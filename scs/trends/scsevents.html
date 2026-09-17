@@ -1108,10 +1108,10 @@ function addTiles(){
     console.error(e);
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
-        'Browsers block <code>fetch()</code> of local files. From the <code>www</code> folder run:<br>'+
+        'Browsers block <code>fetch()</code> of local files. From the <code>extremewxorg</code> folder run:<br>'+
         '<code>python3 -m http.server 8000</code><br>then open '+
-        '<a href="http://localhost:8000/extremewx/scs/trends/scsevents.html" '+
-        'style="color:var(--accent)">localhost:8000/extremewx/scs/trends/scsevents.html</a>.';
+        '<a href="http://localhost:8000/scs/trends/scsevents.html" '+
+        'style="color:var(--accent)">localhost:8000/scs/trends/scsevents.html</a>.';
     } else { msg.textContent='Could not load the data: '+e.message; }
   }
 })();

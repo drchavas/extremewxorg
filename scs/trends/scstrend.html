@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Severe thunderstorm+: Maps and Trends</title>
+<title>Severe thunderstorm(+) Climatology and Trends</title>
 <meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, freezing-rain and peak-wind days, with annual and monthly series.">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
@@ -151,7 +151,7 @@
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 
 <header>
-  <h1>Severe thunderstorm+: Maps and Trends</h1>
+  <h1>Severe thunderstorm(+) Climatology and Trends</h1>
   <p>Climatology and trend side by side on one shared map. <b>Drag or zoom either map and both
      follow</b>, so the two are always showing the same ground. <b>Click a state</b> to centre on it,
      <b>Click a new state</b> to centre on it; clicking inside the state you are already on leaves
@@ -1983,10 +1983,10 @@ function zoomUS(){
     console.error(e);
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
-        'Browsers block <code>fetch()</code> of local files. From the <code>www</code> folder run:<br>'+
+        'Browsers block <code>fetch()</code> of local files. From the <code>extremewxorg</code> folder run:<br>'+
         '<code>python3 -m http.server 8000</code><br>then open '+
-        '<a href="http://localhost:8000/extremewx/scs/trends/scstrend.html" '+
-        'style="color:var(--accent)">localhost:8000/extremewx/scs/trends/scstrend.html</a>.';
+        '<a href="http://localhost:8000/scs/trends/scstrend.html" '+
+        'style="color:var(--accent)">localhost:8000/scs/trends/scstrend.html</a>.';
     } else { msg.textContent='Could not load the data: '+e.message; }
   }
 })();

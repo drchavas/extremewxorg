@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Severe thunderstorm+: Maps and Trends &mdash; 2&deg; grid</title>
+<title>Severe thunderstorm(+) Climatology and Trends &mdash; 2&deg; grid</title>
 <meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado and thunderstorm-wind days on a 2-degree grid, with annual and monthly series.">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
@@ -151,7 +151,7 @@
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 
 <header>
-  <h1>Severe thunderstorm+: Maps and Trends &mdash; 2&deg; grid</h1>
+  <h1>Severe thunderstorm(+) Climatology and Trends &mdash; 2&deg; grid</h1>
   <p>The same paired climatology and trend maps as the county version, binned into
      2&deg;&nbsp;&times;&nbsp;2&deg; boxes. <b>Drag or zoom either map and both follow.</b>
      <b>Click a box</b> to read its series below. State and county lines are geographic reference
@@ -1291,10 +1291,10 @@ function zoomUS(){
     console.error(e);
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
-        'Browsers block <code>fetch()</code> of local files. From the <code>www</code> folder run:<br>'+
+        'Browsers block <code>fetch()</code> of local files. From the <code>extremewxorg</code> folder run:<br>'+
         '<code>python3 -m http.server 8000</code><br>then open '+
-        '<a href="http://localhost:8000/extremewx/scs/trends/scstrend_grid.html" '+
-        'style="color:var(--accent)">localhost:8000/extremewx/scs/trends/scstrend_grid.html</a>.';
+        '<a href="http://localhost:8000/scs/trends/scstrend_grid.html" '+
+        'style="color:var(--accent)">localhost:8000/scs/trends/scstrend_grid.html</a>.';
     } else { msg.textContent='Could not load the data: '+e.message; }
   }
 })();
