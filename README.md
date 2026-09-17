@@ -137,8 +137,8 @@ Everything is driven by CSS variables defined twice, once per scheme
 `--shadow/--shadow-lift/--wash1/--wash2/--h1a/--h1b/--thumb-bg`) — **change colour in those
 blocks, never inline**, or the page will break in one scheme while looking right in the other.
 No top bar: the page opens straight into a `.hero` with a gradient `h1` (`--h1a` → `--h1b`),
-a `.byline` (name + Purdue EAPS affiliation, text only, no logo), the `.subtitle` and a row of
-`.pill` jump links. Then `<section>`s, each `<h2 class="sec-title">` (inline SVG `.ic` icon in a
+a `.byline` (name + Purdue EAPS affiliation, text only, no logo) and the `.subtitle`.
+Then `<section>`s, each `<h2 class="sec-title">` (inline SVG `.ic` icon in a
 tinted rounded square, optional `.qual` sub-line) with `.cat` divider labels over
 `.cards > a.card` — each card is **one anchor wrapping the whole row**: `.shot > img`
 (720x360 WebP in `assets/thumbs/`, `width`/`height` set to reserve space, `loading="lazy"`

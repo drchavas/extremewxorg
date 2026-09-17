@@ -55,16 +55,6 @@
     .subtitle{color:var(--muted);margin:14px 0 0;font-size:clamp(16px,1.6vw,17.5px);max-width:68ch}
     .byline{margin:12px 0 0;font-size:14.5px;color:var(--muted)}
     .byline a{color:var(--accent)}
-    .pills{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0;padding:0;list-style:none}
-    .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
-      font-size:13px;font-weight:600;letter-spacing:.01em;
-      background:var(--accent-soft);border:1px solid color-mix(in srgb, var(--accent) 24%, transparent);
-      color:var(--accent);text-decoration:none}
-    .pill:hover{text-decoration:none;background:color-mix(in srgb, var(--accent) 16%, transparent)}
-    .pill.warm{background:var(--accent2-soft);color:var(--accent2);
-      border-color:color-mix(in srgb, var(--accent2) 30%, transparent)}
-    .pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
-
     .rule{height:1px;background:linear-gradient(90deg,var(--line),transparent);margin:44px 0 0;border:0}
 
     /* ---------- sections ---------- */
@@ -122,11 +112,6 @@
       <h1>Extreme Weather: Maps and Trends</h1>
       <p class="byline">by <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Professor · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a></p>
       <p class="subtitle">Interactive maps and explorers for extreme weather. Many things a work in progress, new updates expected regularly. <a href="mailto:dchavas@purdue.edu">Email me</a> if there is a feature you would like to see added!</p>
-      <ul class="pills">
-        <li><a class="pill" href="#tropical-cyclones"><span class="dot"></span>Tropical Cyclones</a></li>
-        <li><a class="pill" href="#severe-weather"><span class="dot"></span>Severe Weather</a></li>
-        <li><span class="pill warm">Updated regularly</span></li>
-      </ul>
       <hr class="rule" />
     </section>
 
@@ -208,7 +193,7 @@
     </section>
 
     <footer>
-      <p>© <span id="y"></span> Dan Chavas · Purdue University, Department of Earth, Atmospheric, and Planetary Sciences. All rights reserved.</p>
+      <p>© <span id="y"></span> <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a>. All rights reserved.</p>
     </footer>
   </main>
   <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
