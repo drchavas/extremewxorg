@@ -135,7 +135,7 @@ into a `.hero` with a gradient `h1`, a `.byline` (name + Purdue EAPS affiliation
 no logo) and the `.subtitle`; then `<section>`s, each `<h2 class="sec-title">` (optional inline SVG `.ic`
 icon) with `.cat` subheading labels and `ul.links > li > a.tool` + `span.desc`. Keep it
 plain text — **no card/thumbnail artwork** (that was deliberately removed). External links
-use `target="_blank" rel="noopener"` and a `<span class="ext">↗ external site</span>` marker.
+use `target="_blank" rel="noopener"` and a `<span class="ext">(external site)</span>` marker.
 
 **Editing cautions:**
 - Use a normal text editor / file-edit tools. Do **not** run `perl` substitutions that
