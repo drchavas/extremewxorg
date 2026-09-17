@@ -1,4 +1,4 @@
-# Extreme Weather: Maps and Trends — extremewx.org
+# Extreme Weather Data and Visualization Hub — extremewx.org
 
 The public site of interactive extreme-weather visualizations by
 [Dan Chavas](https://web.ics.purdue.edu/~dchavas/) (Purdue University, EAPS).
