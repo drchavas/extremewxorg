@@ -36,7 +36,8 @@ Or plain git from inside this folder: `git add -A && git commit -m "…" && git 
 
 ```
 index.html            Landing page (the two sections below)
-assets/               Purdue EAPS logo
+assets/               purdue_eaps_logo.png (no longer referenced by the landing page)
+  thumbs/             720x360 WebP preview shots, one per tool card on the landing page
 skewt.js              Shared skew-T plotting helper
 tc/                   Tropical cyclones
   ibtracs_viewer.html   (present but UNLINKED — the landing points to tcviewer.org instead)
@@ -129,13 +130,28 @@ This folder is its own git repo (`origin = github.com/drchavas/extremewxorg`).
 → Cloudflare Pages auto-rebuilds → live at extremewx.org in ~1–2 min. There is **no build
 step and no SFTP**; this is unlike the Purdue site.
 
-**Landing-page style conventions** (`index.html`): dark theme via CSS variables
-(`--bg/--panel/--line/--text/--accent/--accent2`); no top bar — the page opens straight
-into a `.hero` with a gradient `h1`, a `.byline` (name + Purdue EAPS affiliation, text only,
-no logo) and the `.subtitle`; then `<section>`s, each `<h2 class="sec-title">` (optional inline SVG `.ic`
-icon) with `.cat` subheading labels and `ul.links > li > a.tool` + `span.desc`. Keep it
-plain text — **no card/thumbnail artwork** (that was deliberately removed). External links
-use `target="_blank" rel="noopener"` and a `<span class="ext">(external site)</span>` marker.
+**Landing-page style conventions** (`index.html`): single-column scroll, **light theme by
+default** with the old dark palette restored under `@media (prefers-color-scheme: dark)`.
+Everything is driven by CSS variables defined twice, once per scheme
+(`--bg/--panel/--line/--line-soft/--text/--muted/--accent/--accent-soft/--accent2/--accent2-soft/`
+`--shadow/--shadow-lift/--wash1/--wash2/--h1a/--h1b/--thumb-bg`) — **change colour in those
+blocks, never inline**, or the page will break in one scheme while looking right in the other.
+No top bar: the page opens straight into a `.hero` with a gradient `h1` (`--h1a` → `--h1b`),
+a `.byline` (name + Purdue EAPS affiliation, text only, no logo), the `.subtitle` and a row of
+`.pill` jump links. Then `<section>`s, each `<h2 class="sec-title">` (inline SVG `.ic` icon in a
+tinted rounded square, optional `.qual` sub-line) with `.cat` divider labels over
+`.cards > a.card` — each card is **one anchor wrapping the whole row**: `.shot > img`
+(720x360 WebP in `assets/thumbs/`, `width`/`height` set to reserve space, `loading="lazy"`
+except the first) plus `.txt > h3 + p.desc`. Cards stack image-over-text below 620px.
+Hover lift and image zoom are disabled under `prefers-reduced-motion`. External links use
+`target="_blank" rel="noopener"` and a `<span class="ext">external site</span>` chip.
+
+**Thumbnails:** screenshots of each tool's own map, captured at 1440px wide, cropped 2:1 and
+saved as WebP (quality 82). To refresh one, open the tool, screenshot just the map element
+(`#map` on tcviewer.org, `svg#card` on tctrend, `#mapEv`/`#mapClim` on the scs pages — click
+`#usBtn` first for the full-U.S. county view), crop 2:1, resize to 720x360. Keep each under
+~50 KB. The copies in `assets/thumbs/` carry a C2PA content-credentials chunk (~5.8 KB each)
+added in transit; harmless, and strippable by re-encoding if you would rather they were clean.
 
 **Editing cautions:**
 - Use a normal text editor / file-edit tools. Do **not** run `perl` substitutions that

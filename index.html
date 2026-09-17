@@ -5,52 +5,115 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Extreme Weather: Maps and Trends</title>
   <meta name="description" content="Interactive maps and trends for extreme weather — global tropical cyclones, and severe weather: wind, hail, tornado, derecho and freezing rain." />
+  <meta name="color-scheme" content="light dark" />
   <style>
     :root{
-      --bg:#0f1720; --panel:#16212e; --line:#2a3a4d;
-      --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e;
+      --bg:#f6f8fb; --panel:#ffffff; --line:#dde5ee; --line-soft:#eaf0f7;
+      --text:#132231; --muted:#55677a; --accent:#0b5fbe; --accent-soft:#e8f1fd;
+      --accent2:#c2620a; --accent2-soft:#fdf1e3;
+      --shadow:0 1px 2px rgba(16,36,60,.05), 0 6px 18px rgba(16,36,60,.06);
+      --shadow-lift:0 2px 4px rgba(16,36,60,.07), 0 14px 32px rgba(16,36,60,.12);
+      --wash1:rgba(11,95,190,.10); --wash2:rgba(230,140,40,.10);
+      --thumb-bg:#0f1720; --h1a:#0e2337; --h1b:#12539f;
     }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0f1720; --panel:#16212e; --line:#2a3a4d; --line-soft:#223044;
+        --text:#e6edf3; --muted:#9fb0c0; --accent:#57aaff; --accent-soft:rgba(70,163,255,.12);
+        --accent2:#ffb14e; --accent2-soft:rgba(255,177,78,.12);
+        --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 18px rgba(0,0,0,.28);
+        --shadow-lift:0 2px 4px rgba(0,0,0,.4), 0 14px 32px rgba(0,0,0,.45);
+        --wash1:rgba(70,163,255,.12); --wash2:rgba(255,177,78,.08);
+        --h1a:#e6edf3; --h1b:#9fc7ff;
+      }
+    }
+
     *{box-sizing:border-box}
     html,body{margin:0;min-height:100%}
+    html{scroll-behavior:smooth}
     body{
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
       background:
-        radial-gradient(1100px 520px at 80% -10%, rgba(70,163,255,.12), transparent 60%),
-        radial-gradient(900px 460px at 0% 0%, rgba(255,177,78,.08), transparent 55%),
-        linear-gradient(180deg,#0d141c 0%, #0f1720 100%);
+        radial-gradient(1100px 560px at 82% -8%, var(--wash1), transparent 62%),
+        radial-gradient(900px 480px at -5% 2%, var(--wash2), transparent 58%),
+        var(--bg);
       background-attachment:fixed;
       color:var(--text);
-      line-height:1.5;
+      line-height:1.55;
+      -webkit-font-smoothing:antialiased;
     }
-    .container{width:min(860px,92%);margin-inline:auto}
+    .container{width:min(920px,92%);margin-inline:auto}
     a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
+    a:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
 
-    .hero{padding:56px 0 6px}
-    .byline{margin:10px 0 0;font-size:14.5px;color:var(--muted)}
+    /* ---------- hero ---------- */
+    .hero{padding:64px 0 8px}
+    h1{margin:0;font-size:clamp(30px,5vw,50px);line-height:1.1;letter-spacing:-.02em;font-weight:800;
+      background:linear-gradient(92deg,var(--h1a),var(--h1b));
+      -webkit-background-clip:text;background-clip:text;color:transparent}
+    .subtitle{color:var(--muted);margin:14px 0 0;font-size:clamp(16px,1.6vw,17.5px);max-width:68ch}
+    .byline{margin:12px 0 0;font-size:14.5px;color:var(--muted)}
     .byline a{color:var(--accent)}
-    h1{margin:0;font-size:clamp(28px,4.5vw,44px);letter-spacing:-.01em;
-      background:linear-gradient(90deg,#e6edf3,#9fc7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .subtitle{color:var(--muted);margin:12px 0 0;font-size:16px;max-width:64ch}
-    .subtitle a{color:var(--accent)}
-    .devnote{display:inline-block;margin-top:16px;padding:5px 12px;border-radius:999px;font-size:12px;
-      letter-spacing:.04em;background:rgba(255,177,78,.12);border:1px solid rgba(255,177,78,.3);color:var(--accent2)}
+    .pills{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0;padding:0;list-style:none}
+    .pill{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+      font-size:13px;font-weight:600;letter-spacing:.01em;
+      background:var(--accent-soft);border:1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+      color:var(--accent);text-decoration:none}
+    .pill:hover{text-decoration:none;background:color-mix(in srgb, var(--accent) 16%, transparent)}
+    .pill.warm{background:var(--accent2-soft);color:var(--accent2);
+      border-color:color-mix(in srgb, var(--accent2) 30%, transparent)}
+    .pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
 
-    section{padding:34px 0 4px}
-    .sec-title{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:clamp(21px,3vw,27px)}
-    .sec-title .ic{width:30px;height:30px;flex:0 0 auto}
-    .cat{margin:20px 0 8px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-      color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:5px}
-    ul.links{list-style:none;margin:0;padding:0}
-    ul.links li{margin:0 0 11px;padding-left:16px;position:relative}
-    ul.links li::before{content:"›";position:absolute;left:0;color:var(--muted)}
-    ul.links a{font-weight:600}
-    .tool{font-size:15.5px}
-    .desc{display:block;color:var(--muted);font-size:13.5px;margin-top:2px;max-width:70ch}
-    .ext{color:var(--muted);font-weight:400;font-size:12.5px}
+    .rule{height:1px;background:linear-gradient(90deg,var(--line),transparent);margin:44px 0 0;border:0}
 
-    footer{color:var(--muted);font-size:13px;padding:36px 0 60px;border-top:1px solid var(--line);margin-top:40px}
+    /* ---------- sections ---------- */
+    section{padding:34px 0 6px;scroll-margin-top:20px}
+    .sec-title{display:flex;align-items:center;gap:13px;margin:0;font-size:clamp(22px,3vw,29px);
+      letter-spacing:-.015em;font-weight:750}
+    .sec-title .ic{width:34px;height:34px;flex:0 0 auto;padding:6px;border-radius:10px;
+      background:var(--accent-soft);color:var(--accent);overflow:visible}
+    .sec-title .qual{display:block;font-weight:500;font-size:15px;color:var(--muted);letter-spacing:0;margin-top:3px}
+
+    .cat{display:flex;align-items:center;gap:10px;margin:26px 0 12px;
+      font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .cat::after{content:"";flex:1;height:1px;background:var(--line)}
+
+    /* ---------- tool cards ---------- */
+    .cards{display:flex;flex-direction:column;gap:14px}
+    .card{display:flex;gap:18px;align-items:center;padding:14px;
+      background:var(--panel);border:1px solid var(--line);border-radius:14px;
+      box-shadow:var(--shadow);color:inherit;text-decoration:none;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+    .card:hover{text-decoration:none;transform:translateY(-2px);
+      box-shadow:var(--shadow-lift);border-color:color-mix(in srgb, var(--accent) 45%, var(--line))}
+    .card .shot{flex:0 0 292px;width:292px;aspect-ratio:2/1;border-radius:9px;overflow:hidden;
+      background:var(--thumb-bg);border:1px solid var(--line-soft)}
+    .card .shot img{display:block;width:100%;height:100%;object-fit:cover;
+      transition:transform .35s ease}
+    .card:hover .shot img{transform:scale(1.045)}
+    .card .txt{min-width:0}
+    .card h3{margin:0;font-size:16.5px;font-weight:700;color:var(--accent);letter-spacing:-.005em}
+    .card:hover h3{text-decoration:underline}
+    .card .desc{margin:5px 0 0;color:var(--muted);font-size:14px}
+    .card .ext{display:inline-block;margin-left:7px;font-size:12px;font-weight:600;color:var(--muted);
+      padding:1px 7px;border-radius:999px;border:1px solid var(--line);vertical-align:1px}
+
+    @media (max-width:620px){
+      .card{flex-direction:column;align-items:stretch;gap:12px}
+      .card .shot{flex:none;width:100%}
+      .hero{padding:44px 0 4px}
+    }
+    @media (prefers-reduced-motion: reduce){
+      html{scroll-behavior:auto}
+      .card,.card .shot img{transition:none}
+      .card:hover{transform:none}
+      .card:hover .shot img{transform:none}
+    }
+
+    footer{color:var(--muted);font-size:13.5px;padding:34px 0 64px;border-top:1px solid var(--line);margin-top:52px}
     footer a{color:var(--accent)}
+    footer p{margin:0 0 6px}
   </style>
 </head>
 <body>
@@ -58,12 +121,19 @@
     <section class="hero">
       <h1>Extreme Weather: Maps and Trends</h1>
       <p class="byline">by <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Professor · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a></p>
-      <p class="subtitle">Interactive maps and explorers for extreme weather. Many things a work in progress, new updates expected regularly. <a href="mailto:dchavas@purdue.edu">Email me</a> if there is a feature you would like to see added!</p>    </section>
+      <p class="subtitle">Interactive maps and explorers for extreme weather. Many things a work in progress, new updates expected regularly. <a href="mailto:dchavas@purdue.edu">Email me</a> if there is a feature you would like to see added!</p>
+      <ul class="pills">
+        <li><a class="pill" href="#tropical-cyclones"><span class="dot"></span>Tropical Cyclones</a></li>
+        <li><a class="pill" href="#severe-weather"><span class="dot"></span>Severe Weather</a></li>
+        <li><span class="pill warm">Updated regularly</span></li>
+      </ul>
+      <hr class="rule" />
+    </section>
 
     <!-- TROPICAL CYCLONES -->
     <section id="tropical-cyclones">
       <h2 class="sec-title">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4.5 7.5c4.5-3.2 10.5-2.3 12.6 1.8"/>
           <path d="M19.5 16.5c-4.5 3.2-10.5 2.3-12.6-1.8"/>
           <circle cx="12" cy="12" r="2.3"/>
@@ -72,42 +142,69 @@
       </h2>
 
       <div class="cat">Historical Event Viewer</div>
-      <ul class="links">
-        <li><a class="tool" href="https://tcviewer.org/" target="_blank" rel="noopener">tcviewer.org: IBTrACS TC Track &amp; Wind Footprint Map Explorer</a> <span class="ext">(external site)</span>
-          <span class="desc">Maps of all global tropical cyclones: individual storm, day in history, month in history, and date range</span></li>
-      </ul>
+      <div class="cards">
+        <a class="card" href="https://tcviewer.org/" target="_blank" rel="noopener">
+          <div class="shot"><img src="assets/thumbs/tcviewer.webp" width="720" height="360" alt="Hurricane best-track points coloured by category with wind-swath outlines along the U.S. East Coast" /></div>
+          <div class="txt">
+            <h3>tcviewer.org: IBTrACS TC Track &amp; Wind Footprint Map Explorer<span class="ext">external site</span></h3>
+            <p class="desc">Maps of all global tropical cyclones: individual storm, day in history, month in history, and date range</p>
+          </div>
+        </a>
+      </div>
 
       <div class="cat">Historical Trends</div>
-      <ul class="links">
-        <li><a class="tool" href="tc/trends/tctrend.html">Climatology &amp; Trends &mdash; 5&deg; grid</a>
-          <span class="desc">Paired climatology and trend maps on a 5&deg; global grid, each with its zonal profile alongside, plus annual, seasonal and month-by-month series. Track density, storm count, ACE, intensity, central pressure and storm size, by basin, 1980&ndash;2025 from IBTrACS. Click a basin to zoom in.</span></li>
-      </ul>
+      <div class="cards">
+        <a class="card" href="tc/trends/tctrend.html">
+          <div class="shot"><img src="assets/thumbs/tctrend.webp" width="720" height="360" loading="lazy" alt="Global track-density map on a 5-degree grid with tropical-cyclone maxima over the western Pacific and eastern Pacific" /></div>
+          <div class="txt">
+            <h3>Climatology &amp; Trends &mdash; 5&deg; grid</h3>
+            <p class="desc">Paired climatology and trend maps on a 5&deg; global grid, each with its zonal profile alongside, plus annual, seasonal and month-by-month series. Track density, storm count, ACE, intensity, central pressure and storm size, by basin, 1980&ndash;2025 from IBTrACS. Click a basin to zoom in.</p>
+          </div>
+        </a>
+      </div>
     </section>
 
-    <!-- SEVERE THUNDERSTORMS -->
-    <section id="severe-thunderstorms">
+    <!-- SEVERE WEATHER -->
+    <section id="severe-weather">
       <h2 class="sec-title">
         <svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M7 17.5a4 4 0 0 1-.5-7.97 5.5 5.5 0 0 1 10.62 1.02A3.5 3.5 0 0 1 17 17.5"
-                stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M12.6 11.5 L9.4 16 H12 L10.4 20 L15 14 H12.1 Z" fill="var(--accent2)"/>
         </svg>
-        Severe Weather (wind, hail, tornado, derecho, freezing rain)
+        <span>Severe Weather
+          <span class="qual">wind, hail, tornado, derecho, freezing rain</span>
+        </span>
       </h2>
 
       <div class="cat">Historical Event Viewer</div>
-      <ul class="links">
-        <li><a class="tool" href="scs/trends/scsevents.html">Historical Severe Weather Events</a>
-          <span class="desc">Maps of any severe thunderstorm and derecho day from the historical record</span></li>
-      </ul>
+      <div class="cards">
+        <a class="card" href="scs/trends/scsevents.html">
+          <div class="shot"><img src="assets/thumbs/scsevents.webp" width="720" height="360" loading="lazy" alt="Derecho wind-gust reports strung west to east across the Midwest, coloured by gust speed" /></div>
+          <div class="txt">
+            <h3>Historical Severe Weather Events</h3>
+            <p class="desc">Maps of any severe thunderstorm and derecho day from the historical record</p>
+          </div>
+        </a>
+      </div>
 
       <div class="cat">Historical Trends</div>
-      <ul class="links">
-        <li><a class="tool" href="scs/trends/scstrend.html">Climatology &amp; Trends — county level</a>
-          <span class="desc">Paired climatology and trend maps at U.S. county resolution, with annual and month-by-month series. Hail, tornado, thunderstorm wind, freezing rain and peak wind.</span></li>
-        <li><a class="tool" href="scs/trends/scstrend_grid.html">Climatology &amp; Trends — 2° grid</a>
-          <span class="desc">The same paired maps binned into a regular 2° grid.</span></li>
-      </ul>
+      <div class="cards">
+        <a class="card" href="scs/trends/scstrend.html">
+          <div class="shot"><img src="assets/thumbs/scstrend.webp" width="720" height="360" loading="lazy" alt="County-level U.S. hail climatology, deep red through the central Plains fading to pale yellow at the coasts" /></div>
+          <div class="txt">
+            <h3>Climatology &amp; Trends — county level</h3>
+            <p class="desc">Paired climatology and trend maps at U.S. county resolution, with annual and month-by-month series. Hail, tornado, thunderstorm wind, freezing rain and peak wind.</p>
+          </div>
+        </a>
+        <a class="card" href="scs/trends/scstrend_grid.html">
+          <div class="shot"><img src="assets/thumbs/scstrend_grid.webp" width="720" height="360" loading="lazy" alt="The same U.S. hail climatology binned into coarse 2-degree grid squares" /></div>
+          <div class="txt">
+            <h3>Climatology &amp; Trends — 2° grid</h3>
+            <p class="desc">The same paired maps binned into a regular 2° grid.</p>
+          </div>
+        </a>
+      </div>
     </section>
 
     <footer>
