@@ -63,7 +63,7 @@ scs/                  Severe convective storms (+ other U.S. hazards)
 - *Historical Trends* → `tc/trends/tctrend.html` (the old `tccard.html` is a redirect stub
   that forwards to it, preserving query string and URL fragment)
 
-**Severe Thunderstorms and Other Impactful Weather**
+**Severe Weather (wind, hail, tornado, derecho, freezing rain)**
 - *Historical Event Viewer* → `scs/trends/scsevents.html`
 - *Historical Trends* → `scs/trends/scstrend.html` (county) and `scs/trends/scstrend_grid.html` (2° grid)
 
