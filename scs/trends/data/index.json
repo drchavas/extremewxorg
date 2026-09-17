@@ -1,0 +1,277 @@
+{
+ "hazards": [
+  {
+   "key": "hail",
+   "label": "Hail",
+   "unit": "in",
+   "note": "Hail diameter in inches as reported in NOAA Storm Events.",
+   "thresholds": [
+    {
+     "key": "any",
+     "label": "Any hail report",
+     "short": "any",
+     "min": 0.0
+    },
+    {
+     "key": "t100",
+     "label": "\u2265 1.00\u2033 (severe, quarter)",
+     "short": "\u22651\u2033",
+     "min": 1.0
+    },
+    {
+     "key": "t200",
+     "label": "\u2265 2.00\u2033 (significant, hen egg)",
+     "short": "\u22652\u2033",
+     "min": 2.0
+    },
+    {
+     "key": "t300",
+     "label": "\u2265 3.00\u2033 (giant, baseball)",
+     "short": "\u22653\u2033",
+     "min": 3.0
+    }
+   ],
+   "year0": 1955,
+   "year1": 2024,
+   "file": "hail.json.gz"
+  },
+  {
+   "key": "tornado",
+   "label": "Tornado",
+   "unit": "EF",
+   "note": "F-scale before 2007, EF-scale after; treated as one continuous rating.",
+   "thresholds": [
+    {
+     "key": "any",
+     "label": "Any tornado (EF0+)",
+     "short": "EF0+",
+     "min": 0
+    },
+    {
+     "key": "ef1",
+     "label": "EF1+ ",
+     "short": "EF1+",
+     "min": 1
+    },
+    {
+     "key": "ef2",
+     "label": "EF2+ (significant)",
+     "short": "EF2+",
+     "min": 2
+    },
+    {
+     "key": "ef3",
+     "label": "EF3+ (intense)",
+     "short": "EF3+",
+     "min": 3
+    },
+    {
+     "key": "ef4",
+     "label": "EF4+ (violent)",
+     "short": "EF4+",
+     "min": 4
+    }
+   ],
+   "year0": 1950,
+   "year1": 2024,
+   "file": "tornado.json.gz"
+  },
+  {
+   "key": "wind",
+   "label": "Thunderstorm Wind",
+   "unit": "kt",
+   "note": "Measured or estimated gust in knots as reported in NOAA Storm Events.",
+   "thresholds": [
+    {
+     "key": "any",
+     "label": "Any wind report",
+     "short": "any",
+     "min": 0
+    },
+    {
+     "key": "k50",
+     "label": "\u2265 50 kt (58 mph, severe)",
+     "short": "\u226550kt",
+     "min": 50
+    },
+    {
+     "key": "k65",
+     "label": "\u2265 65 kt (75 mph, significant)",
+     "short": "\u226565kt",
+     "min": 65
+    },
+    {
+     "key": "k80",
+     "label": "\u2265 80 kt (92 mph)",
+     "short": "\u226580kt",
+     "min": 80
+    }
+   ],
+   "year0": 1955,
+   "year1": 2024,
+   "file": "wind.json.gz"
+  },
+  {
+   "key": "derechoday",
+   "label": "Derecho",
+   "unit": "kt",
+   "note": "Calendar dates on which a county lay inside a definitive derecho wind swath from the SPC archive of Squitieri, Wade and Jirak (2026), dated by the swath's start. NEXRAD era only, so the record starts in 1996.",
+   "countword": "event",
+   "thresholds": [
+    {
+     "key": "k50",
+     "label": "\u2265 50 kt (58 mph, severe)",
+     "short": "\u2265 50 kt",
+     "min": 50
+    },
+    {
+     "key": "k64",
+     "label": "\u2265 64 kt (33 m s\u207b\u00b9)",
+     "short": "\u2265 64 kt",
+     "min": 64
+    },
+    {
+     "key": "k74",
+     "label": "\u2265 74 kt (38 m s\u207b\u00b9)",
+     "short": "\u2265 74 kt",
+     "min": 74
+    }
+   ],
+   "year0": 1996,
+   "year1": 2024,
+   "file": "derechoday.json.gz"
+  },
+  {
+   "key": "fzra",
+   "label": "Freezing Rain",
+   "unit": "h",
+   "note": "Days with freezing rain (FZRA) in the METAR remarks at an ASOS station. Counted over a July\u2013June cold season labelled by the ending year. Higher levels count hours of freezing rain in the day, a rough proxy for how much ice had a chance to accrete.",
+   "thresholds": [
+    {
+     "key": "any",
+     "label": "Any freezing rain",
+     "short": "any",
+     "min": 1
+    },
+    {
+     "key": "h3",
+     "label": "\u2265 3 hours in a day",
+     "short": "\u22653 h",
+     "min": 3
+    },
+    {
+     "key": "h6",
+     "label": "\u2265 6 hours in a day",
+     "short": "\u22656 h",
+     "min": 6
+    }
+   ],
+   "year0": 2000,
+   "year1": 2024,
+   "kind": "station",
+   "season": "JulJun",
+   "file": "fzra.json.gz",
+   "nDelPizzo": 0
+  },
+  {
+   "key": "pkwnd",
+   "label": "Peak Wind",
+   "unit": "kt",
+   "note": "Days on which an ASOS station reported a peak wind gust at or above the threshold, read from the 'PK WND' group in the METAR remarks.",
+   "thresholds": [
+    {
+     "key": "k30",
+     "label": "\u2265 30 kt (35 mph)",
+     "short": "\u226530 kt",
+     "min": 30
+    },
+    {
+     "key": "k40",
+     "label": "\u2265 40 kt (46 mph)",
+     "short": "\u226540 kt",
+     "min": 40
+    },
+    {
+     "key": "k50",
+     "label": "\u2265 50 kt (58 mph, severe)",
+     "short": "\u226550 kt",
+     "min": 50
+    },
+    {
+     "key": "k60",
+     "label": "\u2265 60 kt (69 mph)",
+     "short": "\u226560 kt",
+     "min": 60
+    }
+   ],
+   "year0": 2000,
+   "year1": 2024,
+   "kind": "station",
+   "season": "calendar",
+   "file": "pkwnd.json.gz",
+   "nDelPizzo": 0
+  },
+  {
+   "key": "derecho",
+   "label": "Derecho",
+   "unit": "kt",
+   "kind": "event",
+   "note": "The SPC derecho archive of Squitieri, Wade and Jirak (2026): 184 wind swaths, 1956-2025. Wind reports shown are those falling inside each swath's published UTC window.",
+   "thresholds": [
+    {
+     "key": "k50",
+     "label": "\u2265 50 kt (58 mph, severe)",
+     "short": "\u2265 50 kt",
+     "min": 50
+    },
+    {
+     "key": "k64",
+     "label": "\u2265 64 kt (33 m s\u207b\u00b9)",
+     "short": "\u2265 64 kt",
+     "min": 64
+    },
+    {
+     "key": "k74",
+     "label": "\u2265 74 kt (38 m s\u207b\u00b9)",
+     "short": "\u2265 74 kt",
+     "min": 74
+    }
+   ],
+   "tiers": [
+    {
+     "k": "definitive",
+     "n": 96,
+     "note": "NEXRAD-era definitive derecho"
+    },
+    {
+     "k": "likely_pre",
+     "n": 48,
+     "note": "pre-NEXRAD likely derecho"
+    },
+    {
+     "k": "likely_nex",
+     "n": 13,
+     "note": "NEXRAD-era likely derecho, just short of the wind-report criteria"
+    },
+    {
+     "k": "possible_pre",
+     "n": 16,
+     "note": "pre-NEXRAD possible derecho"
+    },
+    {
+     "k": "hybrid_nex",
+     "n": 7,
+     "note": "NEXRAD-era suspected hybrid"
+    },
+    {
+     "k": "hybrid_pre",
+     "n": 4,
+     "note": "pre-NEXRAD potential hybrid candidate"
+    }
+   ],
+   "year0": 1956,
+   "year1": 2025,
+   "file": "derecho.json.gz"
+  }
+ ]
+}

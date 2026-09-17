@@ -1,0 +1,306 @@
+/* scsevents.html: the derecho archive plus the biggest-days lists. The things
+   worth testing are the ones a screenshot would not catch — that the rankings
+   the page shows are the ones the builder computed, that switching threshold or
+   state cannot strand the reader on a day that is no longer in the list, and
+   that the heavy per-report file is only fetched when actually asked for. */
+const fs=require('fs'), zlib=require('zlib'), path=require('path'), {JSDOM}=require('jsdom');
+const ROOT=process.argv[2];
+const html=fs.readFileSync(path.join(ROOT,'scsevents.html'),'utf8');
+const errors=[], fetched=[];
+const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,
+                          url:'http://localhost/extremewx/scs/trends/scsevents.html'});
+const w=dom.window;
+w.fetch=async u=>{ const p=path.join(ROOT,u);
+  if(!fs.existsSync(p)) throw new Error('404 '+u);
+  fetched.push(u);
+  const b=fs.readFileSync(p);
+  return {ok:true,status:200,json:async()=>JSON.parse(b.toString()),arrayBuffer:async()=>b}; };
+w.DecompressionStream=function(){};
+w.Blob=class{constructor(p){this.parts=p} stream(){return this} pipeThrough(){return this}};
+w.Response=class{constructor(x){this.x=x} async text(){return zlib.gunzipSync(Buffer.from(this.x.parts[0])).toString()}};
+w.URL.createObjectURL=()=>'blob:x'; w.URL.revokeObjectURL=()=>{};
+w.navigator.clipboard={writeText:async()=>{}};
+w.topojson=require(path.join(process.env.NODE_PATH,'topojson-client'));
+
+const maps=[];
+const B={getSouth:()=>24,getNorth:()=>50,getWest:()=>-126,getEast:()=>-66,
+         getCenter:()=>({lat:39,lng:-96}),pad(){return this}};
+w.L={
+  map:id=>{const h={};const m={id,_c:{lat:39,lng:-96},_z:4,_layers:[],_fit:0,_nsize:0,
+    _bodyShown:(w.document.getElementById('body')||{style:{}}).style.display,
+    setView(c,z){this._c=Array.isArray(c)?{lat:c[0],lng:c[1]}:c;if(z!=null)this._z=z;return this},
+    /* real fitBounds moves the centre as well as the zoom; a stub that only
+       changed zoom hid a genuine difference between framing and zooming out */
+    fitBounds(b){this._fit++;this._b=b;this._z=6;
+      if(Array.isArray(b)&&Array.isArray(b[0]))
+        this._c={lat:(b[0][0]+b[1][0])/2,lng:(b[0][1]+b[1][1])/2};
+      return this;},
+    getCenter(){return this._c},getZoom(){return this._z},
+    on(e,f){e.split(' ').forEach(x=>(h[x]=h[x]||[]).push(f))},
+    removeLayer(l){this._layers=this._layers.filter(x=>x!==l)},
+    addLayer(l){this._layers.push(l)},hasLayer(l){return this._layers.includes(l)},
+    eachLayer(cb){this._layers.slice().forEach(cb)},invalidateSize(){this._nsize++},_h:h};
+   maps.push(m);return m;},
+  tileLayer:()=>({_tile:true,addTo(m){m.addLayer(this);return this}}),
+  layerGroup:()=>({_marks:[],_polys:[],_lines:[],addTo(m){m.addLayer(this);return this}}),
+  circleMarker:(ll,o)=>({_ll:ll,_o:o,bindTooltip(f){this._tip=f;return this},
+    on(){return this},addTo(g){g._marks.push(this);return this}}),
+  polygon:(ll,o)=>({_ll:ll,_o:o,addTo(g){g._polys.push(this);return this}}),
+  polyline:(ll,o)=>({_ll:ll,_o:o,addTo(g){g._lines.push(this);return this}}),
+  DomEvent:{stop(){}}, TileLayer:function(){},
+  geoJSON:(d,o)=>{const ls=[];
+    if(d&&d.features&&o&&o.onEachFeature) d.features.forEach(f=>{const l={feature:f,_h:{},
+      _style:(typeof o.style==='function'?o.style(f):o.style),
+      on(e,fn){this._h[e]=fn},bindTooltip(fn){this._tip=fn;return this},
+      setStyle(){},getBounds:()=>B};
+      ls.push(l);o.onEachFeature(f,l);});
+    const L={_data:d,_opts:o,_layers:ls,_styled:0,
+      addTo(m){m.addLayer(this);return this},getLayers(){return ls},
+      setStyle(fn){this._styled++;if(typeof fn==='function')ls.forEach(l=>{l._style=fn(l.feature);});},
+      bringToFront(){},getBounds:()=>B};
+    return L;}};
+w.L.TileLayer.prototype={};
+w.addEventListener('error',e=>errors.push('window error: '+e.message));
+process.on('unhandledRejection',e=>errors.push('unhandled rejection: '+(e&&e.message)));
+w.eval(html.match(/<script>([\s\S]*?)<\/script>/g).pop().replace(/^<script>|<\/script>$/g,''));
+
+const $=id=>w.document.getElementById(id);
+const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
+const rows=()=>[...$('rankBody').querySelectorAll('tr')];
+const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))).toString());
+
+(async()=>{
+  await new Promise(r=>setTimeout(r,3500));
+  const M=maps[0];
+
+  console.log('\n--- opens on the derecho archive');
+  /* Leaflet measures its container on creation. Built into a hidden div it
+     measures 0x0, and every later fitBounds then solves for a zero viewport and
+     returns maximum zoom — the page opened at street level. */
+  say('map is built into a visible container',M._bodyShown==='block',
+      'body display was "'+M._bodyShown+'" when L.map ran');
+  say('and the size is revalidated before fitting',M._nsize>0,M._nsize+' invalidateSize calls');
+  say('hazard menu carries all four',
+      [...$('hazSel').options].map(o=>o.value).join(',')==='derecho,hail,tornado,wind',
+      [...$('hazSel').options].map(o=>o.value).join(','));
+  say('opens on derecho events',$('hazSel').value==='derecho');
+  say('ranked list hidden for derechos',$('ranks').style.display==='none');
+  say('confidence + derecho menus shown',$('tierWrap').style.display===''&&
+      $('evWrap').style.display==='');
+  say('view toggle hidden',$('viewWrap').style.display==='none');
+  say('swath track drawn',(M._layers.find(l=>l._lines&&l._lines.length)||{})._lines?.length===1);
+  say('footer credits the archive',/Squitieri, Wade and Jirak \(2026\)/.test($('foot').innerHTML));
+  say('the report file was NOT fetched',!fetched.some(u=>/_pts\./.test(u)),
+      fetched.filter(u=>/data\//.test(u)).join(' '));
+
+  console.log('\n--- the biggest tornado days');
+  $('hazSel').value='tornado'; await $('hazSel').onchange({target:{value:'tornado'}});
+  await new Promise(r=>setTimeout(r,900));
+  say('ranked list shown',$('ranks').style.display==='');
+  say('derecho-only controls hidden',$('tierWrap').style.display==='none'&&
+      $('evWrap').style.display==='none');
+  say('view toggle shown, on counties',$('viewWrap').style.display===''&&
+      $('viewSel').value==='cty');
+  const raw=gz('events_tornado.json.gz');
+  say('national list is the builder\'s top 100',rows().length===100,rows().length+' rows');
+  say('#1 nationally is the 1974 Super Outbreak',
+      rows()[0].dataset.d==='1974-04-03',rows()[0].dataset.d);
+  say('#2 is 27 April 2011',rows()[1].dataset.d==='2011-04-27',rows()[1].dataset.d);
+  say('the page order matches the data file',
+      rows().map(r=>r.dataset.d).join()===raw.rank[0].US.map(([i])=>raw.days[i]).join());
+  say('it opens on the top day, not a blank map',
+      $('mapTitle').textContent==='3 Apr 1974',$('mapTitle').textContent);
+  say('counties are shaded',(M._layers.filter(l=>l._data&&l._data.features&&
+      l._data.features.length>3000).length)>0);
+  /* The choropleth layer is built without onEachFeature (nothing is clickable),
+     so there are no per-feature stubs to inspect. Ask the page's own style
+     function instead — that is what Leaflet would call. */
+  const shaded=()=>{
+    const on=M._layers.some(x=>x._data&&x._data.features&&x._data.features.length>3000);
+    if(!on) return 0;
+    return w.eval("shadedCount()");
+  };
+  say('only the involved counties are shaded',shaded()===176,shaded()+' of 3222');
+  say('footer states counties and the counted unit',/<b>176<\/b> counties/.test($('foot').innerHTML),
+      ($('foot').innerHTML.match(/<b>\d+<\/b> counties and <b>\d+<\/b> [a-z ]+/)||[''])[0]);
+  /* Storm Events splits a tornado at every county line, so the row count is not
+     a tornado count. The column must say what it counts. */
+  say('tornado column is labelled Segments, not Reports',
+      $('cntTh').textContent==='Segments',$('cntTh').textContent);
+  say('footer says county segments',/counties and <b>\d+<\/b> county segments/.test($('foot').innerHTML));
+  say('and the caveat names the 1974 numbers',
+      /239 segments for 148 tornadoes/.test($('foot').innerHTML));
+  say('and says why they cannot be collapsed',/empty before about 1990/.test($('foot').innerHTML));
+
+  console.log('\n--- threshold changes the list');
+  $('thrSel').value=3; $('thrSel').onchange({target:{value:'3'}});
+  await new Promise(r=>setTimeout(r,300));
+  say('EF3+ list is a different ranking',rows()[0].dataset.d==='1974-04-03'&&
+      rows().map(r=>r.dataset.d).join()!==raw.rank[0].US.map(([i])=>raw.days[i]).join());
+  say('EF3+ matches the file',
+      rows().map(r=>r.dataset.d).join()===raw.rank[3].US.map(([i])=>raw.days[i]).join());
+  say('the county count falls with the threshold',
+      +rows()[0].querySelectorAll('td')[2].textContent===119,
+      rows()[0].querySelectorAll('td')[2].textContent+' counties at EF3+ vs 176 at EF0+');
+  $('thrSel').value=0; $('thrSel').onchange({target:{value:'0'}});
+  await new Promise(r=>setTimeout(r,300));
+
+  console.log('\n--- by state');
+  $('regSel').value='IN'; $('regSel').onchange({target:{value:'IN'}});
+  await new Promise(r=>setTimeout(r,300));
+  say('Indiana list capped at 50',rows().length===50,rows().length+' rows');
+  say('matches the file for Indiana',
+      rows().map(r=>r.dataset.d).join()===raw.rank[0].IN.map(([i])=>raw.days[i]).join());
+  say('header names the state and the cap',/Indiana/.test($('rankHead').innerHTML)&&
+      /Top 50/.test($('rankHead').innerHTML));
+  /* A state with fewer than 50 qualifying days must show what it has and say so. */
+  $('regSel').value='RI'; $('regSel').onchange({target:{value:'RI'}});
+  await new Promise(r=>setTimeout(r,300));
+  say('Rhode Island shows all it has',rows().length===raw.rank[0].RI.length&&rows().length<50,
+      rows().length+' days');
+  say('and says the list is short',/Only \d+ qualifying day/.test($('rankHead').innerHTML),
+      ($('rankHead').innerHTML.match(/Only [^<]*/)||[''])[0]);
+  $('regSel').value=''; $('regSel').onchange({target:{value:''}});
+  await new Promise(r=>setTimeout(r,300));
+
+  console.log('\n--- switching cannot strand the reader');
+  const rowsAt=()=>rows().map(r=>r.dataset.d);
+  $('regSel').value='FL'; $('regSel').onchange({target:{value:'FL'}});
+  await new Promise(r=>setTimeout(r,300));
+  say('a state switch lands on a day that is in the list',rowsAt().includes(w.eval('curDay()')),
+      w.eval('curDay()'));
+  $('thrSel').value=3; $('thrSel').onchange({target:{value:'3'}});
+  await new Promise(r=>setTimeout(r,300));
+  say('a threshold switch does too',rows().length===0||rowsAt().includes(w.eval('curDay()')),
+      w.eval('curDay()')+' among '+rows().length);
+  $('thrSel').value=0; $('thrSel').onchange({target:{value:'0'}});
+  $('regSel').value=''; $('regSel').onchange({target:{value:''}});
+  await new Promise(r=>setTimeout(r,300));
+
+
+  console.log('\n--- the light theme repaints the whole page, not just the maps');
+  const H=w.document.documentElement;
+  say('the theme is on the root element, where the CSS can see it',
+      H.dataset.theme==='dark',H.dataset.theme);
+  $('themeBtn').onclick.call($('themeBtn'));
+  await new Promise(r=>setTimeout(r,200));
+  /* Without this attribute the CSS variables stayed dark and light mode gave
+     white gutters around dark navy cards, with links close to illegible. */
+  say('switching flips it, so --panel, --text and --line all switch',
+      H.dataset.theme==='light',H.dataset.theme);
+  say('the button offers the way back',$('themeBtn').textContent==='Dark');
+  say('and the basemap follows',/World_Light_Gray_Base/.test(w.eval('tileUrl()')),
+      w.eval('tileUrl()').split('/Canvas/')[1].split('/')[0]);
+  $('themeBtn').onclick.call($('themeBtn'));
+  await new Promise(r=>setTimeout(r,200));
+  say('back to dark, page and basemap together',
+      H.dataset.theme==='dark'&&/World_Dark_Gray_Base/.test(w.eval('tileUrl()')));
+
+  console.log('\n--- typing any date');
+  const typeDay=v=>{ const i=$('dayIn'); i.value=v; i.onchange(); };
+  say('date box shown and reflects the current day',$('dayWrap').style.display===''&&
+      $('dayIn').value===w.eval('curDay()').replace(/-/g,''),$('dayIn').value);
+  /* The whole point: a date that never made a top-50 list must still draw. */
+  const raw2=gz('events_tornado.json.gz');
+  const ranked=new Set(raw2.rank[0].US.map(([i])=>raw2.days[i]));
+  const unranked=raw2.days.find(d=>!ranked.has(d)&&d>'2005');
+  typeDay(unranked.replace(/-/g,''));
+  await new Promise(r=>setTimeout(r,300));
+  say('an unranked date still maps',w.eval('curDay()')===unranked&&
+      w.eval('shadedCount()')>0,
+      unranked+' → '+w.eval('shadedCount()')+' counties');
+  say('and it is not highlighted in the ranked list',!rows().some(r=>r.classList.contains('on')));
+  /* A date inside the record with nothing to report. */
+  typeDay('20100101');
+  await new Promise(r=>setTimeout(r,300));
+  say('a quiet date says so rather than blanking',
+      /no tornado reports anywhere/.test($('foot').innerHTML),
+      ($('foot').innerHTML.match(/no [a-z ]+ reports anywhere/)||[''])[0]);
+  /* The two months NCEI lost. */
+  typeDay('19930615');
+  await new Promise(r=>setTimeout(r,300));
+  say('June 1993 explains itself',/June and July 1993 are missing/.test($('foot').innerHTML));
+  /* Outside the record entirely. */
+  typeDay('19000704');
+  await new Promise(r=>setTimeout(r,300));
+  say('a date outside the record says so',/outside the record/.test($('foot').innerHTML),
+      ($('foot').innerHTML.match(/outside the record[^.]*/)||[''])[0]);
+  /* Garbage must be refused, not silently reinterpreted. */
+  const before=w.eval('curDay()');
+  typeDay('20250231');                     // 31 February
+  await new Promise(r=>setTimeout(r,200));
+  say('an impossible date is rejected, not slid to 3 March',w.eval('curDay()')===before,
+      w.eval('curDay()'));
+  typeDay('nonsense');
+  await new Promise(r=>setTimeout(r,200));
+  say('junk is rejected too',w.eval('curDay()')===before);
+  say('and the box flags it',$('dayIn').style.borderColor!=='',$('dayIn').style.borderColor);
+  typeDay('19740403');
+  await new Promise(r=>setTimeout(r,300));
+  say('a good date clears the flag and maps',w.eval('curDay()')==='1974-04-03'&&
+      $('dayIn').style.borderColor==='');
+
+  /* Typing dates is a comparison workflow, so the domain must hold still. */
+  rows()[0].onclick();                       // frame a day by clicking the list
+  await new Promise(r=>setTimeout(r,200));
+  const framedZoom=M.getZoom(), framedC=JSON.stringify(M.getCenter());
+  say('clicking a row still frames that day',M._fit>0);
+  typeDay('20110427');
+  await new Promise(r=>setTimeout(r,200));
+  const usZoom=M.getZoom(), usC=JSON.stringify(M.getCenter());
+  say('typing a date zooms out to the whole country',usZoom===4&&usC!==framedC,
+      'z'+framedZoom+' → z'+usZoom);
+  const fitsBefore=M._fit;
+  typeDay('20120302'); await new Promise(r=>setTimeout(r,200));
+  typeDay('19740403'); await new Promise(r=>setTimeout(r,200));
+  say('and the domain then holds still across further dates',
+      M.getZoom()===usZoom&&JSON.stringify(M.getCenter())===usC&&M._fit===fitsBefore,
+      'z'+M.getZoom()+', '+(M._fit-fitsBefore)+' refits');
+  // a pan by the reader must survive a date change too
+  M.setView([35,-90],6);
+  typeDay('20110427'); await new Promise(r=>setTimeout(r,200));
+  say('a view the reader chose is not snatched back',
+      M.getZoom()===6&&M.getCenter().lat===35,'z'+M.getZoom());
+  M.setView([39.2,-96],4);
+
+  console.log('\n--- points are fetched only on demand');
+  say('still not fetched',!fetched.some(u=>/_pts\./.test(u)));
+  $('viewSel').value='pts'; await $('viewSel').onchange({target:{value:'pts'}});
+  await new Promise(r=>setTimeout(r,600));
+  say('now fetched, once',fetched.filter(u=>/_pts\./.test(u)).length===1,
+      fetched.filter(u=>/_pts\./.test(u)).join(' '));
+  const marks=()=>{const g=M._layers.find(l=>l._marks&&l._marks.length);return g?g._marks.length:0;};
+  say('reports drawn as points',marks()>100,marks()+' points');
+  say('county shading removed',shaded()===0);
+  $('viewSel').value='cty'; await $('viewSel').onchange({target:{value:'cty'}});
+  await new Promise(r=>setTimeout(r,300));
+  say('back to counties',shaded()>0&&marks()===0);
+
+  console.log('\n--- a shared link reopens the same day');
+  const d2=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,
+    url:'http://localhost/scsevents.html#h=hail&t=2&r=&d=2012-03-02&v=cty'});
+  const w2=d2.window;
+  Object.assign(w2,{fetch:w.fetch,DecompressionStream:w.DecompressionStream,Blob:w.Blob,
+    Response:w.Response,topojson:w.topojson,L:w.L});
+  w2.URL.createObjectURL=()=>'blob:x'; w2.URL.revokeObjectURL=()=>{};
+  w2.navigator.clipboard={writeText:async()=>{}};
+  w2.eval(html.match(/<script>([\s\S]*?)<\/script>/g).pop().replace(/^<script>|<\/script>$/g,''));
+  await new Promise(r=>setTimeout(r,3500));
+  /* Hail rows are individual reports and must not inherit the tornado wording. */
+  $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+  await new Promise(r=>setTimeout(r,900));
+  say('hail column stays Reports',$('cntTh').textContent==='Reports',$('cntTh').textContent);
+  say('and carries no segment caveat',!/county segments/.test($('foot').innerHTML));
+
+  say('link restores hazard, threshold and day',
+      w2.document.getElementById('hazSel').value==='hail'&&
+      w2.document.getElementById('thrSel').value==='2'&&
+      w2.document.getElementById('mapTitle').textContent==='2 Mar 2012',
+      w2.document.getElementById('mapTitle').textContent);
+  say('and it is the #1 ≥2″ hail day',
+      w2.document.getElementById('rankBody').querySelector('tr').dataset.d==='2012-03-02');
+
+  console.log('\n--- errors captured: '+errors.length);
+  errors.forEach(e=>console.log('  '+e));
+  process.exit(errors.length?1:0);
+})().catch(e=>{console.error('HARNESS ERROR',e); process.exit(2);});
