@@ -26,18 +26,9 @@
     a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
 
-    .topbar{position:sticky;top:0;z-index:10;backdrop-filter:saturate(120%) blur(6px);
-      background:rgba(15,23,32,.82);border-bottom:1px solid var(--line)}
-    .row{display:flex;align-items:center;gap:16px;padding:12px 0}
-    .brand{display:flex;flex-direction:column;line-height:1.15;text-decoration:none;color:inherit}
-    .brand b{font-size:16px;letter-spacing:.02em}
-    .brand span{font-size:12px;color:var(--muted)}
-    .spacer{flex:1}
-    .byline{font-size:14px;color:var(--muted)}
-    .topbar img{height:52px;width:auto;object-fit:contain}
-    @media (min-width:768px){ .brand b{font-size:19px} .topbar img{height:64px} }
-
-    .hero{padding:44px 0 6px}
+    .hero{padding:56px 0 6px}
+    .byline{margin:10px 0 0;font-size:14.5px;color:var(--muted)}
+    .byline a{color:var(--accent)}
     h1{margin:0;font-size:clamp(28px,4.5vw,44px);letter-spacing:-.01em;
       background:linear-gradient(90deg,#e6edf3,#9fc7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
     .subtitle{color:var(--muted);margin:12px 0 0;font-size:16px;max-width:64ch}
@@ -63,23 +54,10 @@
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="container">
-      <div class="row">
-        <a class="brand" href="#top">
-          <b>Extreme Weather: Maps and Trends</b>
-          <span>Interactive data explorers</span>
-        </a>
-        <div class="spacer"></div>
-        <div class="byline">by <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a></div>
-        <img src="assets/purdue_eaps_logo.png" alt="Purdue EAPS logo" />
-      </div>
-    </div>
-  </header>
-
   <main class="container" id="top">
     <section class="hero">
       <h1>Extreme Weather: Maps and Trends</h1>
+      <p class="byline">by <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Purdue University, Department of Earth, Atmospheric, and Planetary Sciences</p>
       <p class="subtitle">Interactive maps and explorers for extreme weather. Many things a work in progress, new updates expected regularly. <a href="mailto:dchavas@purdue.edu">Email me</a> if there is a feature you would like to see added!</p>    </section>
 
     <!-- TROPICAL CYCLONES -->
@@ -133,7 +111,6 @@
     </section>
 
     <footer>
-      <p>Tropical-cyclone data from NOAA IBTrACS; severe-weather data from NOAA/NCEI Storm Events. Experimental — not yet official.</p>
       <p>© <span id="y"></span> Dan Chavas · Purdue University, Department of Earth, Atmospheric, and Planetary Sciences. All rights reserved.</p>
     </footer>
   </main>
