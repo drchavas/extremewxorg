@@ -218,6 +218,25 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   await new Promise(r=>setTimeout(r,200));
 
 
+  console.log('\n--- the peak-wind provisional banner');
+  const warnShown=()=>$('hazwarn').style.display!=='none'&&$('hazwarn').innerHTML.length>0;
+  say('no banner on a county hazard',!warnShown(),$('hazwarn').style.display);
+  $('hazSel').value='pkwnd'; await $('hazSel').onchange({target:{value:'pkwnd'}});
+  await new Promise(r=>setTimeout(r,900));
+  say('peak wind warns that the view is provisional',warnShown()&&
+      /not working correctly yet/.test($('hazwarn').innerHTML));
+  say('and says why — the QC screen is unsettled',
+      /quality-control/.test($('hazwarn').innerHTML));
+  say('and asks the reader to come back',
+      /check back later/.test($('hazwarn').innerHTML));
+  /* Freezing rain has the DelPizzo screen, so it is not provisional. */
+  $('hazSel').value='fzra'; await $('hazSel').onchange({target:{value:'fzra'}});
+  await new Promise(r=>setTimeout(r,900));
+  say('freezing rain carries no such banner',!warnShown());
+  $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+  await new Promise(r=>setTimeout(r,900));
+  say('and it is gone again on a county hazard',!warnShown());
+
   console.log('\n--- the guidance box follows the data type');
   /* Storm Events and ASOS fail in completely different ways; showing both
      caveats together left the reader to work out which one applied. */

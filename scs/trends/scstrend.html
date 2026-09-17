@@ -132,6 +132,16 @@
          border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
          padding:11px 16px;font-size:11.5px;color:var(--muted);line-height:1.6}
   .guide b.lead{color:var(--text)}
+  /* Per-hazard warning, for a view that is not trustworthy yet. Deliberately
+     louder than the guidance box: guidance explains how to read good data, this
+     says not to rely on it. */
+  .hazwarn{max-width:1100px;margin:0 auto 16px;border:1px solid #ff8a3d;
+           border-left:4px solid #ff8a3d;border-radius:8px;background:#3a1408;
+           padding:11px 16px;font-size:12.5px;color:#ffe3cf;line-height:1.6}
+  .hazwarn b{color:#fff}
+  html[data-theme="light"] .hazwarn{background:#fff4ec;border-color:#c2540a;
+           border-left-color:#c2540a;color:#6b2f06}
+  html[data-theme="light"] .hazwarn b{color:#3d1a02}
   .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
   .methods a{color:var(--accent)}
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
@@ -185,6 +195,7 @@
 </header>
 
 <div id="wrap">
+  <div class="hazwarn" id="hazwarn" style="display:none"></div>
   <div class="guide" id="guide"></div>
   <div id="msg">Loading&hellip;</div>
   <div id="body" style="display:none">
@@ -1096,6 +1107,22 @@ function smTag(){
    database whose volume tracks population and spotter networks, the other a
    fixed instrument network whose sensors and siting changed — and running both
    caveats together left the reader to work out which one bit. */
+/* Peak wind has no settled quality screen yet — unlike freezing rain, which has
+   the DelPizzo list. Until that is resolved the numbers on this view should not
+   be used, and saying so plainly beats letting someone quote them. */
+function hazWarnHtml(){
+  if(S.hazard!=='pkwnd') return '';
+  return '&#9888; <b>This view is not working correctly yet.</b> We are still working through '+
+         'how to quality-control the peak-wind station records &mdash; reporting of peak gusts '+
+         'varies by site, sensor and era, and the screen that handles it is not settled. '+
+         'Treat everything here as provisional and <b>please check back later for updates</b>.';
+}
+function syncHazWarn(){
+  const el=document.getElementById('hazwarn'), h=hazWarnHtml();
+  el.innerHTML=h;
+  el.style.display = h ? '' : 'none';
+}
+
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
   /* The derecho hazard is Storm Events wind reports, but WHICH storms count is
@@ -1410,6 +1437,7 @@ function drawColorbar(el,C,title){
 /* Recompute both maps and both colour bars from the current controls. */
 function refresh(){
   document.getElementById('guide').innerHTML=guideHtml();
+  syncHazWarn();
   /* Outline styling depends on the mode, not just on which state is selected,
      so it has to be reapplied here — focusState alone never fires on a hazard
      switch and the borders would keep the previous mode's colour. */
