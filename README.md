@@ -41,8 +41,8 @@ skewt.js              Shared skew-T plotting helper
 tc/                   Tropical cyclones
   ibtracs_viewer.html   (present but UNLINKED — the landing points to tcviewer.org instead)
   trends/
-    tccard.html         "Tropical Cyclone Trends" (linked from landing)
-    tctrend.html        trend engine/companion used by tccard.html
+    tctrend.html        "Climatology & Trends — 5° grid" (linked from landing)
+    tccard.html         redirect stub for the old filename → tctrend.html (unlinked)
     data/, geo/         pre-generated data + basemap (served)
     build_*.py, *.js    build/audit scripts (not served)
 scs/                  Severe convective storms (+ other U.S. hazards)
@@ -60,7 +60,8 @@ scs/                  Severe convective storms (+ other U.S. hazards)
 **Tropical Cyclones**
 - *Historical Event Viewer* → **[tcviewer.org](https://tcviewer.org/)** (external; the
   IBTrACS global track & wind-field viewer is its own site/repo — `drchavas/tcviewer`)
-- *Historical Trends* → `tc/trends/tccard.html`
+- *Historical Trends* → `tc/trends/tctrend.html` (the old `tccard.html` is a redirect stub
+  that forwards to it, preserving query string and URL fragment)
 
 **Severe Thunderstorms and Other Impactful Weather**
 - *Historical Event Viewer* → `scs/trends/scsevents.html`
