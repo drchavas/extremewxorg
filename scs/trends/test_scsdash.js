@@ -447,10 +447,10 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
 
   say('a climatology of exactly zero is grey, not the pale end of the ramp',
       col(0)==='rgb(214,218,222)'&&col(0.0001)!=='rgb(214,218,222)',col(0));
-  say('the header links say what each page is',
-      /County-level maps by hazard/.test(w.document.querySelector('header p').textContent)&&
-      /2° grid maps by hazard/.test(w.document.querySelector('header p').textContent),
-      w.document.querySelector('header p').textContent.split('·')[0].trim());
+  say('the header links say what each page is, and the whole phrase is the link',
+      [...w.document.querySelectorAll('header p a')].map(a=>a.textContent.trim())
+        .slice(0,2).join('|')==='County-level maps by hazard|2° grid maps by hazard',
+      [...w.document.querySelectorAll('header p a')].map(a=>a.textContent.trim()).join(' · '));
   cr=(a,b)=>+w.eval(`contrastRatio(${JSON.stringify(a)},${JSON.stringify(b)})`);
   say('every class clears 4.5:1 against the one ink, so the text never flips',
       bins.every(b=>cr(b.col,'#10161d')>=4.5)&&cr('#d6dade','#10161d')>=4.5,
