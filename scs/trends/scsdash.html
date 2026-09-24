@@ -11,6 +11,10 @@
 <style>
 
   :root{
+    /* One content width for the body: the map-and-table row, the footer and
+       Methods all centre on it so nothing steps in or out as you scroll. The
+       header is full-bleed and does not use it. */
+    --span:1400px;
     --bg:#0f1720; --panel:#16212e; --panel2:#1d2a3a; --line:#2a3a4d;
     --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e;
   }
@@ -45,8 +49,11 @@
   html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
             background:var(--bg);color:var(--text)}
   header{padding:11px 18px 0;border-bottom:1px solid var(--line);background:var(--panel)}
+  /* The header runs the full width of the window, deliberately: centring its
+     contents on the table's span left the title adrift in the middle of a wide
+     screen while the bar behind it still reached both edges. */
   header h1{margin:0;font-size:17px;font-weight:650}
-  header p{margin:4px 0 0;font-size:12.5px;color:var(--muted);max-width:1100px;line-height:1.5}
+  header p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
   header a{color:var(--accent)}
   header .hmeta{margin:5px 0 0;font-size:11px;color:var(--muted)}
 
@@ -80,7 +87,7 @@
      of frame every extra pixel is ocean. Cap the content column and centre it;
      a wider window just gets margin. The panels and footer share the cap so the
      three stay aligned. */
-  #maps,#panels,.foot{max-width:1100px;margin-left:auto;margin-right:auto}
+  #maps,#panels,.foot{max-width:var(--span);margin-left:auto;margin-right:auto}
   #maps{display:flex;flex-direction:column;gap:16px}
   .mapcol{flex:0 0 auto;min-width:0;background:var(--panel);border:1px solid var(--line);
           border-radius:10px;overflow:hidden}
@@ -112,7 +119,7 @@
 
   /* Methods: collapsed by default so it never competes with the figure, but
      present on the page rather than in a README nobody opens. */
-  .methods{max-width:1100px;margin:18px auto 0;border:1px solid var(--line);
+  .methods{max-width:var(--span);margin:18px auto 0;border:1px solid var(--line);
            border-radius:10px;background:var(--panel)}
   .methods>summary{cursor:pointer;user-select:none;padding:11px 16px;font-size:13px;
                    font-weight:650;color:var(--text);list-style:none}
@@ -120,26 +127,13 @@
   .methods>summary::before{content:'▸ ';color:var(--muted);font-size:11px}
   .methods[open]>summary::before{content:'▾ '}
   .methods>summary:hover{color:var(--accent)}
-  .methods .body{padding:0 18px 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .methods .body{padding:0 18px 14px;font-size:12.5px;color:var(--muted);line-height:1.65;
+                 max-width:1000px}
   .methods ol{margin:0;padding-left:20px}
   .methods li{margin:7px 0}
   .methods li b{color:var(--text);font-weight:650}
   .methods code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
                 background:var(--panel2);border-radius:3px;padding:1px 4px}
-  .guide{max-width:1100px;margin:0 auto 16px;border:1px solid var(--line);
-         border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
-         padding:11px 16px;font-size:11.5px;color:var(--muted);line-height:1.6}
-  .guide b.lead{color:var(--text)}
-  /* Per-hazard warning, for a view that is not trustworthy yet. Deliberately
-     louder than the guidance box: guidance explains how to read good data, this
-     says not to rely on it. */
-  .hazwarn{max-width:1100px;margin:0 auto 16px;border:1px solid #ff8a3d;
-           border-left:4px solid #ff8a3d;border-radius:8px;background:#3a1408;
-           padding:11px 16px;font-size:12.5px;color:#ffe3cf;line-height:1.6}
-  .hazwarn b{color:#fff}
-  html[data-theme="light"] .hazwarn{background:#fff4ec;border-color:#c2540a;
-           border-left-color:#c2540a;color:#6b2f06}
-  html[data-theme="light"] .hazwarn b{color:#3d1a02}
   .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
   .methods a{color:var(--accent)}
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
@@ -155,7 +149,7 @@
 
   /* --- the dashboard table ------------------------------------------- */
   /* map left, table right, one row */
-  #cols{max-width:1400px;margin:0 auto;display:flex;gap:16px;align-items:flex-start}
+  #cols{max-width:var(--span);margin:0 auto;display:flex;gap:16px;align-items:flex-start}
   #cols .left{flex:0 0 34%;min-width:0}
   #cols .right{flex:1 1 auto;min-width:0}
   #cols .lmap{height:420px}
@@ -180,7 +174,17 @@
   #dash td.haz .src{display:block;font-weight:400;font-size:9.5px;color:var(--muted);
                     margin-top:4px;white-space:normal;max-width:190px;line-height:1.35}
   #dash td.haz .src a{display:inline;font-size:9.5px;margin:0}
-  #dash .cell{padding:8px 10px;cursor:pointer;border-left:1px solid var(--line);min-width:104px}
+  #dash .cell{padding:0;cursor:pointer;border-left:1px solid var(--line);min-width:112px}
+  /* Split: climatology above on its class colour, trend below on the panel, so
+     the two encodings do not compete for one swatch. */
+  #dash .cell .top{padding:7px 9px 8px}
+  /* Arrow on the left, the two numbers beside it, the whole row centred on the
+     arrow so it reads as one object rather than a glyph stuck to a line. */
+  #dash .cell .bot{padding:5px 9px 6px;border-top:1px solid var(--line);
+                   display:flex;align-items:center;gap:7px}
+  /* "Significant" here means outside the 10% band — the whole lower half goes
+     bold, not just the first line, so the eye catches the cell not the digit. */
+  #dash .cell .bot.moves{font-weight:700}
   #dash .cell:hover{outline:2px solid var(--accent);outline-offset:-2px}
   /* The whole cell carries the climatology colour, so the table reads as a
      small map. Text colour flips with the background's luminance or the dark
@@ -189,12 +193,13 @@
   #dash .cell .val{font-size:15px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
   #dash .cell .unit{font-size:9.5px;opacity:.75;font-weight:400}
   #dash .cell .ret{margin-top:1px;line-height:1.3;font-weight:700}
+  #dash .cell.none .top{opacity:1}
   #dash .cell .ret .unit{opacity:.95;font-size:10px;font-weight:700}
-  #dash .cell .trd{display:flex;align-items:center;gap:5px;margin-top:3px;
-                   font-size:10.5px;font-variant-numeric:tabular-nums;opacity:.9}
+  #dash .cell .trd{font-size:11.5px;font-variant-numeric:tabular-nums;min-width:0}
+  #dash .cell .bot .unit{opacity:.8}
+  #dash .cell .pct{font-variant-numeric:tabular-nums}
   #dash .cell .arw{flex:0 0 auto;display:block}
   /* Bold only where the arrow points somewhere — outside the near-zero band. */
-  #dash .cell .trd.moves{font-weight:700}
   #dash .cell.on{outline:3px solid var(--accent2);outline-offset:-3px}
   #dash .cell.none{opacity:.35;cursor:default}
   #dash .cell.none:hover{outline:none}
@@ -209,6 +214,8 @@
             font-variant-numeric:tabular-nums}
   .skey .sw i{width:17px;height:11px;border-radius:2px;border:1px solid rgba(0,0,0,.35)}
   .skey .sw b{font-weight:600}
+  .skey .sw.t b{font-size:13px;line-height:1}
+  .skey .sw.t{gap:2px}
   @media (max-width:640px){ #dash td.haz{min-width:120px} #dash .cell{min-width:92px} }
 </style>
 </head>
@@ -278,34 +285,70 @@
           <li><b>Same numbers as the individual pages.</b> This page loads the same data files and
               runs the same functions &mdash; the county-day matrix, the least-squares fit and the
               Gaussian smoother are shared code, not a reimplementation. A cell here and the map on
-              <a href="scstrend.html">the trends page</a> at the same hazard, threshold, period and
-              smoothing will agree to the last digit. That is checked by the test suite rather than
+              <a href="scstrend.html">the hazard page</a> at the same hazard, threshold, period and
+              smoothing agree to the last digit. That is checked by the test suite rather than
               assumed.</li>
-          <li><b>What a cell shows.</b> The upper number is the climatology &mdash; mean
-              hazard days per year over the chosen period (derecho is in events per year). The
-              lower number is the least-squares trend per decade; <b>bold</b> marks
-              <i>p</i>&nbsp;&lt;&nbsp;0.05 on a two-sided <i>t</i> test of the slope.</li>
-          <li><b>Smoothed by default</b>, sigma 2&deg;, area-weighted and normalised &mdash; the
-              same setting the individual pages open on. That means <b>a cell is a neighbourhood
-              average, not the county's own count</b>: half the weight comes from within 230&nbsp;km
-              and nothing beyond 444&nbsp;km contributes. Switch <b>Smoothing</b> to <b>Raw</b> for
-              the county's own recorded values.</li>
+          <li><b>What a cell shows.</b> The large number is the climatology &mdash; mean hazard
+              days per year (derecho is in events per year). Beneath it is the same figure as a
+              <b>return period</b>, 1&divide;rate: the long-run average spacing between events,
+              not a schedule, and not a promise about any particular year. The bottom line is the
+              least-squares trend per decade, given twice: in the hazard's own units, and
+              beneath that as a percentage of the climatology in the same cell. The
+              percentage is what makes cells comparable &mdash; 0.05&nbsp;days/yr per decade
+              is a rounding error on a hazard that happens three times a year and a large
+              change on one that happens once a decade.</li>
+          <li><b>The arrow is the trend, not a significance test.</b> It points <b>up</b> for
+              rising and <b>down</b> for falling, with its length scaled to the magnitude. Where
+              the trend is smaller than 10% of that cell's climatology &mdash; the percentage
+              printed in the cell &mdash; it lies flat
+              (<b>&harr;</b>) instead: a change that small is not worth a direction whichever way
+              it points. Both sides of that comparison are the smoothed values the cell displays.
+              <i>p</i>-values are deliberately absent &mdash; &ldquo;could this slope have come
+              from noise?&rdquo; is a different question from &ldquo;is it changing enough to
+              matter?&rdquo;, and only the second one is this page's business.</li>
+          <li><b>The trend's colour is that same percentage.</b> Red for rising, blue for
+              falling, deepening in four steps at 10%, 20%, 35% and 60% of the climatology per
+              decade, and grey below 10%. It is relative rather than absolute because no
+              single absolute scale can serve a hail cell at 4.8&nbsp;days/yr and a derecho
+              cell at 0.02&nbsp;events/yr at once.</li>
+          <li><b>Colour is an absolute scale.</b> Nine classes in events per year, the same in
+              every cell, every hazard and every county, so two cells can be compared by eye. The
+              breaks step by roughly half an order of magnitude because the rates span four;
+              even spacing would put nearly every cell in one class. A climatology of exactly
+              zero is grey rather than the pale end of the scale. The palette stops at a strong
+              red-orange rather than running to near-black, so one text colour stays legible on
+              every class.</li>
+          <li><b>Always smoothed</b>, sigma 2&deg;, area-weighted and normalised &mdash; the same
+              setting the individual pages open on. That means <b>a cell is a neighbourhood
+              average, not the county's own count</b>: half the weight comes from within
+              230&nbsp;km and nothing beyond 444&nbsp;km contributes. A single county's reports
+              are far too sparse to carry a trend on their own, which is why there is no raw
+              option here; <a href="scstrend.html">the hazard page</a> has one.</li>
+          <li><b>One fixed period, 2000 onward</b>, shown beside each hazard and clipped to that
+              hazard's own record. There is no period control on purpose: pre-2000 windows
+              measure the growth of reporting as much as the weather (see below), and this page
+              is meant to be read without knowing that. Use
+              <a href="scstrend.html">the hazard page</a> to choose a window.</li>
           <li><b>Severity runs left to right</b> and the thresholds are cumulative, so a 2&Prime;
               hailstone is also counted as a 1&Prime; one. Hazards have different numbers of
               levels, so rows are ragged: tornado has five, derecho three.</li>
-          <li><b>Periods differ.</b> Hail and thunderstorm wind begin in 1955, tornado in 1950,
-              derecho in 1996 &mdash; the derecho record is NEXRAD-era only. A cell is blank where
-              the hazard has no data for the chosen window.</li>
+          <li><b>Sources.</b> Hail, tornado and thunderstorm wind are NOAA/NCEI Storm Events.
+              Derecho combines the swath archive of
+              <a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank"
+                 rel="noopener">Squitieri, Wade and Jirak (2026)</a> with the Storm Events reports
+              falling inside those swaths; that archive is NEXRAD-era only, so the derecho record
+              begins in 1996.</li>
           <li><b>Freezing rain and peak wind are not here yet.</b> They are station data &mdash; twelve
               Indiana sites, not a national county field &mdash; so there is no county value to
-              show. They remain on <a href="scstrend.html">the trends page</a>.</li>
+              show. They remain on <a href="scstrend.html">the hazard page</a>.</li>
           <li><b>June and July 1993 are missing</b> from Storm Events entirely, so 1993 is dropped
               from any window that contains it rather than counted as a quiet year.</li>
-          <li><b>Storm Events is a report database.</b> National counts rose roughly thirtyfold
-              between 1955 and the late 1990s as population, spotter networks and radar changed, so
-              trends spanning that era partly measure the growth of reporting. Windows from about
-              2000 on are far more defensible, and higher severities are much less sensitive to
-              reporting practice than &ldquo;any report&rdquo;.</li>
+          <li><b>Storm Events is a report database</b>, not a fixed observing network. National
+              counts rose roughly thirtyfold between 1955 and the late 1990s as population,
+              spotter networks and radar changed, so trends spanning that era partly measure the
+              growth of reporting. That is why this page starts at 2000. Even within it, the
+              higher severities are much less sensitive to reporting practice than
+              &ldquo;any report&rdquo;.</li>
         </ol>
       </div>
     </details>
@@ -898,7 +941,10 @@ function drawDash(){
     const spec=hazSpec(h);
     const on=covered(h);
     const [ha,hb]=hazYears(h);
-    rows+=`<tr><td class="haz">${esc(spec.label)}`+
+    /* Name the row for what is actually counted. "Hail" invites the reading
+       "how much hail"; "Hail days" says a day on which any qualifying report
+       occurred, which is what the number is. Derecho counts events, not days. */
+    rows+=`<tr><td class="haz">${esc(spec.label+' '+countWord(h)+'s')}`+
           (on?`<span class="yrs">${esc(ha+'–'+hb)}</span>`:'')+
           `<a href="scstrend.html#h=${esc(h)}&t=${S.thresh}&r=${esc(STUSPS[c])}&c=${esc(S.county)}`+
           `&p=${ha}-${hb}">full hazard map &rarr;</a>`+
@@ -908,20 +954,24 @@ function drawDash(){
       if(!t||!on){ rows+='<td class="cell none"></td>'; continue; }
       const d=cellOf(h,i);
       const sel=(h===S.hazard&&i===S.thresh)?' on':'';
-      if(!d||!isFinite(d.mean)){ rows+=`<td class="cell none"><div class="lab">${esc(t.short||t.label)}</div></td>`; continue; }
-      const bg=rateColor(d.mean);
-      const fg=CELL_INK;
-      rows+=`<td class="cell${sel}" data-h="${esc(h)}" data-t="${i}" `+
-            `style="background:${bg};color:${fg}">`+
-            `<div class="lab">${esc(t.short||t.label)}</div>`+
-            `<div class="val">${fmt(d.mean,2)} `+
-            `<span class="unit">${esc(countWord(h))}s/yr</span></div>`+
-            `<div class="ret"><span class="unit">${
-               returnPeriod(d.mean)?'one every '+esc(returnPeriod(d.mean))
-                                   :'none on record'}</span></div>`+
-            `<div class="trd${nearZero(d.trend,d.mean)?'':' moves'}">`+
-            `${arrowSVG(d.trend,trendMax(h,i),fg,d.mean)}`+
-            `<span>${fmtTrend(d.trend)}<span class="unit"> /decade</span></span></div></td>`;
+      if(!d||!isFinite(d.mean)){ rows+=`<td class="cell none"><div class="top">`+
+        `<div class="lab">${esc(t.short||t.label)}</div></div></td>`; continue; }
+      const bg=rateColor(d.mean), tc=trendColor(d.trend,d.mean);
+      rows+=`<td class="cell${sel}" data-h="${esc(h)}" data-t="${i}">`+
+            `<div class="top" style="background:${bg};color:${CELL_INK}">`+
+              `<div class="lab">${esc(t.short||t.label)}</div>`+
+              `<div class="val">${fmtVal(d.mean)} `+
+              `<span class="unit">${esc(countWord(h))}s/yr</span></div>`+
+              `<div class="ret"><span class="unit">${
+                 returnPeriod(d.mean)?'one every '+esc(returnPeriod(d.mean))
+                                     :'none on record'}</span></div>`+
+            `</div>`+
+            `<div class="bot${nearZero(d.trend,d.mean)?'':' moves'}" style="color:${tc}">`+
+              `${arrowSVG(d.trend,trendMax(h,i),tc,d.mean)}`+
+              `<div class="trd">${fmtTrend(d.trend)}`+
+              (trendPct(d.trend,d.mean)
+                 ? ` <span class="pct">(${esc(trendPct(d.trend,d.mean))})</span>` : '')+
+              `<span class="unit"> /decade</span></div></div></td>`;
     }
     rows+='</tr>';
   });
@@ -1001,7 +1051,21 @@ function scaleLegend(){
   const sw=RATE_BINS.map(b=>
     `<span class="sw"><i style="background:${b.col}"></i><b>${esc(b.lab)}</b></span>`).join('');
   return `<div class="skey"><span class="cap">Events per year</span>${sw}`+
-         `<span class="sw"><i style="background:${ZERO_GREY}"></i><b>0</b></span></div>`;
+         `<span class="sw"><i style="background:${ZERO_GREY}"></i><b>0</b></span></div>`+
+         trendLegend();
+}
+/* The lower half's colours need their own key: they are a different quantity —
+   change relative to that cell's own climatology — on a diverging scale. */
+function trendLegend(){
+  const P=trendPal(), st=TREND_STEPS;
+  const lab=k=>k===st.length-1?`${Math.round(st[k]*100)}%+`:`${Math.round(st[k]*100)}%`;
+  const dn=P.dn.map((c,k)=>`<span class="sw t"><b style="color:${c}">&darr;</b>`+
+                           `<span>${lab(k)}</span></span>`).reverse().join('');
+  const up=P.up.map((c,k)=>`<span class="sw t"><b style="color:${c}">&uarr;</b>`+
+                           `<span>${lab(k)}</span></span>`).join('');
+  return `<div class="skey"><span class="cap">Trend, % of climatology per decade</span>`+
+         `${dn}<span class="sw t"><b style="color:${P.flat}">&harr;</b>`+
+         `<span>&lt;10%</span></span>${up}</div>`;
 }
 /* Arrow length scale: 99.5th percentile of |trend| over all counties, again per
    hazard and severity, so the arrow answers "big for this hazard?" rather than
@@ -1042,6 +1106,36 @@ function nearZero(tr,mean){
   if(!isFinite(mean)||mean<=0) return Math.abs(tr)<1e-9;
   return Math.abs(tr) < NEARZERO*mean;
 }
+/* The trend gets its own encoding, in the lower half of the cell: the climatology
+   colour above answers "how often?", and a second colour below answers "which way,
+   and how fast?" without the two fighting over the same swatch.
+   Strength is the trend as a fraction of that cell's own climatology, per decade —
+   the only way a hail cell at 4.8 days/yr and a derecho cell at 0.02 events/yr can
+   be put on one scale. Inside the 10% band it is grey: the direction is not worth
+   colouring. Red rising, blue falling, in four steps each way.
+   Two palettes, because the lower half has no fill of its own and therefore sits on
+   whichever panel the theme provides. On the dark theme stronger means brighter; on
+   the light theme stronger means darker. Every entry clears 4.5:1 on its own
+   background — the light theme's weakest steps had to be darkened to manage it. */
+const TREND_STEPS=[0.10,0.20,0.35,0.60];      // |trend| / climatology, per decade
+const TREND_COLS={
+  dark :{ up:['#ffc2b0','#ff9d85','#ff7454','#ff4b28'],
+          dn:['#bfe0ff','#8ec6ff','#5aa9ff','#3d93f5'], flat:'#93a3b3' },
+  light:{ up:['#c9503a','#b23a24','#96240f','#7a1400'],
+          dn:['#2d78b8','#1b5f9c','#0d4a80','#053764'], flat:'#6a7a8a' }
+};
+function trendPal(){ return TREND_COLS[S.theme]||TREND_COLS.dark; }
+/* Test hook: page-level consts are invisible to the harness's eval. */
+function trendPalOf(theme){ return TREND_COLS[theme]||null; }
+function trendSteps(){ return TREND_STEPS.slice(); }
+function trendColor(tr,mean){
+  const P=trendPal();
+  if(!isFinite(tr)||nearZero(tr,mean)) return P.flat;
+  const r=(isFinite(mean)&&mean>0)?Math.abs(tr)/mean:Infinity;
+  const ramp=tr>0?P.up:P.dn;
+  let k=0; while(k<TREND_STEPS.length-1 && r>=TREND_STEPS[k+1]) k++;
+  return ramp[k];
+}
 /* Trend as an arrow: up rising, down falling, length with magnitude, and a flat
    double head inside the near-zero band above.
    No significance encoding. A p-value answers "could this slope have come from
@@ -1050,12 +1144,14 @@ function nearZero(tr,mean){
    Two encodings of near-nothing, one of them requiring a stats course to read,
    was one too many. */
 function arrowSVG(tr,tmax,col,mean){
-  const L0=9, L1=26;
+  /* Sized to span both lines of the lower half rather than sit on the first:
+     the arrow is the fastest thing to read in the cell and was the smallest. */
+  const L0=13, L1=36;
   if(!isFinite(tr)) return `<svg class="arw" width="${L1}" height="${L1}"></svg>`;
   const flat=nearZero(tr,mean);
   const f=Math.min(1,Math.abs(tr)/Math.max(1e-12,tmax));
-  const len=flat?14:L0+(L1-L0)*Math.sqrt(f);   // sqrt: area, not length, reads as size
-  const w=flat?1.9:Math.max(1.6,1.6+2.4*f);
+  const len=flat?20:L0+(L1-L0)*Math.sqrt(f);   // sqrt: area, not length, reads as size
+  const w=flat?2.4:Math.max(2.2,2.2+3.2*f);
   const ang=flat?0:(tr>=0?-90:90);             // SVG y grows downward
   const c=L1/2, h=Math.max(3.4,w*2.1);
   const tail=flat?c-len/2+h:c-len/2;
@@ -1069,9 +1165,22 @@ function arrowSVG(tr,tmax,col,mean){
          `stroke-width="${w}" stroke-linecap="round">`+
          `<path d="${d}" fill="none"/>${heads}</g></svg>`;
 }
-/* Trends run an order of magnitude below the climatology, so two decimals turns
-   most of the table into +0.00. Give anything below 1 a third. */
-function fmtTrend(v){ return sgn(v, (isFinite(v)&&Math.abs(v)<1)?3:2); }
+/* Two decimals reads cleanly and is enough for almost everything here. The
+   exception is the rarest cells, where two decimals rounds a real number to
+   0.00 and the reader cannot tell it from nothing; below 0.05 a third digit
+   earns its place. Same rule for the climatology and the trend, so a column
+   does not change precision halfway down. */
+function dp(v){ return (isFinite(v)&&Math.abs(v)<0.05)?3:2; }
+function fmtVal(v){ return fmt(v, dp(v)); }
+function fmtTrend(v){ return sgn(v, dp(v)); }
+/* The trend again as a share of the climatology directly above it — the same
+   ratio the colour and the flat-arrow band are built on, so the reader can see
+   the number behind the encoding rather than taking it on trust. */
+function trendPct(tr,mean){
+  if(!isFinite(tr)||!isFinite(mean)||mean<=0) return null;
+  const r=tr/mean*100;
+  return (r>=0?'+':'') + (Math.abs(r)<10?r.toFixed(1):Math.round(r)) + '%';
+}
 /* The same number the other way round. "0.02 days/yr" is hard to feel; "one
    every 50 years" is not. It is the mean return period, 1/rate — a long-run
    average, not a schedule. */

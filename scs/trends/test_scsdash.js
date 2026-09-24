@@ -58,6 +58,7 @@ const fmtv=v=>(v==null||!isFinite(v))?'—':(+v).toFixed(4);
 const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
 
 (async()=>{
+  let cr;
   const D=boot('scsdash.html'); const w=D.w;
   const $=id=>w.document.getElementById(id);
   await new Promise(r=>setTimeout(r,6000));
@@ -72,7 +73,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('four hazard rows',rows.length===4,rows.length+' rows');
   say('rows are the county hazards, in order',
       rows.map(r=>r.querySelector('td.haz').firstChild.textContent.trim()).join('|')
-        ==='Hail|Tornado|Thunderstorm Wind|Derecho',
+        ==='Hail days|Tornado days|Thunderstorm Wind days|Derecho events',
       rows.map(r=>r.querySelector('td.haz').firstChild.textContent.trim()).join(' | '));
   say('no station hazards',!/Freezing|Peak Wind/.test($('dashBody').innerHTML));
   const cells=[...$('dashBody').querySelectorAll('.cell[data-h]')];
@@ -80,18 +81,19 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       cells.length>12&&cells.every(c=>/\d/.test(c.querySelector('.val').textContent)&&
                                       c.querySelector('.trd')),
       cells.length+' live cells');
-  say('the whole cell is coloured, not a swatch',
-      cells.every(c=>/background:(#[0-9a-f]{6}|rgb\()/i.test(c.getAttribute('style')||''))&&
+  say('each cell is split: climatology above, trend below',
+      cells.every(c=>c.querySelector('.top')&&c.querySelector('.bot')));
+  say('the class colour is on the upper half only',
+      cells.every(c=>/background:(#[0-9a-f]{6}|rgb\()/i.test(c.querySelector('.top').getAttribute('style')||''))&&
+      cells.every(c=>!/background/.test(c.querySelector('.bot').getAttribute('style')||''))&&
       !/class="swatch"/.test($('dashBody').innerHTML),
-      cells[0].getAttribute('style'));
-  say('and every cell gets real ink, never inherit',
-      cells.every(c=>/color:#[0-9a-f]{6}/i.test(c.getAttribute('style')||'')),
-      cells.map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1])
-           .filter(x=>x==='inherit').length+' inherited');
-  say('the ink is the same on the palest cell and the deepest',
-      new Set(cells.map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1])).size===1);
+      cells[0].querySelector('.top').getAttribute('style'));
+  say('the upper half takes one dark ink everywhere',
+      new Set(cells.map(c=>/color:([^;]+)/.exec(c.querySelector('.top').getAttribute('style'))[1]
+                             .trim())).size===1&&
+      cells.every(c=>/color:#10161d/i.test(c.querySelector('.top').getAttribute('style'))));
   say('every populated cell draws a trend arrow',
-      cells.every(c=>c.querySelector('.trd svg.arw')));
+      cells.every(c=>c.querySelector('.bot > svg.arw')));
   say('severity columns are ragged, as the hazards differ',
       rows.some(r=>r.querySelectorAll('.cell.none').length>0));
 
@@ -134,6 +136,32 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   const btns=[...w.document.querySelectorAll('header .bar button')].map(b=>b.id);
   say('four buttons and nothing else',
       btns.join(',')==='usBtn,resetBtn,themeBtn,linkBtn',btns.join(', '));
+  const meth=w.document.querySelector('.methods').innerHTML;
+  say('Methods no longer describes controls the page does not have',
+      !/Switch <b>Smoothing<\/b>/.test(meth)&&!/chosen period|chosen window/.test(meth),
+      (meth.match(/Switch <b>Smoothing<\/b>|chosen period|chosen window/g)||['none']).join(','));
+  say('and no longer claims the trend is bolded for significance',
+      !/p<\/i>&nbsp;&lt;&nbsp;0\.05/.test(meth)&&!/two-sided/.test(meth));
+  const want=['return period','10% of','absolute scale','2000 onward','Squitieri',
+              'percentage of the climatology','10%, 20%, 35% and 60%'];
+  say('Methods covers what the page now does',want.every(k=>meth.includes(k)),
+      want.filter(k=>!meth.includes(k)).join(',')||'all present');
+  say('the cell itself stays terse, the explaining happens in Methods',
+      !/of climatology/.test($('dashBody').innerHTML)&&
+      /^\([+-][\d.]+%\)$/.test(
+        $('dashBody').querySelector('.cell[data-h] .pct').textContent.trim()),
+      $('dashBody').querySelector('.cell[data-h] .pct').textContent.trim());
+  /* jsdom does not resolve var(), so check the declarations rather than the
+     computed pixels: every band must defer to the one custom property, and that
+     property must be set once. */
+  const css=w.document.querySelector('style').textContent;
+  say('the table, footer and Methods all defer to one span',
+      /--span:\s*1400px/.test(css)&&
+      (css.match(/max-width:\s*var\(--span\)/g)||[]).length>=3&&
+      !/max-width:\s*1100px/.test(css),
+      (css.match(/max-width:\s*var\(--span\)/g)||[]).length+' rules share it');
+  say('but the header runs full width, not centred on it',
+      !/header>\*/.test(css)&&!/header p\{[^}]*margin:4px auto/.test(css));
   say('the page is titled for what it covers',
       w.document.querySelector('header h1').textContent
         ==='United States County-Level Extreme Weather Dashboard',
@@ -166,6 +194,11 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       $('dashBody').querySelector('td.haz > a').getAttribute('href').split('&p=').pop());
   say('the subtitle no longer names a single window',
       !/2000/.test($('dashSub').innerHTML),$('dashSub').textContent);
+  say('the row name says what is counted, days or events',
+      [...$('dashBody').querySelectorAll('tr')].every(r=>{
+        const nm=r.querySelector('td.haz').firstChild.textContent.trim();
+        const unit=r.querySelector('.cell[data-h] .unit');
+        return !unit||nm.endsWith(unit.textContent.split('/')[0].trim()); }));
   const src=h=>[...$('dashBody').querySelectorAll('tr')]
                  .find(r=>new RegExp('^'+h).test(r.querySelector('td.haz').firstChild.textContent.trim()))
                  .querySelector('td.haz .src').textContent.trim();
@@ -334,9 +367,14 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       w.eval("cellRaw('hail',1)").toFixed(4)+' raw');
   /* And the smoothed trend is the one the trends page draws at smooth='2',
      which the 16-cell cross-check above already pins to 1e-6. */
-  say('trends below 1 get three decimals, above it two',
-      w.eval("fmtTrend(0.004)")==='+0.004'&&w.eval("fmtTrend(-2.5)")==='-2.50',
-      w.eval("fmtTrend(0.004)")+' / '+w.eval("fmtTrend(-2.5)"));
+  say('two decimals by default, three only below 0.05',
+      w.eval("fmtTrend(0.004)")==='+0.004'&&w.eval("fmtTrend(-0.049)")==='-0.049'&&
+      w.eval("fmtTrend(0.05)")==='+0.05'&&w.eval("fmtTrend(-2.5)")==='-2.50',
+      [w.eval("fmtTrend(0.004)"),w.eval("fmtTrend(0.05)"),w.eval("fmtTrend(-2.5)")].join(' '));
+  say('and the climatology follows the same rule',
+      w.eval("fmtVal(0.004)")==='0.004'&&w.eval("fmtVal(0.05)")==='0.05'&&
+      w.eval("fmtVal(4.756)")==='4.76',
+      [w.eval("fmtVal(0.004)"),w.eval("fmtVal(0.05)"),w.eval("fmtVal(4.756)")].join(' '));
   console.log('\n--- the rate restated as a return period');
   const rp=r=>w.eval(`JSON.stringify(returnPeriod(${r}))`);
   say('a common hazard is quoted in months',rp(1.8)==='"6.7 months"',rp(1.8));
@@ -355,12 +393,24 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
              const yr=+m[1]/(m[2]==='months'?12:1);
              return Math.abs(yr-1/v)/(1/v)<0.02; })());
 
-  say('the trend reads bold where the arrow points, plain where it is flat',
-      [...$('dashBody').querySelectorAll('.cell[data-h] .trd')].every(t=>{
-        const flat=/rotate\(0 /.test(t.querySelector('svg').outerHTML);
-        return t.classList.contains('moves')===!flat; }),
-      [...$('dashBody').querySelectorAll('.cell[data-h] .trd.moves')].length+' of '+
-      [...$('dashBody').querySelectorAll('.cell[data-h] .trd')].length+' bold');
+  say('the whole lower half goes bold where the arrow points, not just one line',
+      [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].every(b=>{
+        const flat=/rotate\(0 /.test(b.querySelector('svg').outerHTML);
+        return b.classList.contains('moves')===!flat; })&&
+      !/class="trd moves"/.test($('dashBody').innerHTML),
+      [...$('dashBody').querySelectorAll('.cell[data-h] .bot.moves')].length+' of '+
+      [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].length+' bold');
+  say('the arrow sits beside one line carrying both figures',
+      [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].every(b=>
+        b.firstElementChild.tagName.toLowerCase()==='svg'&&
+        b.children.length===2&&b.querySelector('.trd .pct')));
+  say('that line reads value, percentage, unit, in order',
+      /^[+-][\d.]+ \([+-][\d.]+%\) \/decade$/.test(
+        $('dashBody').querySelector('.cell[data-h] .trd').textContent.trim()),
+      $('dashBody').querySelector('.cell[data-h] .trd').textContent.trim());
+  say('and is tall enough to span both lines',
+      +$('dashBody').querySelector('.cell[data-h] svg.arw').getAttribute('height')>=34,
+      $('dashBody').querySelector('.cell[data-h] svg.arw').getAttribute('height')+'px');
 
   console.log('\n--- one absolute colour scale');
   const col=v=>w.eval(`rateColor(${v})`);
@@ -381,11 +431,12 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       col(1e-6)+' / '+col(1e6));
   say('the same rate is the same colour in every hazard and severity',
       w.eval("rateColor(0.07)")===w.eval("rateColor(0.07)"));
+  const key1=$('dashFoot').querySelectorAll('.skey')[0];
   say('the key is drawn with the table, one swatch per class plus zero',
-      $('dashFoot').querySelectorAll('.skey .sw').length===bins.length+1,
-      $('dashFoot').querySelectorAll('.skey .sw').length+' swatches');
+      key1.querySelectorAll('.sw').length===bins.length+1,
+      key1.querySelectorAll('.sw').length+' swatches');
   say('and every swatch shows a colour the cells actually use',
-      [...$('dashFoot').querySelectorAll('.skey .sw i')]
+      [...key1.querySelectorAll('.sw i')]
         .map(i=>i.getAttribute('style')).every((st,k)=>
           st.includes(k<bins.length?bins[k].col:'214,218,222')));
   say('the old per-cell scaling is gone',w.eval("typeof cellMax")==='undefined');
@@ -396,7 +447,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       /County-level maps by hazard/.test(w.document.querySelector('header p').textContent)&&
       /2° grid maps by hazard/.test(w.document.querySelector('header p').textContent),
       w.document.querySelector('header p').textContent.split('·')[0].trim());
-  const cr=(a,b)=>+w.eval(`contrastRatio(${JSON.stringify(a)},${JSON.stringify(b)})`);
+  cr=(a,b)=>+w.eval(`contrastRatio(${JSON.stringify(a)},${JSON.stringify(b)})`);
   say('every class clears 4.5:1 against the one ink, so the text never flips',
       bins.every(b=>cr(b.col,'#10161d')>=4.5)&&cr('#d6dade','#10161d')>=4.5,
       'worst '+Math.min(...bins.map(b=>cr(b.col,'#10161d'))).toFixed(2)+':1');
@@ -404,15 +455,65 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       cr('#bd0026','#10161d')<4.5,
       'the old top class was '+cr('#bd0026','#10161d').toFixed(2)+':1');
   say('every populated cell is coloured off that one scale',
-      [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
-        const bg=/background:([^;]+)/.exec(c.getAttribute('style'))[1].trim();
+      [...$('dashBody').querySelectorAll('.cell[data-h] .top')].every(t=>{
+        const bg=/background:([^;]+)/.exec(t.getAttribute('style'))[1].trim();
         return bins.some(b=>b.col===bg)||bg==='rgb(214,218,222)'; }));
-  say('every cell carries the same ink, dark, with no exceptions',
-      [...new Set([...$('dashBody').querySelectorAll('.cell[data-h]')]
-        .map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1].trim()))]
-        .join('|')==='#10161d',
-      [...new Set([...$('dashBody').querySelectorAll('.cell[data-h]')]
-        .map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1].trim()))].join(' '));
+  console.log('\n--- the trend has its own colour, relative to the climatology');
+  const tcol=(tr,mean)=>w.eval(`trendColor(${tr},${mean})`);
+  const P=JSON.parse(w.eval("JSON.stringify(trendPalOf('dark'))"));
+  const steps=JSON.parse(w.eval("JSON.stringify(trendSteps())"));
+  say('inside the 10% band it is grey, whichever way it points',
+      tcol(0.05,1)===P.flat&&tcol(-0.05,1)===P.flat&&tcol(0,1)===P.flat);
+  say('rising is red, falling is blue',
+      P.up.includes(tcol(0.5,1))&&P.dn.includes(tcol(-0.5,1)),
+      tcol(0.5,1)+' / '+tcol(-0.5,1));
+  say('strength steps with the trend as a share of the climatology',
+      [0.12,0.25,0.45,0.9].map(r=>tcol(r,1)).join(',')===P.up.join(','),
+      [0.12,0.25,0.45,0.9].map(r=>tcol(r,1)).join(' '));
+  say('the same absolute trend means different things at different climatologies',
+      tcol(0.5,1)!==tcol(0.5,10)&&tcol(0.5,10)===P.flat,
+      '0.5 on a climo of 1 → '+tcol(0.5,1)+', on 10 → '+tcol(0.5,10));
+  say('the steps are the ones the key states',steps.join(',')==='0.1,0.2,0.35,0.6',
+      steps.join(', '));
+  say('every trend colour clears 4.5:1 on its own panel',
+      [...P.up,...P.dn,P.flat].every(c=>cr(c,'#16212e')>=4.5)&&
+      (()=>{const L=JSON.parse(w.eval("JSON.stringify(trendPalOf('light'))"));
+            return [...L.up,...L.dn,L.flat].every(c=>cr(c,'#ffffff')>=4.4);})(),
+      'worst dark '+Math.min(...[...P.up,...P.dn,P.flat].map(c=>cr(c,'#16212e'))).toFixed(2)+':1');
+  say('the arrow takes the trend colour, not the cell ink',
+      [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
+        const col=/color:([^;]+)/.exec(c.querySelector('.bot').getAttribute('style'))[1].trim();
+        return c.querySelector('.bot svg').outerHTML.includes(col); }));
+  say('bold marks the same cells the colour does',
+      [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].every(b=>{
+        const col=/color:([^;]+)/.exec(b.getAttribute('style'))[1].trim();
+        return b.classList.contains('moves')===(col!==P.flat); }));
+  /* Compare against the underlying values, not the rounded ones on screen: a
+     cell showing "-0.000 /decade" over "0.002 days/yr" is a real -20%, and
+     parsing the display would call it zero. */
+  say('the ratio behind the colour is printed as well',
+      [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
+        const p=c.querySelector('.pct'); if(!p) return false;
+        const want=JSON.parse(w.eval(
+          `(function(){const d=cellOf('${c.dataset.h}',${c.dataset.t});`+
+          `return JSON.stringify(trendPct(d.trend,d.mean));})()`));
+        return p.textContent.trim()==='('+want+')'; }),
+      $('dashBody').querySelector('.cell[data-h] .pct').textContent.trim());
+  say('it is signed, and rounds harder as it grows',
+      w.eval("trendPct(0.05,1)")==='+5.0%'&&w.eval("trendPct(-0.05,1)")==='-5.0%'&&
+      w.eval("trendPct(0.5,1)")==='+50%',
+      [w.eval("trendPct(0.05,1)"),w.eval("trendPct(0.5,1)")].join(' '));
+  say('a zero climatology has no percentage rather than an infinite one',
+      w.eval("JSON.stringify(trendPct(0.5,0))")==='null'&&
+      w.eval("JSON.stringify(trendPct(NaN,1))")==='null');
+  say('the printed ratio agrees with the band the colour came from',
+      [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
+        const pct=Math.abs(parseFloat(c.querySelector('.pct').textContent.replace(/[()]/g,'')));
+        const col=/color:([^;]+)/.exec(c.querySelector('.bot').getAttribute('style'))[1].trim();
+        return (pct<10)===(col===P.flat); }));
+  say('the key explains the trend scale too',
+      /Trend, % of climatology per decade/.test($('dashFoot').innerHTML)&&
+      $('dashFoot').querySelectorAll('.skey').length===2);
 
   console.log('\n--- a shared link reopens the same view');
   const L=boot('scsdash.html','#c=06037&h=wind&t=1&bg=road');
