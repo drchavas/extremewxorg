@@ -88,6 +88,8 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       cells.every(c=>/color:#[0-9a-f]{6}/i.test(c.getAttribute('style')||'')),
       cells.map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1])
            .filter(x=>x==='inherit').length+' inherited');
+  say('the ink is the same on the palest cell and the deepest',
+      new Set(cells.map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1])).size===1);
   say('every populated cell draws a trend arrow',
       cells.every(c=>c.querySelector('.trd svg.arw')));
   say('severity columns are ragged, as the hazards differ',
@@ -394,16 +396,23 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       /County-level maps by hazard/.test(w.document.querySelector('header p').textContent)&&
       /2° grid maps by hazard/.test(w.document.querySelector('header p').textContent),
       w.document.querySelector('header p').textContent.split('·')[0].trim());
-  say('and grey still takes dark ink',w.eval("inkOn('rgb(214,218,222)')")==='#10161d');
+  const cr=(a,b)=>+w.eval(`contrastRatio(${JSON.stringify(a)},${JSON.stringify(b)})`);
+  say('every class clears 4.5:1 against the one ink, so the text never flips',
+      bins.every(b=>cr(b.col,'#10161d')>=4.5)&&cr('#d6dade','#10161d')>=4.5,
+      'worst '+Math.min(...bins.map(b=>cr(b.col,'#10161d'))).toFixed(2)+':1');
+  say('and the palette stops before it would need white text',
+      cr('#bd0026','#10161d')<4.5,
+      'the old top class was '+cr('#bd0026','#10161d').toFixed(2)+':1');
   say('every populated cell is coloured off that one scale',
       [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
         const bg=/background:([^;]+)/.exec(c.getAttribute('style'))[1].trim();
         return bins.some(b=>b.col===bg)||bg==='rgb(214,218,222)'; }));
-  say('text ink flips with the cell background, hex or rgb',
-      w.eval("inkOn('rgb(255,255,204)')")==='#10161d'&&
-      w.eval("inkOn('rgb(128,0,38)')")==='#ffffff'&&
-      w.eval("inkOn('#ffffcc')")==='#10161d'&&w.eval("inkOn('#800026')")==='#ffffff'&&
-      w.eval("inkOn('#bd0026')")==='#ffffff');
+  say('every cell carries the same ink, dark, with no exceptions',
+      [...new Set([...$('dashBody').querySelectorAll('.cell[data-h]')]
+        .map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1].trim()))]
+        .join('|')==='#10161d',
+      [...new Set([...$('dashBody').querySelectorAll('.cell[data-h]')]
+        .map(c=>/color:([^;]+)/.exec(c.getAttribute('style'))[1].trim()))].join(' '));
 
   console.log('\n--- a shared link reopens the same view');
   const L=boot('scsdash.html','#c=06037&h=wind&t=1&bg=road');

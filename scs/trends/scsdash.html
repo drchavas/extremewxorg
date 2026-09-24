@@ -910,7 +910,7 @@ function drawDash(){
       const sel=(h===S.hazard&&i===S.thresh)?' on':'';
       if(!d||!isFinite(d.mean)){ rows+=`<td class="cell none"><div class="lab">${esc(t.short||t.label)}</div></td>`; continue; }
       const bg=rateColor(d.mean);
-      const fg=inkOn(bg);
+      const fg=CELL_INK;
       rows+=`<td class="cell${sel}" data-h="${esc(h)}" data-t="${i}" `+
             `style="background:${bg};color:${fg}">`+
             `<div class="lab">${esc(t.short||t.label)}</div>`+
@@ -968,15 +968,22 @@ function sourceHtml(h){
    The breaks step by roughly half an order of magnitude because the rates span
    four; even spacing in rate would put fourteen of sixteen cells in the bottom
    class. */
+/* The palette stops where the text would have to change colour. It used to run
+   the full yellow-to-near-black ramp, which meant flipping the ink between dark
+   and white partway down a column — a visible seam that made the table look
+   like two tables. Every class below clears 4.5:1 against one dark ink, so the
+   text colour is constant and the hue still carries the order. The cost is the
+   deep crimson end: the top class is a strong red-orange instead. */
+const CELL_INK='#10161d';
 const RATE_BINS=[
-  {lo:2,    col:'#800026', lab:'2+'},
-  {lo:1,    col:'#bd0026', lab:'1'},
-  {lo:0.5,  col:'#e31a1c', lab:'0.5'},
-  {lo:0.2,  col:'#fc4e2a', lab:'0.2'},
-  {lo:0.1,  col:'#fd8d3c', lab:'0.1'},
-  {lo:0.05, col:'#feb24c', lab:'0.05'},
-  {lo:0.02, col:'#fed976', lab:'0.02'},
-  {lo:0.01, col:'#ffeda0', lab:'0.01'},
+  {lo:2,    col:'#f03423', lab:'2+'},
+  {lo:1,    col:'#fc5a2d', lab:'1'},
+  {lo:0.5,  col:'#fd853a', lab:'0.5'},
+  {lo:0.2,  col:'#fea245', lab:'0.2'},
+  {lo:0.1,  col:'#febc56', lab:'0.1'},
+  {lo:0.05, col:'#fed773', lab:'0.05'},
+  {lo:0.02, col:'#ffe690', lab:'0.02'},
+  {lo:0.01, col:'#fff3ae', lab:'0.01'},
   {lo:0,    col:'#ffffcc', lab:'>0'}
 ];
 function rateColor(v){
@@ -1006,24 +1013,19 @@ function trendMax(h,ti){
   const v=[...FIELDS[h][ti].trend].filter(isFinite).map(Math.abs).sort((p,q)=>p-q);
   return (TMAXC[k]=quantile(v,0.995)||1);
 }
-/* The cell background runs the whole climatology ramp, whose dark end swallows
-   dark text and whose pale end swallows white. Pick by luminance.
-   Takes hex as well as rgb(): the banded scale hands over '#bd0026', and the
-   rgb-only version silently returned 'inherit' for every one of them, which put
-   the table's light body text on a pale yellow cell. */
-function inkOn(col){
-  const c=String(col).trim();
-  let r,g,b;
-  const hex=/^#([0-9a-f]{6})$/i.exec(c) || /^#([0-9a-f]{3})$/i.exec(c);
-  if(hex){
-    const h=hex[1].length===3?hex[1].replace(/./g,x=>x+x):hex[1];
-    r=parseInt(h.slice(0,2),16); g=parseInt(h.slice(2,4),16); b=parseInt(h.slice(4,6),16);
-  } else {
-    const m=/(\d+)\D+(\d+)\D+(\d+)/.exec(c);
-    if(!m) return 'inherit';
-    r=+m[1]; g=+m[2]; b=+m[3];
-  }
-  return (0.299*r+0.587*g+0.114*b)/255>0.55?'#10161d':'#ffffff';
+/* WCAG relative luminance and contrast ratio, so the palette above can be
+   checked rather than eyeballed. Nothing on the page calls these at render
+   time; they exist so the test can assert every class stays legible with one
+   ink, which is the whole reason the palette stops where it does. */
+function relLum(col){
+  const h=String(col).trim().replace('#','');
+  const v=[0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255)
+                 .map(u=>u<=0.03928?u/12.92:Math.pow((u+0.055)/1.055,2.4));
+  return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];
+}
+function contrastRatio(a,b){
+  const x=relLum(a), y=relLum(b), hi=Math.max(x,y), lo=Math.min(x,y);
+  return (hi+0.05)/(lo+0.05);
 }
 /* A trend smaller than 10% of the climatological value is not worth a
    direction: at that size the arrow says "rising" about a change nobody would
