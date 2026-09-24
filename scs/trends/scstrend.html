@@ -1123,6 +1123,26 @@ function syncHazWarn(){
   el.style.display = h ? '' : 'none';
 }
 
+/* Cross-page probe. Returns the value THIS page would draw for one county at a
+   given hazard, threshold, period and smoothing, then restores the controls.
+   scsdash.html reproduces these numbers and its test suite checks every
+   hazard x severity cell against this — which is the only way to be sure the
+   dashboard has not quietly drifted from the individual pages. Returns null if
+   the hazard is not loaded yet; pick it in the Hazard menu first. */
+function probe(hazard,thresh,geoid,y0,y1,smooth){
+  if(!HZ[hazard] || gidxOf[geoid]===undefined) return null;
+  const keep={h:S.hazard,t:S.thresh,a:S.y0,b:S.y1,s:S.smooth};
+  S.hazard=hazard; S.thresh=thresh; S.y0=y0; S.y1=y1; S.smooth=smooth;
+  rebuildMatrix();
+  const cm=countyMetrics();
+  const m=smoothField(cm.mean), tr=smoothField(cm.trend);
+  const c=gidxOf[geoid];
+  const out={mean:m[c], trend:tr[c], p:cm.pv[c], nyr:cm.nyr};
+  S.hazard=keep.h; S.thresh=keep.t; S.y0=keep.a; S.y1=keep.b; S.smooth=keep.s;
+  rebuildMatrix();
+  return out;
+}
+
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
   /* The derecho hazard is Storm Events wind reports, but WHICH storms count is

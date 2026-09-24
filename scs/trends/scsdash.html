@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>U.S. County-Level Extreme Weather Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+<style>
+
+  :root{
+    --bg:#0f1720; --panel:#16212e; --panel2:#1d2a3a; --line:#2a3a4d;
+    --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e;
+  }
+  /* Light theme. The button used to repaint only the maps and the SVG panels,
+     leaving the chrome dark — white gutters wrapped around dark navy cards, and
+     links that all but vanished. These are the same values the JS THEME.light
+     uses, so the page and the drawings agree. */
+  html[data-theme="light"]{
+    --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
+  }
+  html[data-theme="light"] body{
+    background:
+      radial-gradient(1100px 520px at 80% -10%, rgba(43,111,184,.07), transparent 60%),
+      radial-gradient(900px 460px at 0% 0%, rgba(179,100,10,.06), transparent 55%),
+      linear-gradient(180deg,#f7f9fb 0%, #ffffff 100%);
+  }
+  html[data-theme="light"] .btn.on{background:rgba(43,111,184,.14)}
+  html[data-theme="light"] #msg code{background:#eef2f6}
+  html[data-theme="light"] .lmap,
+  html[data-theme="light"] .lmap .leaflet-container{background:#eef2f6}
+  html[data-theme="light"] .cbar{background:rgba(255,255,255,.94)}
+  html[data-theme="light"] .cbar .zchip i{background:#fff;border-color:#9fb0c0}
+  html[data-theme="light"] .hint{background:rgba(255,255,255,.9)}
+  html[data-theme="light"] .leaflet-control-attribution{
+    background:rgba(255,255,255,.8)!important;color:#5b6b7c!important}
+  html[data-theme="light"] .leaflet-control-attribution a{color:#2b6fb8!important}
+  html[data-theme="light"] .ctytip{background:#ffffff!important;color:#16212e!important;
+    border:1px solid #c9d4de!important}
+
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            background:var(--bg);color:var(--text)}
+  header{padding:11px 18px 0;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{margin:0;font-size:17px;font-weight:650}
+  header p{margin:4px 0 0;font-size:12.5px;color:var(--muted);max-width:1100px;line-height:1.5}
+  header a{color:var(--accent)}
+  header .hmeta{margin:5px 0 0;font-size:11px;color:var(--muted)}
+
+  .bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;padding:10px 0 11px}
+  .fld{display:flex;flex-direction:column;gap:3px}
+  .fld label{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  select,input[type=number]{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+       border-radius:6px;padding:5px 7px;font-size:12.5px;font-family:inherit}
+  select:focus,input:focus{outline:none;border-color:var(--accent)}
+  input[type=number]{width:68px}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;
+       font-size:12px;padding:6px 11px;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--accent)}
+  /* The zoom-out is the one control people hunt for after wandering off into a
+     corner of the map, so it is picked out rather than sitting in the row. */
+  .btn-us{color:var(--accent2);font-weight:700}
+  .btn-us:hover{border-color:var(--accent2)}
+  .btn.on{background:rgba(70,163,255,.2);border-color:var(--accent)}
+
+  #wrap{padding:14px 18px 28px}
+  #msg{padding:60px 18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+  #msg code{background:#0b1119;border:1px solid var(--line);border-radius:6px;padding:7px 10px;
+            display:inline-block;margin:8px 0;color:var(--accent2)}
+
+  /* The two maps are one instrument: they share a view, so they get one frame. */
+  /* One column, like tctrend.html: side by side, each map is barely half the
+     width of a country that is 1.65 times wider than it is tall, so both end up
+     tiny. Stacked they get the full width, and the phone layout falls out for
+     free instead of needing a breakpoint to undo the columns. */
+  /* At zoom 4 the lower 48 is only about 660px across, so past roughly 1100px
+     of frame every extra pixel is ocean. Cap the content column and centre it;
+     a wider window just gets margin. The panels and footer share the cap so the
+     three stay aligned. */
+  #maps,#panels,.foot{max-width:1100px;margin-left:auto;margin-right:auto}
+  #maps{display:flex;flex-direction:column;gap:16px}
+  .mapcol{flex:0 0 auto;min-width:0;background:var(--panel);border:1px solid var(--line);
+          border-radius:10px;overflow:hidden}
+  .maphead{padding:10px 14px 8px}
+  .maphead h2{margin:0;font-size:14.5px;font-weight:650}
+  .maphead p{margin:2px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
+  .maphead .smtag{color:var(--accent2);font-weight:700}
+  .lmap{height:460px;background:#0b1119;position:relative}
+  .lmap .leaflet-container{background:#0b1119}
+  .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
+        border:1px solid var(--line);border-radius:8px;padding:8px 9px 6px;
+        font-size:10px;color:var(--muted);backdrop-filter:blur(6px)}
+  .cbar .strip{width:13px;height:150px;border:1px solid var(--line);margin:0 auto}
+  .cbar .ticks{display:flex;flex-direction:column;justify-content:space-between;
+               height:150px;margin-left:5px;font-variant-numeric:tabular-nums}
+  .cbar .row{display:flex}
+  .cbar .cap{text-align:center;margin-bottom:4px;color:var(--text);font-size:10.5px}
+  .cbar .zchip{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:9.5px;
+               color:var(--muted);white-space:nowrap}
+  .cbar .zchip i{width:11px;height:11px;background:#fff;border:1px solid var(--line);
+                 display:inline-block;flex:0 0 auto}
+  .hint{position:absolute;left:10px;bottom:10px;z-index:600;background:rgba(22,33,46,.9);
+        border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:10.5px;
+        color:var(--muted);pointer-events:none}
+  #panels{margin-top:16px}
+  #panels svg{width:100%;height:auto;display:block;border-radius:10px}
+  .foot{margin-top:14px;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .foot a{color:var(--accent)}
+
+  /* Methods: collapsed by default so it never competes with the figure, but
+     present on the page rather than in a README nobody opens. */
+  .methods{max-width:1100px;margin:18px auto 0;border:1px solid var(--line);
+           border-radius:10px;background:var(--panel)}
+  .methods>summary{cursor:pointer;user-select:none;padding:11px 16px;font-size:13px;
+                   font-weight:650;color:var(--text);list-style:none}
+  .methods>summary::-webkit-details-marker{display:none}
+  .methods>summary::before{content:'▸ ';color:var(--muted);font-size:11px}
+  .methods[open]>summary::before{content:'▾ '}
+  .methods>summary:hover{color:var(--accent)}
+  .methods .body{padding:0 18px 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .methods ol{margin:0;padding-left:20px}
+  .methods li{margin:7px 0}
+  .methods li b{color:var(--text);font-weight:650}
+  .methods code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+                background:var(--panel2);border-radius:3px;padding:1px 4px}
+  .guide{max-width:1100px;margin:0 auto 16px;border:1px solid var(--line);
+         border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
+         padding:11px 16px;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .guide b.lead{color:var(--text)}
+  /* Per-hazard warning, for a view that is not trustworthy yet. Deliberately
+     louder than the guidance box: guidance explains how to read good data, this
+     says not to rely on it. */
+  .hazwarn{max-width:1100px;margin:0 auto 16px;border:1px solid #ff8a3d;
+           border-left:4px solid #ff8a3d;border-radius:8px;background:#3a1408;
+           padding:11px 16px;font-size:12.5px;color:#ffe3cf;line-height:1.6}
+  .hazwarn b{color:#fff}
+  html[data-theme="light"] .hazwarn{background:#fff4ec;border-color:#c2540a;
+           border-left-color:#c2540a;color:#6b2f06}
+  html[data-theme="light"] .hazwarn b{color:#3d1a02}
+  .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
+  .methods a{color:var(--accent)}
+  .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
+            padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
+  .alertbar b{color:#fff}
+  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} }
+  @media (max-width:640px){ .lmap{height:320px} }
+
+  .leaflet-control-attribution{background:rgba(15,23,32,.75)!important;color:#7f909f!important;font-size:10px!important}
+  .leaflet-control-attribution a{color:#9fb0c0!important}
+  .ctytip{background:#101b27!important;color:#e6edf3!important;border:1px solid #2a3a4d!important;
+          border-radius:7px!important;font-size:11.5px!important}
+
+  /* --- the dashboard table ------------------------------------------- */
+  /* map left, table right, one row */
+  #cols{max-width:1400px;margin:0 auto;display:flex;gap:16px;align-items:flex-start}
+  #cols .left{flex:0 0 34%;min-width:0}
+  #cols .right{flex:1 1 auto;min-width:0}
+  #cols .lmap{height:420px}
+  @media (max-width:900px){ #cols{flex-direction:column} #cols .left{flex:1 1 auto;width:100%}
+                            #cols .lmap{height:340px} }
+  #dash{background:var(--panel);
+        border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  #dash .dhead{padding:12px 16px;border-bottom:1px solid var(--line)}
+  #dash .dhead h2{margin:0;font-size:17px;font-weight:650}
+  #dash .dhead p{margin:3px 0 0;font-size:11.5px;color:var(--muted);line-height:1.5}
+  #dash .scroll{overflow-x:auto}
+  #dash table{width:100%;border-collapse:collapse;font-size:12px}
+  #dash th{background:var(--panel2);color:var(--muted);text-align:left;font-weight:600;
+           padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+           white-space:nowrap;border-bottom:1px solid var(--line)}
+  #dash td{padding:0;border-top:1px solid var(--line);vertical-align:top}
+  #dash td.haz{padding:9px 10px;font-weight:650;color:var(--text);white-space:nowrap;
+               font-size:12.5px;min-width:150px}
+  #dash td.haz .yrs{display:block;font-weight:400;font-size:10.5px;color:var(--muted);
+                    margin-top:2px;font-variant-numeric:tabular-nums}
+  #dash td.haz a{display:block;font-weight:400;font-size:10.5px;color:var(--accent);margin-top:2px}
+  #dash td.haz .src{display:block;font-weight:400;font-size:9.5px;color:var(--muted);
+                    margin-top:4px;white-space:normal;max-width:190px;line-height:1.35}
+  #dash td.haz .src a{display:inline;font-size:9.5px;margin:0}
+  #dash .cell{padding:8px 10px;cursor:pointer;border-left:1px solid var(--line);min-width:104px}
+  #dash .cell:hover{outline:2px solid var(--accent);outline-offset:-2px}
+  /* The whole cell carries the climatology colour, so the table reads as a
+     small map. Text colour flips with the background's luminance or the dark
+     end of the ramp swallows it. */
+  #dash .cell .lab{font-size:9.5px;opacity:.8;text-transform:uppercase;letter-spacing:.04em}
+  #dash .cell .val{font-size:15px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
+  #dash .cell .unit{font-size:9.5px;opacity:.75;font-weight:400}
+  #dash .cell .ret{margin-top:1px;line-height:1.3;font-weight:700}
+  #dash .cell .ret .unit{opacity:.95;font-size:10px;font-weight:700}
+  #dash .cell .trd{display:flex;align-items:center;gap:5px;margin-top:3px;
+                   font-size:10.5px;font-variant-numeric:tabular-nums;opacity:.9}
+  #dash .cell .arw{flex:0 0 auto;display:block}
+  /* Bold only where the arrow points somewhere — outside the near-zero band. */
+  #dash .cell .trd.moves{font-weight:700}
+  #dash .cell.on{outline:3px solid var(--accent2);outline-offset:-3px}
+  #dash .cell.none{opacity:.35;cursor:default}
+  #dash .cell.none:hover{outline:none}
+  #dash .foot2{padding:10px 16px;border-top:1px solid var(--line);font-size:11px;
+               color:var(--muted);line-height:1.6}
+  /* Colour key. The scale is absolute now, so it has to be legible somewhere.
+     Banded, matching the cells: one swatch per class, labelled with the rate at
+     which that class begins. */
+  .skey{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
+  .skey .cap{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .skey .sw{display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--muted);
+            font-variant-numeric:tabular-nums}
+  .skey .sw i{width:17px;height:11px;border-radius:2px;border:1px solid rgba(0,0,0,.35)}
+  .skey .sw b{font-weight:600}
+  @media (max-width:640px){ #dash td.haz{min-width:120px} #dash .cell{min-width:92px} }
+</style>
+</head>
+<body>
+<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
+
+<header>
+  <h1>United States County-Level Extreme Weather Dashboard</h1>
+  <p><a href="scstrend.html">County-level maps by hazard</a> &middot;
+     <a href="scstrend_grid.html">2&deg; grid</a> maps by hazard &middot;
+     <a href="scsevents.html">Historical events</a> &middot;
+     <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.</p>
+  <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> as part of NSF Grant 2519425</div>
+
+  <div class="bar">
+    <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole country">&#8592; Full U.S.</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
+  </div>
+</header>
+
+<div id="wrap">
+  <div id="msg">Loading&hellip;</div>
+  <div id="body" style="display:none">
+    <div id="cols">
+     <div class="left">
+      <div class="mapcol">
+        <div class="maphead" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div style="flex:1 1 auto;min-width:0">
+            <h2 id="mapTitle">Where</h2>
+            <p id="mapSub">&nbsp;</p>
+          </div>
+          <div class="fld" style="margin:0"><label for="stSel">Zoom to</label>
+            <select id="stSel"></select></div>
+          <div class="fld" style="margin:0"><label for="baseSel">Backdrop</label>
+            <select id="baseSel">
+              <option value="topo">Topography</option>
+              <option value="pop">Night lights</option>
+              <option value="road">Highways</option>
+              <option value="plain">Plain</option>
+            </select></div>
+        </div>
+        <div class="lmap" id="map"><div class="hint">click a county</div></div>
+      </div>
+     </div>
+     <div class="right">
+      <div id="dash">
+      <div class="dhead">
+        <h2 id="dashTitle">&nbsp;</h2>
+        <p id="dashSub">&nbsp;</p>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr id="dashHead"></tr></thead>
+        <tbody id="dashBody"></tbody>
+      </table></div>
+      <div class="foot2" id="dashFoot"></div>
+      </div>
+     </div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+    <details class="methods">
+      <summary>Methods</summary>
+      <div class="body">
+        <ol>
+          <li><b>Same numbers as the individual pages.</b> This page loads the same data files and
+              runs the same functions &mdash; the county-day matrix, the least-squares fit and the
+              Gaussian smoother are shared code, not a reimplementation. A cell here and the map on
+              <a href="scstrend.html">the trends page</a> at the same hazard, threshold, period and
+              smoothing will agree to the last digit. That is checked by the test suite rather than
+              assumed.</li>
+          <li><b>What a cell shows.</b> The upper number is the climatology &mdash; mean
+              hazard days per year over the chosen period (derecho is in events per year). The
+              lower number is the least-squares trend per decade; <b>bold</b> marks
+              <i>p</i>&nbsp;&lt;&nbsp;0.05 on a two-sided <i>t</i> test of the slope.</li>
+          <li><b>Smoothed by default</b>, sigma 2&deg;, area-weighted and normalised &mdash; the
+              same setting the individual pages open on. That means <b>a cell is a neighbourhood
+              average, not the county's own count</b>: half the weight comes from within 230&nbsp;km
+              and nothing beyond 444&nbsp;km contributes. Switch <b>Smoothing</b> to <b>Raw</b> for
+              the county's own recorded values.</li>
+          <li><b>Severity runs left to right</b> and the thresholds are cumulative, so a 2&Prime;
+              hailstone is also counted as a 1&Prime; one. Hazards have different numbers of
+              levels, so rows are ragged: tornado has five, derecho three.</li>
+          <li><b>Periods differ.</b> Hail and thunderstorm wind begin in 1955, tornado in 1950,
+              derecho in 1996 &mdash; the derecho record is NEXRAD-era only. A cell is blank where
+              the hazard has no data for the chosen window.</li>
+          <li><b>Freezing rain and peak wind are not here yet.</b> They are station data &mdash; twelve
+              Indiana sites, not a national county field &mdash; so there is no county value to
+              show. They remain on <a href="scstrend.html">the trends page</a>.</li>
+          <li><b>June and July 1993 are missing</b> from Storm Events entirely, so 1993 is dropped
+              from any window that contains it rather than counted as a quiet year.</li>
+          <li><b>Storm Events is a report database.</b> National counts rose roughly thirtyfold
+              between 1955 and the late 1990s as population, spotter networks and radar changed, so
+              trends spanning that era partly measure the growth of reporting. Windows from about
+              2000 on are far more defensible, and higher severities are much less sensitive to
+              reporting practice than &ldquo;any report&rdquo;.</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+const ZERO_GREY='rgb(214,218,222)';
+const CMAP={
+  seq:['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'],
+  div:['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#fddbc7','#f4a582','#d6604d','#b2182b','#67001f']
+};
+const THEME={
+  dark :{bg:'#111c26',panel:'#16212e',ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',
+         grid:'#22303f',axis:'#6d8299',land:'#182635',pt:'#6cb6ff',fit:'#ffb14e',
+         band:'rgba(255,177,78,.10)',bandEdge:'rgba(255,177,78,.42)',
+         sea:'#0d151d',cline:'rgba(0,0,0,.45)',tile:'World_Dark_Gray_Base',sel:'#ff3ecb'},
+  light:{bg:'#ffffff',panel:'#ffffff',ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',
+         grid:'#e6ecf2',axis:'#8494a4',land:'#f2f5f8',pt:'#2b7bd4',fit:'#d4770f',
+         band:'rgba(212,119,15,.13)',bandEdge:'rgba(212,119,15,.45)',
+         sea:'#ffffff',cline:'rgba(0,0,0,.35)',tile:'World_Light_Gray_Base',sel:'#c2007a'}
+};
+function T(){ return THEME[S.theme]; }
+const TILE_ATTR='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ · data: NOAA/NCEI';
+/* CARTO's key-free raster basemap now stamps every tile "API key required".
+   It shows through the choropleth (0.88 fill) and unobstructed over water, so
+   the fix has to be the basemap itself, not something drawn over it. Esri's
+   canvas basemaps are free without a key; attribution is required and given
+   below. Note the {z}/{y}/{x} order — Esri, unlike XYZ, puts row before col. */
+function tileUrl(){
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${T().tile}`+
+         `/MapServer/tile/{z}/{y}/{x}`;
+}
+/* Backdrops. This map is a locator, not a data display, so what goes underneath
+   is the reader's choice: terrain, where the people are, or the road network.
+   All three are free and need no key; note {z}/{y}/{x} — row before column —
+   for both Esri and NASA GIBS.
+   "Night lights" is exactly that: VIIRS radiance, not a population count. It is
+   a serviceable proxy for where people are, but a lit gas field or airport is
+   not a city, so the control says what it actually measures. */
+const BASES={
+  /* World_Physical_Map, not World_Shaded_Relief: relief alone is grayscale, and
+     over the Midwest — where most of this map's readers are — it renders as a
+     blank white sheet. The physical map carries hypsometric tint as well, so
+     flat country still reads as country. It is only tiled to z8, so higher
+     zooms upsample; at county scale that is a soft backdrop, which is what a
+     backdrop should be. */
+  topo :{label:'Topography',
+         url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map'+
+             '/MapServer/tile/{z}/{y}/{x}',
+         maxNative:8, attr:'Physical map tiles &copy; Esri'},
+  pop  :{label:'Night lights',
+         url:'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble'+
+             '/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png',
+         maxNative:8, attr:'Night lights: NASA GIBS &middot; VIIRS Black Marble (2016)'},
+  road :{label:'Highways',
+         url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map'+
+             '/MapServer/tile/{z}/{y}/{x}',
+         maxNative:11, attr:'Street tiles &copy; Esri, HERE, Garmin'},
+  plain:{label:'Plain', url:null, maxNative:11, attr:''}
+};
+function baseSpec(){ return BASES[S.base]||BASES.plain; }
+/* Accessor: BASES is a page-level const, which the test harness cannot reach
+   through eval — only function declarations are visible from outside. */
+function baseInfo(k){ return BASES[k]||null; }
+/* Night lights are near-black, so the county mesh has to invert over them or
+   the map reads as an empty rectangle. */
+function darkBase(){ return S.base==='pop' || S.theme==='dark'; }
+function fmt(v,d){ return (v==null||!isFinite(v))?'—':v.toFixed(d==null?2:d); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sgn(v,d){ return (v>=0?'+':'')+fmt(v,d); }
+function hex2rgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function ramp(st,t){
+  t=Math.max(0,Math.min(1,t));
+  const x=t*(st.length-1), i=Math.min(st.length-2,Math.floor(x)), f=x-i;
+  const a=hex2rgb(st[i]), b=hex2rgb(st[i+1]);
+  return 'rgb('+Math.round(a[0]+(b[0]-a[0])*f)+','+Math.round(a[1]+(b[1]-a[1])*f)+','+
+                Math.round(a[2]+(b[2]-a[2])*f)+')';
+}
+function niceUp(x){
+  if(!(x>0)) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(x))), m=x/e;
+  const steps=[1,1.2,1.5,2,2.5,3,4,5,6,7,8,9,10];
+  for(const s of steps) if(m<=s*1.0001) return s*e;
+  return 10*e;
+}
+function quantile(s,q){ if(!s.length)return 0; const h=(s.length-1)*q,l=Math.floor(h),u=Math.ceil(h);
+  return s[l]+(s[u]-s[l])*(h-l); }
+function betacf(a,b,x){
+  const F=1e-300,E=3e-12; let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;
+  if(Math.abs(d)<F)d=F; d=1/d; let h=d;
+  for(let m=1;m<=200;m++){
+    const m2=2*m; let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<F)d=F; c=1+aa/c; if(Math.abs(c)<F)c=F; d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<F)d=F; c=1+aa/c; if(Math.abs(c)<F)c=F; d=1/d;
+    const del=d*c; h*=del; if(Math.abs(del-1)<E) break;
+  }
+  return h;
+}
+function gammaln(x){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,
+           -1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x,tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp);
+  let ser=1.000000000190015; for(let j=0;j<6;j++) ser+=c[j]/++y;
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+function betai(a,b,x){
+  if(x<=0)return 0; if(x>=1)return 1;
+  const bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2) ? bt*betacf(a,b,x)/a : 1-bt*betacf(b,a,1-x)/b;
+}
+function tp(t,df){ if(!(df>0)||!isFinite(t))return 1; return betai(df/2,0.5,df/(df+t*t)); }
+function ols(xs,ys){
+  const n=xs.length; if(n<3) return null;
+  let sx=0,sy=0; for(let i=0;i<n;i++){sx+=xs[i];sy+=ys[i];}
+  const mx=sx/n,my=sy/n;
+  let sxx=0,sxy=0,syy=0;
+  for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my; sxx+=dx*dx; sxy+=dx*dy; syy+=dy*dy;}
+  if(sxx===0) return null;
+  const b=sxy/sxx, a=my-b*mx;
+  let sse=0; for(let i=0;i<n;i++){const r=ys[i]-(a+b*xs[i]); sse+=r*r;}
+  const s2=sse/(n-2), se=Math.sqrt(s2/sxx), t=se>0?b/se:0;
+  return {slope:b,intercept:a,se,t,p:tp(Math.abs(t),n-2),n,mx,sxx,s:Math.sqrt(s2),
+          r2:syy>0?1-sse/syy:0};
+}
+function dl(blob,name){
+  const u=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+
+async function gzFetch(url){
+  if(!('DecompressionStream' in window)) throw new Error('this browser cannot decompress the data');
+  const r=await fetch(url); if(!r.ok) throw new Error('could not fetch '+url+' ('+r.status+')');
+  const st=new Blob([await r.arrayBuffer()]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return JSON.parse(await new Response(st).text());
+}
+
+/* ------------------------------------------------------------------ state */
+/* HAZ is the row order. Only county hazards: freezing rain and peak wind are
+   twelve Indiana stations, not a national county field, so there is no county
+   value for them to show. */
+const HAZ=['hail','tornado','wind','derechoday'];
+
+const S={county:'18157',            // Tippecanoe, IN — home county
+         y0:2000,y1:2024,theme:'dark',smooth:'2',
+         hazard:'hail',thresh:1,    // which cell the table highlights
+         base:'topo',               // map backdrop
+         state:'IN'};               // map zoom
+let INDEX=null, GEO=null, STGEO=null;
+const HZ={}, STATES=[];
+let GEOID=[],NAME=[],STUSPS=[],AREA=[],gidxOf={};
+let COCEN=null, SMNB={}, COBB=null, COBYST={}, LASTLL=null;
+let map=null, ctyLay=null, stLay=null, tiles=null, CUR=null;
+/* field cache: FIELDS[hazard][thresh] = {mean,trend,pv,nyr} after smoothing */
+let FIELDS={}, FIELDKEY='';
+
+function hazSpec(h){ return INDEX.hazards.find(x=>x.key===(h||S.hazard)); }
+function thrSpec(h,t){ const s=hazSpec(h);
+  return s.thresholds[Math.min(t==null?S.thresh:t, s.thresholds.length-1)]; }
+function yearsSel(){ const a=Math.min(S.y0,S.y1), b=Math.max(S.y0,S.y1); return [a,b,b-a+1]; }
+/* This page has no period control on purpose: it is meant to answer "what is it
+   like where I live, and is it changing?" for a reader who should not have to
+   know that Storm Events counts rose thirtyfold as reporting practice changed.
+   So the window is the same 2000-onward default the individual pages open with,
+   clipped to each hazard's own record — derecho's archive is NEXRAD-era, and a
+   row that says 2000–2024 while quietly computing from 1996 would be a lie. */
+function clipYears(a,b,y0,y1){ return [Math.max(a,y0), Math.min(b,y1)]; }
+function hazYears(h){
+  const [a,b]=yearsSel(), sp=INDEX.hazards.find(x=>x.key===h);
+  return sp?clipYears(a,b,sp.year0,sp.year1):[a,b];
+}
+function countWord(h){ const s=hazSpec(h); return (s&&s.countword)||'day'; }
+function countUnit(h){ return countWord(h)+'s/yr'; }
+function isStation(){ return false; }
+function isEvent(){ return false; }
+function sigDeg(){ const v=parseFloat(S.smooth); return isFinite(v)?v:2; }
+function smoothOn(){ return S.smooth!=='off'; }
+
+async function loadHazard(k){
+  if(HZ[k]) return HZ[k];
+  const spec=INDEX.hazards.find(h=>h.key===k);
+  const d=await gzFetch('data/'+spec.file);
+  d.nY=d.meta.year1-d.meta.year0+1;
+  d.g=new Int32Array(d.counties.length);
+  d.counties.forEach((g,i)=>{ const gi=gidxOf[g]; d.g[i]=(gi===undefined)?-1:gi; });
+  d.ci=Int32Array.from(d.ci); d.yi=Int16Array.from(d.yi); d.mi=Int8Array.from(d.mi);
+  d.v=d.v.map(a=>Int16Array.from(a));
+  d.M=new Float32Array(GEOID.length*d.nY);
+  HZ[k]=d; return d;
+}
+
+/* NCEI mislaid two months. June and July 1993 are absent from the Storm Events
+   database itself — not sparse, not uncoordinated, absent — because the NWS
+   offices' WordPerfect files for those months were lost in the move to the
+   FoxPro database. A count of zero there is not a quiet month, it is no month,
+   so those cells are masked and 1993 is dropped from anything annual.
+   https://www.ncei.noaa.gov/stormevents/details.jsp?type=collection */
+function gapMask(d){
+  if(d._gapYM) return d._gapYM;
+  const nY=d.nY, ym=new Uint8Array(nY*12).fill(1), yr=new Uint8Array(nY).fill(1);
+  (d.meta.gaps||[]).forEach(([y,m])=>{
+    const i=y-d.meta.year0;
+    if(i>=0&&i<nY){ ym[i*12+(m-1)]=0; yr[i]=0; }
+  });
+  d._gapYM={ym,yr,any:(d.meta.gaps||[]).length>0};
+  return d._gapYM;
+}
+function gapYears(d){
+  const out=[]; const g=gapMask(d);
+  for(let i=0;i<d.nY;i++) if(!g.yr[i]) out.push(i+d.meta.year0);
+  return out;
+}
+function rebuildMatrix(){
+  const d=HZ[S.hazard];
+  if(d.event) return;                    // events carry no matrix to rebuild
+  const M=d.M,nY=d.nY,v=d.v[Math.min(S.thresh,d.v.length-1)];
+  M.fill(0);
+  if(d.station){
+    const si=d.si,yi=d.yi,n=si.length;
+    for(let k=0;k<n;k++) M[si[k]*nY+yi[k]]+=v[k];
+    return;
+  }
+  const ci=d.ci,yi=d.yi,g=d.g,n=ci.length;
+  for(let k=0;k<n;k++){ const gi=g[ci[k]]; if(gi<0)continue; M[gi*nY+yi[k]]+=v[k]; }
+}
+function countyMetrics(){
+  const d=HZ[S.hazard],M=d.M,nY=d.nY,y0=d.meta.year0,nC=GEOID.length;
+  const [a,b,nyr]=yearsSel(), i0=a-y0, i1=b-y0;
+  const mean=new Float32Array(nC), trend=new Float32Array(nC), pv=new Float32Array(nC).fill(1);
+  const xs=[]; for(let y=i0;y<=i1;y++) xs.push(y+y0);
+  const ys=new Array(xs.length);
+  /* An incomplete year must leave the denominator as well as the numerator,
+     otherwise 1993 drags every mean down and bends every trend. */
+  const gm=gapMask(d);
+  const keep=[]; for(let y=i0;y<=i1;y++) if(gm.yr[y]) keep.push(y);
+  const xk=keep.map(y=>y+y0), yk=new Array(keep.length);
+  const nk=keep.length||1;
+  for(let c=0;c<nC;c++){
+    const base=c*nY; let s=0;
+    for(let j=0;j<keep.length;j++){ const v=M[base+keep[j]]; s+=v; yk[j]=v; }
+    mean[c]=s/nk;
+    const r=ols(xk,yk); if(r){ trend[c]=r.slope*10; pv[c]=r.p; }
+  }
+  return {mean,trend,pv,y0:a,y1:b,nyr:nk,ndrop:(i1-i0+1)-keep.length};
+}
+function smoothNeighbours(){
+  const sd=sigDeg();
+  if(SMNB[sd]) return SMNB[sd];
+  const n=COCEN.length, sig=sd*111.0, cut=2*sd;
+  const lat=new Float64Array(n), lon=new Float64Array(n);
+  for(let i=0;i<n;i++){ lon[i]=COCEN[i][0]; lat[i]=COCEN[i][1]; }
+  // walk in latitude order so the ±cut band is a contiguous slice
+  const ord=Array.from({length:n},(_,i)=>i).sort((a,b)=>lat[a]-lat[b]);
+  const idx=new Array(n), wt=new Array(n);
+  for(let i=0;i<n;i++){ idx[i]=[]; wt[i]=[]; }
+  for(let a=0;a<n;a++){
+    const i=ord[a], la=lat[i], lo=lon[i];
+    for(let b=a;b<n;b++){
+      const j=ord[b];
+      const dy=(lat[j]-la); if(dy>cut) break;
+      /* cos of the MIDPOINT latitude, not of whichever county happened to come
+         first in the sort. Using one end's cosine made the kernel asymmetric —
+         i saw j at a slightly different distance than j saw i — which showed up
+         as ~0.3% disagreement against an independent recomputation. */
+      const ck=Math.cos((la+lat[j])*0.5*Math.PI/180);
+      const dx=(lon[j]-lo)*ck; if(Math.abs(dx)>cut) continue;
+      const d=Math.hypot(dx,dy)*111.0;
+      if(d>cut*111.0) continue;
+      const g=Math.exp(-0.5*(d/sig)*(d/sig));
+      idx[i].push(j); wt[i].push(g*AREA[j]);
+      if(i!==j){ idx[j].push(i); wt[j].push(g*AREA[i]); }
+    }
+  }
+  SMNB[sd]={idx,wt};
+  return SMNB[sd];
+}
+function smoothField(v){
+  if(!smoothOn()) return v;
+  const {idx,wt}=smoothNeighbours();
+  const out=new Float32Array(v.length).fill(NaN);
+  for(let i=0;i<v.length;i++){
+    if(!isFinite(v[i])) continue;
+    const I=idx[i], W=wt[i];
+    let s=0,ww=0;
+    for(let k=0;k<I.length;k++){
+      const u=v[I[k]];
+      if(!isFinite(u)) continue;
+      s+=W[k]*u; ww+=W[k];
+    }
+    out[i]= ww>0 ? s/ww : v[i];
+  }
+  return out;
+}
+function buildCountyIndex(){
+  COBB=new Array(GEO.features.length); COBYST={}; COCEN=new Array(GEO.features.length);
+  GEO.features.forEach((f,i)=>{
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    const walk=c=>{ if(typeof c[0]==='number'){
+        if(c[0]<x0)x0=c[0]; if(c[0]>x1)x1=c[0];
+        if(c[1]<y0)y0=c[1]; if(c[1]>y1)y1=c[1];
+      } else c.forEach(walk); };
+    walk(f.geometry.coordinates);
+    COBB[i]=[x0,y0,x1,y1];
+    /* Vertex-mean centroid. Not an area centroid, but for a 2° kernel the
+       difference (a few km) is far below the smoothing scale. */
+    let sx=0,sy=0,n=0;
+    const acc=c=>{ if(typeof c[0]==='number'){ sx+=c[0]; sy+=c[1]; n++; } else c.forEach(acc); };
+    acc(f.geometry.coordinates);
+    COCEN[i]= n? [sx/n, sy/n] : [(x0+x1)/2,(y0+y1)/2];
+    (COBYST[f.properties.STUSPS]=COBYST[f.properties.STUSPS]||[]).push(i);
+  });
+}
+function inRing(x,y,r){
+  let inside=false;
+  for(let i=0,j=r.length-1;i<r.length;j=i++){
+    const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];
+    if(((yi>y)!==(yj>y)) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) inside=!inside;
+  }
+  return inside;
+}
+function inFeature(x,y,f){
+  const g=f.geometry, polys=g.type==='Polygon'?[g.coordinates]:g.coordinates;
+  for(const poly of polys){
+    if(!inRing(x,y,poly[0])) continue;
+    let hole=false;
+    for(let h=1;h<poly.length;h++) if(inRing(x,y,poly[h])) hole=true;
+    if(!hole) return true;
+  }
+  return false;
+}
+/* One county label for the tooltip, the map header and the table header, so the
+   three cannot drift apart. The geometry carries a bare NAME ("Madison") and no
+   LSAD, so the suffix has to come from the state: Louisiana has parishes, not
+   counties; Alaska has boroughs and census areas that this file cannot tell
+   apart, so it takes no suffix at all; and the independent cities are counties
+   in the data but are not called that. Matching on the name itself does not
+   work — James City County, VA and Carson City, NV both contain "City". */
+const VA_CITY0=510;                       // VA county FIPS 001–199; cities 510+
+const IND_CITY={'24510':1,'29510':1,'32510':1};   // Baltimore, St. Louis, Carson City
+function countyLabel(c){
+  if(c===undefined||c<0) return '';
+  const n=NAME[c], st=STUSPS[c], g=GEOID[c], cc=+g.slice(2);
+  if(g==='11001') return 'District of Columbia';
+  if(st==='LA')   return `${n} Parish, LA`;
+  if(st==='AK')   return `${n}, AK`;
+  if(st==='PR')   return `${n} Municipio, PR`;
+  if(IND_CITY[g]||(st==='VA'&&cc>=VA_CITY0)) return `${n} City, ${st}`;
+  return `${n} County, ${st}`;
+}
+function countyAt(lat,lon,ab){
+  for(const c of (COBYST[ab]||[])){
+    const b=COBB[c];
+    if(lon<b[0]||lon>b[2]||lat<b[1]||lat>b[3]) continue;
+    if(inFeature(lon,lat,GEO.features[c])) return c;
+  }
+  return -1;
+}
+function makeMap(id){
+  const m=L.map(id,{preferCanvas:true,worldCopyJump:false,minZoom:3,maxZoom:11,
+                    zoomControl:id==='mapClim'}).setView([39.8,-86.3],6);
+  L.tileLayer(tileUrl(),
+    {attribution:TILE_ATTR,maxZoom:11}).addTo(m);
+  return m;
+}
+function colorFor(v,C){
+  if(!isFinite(v)) return null;
+  /* Exact zero steps off the ramp entirely, into a light grey. The ramp's own
+     low end is a pale yellow, so "never happened" and "happened rarely" looked
+     alike and the edge of the affected area was invisible — which matters most
+     for the rare hazards, where most of the map is a true zero. Grey rather
+     than white because white reads as "no data" next to a blank cell, and
+     because it is plainly not part of a yellow-to-red scale. Only the
+     sequential ramp: on the diverging trend ramp zero is mid-scale and already
+     neutral. */
+  if(!C.div && v===0) return ZERO_GREY;
+  return ramp(C.div?CMAP.div:CMAP.seq,(v-C.lo)/(C.hi-C.lo));
+}
+function drawColorbar(el,C,title){
+  const stops=(C.div?CMAP.div:CMAP.seq);
+  const grad='linear-gradient(to top,'+stops.join(',')+')';
+  const ticks=[];
+  for(let i=4;i>=0;i--) ticks.push(fmt(C.lo+(C.hi-C.lo)*i/4,C.dec));
+  el.innerHTML=`<div class="cap">${esc(title)}</div><div class="row">`+
+    `<div class="strip" style="background:${grad}"></div>`+
+    `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
+    /* say what the white means, or it reads as missing data */
+    (C.div?'':`<div class="zchip"><i></i>exactly 0</div>`);
+}
+
+/* ------------------------------------------------------- the field cache */
+/* Every hazard x threshold, climatology and trend, for the current period and
+   smoothing. Computed by driving the SAME functions the trends page uses —
+   set S.hazard/S.thresh, rebuild, measure, smooth — so the two cannot drift.
+   Nothing here depends on which county is selected, so this runs once per
+   period or smoothing change and a county click is then a lookup. */
+/* Page-level `const S` is not reachable from outside the page's own scope, so
+   expose what a test (or the console) needs to see. */
+function dashState(){ return {county:S.county,hazard:S.hazard,thresh:S.thresh,
+                              smooth:S.smooth,y0:S.y0,y1:S.y1,
+                              base:S.base,state:S.state}; }
+function fieldKey(){ const [a,b]=yearsSel(); return `${a}-${b}-${S.smooth}`; }
+function buildFields(){
+  const key=fieldKey();
+  if(FIELDKEY===key) return FIELDS;
+  const keepH=S.hazard, keepT=S.thresh;
+  const out={};
+  HAZ.forEach(h=>{
+    if(!HZ[h]) return;
+    out[h]=[];
+    const spec=INDEX.hazards.find(x=>x.key===h);
+    spec.thresholds.forEach((t,ti)=>{
+      S.hazard=h; S.thresh=ti;
+      rebuildMatrix();
+      const cm=countyMetrics();
+      out[h][ti]={mean:smoothField(cm.mean),trend:smoothField(cm.trend),
+                  pv:cm.pv,nyr:cm.nyr,raw:cm.mean};
+    });
+  });
+  S.hazard=keepH; S.thresh=keepT;
+  FIELDS=out; FIELDKEY=key;
+  return FIELDS;
+}
+/* A hazard covers the chosen window only if its record overlaps it at all. */
+function covered(h){
+  const s=INDEX.hazards.find(x=>x.key===h), [a,b]=yearsSel();
+  return s && s.year1>=a && s.year0<=b;
+}
+function cellOf(h,ti){
+  const F=FIELDS[h]; if(!F||!F[ti]) return null;
+  const c=gidxOf[S.county]; if(c===undefined) return null;
+  /* mean and trend are both smoothField() output — see buildFields. Everything
+     downstream, including the 10% near-zero band, therefore compares smoothed
+     against smoothed. */
+  return {mean:F[ti].mean[c], trend:F[ti].trend[c], p:F[ti].pv[c], nyr:F[ti].nyr};
+}
+/* The county's own unsmoothed mean, kept only so a test can show that cellOf is
+   not returning it. Nothing on the page displays this. */
+function cellRaw(h,ti){
+  const F=FIELDS[h], c=gidxOf[S.county];
+  return (F&&F[ti]&&c!==undefined)?F[ti].raw[c]:NaN;
+}
+
+/* ------------------------------------------------------------ the layers */
+function stStyle(f){
+  const on=STUSPS[gidxOf[S.county]]===f.properties.STUSPS;
+  return {stroke:true,color:on?T().sel:(darkBase()?'#fff':'#000'),weight:on?2.4:0.9,
+          opacity:on?1:.85,fill:true,fillOpacity:0};
+}
+function stateLayer(){
+  return L.geoJSON(STGEO,{style:stStyle,onEachFeature:(f,l)=>{
+    /* The outlines sit on top with an invisible fill so hover hit-tests, which
+       means this handler receives every map click — resolve it to the county
+       underneath and select that, without moving the view. */
+    l.on('click',e=>{
+      const c=e.latlng?countyAt(e.latlng.lat,e.latlng.lng,f.properties.STUSPS):-1;
+      if(c>=0) pickCounty(GEOID[c]);
+      L.DomEvent.stop(e);
+    });
+    /* A sticky tooltip's content function runs once, on mouseover, and after
+       that Leaflet only moves the box — so the name was whatever county the
+       pointer had last been over, or the state if it had been nowhere. Seed the
+       position on entry and rewrite the content on every move. */
+    const tipHtml=()=>{
+      const c=LASTLL?countyAt(LASTLL.lat,LASTLL.lng,f.properties.STUSPS):-1;
+      if(c<0) return esc(f.properties.STATE_NAME);
+      return `<b>${esc(countyLabel(c))}</b>`;
+    };
+    l.on('mouseover',e=>{ if(e.latlng) LASTLL=e.latlng; });
+    l.on('mousemove',e=>{ LASTLL=e.latlng;
+      if(l.getTooltip&&l.getTooltip()) l.setTooltipContent(tipHtml()); });
+    l.bindTooltip(tipHtml,{sticky:true,className:'ctytip'});
+  }});
+}
+/* The map no longer carries a hazard field — the table does that now. Counties
+   are a hairline mesh so the backdrop shows through, with the chosen one
+   filled. */
+function ctyStyle(){
+  /* Yellow, and the same yellow on every backdrop. Grey hairlines vanished
+     against the physical map's pale greens and against night lights alike;
+     yellow is the one hue none of the three backdrops contains at any
+     strength. */
+  const line='rgba(255,209,64,.85)';
+  return f=>{
+    const sel=f.properties.GEOID===S.county;
+    return {stroke:true,color:sel?T().sel:line,weight:sel?2.8:.6,
+            fill:sel,fillColor:T().sel,fillOpacity:sel?.25:0};
+  };
+}
+function drawMap(){
+  if(!ctyLay){
+    ctyLay=L.geoJSON(GEO,{style:ctyStyle(),interactive:false}).addTo(map);
+    if(stLay) stLay.bringToFront();
+  } else ctyLay.setStyle(ctyStyle());
+  if(stLay) stLay.setStyle(stStyle);
+}
+function zoomUS(){ if(!map) return; S.state=''; syncStateSel(); map.setView([39.2,-96],4); }
+function stateOf(ab){ return STATES.find(s=>s.ab===ab); }
+/* State capitals, so that choosing a state lands on a county rather than
+   leaving the selection behind in whatever state the reader came from. The
+   capital's county is a defensible "start here": it is somewhere the reader has
+   heard of, it is usually well populated, and it needs no data the page does
+   not already have. Coordinates are the capitol buildings, to a few hundred
+   metres — precision beyond that buys nothing, since the answer is a county. */
+const CAPITAL={
+  AL:[32.377,-86.300], AK:[58.302,-134.420], AZ:[33.448,-112.074], AR:[34.746,-92.289],
+  CA:[38.577,-121.494],CO:[39.739,-104.984], CT:[41.764,-72.682],  DE:[39.157,-75.520],
+  DC:[38.895,-77.037], FL:[30.438,-84.281],  GA:[33.749,-84.388],  HI:[21.307,-157.858],
+  ID:[43.617,-116.200],IL:[39.798,-89.655],  IN:[39.768,-86.162],  IA:[41.591,-93.604],
+  KS:[39.048,-95.678], KY:[38.187,-84.875],  LA:[30.457,-91.187],  ME:[44.307,-69.782],
+  MD:[38.979,-76.491], MA:[42.358,-71.064],  MI:[42.734,-84.555],  MN:[44.955,-93.102],
+  MS:[32.299,-90.182], MO:[38.579,-92.173],  MT:[46.586,-112.018], NE:[40.808,-96.700],
+  NV:[39.164,-119.767],NH:[43.206,-71.538],  NJ:[40.221,-74.756],  NM:[35.682,-105.939],
+  NY:[42.652,-73.757], NC:[35.780,-78.639],  ND:[46.821,-100.783], OH:[39.961,-82.999],
+  OK:[35.492,-97.503], OR:[44.938,-123.030], PA:[40.264,-76.883],  RI:[41.831,-71.415],
+  SC:[34.000,-81.035], SD:[44.367,-100.351], TN:[36.166,-86.784],  TX:[30.275,-97.740],
+  UT:[40.777,-111.888],VT:[44.262,-72.581],  VA:[37.538,-77.436],  WA:[47.038,-122.901],
+  WV:[38.336,-81.612], WI:[43.075,-89.384],  WY:[41.140,-104.820]
+};
+function defaultCounty(ab){
+  const cap=CAPITAL[ab];
+  if(cap){ const c=countyAt(cap[0],cap[1],ab); if(c>=0) return GEOID[c]; }
+  /* No capital listed, or the point fell in a gap left by polygon
+     simplification: take the county nearest the middle of the state. */
+  const list=COBYST[ab]||[]; if(!list.length) return null;
+  const st=stateOf(ab); if(!st) return GEOID[list[0]];
+  const ctr=st.bounds.getCenter(), kx=Math.cos(ctr.lat*Math.PI/180);
+  let best=list[0], bd=Infinity;
+  for(const i of list){
+    const dx=(COCEN[i][0]-ctr.lng)*kx, dy=COCEN[i][1]-ctr.lat, d=dx*dx+dy*dy;
+    if(d<bd){ bd=d; best=i; }
+  }
+  return GEOID[best];
+}
+function zoomState(ab){
+  const st=stateOf(ab); if(!st||!map) return;
+  S.state=ab; syncStateSel(); map.fitBounds(st.bounds,{padding:[12,12]});
+  /* Move the selection with the view. Leaving it behind meant the table still
+     described a county three states away from the one on screen. */
+  /* Only when the county on show is somewhere else. Re-picking the state you
+     are already in, and opening the page or a shared link, must not throw away
+     the county the reader (or the URL) chose. */
+  if(STUSPS[gidxOf[S.county]]!==ab){ const g=defaultCounty(ab); if(g) pickCounty(g); }
+}
+function syncStateSel(){
+  const el=document.getElementById('stSel'); if(el) el.value=S.state||'';
+}
+
+/* --------------------------------------------------------------- the table */
+function pickCounty(g){
+  if(!g||gidxOf[g]===undefined) return;
+  S.county=g;
+  /* Follow the click in the Zoom-to menu, but do not re-fit: the reader chose
+     this view and having it jump under them is the bug we already fixed once on
+     the trends page. */
+  S.state=STUSPS[gidxOf[g]]; syncStateSel();
+  drawMapHead(); drawDash(); drawMap(); writeHash();
+}
+/* Cells are still selectable — it carries through to the per-hazard link and
+   the URL — but the map no longer follows, so nothing needs redrawing there. */
+function pickCell(h,ti){
+  S.hazard=h; S.thresh=ti;
+  refreshCUR(); drawDash(); writeHash();
+}
+function refreshCUR(){
+  const F=FIELDS[S.hazard]; if(!F||!F[S.thresh]) return;
+  const mean=F[S.thresh].mean;
+  const pool=GEO.features.map(f=>gidxOf[f.properties.GEOID]);
+  const mv=pool.map(c=>mean[c]).filter(isFinite).sort((p,q)=>p-q);
+  const hi=niceUp(quantile(mv,0.995))||1;
+  CUR={val:mean,lo:0,hi,div:false,dec:hi<5?2:1,unit:countUnit(S.hazard)};
+}
+
+function drawDash(){
+  const c=gidxOf[S.county], [a,b]=yearsSel();
+  const maxLev=Math.max(...HAZ.filter(covered).map(h=>hazSpec(h).thresholds.length));
+
+  document.getElementById('dashTitle').textContent =
+    countyLabel(c);
+  document.getElementById('dashSub').innerHTML =
+    'Climatology and trend per decade · 2° neighbourhood average';
+
+  // header: severity 1..n, labelled per row since hazards differ
+  let th='<th>Hazard</th>';
+  for(let i=0;i<maxLev;i++) th+=`<th>Severity ${i+1}</th>`;
+  document.getElementById('dashHead').innerHTML=th;
+
+  let rows='';
+  HAZ.forEach(h=>{
+    const spec=hazSpec(h);
+    const on=covered(h);
+    const [ha,hb]=hazYears(h);
+    rows+=`<tr><td class="haz">${esc(spec.label)}`+
+          (on?`<span class="yrs">${esc(ha+'–'+hb)}</span>`:'')+
+          `<a href="scstrend.html#h=${esc(h)}&t=${S.thresh}&r=${esc(STUSPS[c])}&c=${esc(S.county)}`+
+          `&p=${ha}-${hb}">full hazard map &rarr;</a>`+
+          `<span class="src">${sourceHtml(h)}</span></td>`;
+    for(let i=0;i<maxLev;i++){
+      const t=spec.thresholds[i];
+      if(!t||!on){ rows+='<td class="cell none"></td>'; continue; }
+      const d=cellOf(h,i);
+      const sel=(h===S.hazard&&i===S.thresh)?' on':'';
+      if(!d||!isFinite(d.mean)){ rows+=`<td class="cell none"><div class="lab">${esc(t.short||t.label)}</div></td>`; continue; }
+      const bg=rateColor(d.mean);
+      const fg=inkOn(bg);
+      rows+=`<td class="cell${sel}" data-h="${esc(h)}" data-t="${i}" `+
+            `style="background:${bg};color:${fg}">`+
+            `<div class="lab">${esc(t.short||t.label)}</div>`+
+            `<div class="val">${fmt(d.mean,2)} `+
+            `<span class="unit">${esc(countWord(h))}s/yr</span></div>`+
+            `<div class="ret"><span class="unit">${
+               returnPeriod(d.mean)?'one every '+esc(returnPeriod(d.mean))
+                                   :'none on record'}</span></div>`+
+            `<div class="trd${nearZero(d.trend,d.mean)?'':' moves'}">`+
+            `${arrowSVG(d.trend,trendMax(h,i),fg,d.mean)}`+
+            `<span>${fmtTrend(d.trend)}<span class="unit"> /decade</span></span></div></td>`;
+    }
+    rows+='</tr>';
+  });
+  document.getElementById('dashBody').innerHTML=rows;
+  [...document.querySelectorAll('#dashBody .cell[data-h]')].forEach(td=>{
+    td.onclick=()=>pickCell(td.dataset.h,+td.dataset.t);
+  });
+
+  const gaps=gapYears(HZ[S.hazard]||HZ.hail).filter(y=>y>=a&&y<=b);
+  document.getElementById('dashFoot').innerHTML = scaleLegend()+
+    'Cell colour is how often it happens, on one scale shared by every cell and every '+
+    'county &mdash; redder is more frequent. The '+
+    'arrow is the trend: <b>up</b> rising, <b>down</b> falling, length &prop; magnitude, '+
+    'and <b>&harr;</b> for a change smaller than 10% of the climatological value &mdash; too '+
+    'small to matter whichever way it points. The return period is the long-run '+
+    'average spacing, 1&divide;rate &mdash; not a schedule. '+
+    'Blank cells mean the hazard has no record.'+
+    (gaps.length?` <b>${gaps.join(', ')} is excluded</b>: June and July 1993 are missing from `+
+                 `Storm Events entirely.`:'')+
+    ' Each value is a 2° neighbourhood average rather than this county alone, over the '+
+    'years listed beside the hazard.';
+}
+/* Where each row's numbers come from, named on the row rather than buried in a
+   footnote. Derecho is the only one that is not Storm Events alone: the swaths
+   come from the Squitieri, Wade and Jirak archive, and the reports that fall
+   inside them come from Storm Events. */
+function sourceHtml(h){
+  if(h==='derechoday')
+    return '<a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" '+
+           'rel="noopener">Squitieri et al. 2026</a> + NCEI StormEvents';
+  return 'NCEI StormEvents';
+}
+
+/* Discrete classes rather than a continuous ramp: a reader comparing two cells
+   is asking "same ballpark or not?", and a banded scale answers that at a glance
+   where a smooth gradient makes them squint. The breaks are round numbers in
+   events per year, so the legend can state them exactly.
+   The classes are absolute — the same rate is the same colour in every hazard,
+   every severity and every county. They used to be scaled per hazard and
+   severity, which gave each cell good internal contrast but made the colours
+   mutually incomparable: an EF4 tornado once in 236 years came out the same
+   orange as hail three times a year, which is the opposite of what a colour
+   should say.
+   The breaks step by roughly half an order of magnitude because the rates span
+   four; even spacing in rate would put fourteen of sixteen cells in the bottom
+   class. */
+const RATE_BINS=[
+  {lo:2,    col:'#800026', lab:'2+'},
+  {lo:1,    col:'#bd0026', lab:'1'},
+  {lo:0.5,  col:'#e31a1c', lab:'0.5'},
+  {lo:0.2,  col:'#fc4e2a', lab:'0.2'},
+  {lo:0.1,  col:'#fd8d3c', lab:'0.1'},
+  {lo:0.05, col:'#feb24c', lab:'0.05'},
+  {lo:0.02, col:'#fed976', lab:'0.02'},
+  {lo:0.01, col:'#ffeda0', lab:'0.01'},
+  {lo:0,    col:'#ffffcc', lab:'>0'}
+];
+function rateColor(v){
+  if(!isFinite(v)) return null;
+  if(v<=0) return ZERO_GREY;
+  for(const b of RATE_BINS) if(v>=b.lo) return b.col;
+  return RATE_BINS[RATE_BINS.length-1].col;
+}
+/* Accessor: RATE_BINS is a page-level const, invisible to the test harness's
+   eval, which can only reach function declarations. */
+function rateBins(){ return RATE_BINS.map(b=>({lo:b.lo,col:b.col,lab:b.lab})); }
+/* The scale is only worth having if it can be read, and this page no longer has
+   a map colour bar. Drawn high to low, so it reads the way the table does. */
+function scaleLegend(){
+  const sw=RATE_BINS.map(b=>
+    `<span class="sw"><i style="background:${b.col}"></i><b>${esc(b.lab)}</b></span>`).join('');
+  return `<div class="skey"><span class="cap">Events per year</span>${sw}`+
+         `<span class="sw"><i style="background:${ZERO_GREY}"></i><b>0</b></span></div>`;
+}
+/* Arrow length scale: 99.5th percentile of |trend| over all counties, again per
+   hazard and severity, so the arrow answers "big for this hazard?" rather than
+   being swamped by whichever hazard happens to be most common. */
+const TMAXC={};
+function trendMax(h,ti){
+  const k=h+'|'+ti+'|'+FIELDKEY;
+  if(TMAXC[k]!=null) return TMAXC[k];
+  const v=[...FIELDS[h][ti].trend].filter(isFinite).map(Math.abs).sort((p,q)=>p-q);
+  return (TMAXC[k]=quantile(v,0.995)||1);
+}
+/* The cell background runs the whole climatology ramp, whose dark end swallows
+   dark text and whose pale end swallows white. Pick by luminance.
+   Takes hex as well as rgb(): the banded scale hands over '#bd0026', and the
+   rgb-only version silently returned 'inherit' for every one of them, which put
+   the table's light body text on a pale yellow cell. */
+function inkOn(col){
+  const c=String(col).trim();
+  let r,g,b;
+  const hex=/^#([0-9a-f]{6})$/i.exec(c) || /^#([0-9a-f]{3})$/i.exec(c);
+  if(hex){
+    const h=hex[1].length===3?hex[1].replace(/./g,x=>x+x):hex[1];
+    r=parseInt(h.slice(0,2),16); g=parseInt(h.slice(2,4),16); b=parseInt(h.slice(4,6),16);
+  } else {
+    const m=/(\d+)\D+(\d+)\D+(\d+)/.exec(c);
+    if(!m) return 'inherit';
+    r=+m[1]; g=+m[2]; b=+m[3];
+  }
+  return (0.299*r+0.587*g+0.114*b)/255>0.55?'#10161d':'#ffffff';
+}
+/* A trend smaller than 10% of the climatological value is not worth a
+   direction: at that size the arrow says "rising" about a change nobody would
+   notice. Those get a double-headed horizontal arrow instead — "flat" rather
+   than up or down.
+   Both sides of the ratio are the smoothed fields, as they must be: cellOf
+   reads mean and trend from smoothField() output, so a county whose own counts
+   are noisy is judged on the same 2° neighbourhood its displayed climatology
+   comes from. Comparing a smoothed trend against a raw mean would make the
+   band mean different things in different counties. */
+const NEARZERO=0.10;
+function nearZero(tr,mean){
+  if(!isFinite(tr)) return false;
+  if(!isFinite(mean)||mean<=0) return Math.abs(tr)<1e-9;
+  return Math.abs(tr) < NEARZERO*mean;
+}
+/* Trend as an arrow: up rising, down falling, length with magnitude, and a flat
+   double head inside the near-zero band above.
+   No significance encoding. A p-value answers "could this slope have come from
+   noise?", which is an academic question; the reader of this page is asking "is
+   it changing enough for me to care?", and the 10% band answers that directly.
+   Two encodings of near-nothing, one of them requiring a stats course to read,
+   was one too many. */
+function arrowSVG(tr,tmax,col,mean){
+  const L0=9, L1=26;
+  if(!isFinite(tr)) return `<svg class="arw" width="${L1}" height="${L1}"></svg>`;
+  const flat=nearZero(tr,mean);
+  const f=Math.min(1,Math.abs(tr)/Math.max(1e-12,tmax));
+  const len=flat?14:L0+(L1-L0)*Math.sqrt(f);   // sqrt: area, not length, reads as size
+  const w=flat?1.9:Math.max(1.6,1.6+2.4*f);
+  const ang=flat?0:(tr>=0?-90:90);             // SVG y grows downward
+  const c=L1/2, h=Math.max(3.4,w*2.1);
+  const tail=flat?c-len/2+h:c-len/2;
+  const d=`M ${tail} ${c} L ${c+len/2-h} ${c}`;
+  const head=(x,sg)=>`${x} ${c} ${x-sg*h} ${c-h*0.72} ${x-sg*h} ${c+h*0.72}`;
+  const heads=`<polygon points="${head(c+len/2,1)}" stroke="none"/>`+
+              (flat?`<polygon points="${head(c-len/2,-1)}" stroke="none"/>`:'');
+  return `<svg class="arw" width="${L1}" height="${L1}" viewBox="0 0 ${L1} ${L1}" `+
+         `role="img" aria-label="${flat?'little change':(tr>=0?'increase':'decrease')}">`+
+         `<g transform="rotate(${ang} ${c} ${c})" fill="${col}" stroke="${col}" `+
+         `stroke-width="${w}" stroke-linecap="round">`+
+         `<path d="${d}" fill="none"/>${heads}</g></svg>`;
+}
+/* Trends run an order of magnitude below the climatology, so two decimals turns
+   most of the table into +0.00. Give anything below 1 a third. */
+function fmtTrend(v){ return sgn(v, (isFinite(v)&&Math.abs(v)<1)?3:2); }
+/* The same number the other way round. "0.02 days/yr" is hard to feel; "one
+   every 50 years" is not. It is the mean return period, 1/rate — a long-run
+   average, not a schedule. */
+function returnPeriod(rate){
+  if(!isFinite(rate)||rate<=0) return null;
+  const yr=1/rate;
+  if(yr<1)  return `${(yr*12).toFixed(yr*12<10?1:0)} months`;
+  if(yr<10) return `${yr.toFixed(1)} years`;
+  return `${Math.round(yr)} years`;
+}
+
+/* ------------------------------------------------------------- rendering */
+function unusedGuideHtml(){
+  return '<b class="lead">Guidance on interpreting these data:</b> '+
+    'Every number here is Storm Events, a <i>report</i> database rather than a fixed observing '+
+    'network. National counts rose roughly thirtyfold between 1955 and the late 1990s as '+
+    'population, spotter networks, radar and NWS verification practice changed, so a window '+
+    'spanning that era partly measures the growth of reporting; windows from about 2000 on are '+
+    'far more defensible, and the higher severities are much less sensitive to reporting practice '+
+    'than &ldquo;any report&rdquo;. <b>Derecho</b> rows additionally draw on the archive of '+
+    '<a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" rel="noopener">Squitieri, '+
+    'Wade and Jirak (2026)</a>, which is NEXRAD-era only, so that row begins in 1996. '+
+    '<b>June and July 1993 are missing from Storm Events entirely</b>, so 1993 is dropped from '+
+    'any window containing it rather than counted as a quiet year.';
+}
+
+/* The map header names the hazard and severity on show, so it has to follow a
+   cell click as well as a full refresh — it used to be set only in refresh(),
+   which left the title naming the previous hazard. */
+/* The map is now a locator: it names the county in view and says what the
+   backdrop is, since "night lights" in particular must not be read as a
+   population count. */
+function drawMapHead(){
+  const c=gidxOf[S.county];
+  document.getElementById('mapTitle').textContent =
+    c===undefined?'Pick a county':countyLabel(c);
+  const b=baseSpec();
+  document.getElementById('mapSub').innerHTML =
+    'Click any county to load its record'+
+    (b.attr?` · <span class="unit">${b.attr}</span>`:'');
+}
+
+function refresh(){
+  buildFields();
+  refreshCUR();
+  drawMapHead();
+  drawDash();
+  drawMap();
+  document.getElementById('foot').innerHTML='';
+  writeHash();
+}
+
+/* ------------------------------------------------------------ URL + wire */
+function writeHash(){
+  const p=new URLSearchParams();
+  p.set('c',S.county);
+  p.set('h',S.hazard); p.set('t',S.thresh);
+  if(S.base!=='topo') p.set('bg',S.base);
+  if(S.theme!=='dark') p.set('k',S.theme);
+  try{ history.replaceState(null,'','#'+p.toString()); }catch(e){}
+}
+function readHash(){
+  if(!location.hash) return;
+  const p=new URLSearchParams(location.hash.slice(1));
+  if(p.get('c')) S.county=p.get('c');
+  if(p.get('h')) S.hazard=p.get('h');
+  if(p.get('t')) S.thresh=+p.get('t');
+  if(BASES[p.get('bg')]) S.base=p.get('bg');
+  if(p.get('k')) S.theme=p.get('k');
+}
+function addTiles(){
+  const b=baseSpec();
+  const url=b.url||tileUrl();
+  const attr=b.url?(b.attr+' · data: NOAA/NCEI'):TILE_ATTR;
+  return L.tileLayer(url,{attribution:attr,maxZoom:11,
+                          maxNativeZoom:b.maxNative||11}).addTo(map);
+}
+function setBase(k){
+  S.base=BASES[k]?k:'topo';
+  if(map&&tiles){ map.removeLayer(tiles); tiles=addTiles(); }
+  drawMapHead(); drawMap(); writeHash();
+}
+function wire(){
+  document.getElementById('usBtn').onclick=()=>{ zoomUS(); };
+  document.getElementById('stSel').onchange=e=>{
+    const v=e.target.value; if(v) zoomState(v); else zoomUS(); };
+  document.getElementById('baseSel').onchange=e=>setBase(e.target.value);
+  document.getElementById('resetBtn').onclick=()=>{
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+    location.reload(); };
+  document.getElementById('themeBtn').onclick=function(){
+    S.theme=S.theme==='dark'?'light':'dark';
+    this.textContent=S.theme==='dark'?'Light':'Dark';
+    document.documentElement.dataset.theme=S.theme;
+    document.documentElement.style.background=T().bg;
+    if(tiles){ map.removeLayer(tiles); tiles=addTiles(); }
+    refresh(); };
+  document.getElementById('linkBtn').onclick=function(){
+    writeHash();
+    navigator.clipboard.writeText(location.href).then(()=>{
+      const t=this.textContent; this.textContent='Copied';
+      setTimeout(()=>{this.textContent=t;},1200); }); };
+}
+
+/* ------------------------------------------------------------------ init */
+(async function init(){
+  const msg=document.getElementById('msg');
+  try{
+    msg.textContent='Loading county map…';
+    const [idx,ctopo,stopo]=await Promise.all([
+      fetch('data/index.json').then(r=>r.json()),
+      gzFetch('geo/counties.topo.json.gz'),
+      gzFetch('geo/states.topo.json.gz')
+    ]);
+    INDEX={hazards:idx.hazards.filter(h=>!h.kind)};   // county hazards only
+    GEO  =topojson.feature(ctopo,ctopo.objects[Object.keys(ctopo.objects)[0]]);
+    STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
+    GEO.features.forEach((f,i)=>{ const p=f.properties;
+      gidxOf[p.GEOID]=i; GEOID.push(p.GEOID); NAME.push(p.NAME);
+      STUSPS.push(p.STUSPS); AREA.push(p.AREA||1); });
+    buildCountyIndex();
+
+    readHash();
+    if(gidxOf[S.county]===undefined) S.county='18157';
+    if(!HAZ.includes(S.hazard)) S.hazard='hail';
+
+    msg.textContent='Loading storm records…';
+    for(const h of HAZ) await loadHazard(h);
+
+    /* Leaflet measures its container on creation; a hidden one measures 0x0 and
+       every later fitBounds then returns maximum zoom. Show the body first. */
+    msg.style.display='none';
+    document.getElementById('body').style.display='block';
+    document.documentElement.dataset.theme=S.theme;
+
+    map=makeMap('map'); tiles=addTiles();
+    STGEO.features.forEach(f=>STATES.push({ab:f.properties.STUSPS,
+      name:f.properties.STATE_NAME,bounds:L.geoJSON(f).getBounds()}));
+    STATES.sort((x,y)=>x.name.localeCompare(y.name));
+    stLay=stateLayer().addTo(map);
+
+    document.getElementById('stSel').innerHTML =
+      '<option value="">Lower 48</option>'+
+      STATES.map(s=>`<option value="${esc(s.ab)}">${esc(s.name)}</option>`).join('');
+    document.getElementById('baseSel').value=S.base;
+
+    wire();
+    document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
+
+    map.invalidateSize();
+    /* Open where the reader's county is rather than at the Lower 48 — the
+       default county is in Indiana, and a state-sized view is the one at which
+       a county is actually clickable. */
+    /* The state is not in the URL — it is wherever the county is. Keeping the
+       'IN' default here made a shared link to a California county open in
+       Indiana and then relocate the selection to match. */
+    S.state=STUSPS[gidxOf[S.county]]||'IN';
+    if(stateOf(S.state)) zoomState(S.state); else zoomUS();
+    syncStateSel();
+    refresh();
+    setTimeout(()=>map.invalidateSize(),120);
+  }catch(e){
+    console.error(e);
+    if(location.protocol==='file:'){
+      msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
+        'Browsers block <code>fetch()</code> of local files. From the '+
+        '<code>extremewxorg</code> folder run:<br>'+
+        '<code>python3 -m http.server 8000</code><br>then open '+
+        '<a href="http://localhost:8000/scs/trends/scsdash.html" '+
+        'style="color:var(--accent)">localhost:8000/scs/trends/scsdash.html</a>.';
+    } else { msg.textContent='Could not load the data: '+e.message; }
+  }
+})();
+</script>
+</body>
+</html>
