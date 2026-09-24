@@ -189,7 +189,9 @@
   /* The whole cell carries the climatology colour, so the table reads as a
      small map. Text colour flips with the background's luminance or the dark
      end of the ramp swallows it. */
-  #dash .cell .lab{font-size:9.5px;opacity:.8;text-transform:uppercase;letter-spacing:.04em}
+  /* The severity threshold is what tells you which number you are looking at, so
+     it should not be the smallest thing in the cell. */
+  #dash .cell .lab{font-size:12px;font-weight:650;opacity:.9;letter-spacing:.01em}
   #dash .cell .val{font-size:15px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
   #dash .cell .unit{font-size:9.5px;opacity:.75;font-weight:400}
   #dash .cell .ret{margin-top:1px;line-height:1.3;font-weight:700}
