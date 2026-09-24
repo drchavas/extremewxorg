@@ -400,14 +400,18 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       !/class="trd moves"/.test($('dashBody').innerHTML),
       [...$('dashBody').querySelectorAll('.cell[data-h] .bot.moves')].length+' of '+
       [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].length+' bold');
-  say('the arrow sits beside one line carrying both figures',
+  say('the arrow sits beside the two stacked figures',
       [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].every(b=>
         b.firstElementChild.tagName.toLowerCase()==='svg'&&
-        b.children.length===2&&b.querySelector('.trd .pct')));
-  say('that line reads value, percentage, unit, in order',
-      /^[+-][\d.]+ \([+-][\d.]+%\) \/decade$/.test(
-        $('dashBody').querySelector('.cell[data-h] .trd').textContent.trim()),
-      $('dashBody').querySelector('.cell[data-h] .trd').textContent.trim());
+        b.children.length===2&&b.querySelector('.tnum > .trd')&&
+        b.querySelector('.tnum > .pct')));
+  say('the value carries the unit and the percentage below it does not',
+      /^[+-][\d.]+ \/decade$/.test(
+        $('dashBody').querySelector('.cell[data-h] .trd').textContent.trim())&&
+      [...$('dashBody').querySelectorAll('.cell[data-h] .pct')]
+        .every(p=>!/decade/.test(p.textContent)),
+      $('dashBody').querySelector('.cell[data-h] .trd').textContent.trim()+' / '+
+      $('dashBody').querySelector('.cell[data-h] .pct').textContent.trim());
   say('and is tall enough to span both lines',
       +$('dashBody').querySelector('.cell[data-h] svg.arw').getAttribute('height')>=34,
       $('dashBody').querySelector('.cell[data-h] svg.arw').getAttribute('height')+'px');
