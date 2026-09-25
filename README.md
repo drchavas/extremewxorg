@@ -35,7 +35,7 @@ Or plain git from inside this folder: `git add -A && git commit -m "…" && git 
 ## Structure
 
 ```
-index.html            Landing page (the two sections below)
+index.html            Landing page (the three sections below)
 assets/               purdue_eaps_logo.png (no longer referenced by the landing page)
   thumbs/             720x360 WebP preview shots, one per tool card on the landing page
 skewt.js              Shared skew-T plotting helper
@@ -48,6 +48,7 @@ tc/                   Tropical cyclones
     build_*.py, *.js    build/audit scripts (not served)
 scs/                  Severe convective storms (+ other U.S. hazards)
   trends/
+    scsdash.html        county multi-hazard dashboard (linked from landing, BETA)
     scsevents.html      "Historical Severe Weather Events" (event viewer)
     scstrend.html       "Climatology & Trends — county level"
     scstrend_grid.html  "Climatology & Trends — 2° grid"
@@ -57,6 +58,11 @@ scs/                  Severe convective storms (+ other U.S. hazards)
 ```
 
 ### The landing page (`index.html`) links to
+
+**Dashboards**
+- *United States County-Level Multi-Hazard Extreme Weather Dashboard* → `scs/trends/scsdash.html`
+  — carries a `new — in beta` chip on the landing page; drop the `<span class="beta">` when it
+  leaves beta.
 
 **Tropical Cyclones**
 - *Historical Event Viewer* → **[tcviewer.org](https://tcviewer.org/)** (external; the
@@ -144,7 +150,9 @@ tinted rounded square, optional `.qual` sub-line) with `.cat` divider labels ove
 (720x360 WebP in `assets/thumbs/`, `width`/`height` set to reserve space, `loading="lazy"`
 except the first) plus `.txt > h3 + p.desc`. Cards stack image-over-text below 620px.
 Hover lift and image zoom are disabled under `prefers-reduced-motion`. External links use
-`target="_blank" rel="noopener"` and a `<span class="ext">external site</span>` chip.
+`target="_blank" rel="noopener"` and a `<span class="ext">external site</span>` chip; a tool still
+in testing gets a `<span class="beta">` chip (warm `--accent2` pill) in the same position. A section
+with a single card and no `.cat` labels relies on `.sec-title + .cards` for its spacing.
 
 **Thumbnails:** screenshots of each tool's own map, captured at 1440px wide, cropped 2:1 and
 saved as WebP (quality 82). To refresh one, open the tool, screenshot just the map element

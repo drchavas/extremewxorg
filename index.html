@@ -92,6 +92,10 @@
     .card .desc{margin:5px 0 0;color:var(--muted);font-size:14px}
     .card .ext{display:inline-block;margin-left:7px;font-size:12px;font-weight:600;color:var(--muted);
       padding:1px 7px;border-radius:999px;border:1px solid var(--line);vertical-align:1px}
+    .card .beta{display:inline-block;margin-left:7px;font-size:12px;font-weight:700;letter-spacing:.02em;
+      color:var(--accent2);background:var(--accent2-soft);padding:1px 8px;border-radius:999px;
+      border:1px solid color-mix(in srgb, var(--accent2) 34%, transparent);vertical-align:1px;white-space:nowrap}
+    .sec-title + .cards{margin-top:18px}
 
     @media (max-width:620px){
       .card{flex-direction:column;align-items:stretch;gap:12px}
@@ -119,6 +123,28 @@
       <h2 class="about-title">What is this site?</h2>
       <p class="subtitle">Interactive maps and explorers for extreme weather. Site development is ongoing, new updates expected regularly. <a href="mailto:dchavas@purdue.edu">Email me</a> if there is a feature you would like to see added!</p>
       <hr class="rule" />
+    </section>
+
+    <!-- DASHBOARDS -->
+    <section id="dashboards">
+      <h2 class="sec-title">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3" y="3.5" width="7.5" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/>
+          <rect x="13.5" y="3.5" width="7.5" height="17" rx="1.6" stroke="currentColor" stroke-width="1.8"/>
+          <rect x="3" y="13.5" width="7.5" height="7" rx="1.6" fill="var(--accent2)"/>
+        </svg>
+        Dashboards
+      </h2>
+
+      <div class="cards">
+        <a class="card" href="scs/trends/scsdash.html">
+          <div class="shot"><img src="assets/thumbs/scsdash.webp" width="720" height="360" loading="lazy" alt="County map beside a matrix of severe-weather hazards by severity, cells shaded red through yellow with per-decade trend arrows" /></div>
+          <div class="txt">
+            <h3>United States County-Level Multi-Hazard Extreme Weather Dashboard<span class="beta">new — in beta</span></h3>
+            <p class="desc">“What does extreme weather look like where I live?” A single county’s hazards on one page — currently hail, tornado, thunderstorm wind and derecho, with more to come — by severity level, with info about how often they occur and how they are changing. Click any county on the map to load its record.</p>
+          </div>
+        </a>
+      </div>
     </section>
 
     <!-- TROPICAL CYCLONES -->

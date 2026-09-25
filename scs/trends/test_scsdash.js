@@ -162,9 +162,13 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       (css.match(/max-width:\s*var\(--span\)/g)||[]).length+' rules share it');
   say('but the header runs full width, not centred on it',
       !/header>\*/.test(css)&&!/header p\{[^}]*margin:4px auto/.test(css));
+  say('the beta notice leads the banner',
+      /^⚠\s*Beta version — still in testing\. Work in progress/.test(
+        w.document.querySelector('.alertbar').textContent.trim()),
+      w.document.querySelector('.alertbar').textContent.trim().slice(0,52));
   say('the page is titled for what it covers',
       w.document.querySelector('header h1').textContent
-        ==='United States County-Level Extreme Weather Dashboard',
+        ==='United States County-Level Multi-Hazard Extreme Weather Dashboard',
       w.document.querySelector('header h1').textContent);
   say('the how-to paragraph is gone, the credit line is not',
       !/Click any county<\/b> on the/.test(w.document.querySelector('header').innerHTML)&&
