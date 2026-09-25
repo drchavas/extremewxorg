@@ -317,6 +317,17 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   w.eval("pickCounty('18157')");
 
   say('backdrop defaults to topography',w.eval("dashState().base")==='topo');
+  /* The menus used to flow after the subtitle on one wrapping line, so the
+     subtitle's length decided where they broke — picking "Plain", which prints
+     no tile credit, shuffled them onto different rows. */
+  say('the two menus share their own row, whatever the subtitle says',
+      ['topo','pop','road','plain'].every(k=>{
+        $('baseSel').value=k; $('baseSel').onchange({target:{value:k}});
+        const c=$('stSel').parentElement.parentElement;
+        return c.classList.contains('mapctl')&&
+               c===$('baseSel').parentElement.parentElement&&
+               c.previousElementSibling.id==='mapSub'; }),
+      'subtitle now: "'+$('mapSub').textContent.trim()+'"');
   const tileUrlOf=k=>w.eval(`baseInfo(${JSON.stringify(k)}).url||''`);
   say('topography, night lights and highways all have key-free sources',
       /World_Physical_Map/.test(tileUrlOf('topo'))&&

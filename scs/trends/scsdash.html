@@ -95,6 +95,12 @@
   .maphead h2{margin:0;font-size:14.5px;font-weight:650}
   .maphead p{margin:2px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
   .maphead .smtag{color:var(--accent2);font-weight:700}
+  /* The two menus sit on their own row rather than flowing after the subtitle.
+     Sharing one wrapping flex line meant the subtitle's length decided where
+     they broke: "Plain" has no tile credit to print, so the line got short
+     enough for one menu to ride up beside the title and the other to drop. */
+  .maphead .mapctl{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .maphead .mapctl .fld{margin:0}
   .lmap{height:460px;background:#0b1119;position:relative}
   .lmap .leaflet-container{background:#0b1119}
   .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
@@ -250,20 +256,20 @@
     <div id="cols">
      <div class="left">
       <div class="mapcol">
-        <div class="maphead" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-          <div style="flex:1 1 auto;min-width:0">
-            <h2 id="mapTitle">Where</h2>
-            <p id="mapSub">&nbsp;</p>
+        <div class="maphead">
+          <h2 id="mapTitle">Where</h2>
+          <p id="mapSub">&nbsp;</p>
+          <div class="mapctl">
+            <div class="fld"><label for="stSel">Zoom to</label>
+              <select id="stSel"></select></div>
+            <div class="fld"><label for="baseSel">Backdrop</label>
+              <select id="baseSel">
+                <option value="topo">Topography</option>
+                <option value="pop">Night lights</option>
+                <option value="road">Highways</option>
+                <option value="plain">Plain</option>
+              </select></div>
           </div>
-          <div class="fld" style="margin:0"><label for="stSel">Zoom to</label>
-            <select id="stSel"></select></div>
-          <div class="fld" style="margin:0"><label for="baseSel">Backdrop</label>
-            <select id="baseSel">
-              <option value="topo">Topography</option>
-              <option value="pop">Night lights</option>
-              <option value="road">Highways</option>
-              <option value="plain">Plain</option>
-            </select></div>
         </div>
         <div class="lmap" id="map"><div class="hint">click a county</div></div>
       </div>
