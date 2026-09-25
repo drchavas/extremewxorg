@@ -172,7 +172,8 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       w.document.querySelector('header h1').textContent);
   say('the how-to paragraph is gone, the credit line is not',
       !/Click any county<\/b> on the/.test(w.document.querySelector('header').innerHTML)&&
-      /NSF Grant 2519425/.test(w.document.querySelector('header').innerHTML));
+      /National Science Foundation/.test(w.document.querySelector('header').innerHTML)&&
+      !/2519425/.test(w.document.querySelector('header').innerHTML));
   say('smoothing is locked on',w.eval("dashState().smooth")==='2');
   say('the window is locked to the trends page default',
       w.eval("dashState().y0")===2000&&w.eval("dashState().y1")===2024,
@@ -316,7 +317,9 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   $('stSel').value='IN'; $('stSel').onchange({target:{value:'IN'}});
   w.eval("pickCounty('18157')");
 
-  say('backdrop defaults to topography',w.eval("dashState().base")==='topo');
+  say('backdrop defaults to night lights',w.eval("dashState().base")==='pop'&&
+      $('baseSel').value==='pop', $('baseSel').value);
+  say('and the county mesh inverts for it by default',w.eval("darkBase()")===true);
   /* The menus used to flow after the subtitle on one wrapping line, so the
      subtitle's length decided where they broke — picking "Plain", which prints
      no tile credit, shuffled them onto different rows. */
@@ -328,6 +331,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
                c===$('baseSel').parentElement.parentElement&&
                c.previousElementSibling.id==='mapSub'; }),
       'subtitle now: "'+$('mapSub').textContent.trim()+'"');
+  $('baseSel').value='pop'; $('baseSel').onchange({target:{value:'pop'}});  // back to default
   const tileUrlOf=k=>w.eval(`baseInfo(${JSON.stringify(k)}).url||''`);
   say('topography, night lights and highways all have key-free sources',
       /World_Physical_Map/.test(tileUrlOf('topo'))&&
@@ -339,13 +343,18 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       /Night lights/.test(w.eval("baseInfo('pop').label"))&&
       !/[Pp]opulation/.test(w.eval("baseInfo('pop').label+' '+baseInfo('pop').attr")),
       w.eval("baseInfo('pop').label"));
-  $('baseSel').value='pop'; $('baseSel').onchange({target:{value:'pop'}});
+  say('the default backdrop credits its source',/NASA GIBS/.test($('mapSub').innerHTML),
+      $('mapSub').textContent.trim());
+  $('baseSel').value='topo'; $('baseSel').onchange({target:{value:'topo'}});
   say('switching the backdrop swaps the tile layer and credits it',
-      w.eval("dashState().base")==='pop'&&/NASA GIBS/.test($('mapSub').innerHTML));
+      w.eval("dashState().base")==='topo'&&/Esri/.test($('mapSub').innerHTML));
   say('the county mesh is yellow on every backdrop',
       /255,209,64/.test(w.eval("JSON.stringify(ctyStyle()({properties:{GEOID:'x'}}))")));
-  say('the backdrop rides in the hash',/bg=pop/.test(w.location.hash),w.location.hash.slice(0,60));
-  $('baseSel').value='topo'; $('baseSel').onchange({target:{value:'topo'}});
+  say('a non-default backdrop rides in the hash',/bg=topo/.test(w.location.hash),
+      w.location.hash.slice(0,60));
+  $('baseSel').value='pop'; $('baseSel').onchange({target:{value:'pop'}});
+  say('and the default one is left out of it',!/bg=/.test(w.location.hash),
+      w.location.hash.slice(0,60));
 
   console.log('\n--- arrows encode direction and size, and nothing else');
   const arrow=(tr,mean)=>w.eval(`arrowSVG(${tr},1,'#fff',${mean==null?1:mean})`);

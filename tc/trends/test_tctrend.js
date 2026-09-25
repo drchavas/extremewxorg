@@ -813,7 +813,22 @@ async function load(hash) {
     ok('  and the wind coverage comes from index.json',
        txt.includes(`present for ${(dw.st.IX.sources.usa.coverage * 100).toFixed(0)}% of positions`),
        'mismatch', 'from index.json');
-    ok('  links out to the README and both comparisons',
+    {
+    const hm = dw.document.getElementById('hmeta');
+    const t = hm.textContent;
+    ok('  the header meta points readers at global-tropical-cyclones.com',
+       /For basin-wide and global trend analyses check out/.test(t)
+       && hm.querySelector('a[href^="https://global-tropical-cyclones.com"]'),
+       'absent', 'named and linked');
+    ok('    opened safely in a new tab',
+       (() => { const a2 = hm.querySelector('a[href^="https://global-tropical-cyclones.com"]');
+                return a2.getAttribute('target') === '_blank'
+                    && /noopener/.test(a2.getAttribute('rel') || ''); })(),
+       'same tab or no noopener', '_blank + noopener');
+    ok('    with the copyright last on the line',
+       /©\s*\d{4} Dan Chavas$/.test(t.trim()), t.trim().slice(-40), 'ends with the copyright');
+  }
+  ok('  links out to the README and both comparisons',
        ['README.md', 'COMPARISON_vs_notebook.md', 'COMPARISON_vs_gtc.md']
          .every(f => [...foot.querySelectorAll('a')].some(a => a.getAttribute('href') === f)),
        [...foot.querySelectorAll('a')].map(a => a.getAttribute('href')).join(','),

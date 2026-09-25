@@ -240,7 +240,7 @@
      <a href="scstrend_grid.html">2&deg; grid maps by hazard</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> as part of NSF Grant 2519425</div>
+  <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole country">&#8592; Full U.S.</button></div>
@@ -264,8 +264,8 @@
               <select id="stSel"></select></div>
             <div class="fld"><label for="baseSel">Backdrop</label>
               <select id="baseSel">
-                <option value="topo">Topography</option>
                 <option value="pop">Night lights</option>
+                <option value="topo">Topography</option>
                 <option value="road">Highways</option>
                 <option value="plain">Plain</option>
               </select></div>
@@ -508,7 +508,7 @@ const HAZ=['hail','tornado','wind','derechoday'];
 const S={county:'18157',            // Tippecanoe, IN — home county
          y0:2000,y1:2024,theme:'dark',smooth:'2',
          hazard:'hail',thresh:1,    // which cell the table highlights
-         base:'topo',               // map backdrop
+         base:'pop',                // map backdrop: night lights, see BASES
          state:'IN'};               // map zoom
 let INDEX=null, GEO=null, STGEO=null;
 const HZ={}, STATES=[];
@@ -1252,7 +1252,7 @@ function writeHash(){
   const p=new URLSearchParams();
   p.set('c',S.county);
   p.set('h',S.hazard); p.set('t',S.thresh);
-  if(S.base!=='topo') p.set('bg',S.base);
+  if(S.base!=='pop') p.set('bg',S.base);
   if(S.theme!=='dark') p.set('k',S.theme);
   try{ history.replaceState(null,'','#'+p.toString()); }catch(e){}
 }
@@ -1273,7 +1273,7 @@ function addTiles(){
                           maxNativeZoom:b.maxNative||11}).addTo(map);
 }
 function setBase(k){
-  S.base=BASES[k]?k:'topo';
+  S.base=BASES[k]?k:'pop';
   if(map&&tiles){ map.removeLayer(tiles); tiles=addTiles(); }
   drawMapHead(); drawMap(); writeHash();
 }
