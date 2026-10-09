@@ -75,6 +75,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pandas as pd
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year
 from shapely.geometry import Point
 from shapely.ops import unary_union
 
@@ -439,7 +440,7 @@ def main():
             d += timedelta(days=1)
 
     nrow = nutc = nfall = 0
-    for ch in pd.read_csv(os.path.join(root, WIND_CSV), usecols=USECOLS, dtype=str,
+    for ch in read_chunks(os.path.join(root, WIND_CSV), usecols=USECOLS, dtype=str,
                           chunksize=400_000, low_memory=False):
         nrow += len(ch)
         ym = pd.to_numeric(ch.BEGIN_YEARMONTH, errors="coerce")

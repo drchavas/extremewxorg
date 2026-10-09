@@ -187,7 +187,7 @@
       <div class="mapcol">
         <div class="maphead"><h2>Climatology</h2><p id="climSub">&nbsp;</p></div>
         <div class="lmap" id="mapClim"><div class="cbar" id="cbClim"></div>
-          <div class="hint">drag &middot; scroll to zoom &middot; click a state to centre</div></div>
+          <div class="hint">drag &middot; scroll to zoom &middot; click a box to select it</div></div>
       </div>
       <div class="mapcol">
         <div class="maphead"><h2>Trend</h2><p id="trendSub">&nbsp;</p>
@@ -211,7 +211,7 @@
               matters almost entirely in 1993–1995, when hail and wind reports carry no
               coordinates at all.</li>
           <li><b>Bin into a box.</b> A 2°&nbsp;×&nbsp;2° grid over the lower 48
-              (24–50°N, 126–66°W; 390 boxes, 258 of which ever see a report).</li>
+              (24–50°N, 126–66°W; 390 boxes, about 260 of which ever see a hail, tornado or wind report).</li>
           <li><b>Apply the threshold.</b> Each report is scored against the selected size or
               intensity cut. Thresholds are cumulative — a 2″ hailstone also counts as a 1″ one.</li>
           <li><b>Collapse to hazard days.</b> Count <i>distinct calendar dates</i> on which a box
@@ -461,7 +461,7 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid,gate){
   });
   if(r){
     const per=r.slope*10;
-    const stat=`slope ${per>=0?'+':''}${per.toFixed(2)} days/decade · R² = ${r.r2.toFixed(3)} · p = ${r.p<0.001?'<0.001':r.p.toFixed(3)}`;
+    const stat=`slope ${per>=0?'+':''}${per.toFixed(2)} ${countWord()}s/decade · R² = ${r.r2.toFixed(3)} · p = ${r.p<0.001?'<0.001':r.p.toFixed(3)}`;
     out+=txt(L+6,TOP+14,stat,{size:11.5,fill:r.p<0.05?t.fit:t.mute,weight:r.p<0.05?650:400});
   } else {
     out+=txt(L+6,TOP+14,'No trend fitted — '+esc(gate?gate.why:'too sparse'),
@@ -470,7 +470,7 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid,gate){
   out+=txt((L+R)/2,BOT+38,'Year',{size:12,fill:t.mute,anchor:'middle'});
   out+=`<text x="${x+16}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+16} ${(TOP+BOT)/2})"`+
        ` font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"`+
-       ` font-size="12" fill="${t.mute}" text-anchor="middle">Number of ${esc(label)} days</text>`;
+       ` font-size="12" fill="${t.mute}" text-anchor="middle">Number of ${esc(label)} ${countWord()}s</text>`;
   out+=`</g>`;
   return out;
 }
@@ -489,7 +489,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,gate,vm){
   // common y scale across all months
   let vmax=1;
   for(let i=0;i<nY;i++){ const yr=i+y0; if(yr<a||yr>b) continue;
-    if(valid && !valid[i]) continue;
+    if(!vm && valid && !valid[i]) continue;
     for(let m=0;m<12;m++){ if(vm&&!vm[i*12+m]) continue;
                            vmax=Math.max(vmax,my[i*12+m]); } }
   const vTop=niceAxis(vmax,4).top;
@@ -548,6 +548,9 @@ function syncYears(){
   /* Clamp the end to the record, then widen backwards if the window is under
      three years — forcing y1>=y0+2 after clamping used to display an end year
      past the data (From 2024 showed To 2026). */
+  /* No period chosen yet: end on the latest COMPLETE year, so a partly published
+     final year is reachable from the To box but never opens the page. */
+  if(S.y1==null) S.y1=lastFull();
   S.y0=Math.max(a,Math.min(S.y0,b));
   S.y1=Math.min(b,Math.max(S.y1,S.y0));
   if(S.y1-S.y0<2) S.y0=Math.max(a,S.y1-2);
@@ -558,7 +561,7 @@ function dl(blob,name){
   a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
 }
 
-const S={hazard:'hail',thresh:0,region:'',cell:'',y0:2000,y1:2024,theme:'dark',smooth:'2'};
+const S={hazard:'hail',thresh:0,region:'',cell:'',y0:2000,y1:null,theme:'dark',smooth:'2'};
 let INDEX=null, GEO=null, STGEO=null, COGEO=null;
 const HZ={}, STATES=[];
 let CELLS=[];              // {ci, lat, lon, state} for every populated 2° box
@@ -657,7 +660,7 @@ function gateOf(ys,nwin){
   const ok = ne>=need && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN;
   let why='';
   if(!ok){
-    if(ne<need) why=`only ${ne} of ${nwin} years carry a day, needs ${need}`;
+    if(ne<need) why=`only ${ne} of ${nwin} years carry a${countWord()==='event'?'n':''} ${countWord()}, needs ${need}`;
     else if((e1-e0+1)<SPAN_MIN*nwin)
       why=`active years span ${e1-e0+1} of ${nwin}, needs ${Math.ceil(SPAN_MIN*nwin)}`;
     else why=`needs ${HALF_MIN} active years in each half, has ${nfh} and ${nsh}`;
@@ -677,6 +680,11 @@ function gapMask(){
   });
   d._gapYM={ym,yr};
   return d._gapYM;
+}
+function lastFull(){
+  const g=gapMask();
+  for(let i=NY-1;i>=0;i--) if(g.yr[i]) return i+Y0;
+  return Y0+NY-1;
 }
 function gapYears(){
   const g=gapMask(), out=[];
@@ -987,7 +995,7 @@ function guideHtml(){
       '<b>Derechoes are single storms</b>, taken from the archive of '+
       '<a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" rel="noopener">'+
       'Squitieri, Wade and Jirak (2026)</a>, the first comprehensive US derecho archive: '+
-      '184 events from 1956 to 2025. Only the 96 NEXRAD-confirmed <i>definitive</i> cases are '+
+      '184 events from 1956 to 2025. Only the NEXRAD-confirmed <i>definitive</i> cases (96 in the archive) are '+
       'counted here, so this record begins in <b>1996</b>, and each is dated by its swath\'s '+
       'start rather than by each report. '+
       'The wind reports inside each swath are still Storm Events, so the reporting caveat '+
@@ -1028,8 +1036,8 @@ function refresh(){
   const nwin=b-a+1, need=yearsNeeded(nwin);
   document.getElementById('trendSub').innerHTML = nwin<need
     ? esc(`No trends shown: ${a}–${b} is ${nwin} year${nwin===1?'':'s'} and a fit needs at `+
-          `least ${need} years carrying a hazard day`)
-    : esc(`Change per decade · grey boxes have reports but are too sparse to fit a trend`)+smTag();
+          `least ${need} years carrying a hazard ${countWord()}`)
+    : esc(`Change per decade · grey boxes are too sparse to fit a trend`)+smTag();
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -1062,6 +1070,7 @@ function drawPanels(){
   // the annual series the panel plots, gated exactly as the map gates the box
   const annual=[];
   for(let i=0;i<NY;i++){ const yr=i+Y0; if(yr<a||yr>b) continue;
+    if(valid&&!valid[i]){ annual.push(0); continue; }   // the map skips it too
     let v=0; for(let m=0;m<12;m++) v+=my[i*12+m]; annual.push(v); }
   // one place decides how the panels describe their scope
   SCOPE = selCell()<0 ? `mean over all ${CELLS.length} boxes` : `box at ${placeLabel()}`;
@@ -1093,10 +1102,19 @@ function gapNote(){
   const [a,b]=yearsSel();
   const yrs=gapYears().filter(y=>y>=a&&y<=b);
   if(!yrs.length) return '';
-  return ` <b>${yrs.join(', ')} is excluded</b> from the maps and the annual plot: June and July `+
+  let out='';
+  if(yrs.includes(1993))
+    out+=` <b>1993 is excluded</b> from the maps and the annual plot: June and July `+
          `1993 are missing from the Storm Events database itself — the NWS offices' files for those `+
          `two months were lost when NCEI migrated the records — so the year is incomplete rather `+
          `than quiet. The other ten months still appear in the monthly panels.`;
+  const late=yrs.filter(y=>y!==1993), thru=HZ[S.hazard].meta.through;
+  if(late.length)
+    out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
+         `not yet published the whole year`+(thru?` (Storm Events currently runs through `+
+         `${MONTHS[+thru.split('-')[1]-1]} ${thru.split('-')[0]})`:'')+
+         `. The months already published appear in the monthly panels.`;
+  return out;
 }
 /* Crossing the panel breakpoint changes the whole SVG geometry, so redraw when
    it happens — but only then, since a resize storm during a drag should not
@@ -1165,10 +1183,23 @@ function wire(){
     o.value=h.key; o.textContent=h.label; hz.appendChild(o); });
   hz.value=S.hazard;
   hz.onchange=async e=>{
-    S.hazard=e.target.value;
-    document.getElementById('msg').textContent='Loading '+hazSpec().label.toLowerCase()+'…';
-    document.getElementById('msg').style.display='block';
-    const d=await loadHazard(S.hazard);
+    const key=e.target.value, prevH=S.hazard, msg=document.getElementById('msg');
+    const spec=INDEX.hazards.find(h=>h.key===key);
+    msg.textContent='Loading '+spec.label.toLowerCase()+'…';
+    msg.style.display='block';
+    /* S.hazard only changes once the data are in: the grid geometry and year axis
+       are per hazard, so a slow fetch that is overtaken must not be applied. */
+    let d;
+    try{ d=await loadHazard(key); }
+    catch(err){
+      console.error(err);
+      if(hz.value===key){ hz.value=prevH;
+        msg.textContent='Could not load '+spec.label.toLowerCase()+': '+err.message;
+        setTimeout(()=>{ msg.style.display='none'; },4000); }
+      return;
+    }
+    if(hz.value!==key) return;
+    S.hazard=key;
     /* Each hazard populates a slightly different set of boxes and starts in a
        different year — hail 258 boxes from 1955, tornado 257 from 1950 — so the
        geometry and the year axis have to be rebuilt, not just the counts. */
@@ -1255,6 +1286,10 @@ function zoomUS(){
              countword:h.countword,
              thresholds:h.thresholds.map(t=>({key:t.k,label:t.label})),
              year0:h.y0,year1:h.y1,file:h.file}))};
+    /* Old or hand-edited links must not take the page down. */
+    if(!INDEX.hazards.some(h=>h.key===S.hazard)) S.hazard='hail';
+    if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<hazSpec().thresholds.length)) S.thresh=0;
+    if(!THEME[S.theme]) S.theme='dark';
     STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
     COGEO=topojson.feature(ctopo,ctopo.objects[Object.keys(ctopo.objects)[0]]);
 

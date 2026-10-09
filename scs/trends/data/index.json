@@ -32,7 +32,7 @@
     }
    ],
    "year0": 1955,
-   "year1": 2024,
+   "year1": 2026,
    "file": "hail.json.gz"
   },
   {
@@ -73,7 +73,7 @@
     }
    ],
    "year0": 1950,
-   "year1": 2024,
+   "year1": 2026,
    "file": "tornado.json.gz"
   },
   {
@@ -108,7 +108,7 @@
     }
    ],
    "year0": 1955,
-   "year1": 2024,
+   "year1": 2026,
    "file": "wind.json.gz"
   },
   {
@@ -138,7 +138,7 @@
     }
    ],
    "year0": 1996,
-   "year1": 2024,
+   "year1": 2025,
    "file": "derechoday.json.gz"
   },
   {
@@ -166,12 +166,12 @@
      "min": 6
     }
    ],
-   "year0": 2000,
-   "year1": 2024,
+   "year0": 2001,
+   "year1": 2025,
    "kind": "station",
    "season": "JulJun",
    "file": "fzra.json.gz",
-   "nDelPizzo": 0
+   "nDelPizzo": 5
   },
   {
    "key": "pkwnd",
@@ -209,7 +209,7 @@
    "kind": "station",
    "season": "calendar",
    "file": "pkwnd.json.gz",
-   "nDelPizzo": 0
+   "nDelPizzo": 5
   },
   {
    "key": "derecho",

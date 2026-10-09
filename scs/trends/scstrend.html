@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Severe thunderstorm(+) Climatology and Trends</title>
-<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, freezing-rain and peak-wind days, with annual and monthly series.">
+<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho, freezing-rain and peak-wind days, with annual and monthly series.">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="referrer" content="no-referrer">
@@ -163,8 +163,7 @@
 <header>
   <h1>Severe thunderstorm(+) Climatology and Trends</h1>
   <p>Climatology and trend side by side on one shared map. <b>Drag or zoom either map and both
-     follow</b>, so the two are always showing the same ground. <b>Click a state</b> to centre on it,
-     <b>Click a new state</b> to centre on it; clicking inside the state you are already on leaves
+     follow</b>, so the two are always showing the same ground. <b>Click a new state</b> to centre on it; clicking inside the state you are already on leaves
      the view exactly where you put it. Pick a county from the County menu to pin it. Nothing is
      ever hidden, you are just moving around the country.
      For individual storms &mdash; the SPC derecho archive and the biggest days on record
@@ -180,7 +179,7 @@
     <div class="fld"><label for="ctySel">County</label><select id="ctySel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" id="smWrap" title="A light Gaussian blur (sigma = 1&deg;, about 111 km) over the two maps, area-weighted and normalised. Counties with no value are excluded and stay grey; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+    <div class="fld" id="smWrap" title="A light Gaussian blur (the 2&deg; option, as described under Methods) over the two maps, area-weighted and normalised. Counties with no value are excluded and stay grey; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="2">2&deg;</option><option value="off">Raw</option></select></div>
     <div class="fld" id="tierWrap" style="display:none"><label for="tierSel">Confidence</label>
       <select id="tierSel"></select></div>
@@ -284,7 +283,7 @@
               swaths cross a date boundary, and dating by report counted one storm twice in any
               county hit either side of midnight. Values are small by construction — the busiest
               counties see about one derecho every two years — so read the map as a corridor map,
-              not a frequency map, and treat trends over 29 years with the caution the yellow note
+              not a frequency map, and treat trends over a record this short with the caution the yellow note
               above the trend panel describes.</li>
           <li><b>Derecho events</b> work differently — they are single storms, not a
               climatology, so that mode shows one map and no trend. The swaths come from the
@@ -308,9 +307,9 @@
               and 11 suspected <i>hybrids</i> the paper deliberately keeps separate. The default
               is the 144 the paper headlines. Report counts here run well above those quoted in
               the derecho literature, which works from SPC <i>filtered</i> reports that thin
-              near-duplicate reports of a single gust. Seven swaths show a track but no reports:
-              three are 2025 events, past the end of this Storm Events extract, and four fall in
-              June–July 1993, which are missing outright from the wind file.</li>
+              near-duplicate reports of a single gust. A few swaths show a track but no reports:
+              four fall in June–July 1993, which are missing outright from the wind file, and any
+              others are too recent for the Storm Events data used here.</li>
         </ol>
       </div>
     </details>
@@ -366,7 +365,7 @@ function tp(t,df){ if(!(df>0)||!isFinite(t))return 1; return betai(df/2,0.5,df/(
    trend. So freezing rain opens on the QC'd subset. Peak wind is a different
    measurement and that screen does not apply to it. */
 function dpDefault(h){ return h==='fzra'; }
-const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:2024,theme:'dark',
+const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:null,theme:'dark',
          dpOnly:dpDefault('hail'),tier:'firm',smooth:'2'};
 let INDEX=null, GEO=null, STGEO=null;
 const HZ={}, STATES=[];
@@ -527,6 +526,11 @@ function gapMask(d){
   d._gapYM={ym,yr,any:(d.meta.gaps||[]).length>0};
   return d._gapYM;
 }
+function lastFull(d){
+  const g=gapMask(d);
+  for(let i=d.nY-1;i>=0;i--) if(g.yr[i]) return i+d.meta.year0;
+  return d.meta.year1;
+}
 function gapYears(d){
   const out=[]; const g=gapMask(d);
   for(let i=0;i<d.nY;i++) if(!g.yr[i]) out.push(i+d.meta.year0);
@@ -639,7 +643,7 @@ function yearsSel(){
 function countyMetrics(){
   const d=HZ[S.hazard],M=d.M,nY=d.nY,y0=d.meta.year0,nC=GEOID.length;
   const [a,b,nyr]=yearsSel(), i0=a-y0, i1=b-y0;
-  const mean=new Float32Array(nC), trend=new Float32Array(nC), pv=new Float32Array(nC).fill(1);
+  const mean=new Float32Array(nC), trend=new Float32Array(nC).fill(NaN), pv=new Float32Array(nC).fill(1);
   const xs=[]; for(let y=i0;y<=i1;y++) xs.push(y+y0);
   const ys=new Array(xs.length);
   /* An incomplete year must leave the denominator as well as the numerator,
@@ -804,13 +808,13 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid){
   });
   if(r){
     const per=r.slope*10;
-    const stat=`slope ${per>=0?'+':''}${per.toFixed(2)} days/decade · R² = ${r.r2.toFixed(3)} · p = ${r.p<0.001?'<0.001':r.p.toFixed(3)}`;
+    const stat=`slope ${per>=0?'+':''}${per.toFixed(2)} ${countWord()}s/decade · R² = ${r.r2.toFixed(3)} · p = ${r.p<0.001?'<0.001':r.p.toFixed(3)}`;
     out+=txt(L+6,TOP+14,stat,{size:11.5,fill:r.p<0.05?t.fit:t.mute,weight:r.p<0.05?650:400});
   }
   out+=txt((L+R)/2,BOT+38,'Year',{size:12,fill:t.mute,anchor:'middle'});
   out+=`<text x="${x+16}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+16} ${(TOP+BOT)/2})"`+
        ` font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"`+
-       ` font-size="12" fill="${t.mute}" text-anchor="middle">Number of ${esc(label)} days</text>`;
+       ` font-size="12" fill="${t.mute}" text-anchor="middle">Number of ${esc(label)} ${countWord()}s</text>`;
   out+=`</g>`;
   return out;
 }
@@ -861,7 +865,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
     // not a gap, and dropping those points is what biases the eye (and the fit)
     years.forEach((yr,i)=>{
       out+=`<circle cx="${X(yr).toFixed(1)}" cy="${Y(vals[i]).toFixed(1)}" r="2.1" fill="${t.pt}"`+
-           `${vals[i]<=0?' opacity=".55"':''}><title>${MONTHS[m]} ${yr}: ${vals[i]}</title></circle>`;
+           `${vals[i]<=0?' opacity=".55"':''}><title>${MONTHS[m]} ${seasonCal(yr,m)}: ${vals[i]}</title></circle>`;
     });
     out+=txt(cx+cw/2,cy+12,MONTHS[m],{size:11.5,weight:650,anchor:'middle'});
     if(r) out+=txt(R-2,TOP+9,'R² '+r.r2.toFixed(2),
@@ -869,6 +873,9 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
   }
   out+=`</g>`;
   return out;
+}
+function seasonCal(yr,m){
+  const h=hazSpec(); return (h&&h.season==='JulJun'&&m>=6)?yr-1:yr;
 }
 function placeLabel(){
   if(S.county){
@@ -968,7 +975,10 @@ function syncYears(){
   const a=d.meta.year0,b=d.meta.year1;
   const i0=document.getElementById('y0In'), i1=document.getElementById('y1In');
   i0.min=a; i0.max=b; i1.min=a; i1.max=b;
-  S.y0=Math.max(a,Math.min(S.y0,b)); S.y1=Math.max(S.y0+2,Math.min(S.y1,b));
+  /* No period chosen yet: end on the latest COMPLETE year, so a partly published
+     final year is reachable from the To box but never opens the page. */
+  if(S.y1==null) S.y1=lastFull(d);
+  S.y0=Math.max(a,Math.min(S.y0,b-2)); S.y1=Math.max(S.y0+2,Math.min(S.y1,b));
   i0.value=S.y0; i1.value=S.y1;
 }
 function readHash(){
@@ -987,6 +997,13 @@ function readHash(){
   const smq=p.get('sm');
   if(smq==='off'||smq==='2') S.smooth=smq;
   else if(smq==='on'||smq==='1') S.smooth='2';   // older links
+  /* Old or hand-edited links must not take the page down: anything unknown
+     falls back to the default. "derecho" was the event view, now on scsevents. */
+  if(S.hazard==='derecho') S.hazard='derechoday';
+  if(!INDEX.hazards.some(h=>h.key===S.hazard)) S.hazard='hail';
+  const nt=hazSpec().thresholds.length;
+  if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<nt)) S.thresh=0;
+  if(!THEME[S.theme]) S.theme='dark';
   const q=p.get('q');
   S.dpOnly = q==null ? dpDefault(S.hazard) : q==='1';
 }
@@ -1519,7 +1536,7 @@ function refresh(){
   document.getElementById('climSub').innerHTML =
     esc(`Mean annual ${lab} ${countWord()}s per ${stn?'station':'county'}, ${a}–${b}`)+smTag();
   document.getElementById('trendSub').innerHTML =
-    esc(`Change per decade · ${stn?'ringed':'outlined'} where p < 0.05`)+smTag();
+    esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade')+smTag();
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -1591,15 +1608,27 @@ function eventFoot(e){
 
 /* Say so on screen when the window straddles the missing months, rather than
    letting the reader wonder why 1993 has no point on the annual plot. */
+function monthName(ym){
+  const [y,m]=String(ym).split('-').map(Number);
+  return (MONTHS[m-1]||'')+' '+y;
+}
 function gapNote(){
   const d=HZ[S.hazard]; if(!d||d.event||d.station) return '';
   const [a,b]=yearsSel();
   const yrs=gapYears(d).filter(y=>y>=a&&y<=b);
   if(!yrs.length) return '';
-  return ` <b>${yrs.join(', ')} is excluded</b> from the maps and the annual plot: June and July `+
+  let out='';
+  if(yrs.includes(1993))
+    out+=` <b>1993 is excluded</b> from the maps and the annual plot: June and July `+
          `1993 are missing from the Storm Events database itself — the NWS offices' files for those `+
          `two months were lost when NCEI migrated the records — so the year is incomplete rather `+
          `than quiet. The other ten months still appear in the monthly panels.`;
+  const late=yrs.filter(y=>y!==1993);
+  if(late.length)
+    out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
+         `not yet published the whole year`+(d.meta.through?` (Storm Events currently runs through `+
+         `${monthName(d.meta.through)})`:'')+`. The months already published appear in the monthly panels.`;
+  return out;
 }
 
 function bindCounty(f,l){
@@ -1824,7 +1853,7 @@ function figureSVG(){
       `Mean annual ${lab} ${countWord()}s per ${stn?'station':'county'}, ${a}\u2013${b}`+
       (smoothOn()?` \u00b7 ${sigDeg()}\u00b0 Gaussian smoothed`:''));
   g+=mapSVG(mw+30,10,mw,mh,CURT,'Trend',
-      `Change per decade \u00b7 ${stn?'ringed':'outlined'} where p < 0.05`);
+      stn?'Change per decade \u00b7 ringed where p < 0.05':'Change per decade');
   g+=`<g transform="translate(0,${top})">`+document.getElementById('card').innerHTML+'</g>';
   return {svg:g,W:LO.W,H,mapW:mw,mapH:mh-42,aspect:asp};
 }
@@ -1856,11 +1885,22 @@ function wire(){
     o.value=h.key; o.textContent=h.label; hz.appendChild(o); });
   hz.value=S.hazard;
   hz.onchange=async e=>{
-    const wasEvent=isEvent();
-    S.hazard=e.target.value; S.county=''; S.dpOnly=dpDefault(S.hazard);
-    document.getElementById('msg').textContent='Loading '+hazSpec().label.toLowerCase()+'…';
-    document.getElementById('msg').style.display='block';
-    await loadHazard(S.hazard);
+    const wasEvent=isEvent(), key=e.target.value, prev=S.hazard;
+    const spec=INDEX.hazards.find(h=>h.key===key), msg=document.getElementById('msg');
+    msg.textContent='Loading '+spec.label.toLowerCase()+'…';
+    msg.style.display='block';
+    /* S.hazard only changes once the data are in, so the controls keep working on
+       the old hazard meanwhile, and a slow fetch that is overtaken is dropped. */
+    try{ await loadHazard(key); }
+    catch(err){
+      console.error(err);
+      if(hz.value===key){ hz.value=prev;
+        msg.textContent='Could not load '+spec.label.toLowerCase()+': '+err.message;
+        setTimeout(()=>{ msg.style.display='none'; },4000); }
+      return;
+    }
+    if(hz.value!==key) return;
+    S.hazard=key; S.county=''; S.dpOnly=dpDefault(S.hazard);
     /* For a time series the year window is the analysis period; for events it is
        only a filter over a list, so opening it narrowed would hide the 1990s
        derechos without saying so. Widen on entry, put the analysis period back

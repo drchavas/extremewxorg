@@ -102,7 +102,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   const T=boot('scstrend.html'); const tw=T.w;
   await new Promise(r=>setTimeout(r,4000));
 
-  const COUNTY='18157', A=2000, B=2024;
+  const COUNTY='18157', A=2000, B=w.eval("dashState().y1");   // the dashboard's own window
   const th=tw.document.getElementById('hazSel');
 
   let checked=0, bad=[];
@@ -176,26 +176,27 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       !/2519425/.test(w.document.querySelector('header').innerHTML));
   say('smoothing is locked on',w.eval("dashState().smooth")==='2');
   say('the window is locked to the trends page default',
-      w.eval("dashState().y0")===2000&&w.eval("dashState().y1")===2024,
+      w.eval("dashState().y0")===2000&&w.eval("dashState().y1")>=2024&&w.eval("dashState().y1")<new Date().getFullYear(),
       w.eval("dashState().y0")+'-'+w.eval("dashState().y1"));
   say('the hash no longer carries a period or a smoothing',
       !/[?&#]p=/.test(w.location.hash)&&!/sm=/.test(w.location.hash),w.location.hash);
 
   console.log('\n--- each row states the years behind its numbers');
+  const END=w.eval("dashState().y1");
   const yrs=h=>{ const tr=[...$('dashBody').querySelectorAll('tr')]
                    .find(r=>new RegExp(h,'i').test(r.querySelector('td.haz').textContent));
                  return tr.querySelector('td.haz .yrs').textContent; };
   say('hail, tornado and wind all run the full default window',
-      yrs('Hail')==='2000–2024'&&yrs('Tornado')==='2000–2024'&&
-      yrs('Thunderstorm Wind')==='2000–2024', yrs('Hail'));
+      yrs('Hail')==='2000–'+END&&yrs('Tornado')==='2000–'+END&&
+      yrs('Thunderstorm Wind')==='2000–'+END, yrs('Hail'));
   say('the range is clipped to each hazard\'s own record',
-      w.eval("JSON.stringify(hazYears('derechoday'))")==='[2000,2024]'&&
-      w.eval("JSON.stringify(hazYears('tornado'))")==='[2000,2024]');
+      w.eval("JSON.stringify(hazYears('derechoday'))")===`[2000,${Math.min(END,w.eval("hazSpec('derechoday').year1"))}]`&&
+      w.eval("JSON.stringify(hazYears('tornado'))")===`[2000,${END}]`);
   say('a record starting after the window shortens its own row, not lies',
       w.eval("clipYears(2000,2024,2010,2024).join('-')")==='2010-2024'&&
       w.eval("clipYears(2000,2024,1950,2019).join('-')")==='2000-2019');
   say('the per-row link carries that row\'s window, not a global one',
-      /p=2000-2024/.test($('dashBody').querySelector('td.haz > a').href),
+      new RegExp('p=2000-'+END).test($('dashBody').querySelector('td.haz > a').href),
       $('dashBody').querySelector('td.haz > a').getAttribute('href').split('&p=').pop());
   say('the subtitle no longer names a single window',
       !/2000/.test($('dashSub').innerHTML),$('dashSub').textContent);

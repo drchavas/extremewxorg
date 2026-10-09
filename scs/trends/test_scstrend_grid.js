@@ -296,7 +296,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       [...$('hazSel').options].map(o=>o.value).join(','));
   $('hazSel').value='derechoday'; await $('hazSel').onchange({target:{value:'derechoday'}});
   await new Promise(r=>setTimeout(r,900));
-  say('record starts in 1996',$('y0In').min==='1996'&&$('y1In').max==='2024',
+  say('record starts in 1996',$('y0In').min==='1996'&&+$('y1In').max>=2024,
       $('y0In').min+'-'+$('y1In').max);
   /* Same wording rule as the county page: a derecho is one coherent storm. */
   say('the guidance credits the SPC archive',

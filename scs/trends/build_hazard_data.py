@@ -21,6 +21,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected
 
 # --------------------------------------------------------------------------
 # Hazard definitions
@@ -136,7 +137,7 @@ def build(hazard, root, valid_geoids, fips2usps, chunksize=400_000):
 
     nrows = 0
     dropped_geoid = 0
-    for chunk in pd.read_csv(path, usecols=USECOLS, dtype=str, chunksize=chunksize,
+    for chunk in read_chunks(path, usecols=USECOLS, dtype=str, chunksize=chunksize,
                              low_memory=False):
         nrows += len(chunk)
         chunk = chunk[chunk["CZ_TYPE"] == "C"]
@@ -200,7 +201,7 @@ def build(hazard, root, valid_geoids, fips2usps, chunksize=400_000):
 
     keys = sorted(cells.keys(), key=lambda k: (cidx[k[0]], k[1], k[2]))
     y0 = min(k[1] for k in keys)
-    y1 = max(k[1] for k in keys)
+    y1 = last_year(root, max(k[1] for k in keys))
 
     ci, yi, mi = [], [], []
     vals = [[] for _ in range(nlev)]
@@ -240,7 +241,8 @@ def build(hazard, root, valid_geoids, fips2usps, chunksize=400_000):
         "rri": rri, "ryi": ryi, "rmi": rmi, "rv": rvals,
         "meta": {
             "hazard": hazard,
-            "gaps": [[y, m] for (y, m) in sorted(NODATA)],
+            "gaps": [[y, m] for (y, m) in cov_gaps(NODATA, root)],
+            "through": cov_through(root),
             "label": spec["label"],
             "unit": spec["unit"],
             "note": spec["note"],
@@ -275,8 +277,9 @@ def main():
     # from scratch here silently deleted them.
     idx_path = os.path.join(outdir, "index.json")
     index = json.load(open(idx_path)) if os.path.exists(idx_path) else {"hazards": []}
-    index["hazards"] = [h for h in index["hazards"] if h["key"] not in HAZARDS]
-    for hz in HAZARDS:
+    todo = selected(HAZARDS)
+    index["hazards"] = [h for h in index["hazards"] if h["key"] not in todo]
+    for hz in todo:
         print(f"\n== {hz}")
         res = build(hz, root, valid, fips2usps)
         if res is None:

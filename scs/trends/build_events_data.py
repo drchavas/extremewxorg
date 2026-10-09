@@ -35,6 +35,7 @@ import sys
 from collections import defaultdict
 
 import pandas as pd
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected
 
 TOP_STATE, TOP_US = 50, 100
 
@@ -137,7 +138,7 @@ def build(hz, root, cmeta):
     dayrep = defaultdict(list)
     nrow = nodrop = 0
 
-    for ch in pd.read_csv(path, usecols=USECOLS, dtype=str,
+    for ch in read_chunks(path, usecols=USECOLS, dtype=str,
                           chunksize=400_000, low_memory=False):
         nrow += len(ch)
         ym = pd.to_numeric(ch.BEGIN_YEARMONTH, errors="coerce")
@@ -267,7 +268,8 @@ def build(hz, root, cmeta):
             "topState": TOP_STATE, "topUS": TOP_US,
             "year0": int(min(days)[:4]), "year1": int(max(days)[:4]),
             "source": "NOAA/NCEI Storm Events Database",
-            "gaps": [[y, m] for (y, m) in sorted(NODATA)],
+            "gaps": [[y, m] for (y, m) in cov_gaps(NODATA, root)],
+            "through": cov_through(root),
             "nday": len(days), "nranked": len(keep), "nreport": len(ci),
             "points": f"events_{hz}_pts.json.gz",
         },
@@ -290,7 +292,11 @@ def main():
     print(f"county metadata: {len(cmeta):,}")
 
     index = {"topState": TOP_STATE, "topUS": TOP_US, "hazards": []}
-    for hz in HAZARDS:
+    todo = selected(HAZARDS)
+    ip = os.path.join(outdir, "events_index.json")
+    if os.path.exists(ip):              # keep hazards not rebuilt this run
+        index["hazards"] = [h for h in json.load(open(ip)).get("hazards", []) if h["key"] not in todo]
+    for hz in todo:
         print(f"\n== {hz}")
         built = build(hz, root, cmeta)
         if built is None:
@@ -313,6 +319,8 @@ def main():
             "thresholds": m["thresholds"], "year0": m["year0"], "year1": m["year1"],
             "file": f"events_{hz}.json.gz", "points": m["points"],
         })
+    order = {k: i for i, k in enumerate(HAZARDS)}
+    index["hazards"].sort(key=lambda h: order.get(h["key"], 99))
     with open(os.path.join(outdir, "events_index.json"), "w") as fh:
         json.dump(index, fh, indent=1)
     print("\nwrote events_index.json")

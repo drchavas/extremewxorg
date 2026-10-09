@@ -590,10 +590,11 @@ function eventFoot(e){
   const nrep=e.reports.length;
   const gap = nrep===0
     ? `<br><b>No wind reports are available for this swath.</b> `+
-      (e.start.slice(0,4)>='2025'
-        ? `The Storm Events extract behind this page stops at 2024.`
-        : `June and July 1993 are missing outright from the Storm Events wind file — not sparse, `+
-          `absent. The track above is the archive's and is unaffected.`)
+      (e.start.slice(0,7)==='1993-06'||e.start.slice(0,7)==='1993-07'
+        ? `June and July 1993 are missing outright from the Storm Events wind file — not sparse, `+
+          `absent. The track above is the archive's and is unaffected.`
+        : `This swath is more recent than the Storm Events data behind this page, or NOAA has `+
+          `not yet published reports for it. The track above is the archive's and is unaffected.`)
     : '';
   return `<b>${prettyDate(e.start)}</b> · ${TIERLABEL[e.tier]} — archive swath of `+
     `<b>${e.km.toLocaleString()} km</b> over <b>${e.hours} h</b>, `+

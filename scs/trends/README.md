@@ -16,8 +16,8 @@ and counties are drawn as geographic reference only; every number is per grid bo
 archive (184 wind swaths, 1956–2025) and the biggest days on record for hail, tornado and
 thunderstorm wind: top 50 for any state, top 100 nationally, or type any date as `YYYYMMDD`.
 
-Deprecated pages live in `old/` and are not linked from anywhere: `scstrend_state.html`
-(the original single-SVG "baseball card"), `scstrend_map.html` and `scscard.html`.
+(The earlier deprecated pages — `scstrend_state.html`, `scstrend_map.html`, `scscard.html` — and
+their `old/` test folder are no longer in this repo.)
 
 ## What a "hazard day" is
 
@@ -41,12 +41,15 @@ Two hazards do not use that definition, on purpose:
 
 | Hazard | Source | Record | Thresholds |
 |---|---|---|---|
-| Hail | NOAA/NCEI Storm Events | 1955–2024 | any, ≥1″, ≥2″, ≥3″ |
-| Tornado | NOAA/NCEI Storm Events | 1950–2024 | EF0+, EF1+, EF2+, EF3+ |
-| Thunderstorm wind | NOAA/NCEI Storm Events | 1955–2024 | any, ≥50 kt, ≥65 kt, ≥80 kt |
-| Derecho | SPC archive + Storm Events | 1996–2024 | ≥50 kt, ≥64 kt, ≥74 kt |
-| Freezing rain | NOAA/NCEI ISD hourly | 2000–2024 | ≥1 h, ≥3 h, ≥6 h |
-| Peak wind | NOAA/NCEI ISD hourly | 2000–2024 | ≥40 kt, ≥50 kt, ≥60 kt |
+| Hail | NOAA/NCEI Storm Events | 1955–latest | any, ≥1″, ≥2″, ≥3″ |
+| Tornado | NOAA/NCEI Storm Events | 1950–latest | EF0+, EF1+, EF2+, EF3+ |
+| Thunderstorm wind | NOAA/NCEI Storm Events | 1955–latest | any, ≥50 kt, ≥65 kt, ≥80 kt |
+| Derecho | SPC archive + Storm Events | 1996–end of archive | ≥50 kt, ≥64 kt, ≥74 kt |
+| Freezing rain | NOAA ISD hourly | 2000–2025 season (ISD frozen) | ≥1 h, ≥3 h, ≥6 h |
+| Peak wind | NOAA ISD hourly | 2000–2024 (ISD frozen) | ≥40 kt, ≥50 kt, ≥60 kt |
+
+"latest" is whatever `update_storm_events.py` last fetched; `data/*.json.gz` `meta.year1` is
+the authority. The newest year is usually only partly published — see *Updating* below.
 
 Only `CZ_TYPE == "C"` (county) records are used; the county GEOID is built from
 `STATE_FIPS` + `CZ_FIPS` rather than by matching county names, which avoids the
@@ -93,22 +96,57 @@ populated on only 13% of rows since 2010. So the column is labelled *Segments*, 
 and 0% in between. Anything needing a position (the 2° grid, the derecho swaths) falls back
 to the county centroid for those years.
 
+## Updating to newer NOAA data
+
+```sh
+BC="/path/to/Baseball Cards"
+python3 update_storm_events.py "$BC" --isd "$BC/Freezing Rain Baseball Card/global_hourly_downloads"
+```
+
+This compares NCEI's yearly Storm Events "details" files with what was used last time
+(`storm_events_coverage.json` in the Baseball Cards folder), downloads any year that is new
+or re-issued (the three most recent years are watched; `--full` refreshes all), and splices
+the hail, tornado and thunderstorm-wind rows into the Baseball Cards CSVs. `--dry-run` only
+reports. Exit status 0 means something changed, 3 means already current. Network access to
+`www.ncei.noaa.gov` and `noaa-global-hourly-pds.s3.amazonaws.com` is required.
+
+**The newest year is usually partial.** NCEI publishes a year piecemeal and finishes it
+some eight months later. Complete years go into `<hazard>_events_complete_years.csv`
+as before; the incomplete one goes into `<hazard>_events_partial_year.csv`, with its last
+published month recorded as `partial_through`. The builders (via `storm_coverage.py`) add
+the unpublished months to `meta.gaps`, exactly like June/July 1993, so the pages drop that
+year from means, trends and annual plots but still show its published months in the
+monthly panels. Every page opens on the latest *complete* year; the partial year is
+reachable from the To box.
+
+**ISD is frozen.** NOAA stopped updating ISD Global Hourly on 24 Aug 2025 and, from
+31 Jul 2026, serves the CSVs only from the NODD bucket
+`noaa-global-hourly-pds.s3.amazonaws.com`. `--isd` fills in missing station-years up to 2025
+from there. That extends freezing rain (Jul–Jun seasons) through the 2025 season; peak wind
+(calendar years) cannot pass 2024 because 2025 fails the 90% completeness screen. Going
+further means moving the station builder to GHCNh, NOAA's successor product.
+
 ## Rebuilding
 
-Order matters: the county builder owns `index.json` and the others merge into it.
+Order matters: the county builder owns `index.json` and the others merge into it, and the
+derecho builder reads the grid definition from `grid_index.json`.
 
 ```sh
 python3 build_hazard_data.py   "/path/to/Baseball Cards" data   # hail, tornado, wind
 python3 build_station_data.py  "/path/to/ISD csvs"        data   # fzra, pkwnd
-python3 extract_derecho_archive.py SquitieriWadeJirak2026_supp.pdf
-python3 build_derecho_data.py  "/path/to/Baseball Cards" data   # derecho swaths + county
+python3 extract_derecho_archive.py SquitieriWadeJirak2026_supp.pdf   # only if the archive changes
 python3 build_scs_grid.py      "/path/to/Baseball Cards" data   # 2 deg grid
+python3 build_derecho_data.py  "/path/to/Baseball Cards" data   # derecho swaths + county + grid
 python3 build_events_data.py   "/path/to/Baseball Cards" data   # biggest-days lists
 ```
 
+(`build_scs_grid.py` keeps any Derecho entry already in `grid_index.json`, so running it
+after the derecho builder no longer drops Derecho from the grid page.)
+
 `build_station_data.py` needs the raw NOAA ISD Global Hourly station-year CSVs, which are
-**not** in the Baseball Cards folder. It refuses to write an empty file if it finds none —
-an earlier version silently overwrote good data with zero stations.
+in `Freezing Rain Baseball Card/global_hourly_downloads/` (a copy also sits under Peak
+Winds). It refuses to write an empty file if it finds none — an earlier version silently
+overwrote good data with zero stations.
 
 Geometry:
 
@@ -154,15 +192,8 @@ node test_scstrend_grid.js   .        # 2 deg grid page
 node test_scstrend_grid_audit.js .    # grid counts against an independent recomputation
 node test_derecho.js         .        # the Derecho county climatology
 node test_scsevents.js       .        # derecho archive + biggest-days lists
-node old/test_tctrend.js        old      # deprecated single-SVG card, real SVG output
-node old/test_dom.js         old      # deprecated map explorer
-node old/test_logic.js old/scstrend_map.html geo/counties.topo.json.gz data/hail.json.gz
+node test_scsdash.js         .        # county multi-hazard dashboard
 ```
-
-`old/test_logic.js` drives the page's functions directly through `vm` rather than booting it,
-so it prints a harmless `your browser is too old to decompress the data` to stderr from the
-page's own init path. Its checks still run: season partition 0, threshold monotonicity 0,
-and the Student's *t* values exact.
 
 What the suites are actually for, beyond "it renders": that the projection is not upside
 down (it was once, and four visual checks missed it); that a zero-filled year is a real
@@ -171,11 +202,3 @@ units are drawn; that switching hazard, threshold or state cannot strand the rea
 selection that no longer exists; that the heavy per-report file is fetched only on demand;
 and that a map is never built into a hidden container, which silently pins it at maximum
 zoom.
-
-For a visual check of the deprecated card, dump its SVG and rasterise:
-
-```sh
-node old/dump_tctrend.js old out.svg "h=hail&r=IN&p=2000-2024"
-python3 -c "import cairosvg; cairosvg.svg2png(url='out.svg', write_to='out.png', \
-            output_width=1520, output_height=1035)"
-```

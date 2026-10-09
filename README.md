@@ -40,7 +40,6 @@ assets/               purdue_eaps_logo.png (no longer referenced by the landing 
   thumbs/             720x360 WebP preview shots, one per tool card on the landing page
 skewt.js              Shared skew-T plotting helper
 tc/                   Tropical cyclones
-  ibtracs_viewer.html   (present but UNLINKED — the landing points to tcviewer.org instead)
   trends/
     tctrend.html        "Climatology & Trends — 5° grid" (linked from landing)
     tccard.html         redirect stub for the old filename → tctrend.html (unlinked)
@@ -120,8 +119,6 @@ link to `index.html`.
 
 ## Notes
 
-- `tc/ibtracs_viewer.html` is a leftover local copy and is currently unlinked (the landing
-  uses tcviewer.org). It can be deleted.
 - Local folder name is `extremewxorg/`; the GitHub repo and Cloudflare project are also
   `extremewxorg`; the public domain is `extremewx.org`.
 

@@ -41,6 +41,7 @@ import sys
 from collections import defaultdict
 
 import pandas as pd
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected
 
 # lower-48 grid, aligned to even degrees
 GRID = 2.0
@@ -151,7 +152,7 @@ def build(hz, root, cents):
     daymax = {}          # (cell, year, month, day) -> highest threshold level
     nrow = nll = nfall = ndrop = 0
 
-    for chunk in pd.read_csv(path, usecols=USECOLS, dtype=str,
+    for chunk in read_chunks(path, usecols=USECOLS, dtype=str,
                              chunksize=400_000, low_memory=False):
         nrow += len(chunk)
         ym = pd.to_numeric(chunk["BEGIN_YEARMONTH"], errors="coerce")
@@ -215,11 +216,12 @@ def build(hz, root, cents):
             arr[j] += 1
 
     keys = sorted(cells)
-    y0 = min(k[1] for k in keys); y1 = max(k[1] for k in keys)
+    y0 = min(k[1] for k in keys); y1 = last_year(root, max(k[1] for k in keys))
     return {
         "meta": {
             "hazard": hz, "label": spec["label"], "unit": spec["unit"],
-            "gaps": [[y, m] for (y, m) in sorted(NODATA)],
+            "gaps": [[y, m] for (y, m) in cov_gaps(NODATA, root)],
+            "through": cov_through(root),
             "thresholds": spec["thresholds"], "year0": y0, "year1": y1,
             "grid": GRID, "lat0": LAT0, "lon0": LON0, "nlat": NLAT, "nlon": NLON,
             "source": "NOAA/NCEI Storm Events Database",
@@ -243,7 +245,14 @@ def main():
 
     index = {"grid": GRID, "lat0": LAT0, "lon0": LON0, "nlat": NLAT, "nlon": NLON,
              "hazards": []}
-    for hz in HAZARDS:
+    # build_derecho_data.py adds its own entry to this index. Keep it, so running
+    # the builders in either order cannot silently drop Derecho from the page.
+    todo = selected(HAZARDS)
+    ip = os.path.join(outdir, "grid_index.json")
+    others = []
+    if os.path.exists(ip):
+        others = [h for h in json.load(open(ip)).get("hazards", []) if h["k"] not in todo]
+    for hz in todo:
         print(f"\n== {hz}")
         res = build(hz, root, cents)
         if res is None:
@@ -259,6 +268,9 @@ def main():
             "thresholds": m["thresholds"], "y0": m["year0"], "y1": m["year1"],
             "file": f"grid_{hz}.json.gz",
         })
+    index["hazards"] += others
+    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday"])}
+    index["hazards"].sort(key=lambda h: order.get(h["k"], 99))
     with open(os.path.join(outdir, "grid_index.json"), "w") as fh:
         json.dump(index, fh, indent=1)
     print("\nwrote grid_index.json")

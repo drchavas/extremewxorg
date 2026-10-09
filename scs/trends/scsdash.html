@@ -506,7 +506,7 @@ async function gzFetch(url){
 const HAZ=['hail','tornado','wind','derechoday'];
 
 const S={county:'18157',            // Tippecanoe, IN — home county
-         y0:2000,y1:2024,theme:'dark',smooth:'2',
+         y0:2000,y1:2024,theme:'dark',smooth:'2',   // y1 is reset to the data once loaded
          hazard:'hail',thresh:1,    // which cell the table highlights
          base:'pop',                // map backdrop: night lights, see BASES
          state:'IN'};               // map zoom
@@ -531,7 +531,10 @@ function yearsSel(){ const a=Math.min(S.y0,S.y1), b=Math.max(S.y0,S.y1); return 
 function clipYears(a,b,y0,y1){ return [Math.max(a,y0), Math.min(b,y1)]; }
 function hazYears(h){
   const [a,b]=yearsSel(), sp=INDEX.hazards.find(x=>x.key===h);
-  return sp?clipYears(a,b,sp.year0,sp.year1):[a,b];
+  /* End on the hazard's latest COMPLETE year: a partly published final year is
+     masked out of every annual number, so naming it in the row would mislead. */
+  const end = HZ[h] ? lastFull(HZ[h]) : (sp && sp.year1);
+  return sp?clipYears(a,b,sp.year0,end):[a,b];
 }
 function countWord(h){ const s=hazSpec(h); return (s&&s.countword)||'day'; }
 function countUnit(h){ return countWord(h)+'s/yr'; }
@@ -569,6 +572,11 @@ function gapMask(d){
   d._gapYM={ym,yr,any:(d.meta.gaps||[]).length>0};
   return d._gapYM;
 }
+function lastFull(d){
+  const g=gapMask(d);
+  for(let i=d.nY-1;i>=0;i--) if(g.yr[i]) return i+d.meta.year0;
+  return d.meta.year1;
+}
 function gapYears(d){
   const out=[]; const g=gapMask(d);
   for(let i=0;i<d.nY;i++) if(!g.yr[i]) out.push(i+d.meta.year0);
@@ -589,7 +597,7 @@ function rebuildMatrix(){
 }
 function countyMetrics(){
   const d=HZ[S.hazard],M=d.M,nY=d.nY,y0=d.meta.year0,nC=GEOID.length;
-  const [a,b,nyr]=yearsSel(), i0=a-y0, i1=b-y0;
+  const [a,b]=hazYears(S.hazard), i0=a-y0, i1=b-y0;   // clipped to this hazard's record
   const mean=new Float32Array(nC), trend=new Float32Array(nC), pv=new Float32Array(nC).fill(1);
   const xs=[]; for(let y=i0;y<=i1;y++) xs.push(y+y0);
   const ys=new Array(xs.length);
@@ -1003,7 +1011,7 @@ function drawDash(){
     'small to matter whichever way it points. The return period is the long-run '+
     'average spacing, 1&divide;rate &mdash; not a schedule. '+
     'Blank cells mean the hazard has no record.'+
-    (gaps.length?` <b>${gaps.join(', ')} is excluded</b>: June and July 1993 are missing from `+
+    (gaps.includes(1993)?` <b>1993 is excluded</b>: June and July 1993 are missing from `+
                  `Storm Events entirely.`:'')+
     ' Each value is a 2° neighbourhood average rather than this county alone, over the '+
     'years listed beside the hazard.';
@@ -1323,6 +1331,9 @@ function wire(){
 
     msg.textContent='Loading storm records…';
     for(const h of HAZ) await loadHazard(h);
+    /* End on the latest complete year in the data, as the trends pages do;
+       hazYears() then clips each row to its own record. */
+    S.y1=Math.max(...HAZ.filter(h=>HZ[h]).map(h=>lastFull(HZ[h])));
 
     /* Leaflet measures its container on creation; a hidden one measures 0x0 and
        every later fitBounds then returns maximum zoom. Show the body first. */

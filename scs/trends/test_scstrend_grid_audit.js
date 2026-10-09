@@ -74,7 +74,7 @@ const svg=()=>$('card').innerHTML;
   await new Promise(r=>setTimeout(r,800));
   for(const y of [2023,2024]){
     $('y0In').value=y; $('y0In').onchange({target:$('y0In')});
-    say(`From ${y} -> To stays within the record`,+$('y1In').value<=2024,
+    say(`From ${y} -> To stays within the record`,+$('y1In').value<=+$('y1In').max,
         `From ${$('y0In').value} To ${$('y1In').value}`);
   }
 

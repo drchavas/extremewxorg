@@ -35,7 +35,7 @@
     }
    ],
    "year0": 1955,
-   "year1": 2024,
+   "year1": 2026,
    "file": "events_hail.json.gz",
    "points": "events_hail_pts.json.gz"
   },
@@ -72,7 +72,7 @@
     }
    ],
    "year0": 1950,
-   "year1": 2024,
+   "year1": 2026,
    "file": "events_tornado.json.gz",
    "points": "events_tornado_pts.json.gz"
   },
@@ -109,7 +109,7 @@
     }
    ],
    "year0": 1955,
-   "year1": 2024,
+   "year1": 2026,
    "file": "events_wind.json.gz",
    "points": "events_wind_pts.json.gz"
   }

@@ -274,7 +274,11 @@ def build(hz, data_dir, y0, y1, listed=None):
 def main():
     data_dir = sys.argv[1] if len(sys.argv) > 1 else "global_hourly_downloads"
     outdir = sys.argv[2] if len(sys.argv) > 2 else "data"
-    y0, y1 = 2000, 2024
+    y0 = 2000
+    # The last year on disk. A year that is only partly observed fails the 90%
+    # completeness screen and is dropped as no observation, so this is safe.
+    found = [y for f in scan(data_dir).values() for y in f]
+    y1 = max(found) if found else 2024
     os.makedirs(outdir, exist_ok=True)
     listed = load_station_list(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                             STATION_LIST))

@@ -80,7 +80,7 @@ const ptInRing=(x,y,ring)=>{let c=false;
       $('trendCol').style.display===''&&$('panels').style.display===''&&
       A._layers.some(isCounty));
   say('confidence menu hidden here',$('tierWrap').style.display==='none');
-  say('record starts in 1996',$('y0In').min==='1996'&&$('y1In').max==='2024',
+  say('record starts in 1996',$('y0In').min==='1996'&&+$('y1In').max>=2024,
       $('y0In').min+'-'+$('y1In').max);
   say('both maps drawn',/linear-gradient/.test($('cbClim').innerHTML)&&
                         /linear-gradient/.test($('cbTrend').innerHTML));
@@ -124,13 +124,13 @@ const ptInRing=(x,y,ring)=>{let c=false;
   // the page opens on Indiana, so this is the Indiana series, not the national one
   const ind=sumSeries();   // whole record, 1996-2024, not just the chosen window
   say('Indiana derecho days 1996-2024 are plausible',ind>5&&ind<40,
-      ind+' days over 29 yr, '+(ind/29).toFixed(2)+'/yr');
+      ind+' days over 30 yr, '+(ind/30).toFixed(2)+'/yr');
   $('regSel').value=''; fire('regSel','change');
   await new Promise(r=>setTimeout(r,200));
   const natl=sumSeries();
   say('the national series is larger and plausible',natl>50&&natl<120&&natl>ind,
-      natl+' days over 29 yr, '+(natl/29).toFixed(1)+'/yr nationally');
-  say('it matches the 93 definitive swaths, minus shared dates',natl===90,natl+'');
+      natl+' days over 30 yr, '+(natl/30).toFixed(1)+'/yr nationally');
+  say('it matches the 96 definitive swaths, minus shared dates',natl===93,natl+'');
   say('a state cannot exceed the nation',ind<natl);
   $('regSel').value='IN'; fire('regSel','change');
   say('climatology is small per county',

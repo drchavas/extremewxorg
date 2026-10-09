@@ -96,6 +96,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
 
 (async()=>{
   await new Promise(r=>setTimeout(r,3200));
+  const Y1_AT_OPEN=+$('y1In').value;            // checked in the partial-year block
   const [A,Bm]=maps;
 
   console.log('\n--- init');
@@ -455,6 +456,44 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('the choropleth is back, not just the backdrop',
       A._layers.filter(isCounty).some(l=>l._opts&&l._opts.onEachFeature));
   say('QC toggle hidden for county hazards',$('dpWrap').style.display==='none');
+
+  console.log('\n--- a partly published final year');
+  {
+    const meta=JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data/hail.json.gz')))).meta;
+    const partial=meta.through?+meta.through.slice(0,4):null;
+    if(partial){
+      $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+      await new Promise(r=>setTimeout(r,500));
+      say('the To box reaches the partial year',+$('y1In').max===partial,$('y1In').max);
+      say('the page opened on the latest complete year',Y1_AT_OPEN===partial-1,String(Y1_AT_OPEN));
+      $('y1In').value=partial; $('y1In').onchange({target:$('y1In')});
+      await new Promise(r=>setTimeout(r,300));
+      const foot=$('foot').innerHTML;
+      say('choosing it says why it is left out',new RegExp(partial+' is excluded').test(foot)&&
+          /not yet published the whole year/.test(foot),
+          (foot.match(/<b>\d{4} is excluded<\/b>[^.(]*/)||[''])[0].slice(0,90));
+      say('and names the last published month',
+          new RegExp('runs through \\w{3} '+partial).test(foot),
+          (foot.match(/runs through [^)]*/)||[''])[0]);
+      $('y1In').value=partial-1; $('y1In').onchange({target:$('y1In')});
+      await new Promise(r=>setTimeout(r,300));
+    } else console.log('  (no partial year in the data; skipped)');
+  }
+
+  console.log('\n--- links the page cannot honour fall back to the default');
+  {
+    const st=()=>Object.fromEntries(new URLSearchParams(w.location.hash.slice(1)));
+    const keep=w.location.hash;
+    w.history.replaceState(null,'','#h=derecho&t=abc&k=nope&r=IN&p=2000-2025');
+    w.eval("readHash(); writeHash()");
+    say('old event-mode link lands on the derecho climatology',st().h==='derechoday',st().h);
+    say('a non-numeric threshold becomes 0',st().t==='0',st().t);
+    say('an unknown theme becomes the default',!('k' in st()),st().k||'(default)');
+    w.history.replaceState(null,'','#h=bogus&t=7&r=IN&p=2000-2025');
+    w.eval("readHash(); writeHash()");
+    say('an unknown hazard becomes hail',st().h==='hail'&&st().t==='0',st().h+'/'+st().t);
+    w.history.replaceState(null,'',keep); w.eval("readHash()");
+  }
 
   console.log('\n--- errors captured: '+errors.length);
   errors.forEach(e=>console.log('  '+e));
