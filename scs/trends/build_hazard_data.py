@@ -21,7 +21,7 @@ import sys
 
 import numpy as np
 import pandas as pd
-from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected, state_fips
 
 # --------------------------------------------------------------------------
 # Hazard definitions
@@ -142,7 +142,7 @@ def build(hazard, root, valid_geoids, fips2usps, chunksize=400_000):
         nrows += len(chunk)
         chunk = chunk[chunk["CZ_TYPE"] == "C"]
 
-        geo = fips(chunk["STATE_FIPS"], chunk["CZ_FIPS"])
+        geo = fips(state_fips(chunk["STATE_FIPS"], chunk["BEGIN_YEARMONTH"]), chunk["CZ_FIPS"])
         ym = pd.to_numeric(chunk["BEGIN_YEARMONTH"], errors="coerce")
         day = pd.to_numeric(chunk["BEGIN_DAY"], errors="coerce")
 

@@ -80,3 +80,21 @@ def selected(hazards):
         return list(hazards)
     want = [h.strip() for h in only.split(",") if h.strip()]
     return [h for h in hazards if h in want]
+
+
+PR_FROM = 2009
+
+
+def state_fips(state_fips_col, yearmonth_col):
+    """STATE_FIPS as numbers, with Puerto Rico's Storm Events code repaired.
+
+    Storm Events files Puerto Rico under state code 99, not its FIPS code 72, so
+    every PR report missed the county map. Before 2009 PR rows also carry NWS
+    forecast-zone numbers in CZ_FIPS rather than municipio codes. Checked by
+    name against the Census geometry: from 2009 on every PR row's code names the
+    right municipio; before 2009, 116 of 146 rows do not. So PR is mapped from
+    2009 on, and earlier PR rows stay out as before.
+    """
+    sf = pd.to_numeric(state_fips_col, errors="coerce")
+    yr = pd.to_numeric(yearmonth_col, errors="coerce") // 100
+    return sf.mask((sf == 99) & (yr >= PR_FROM), 72)

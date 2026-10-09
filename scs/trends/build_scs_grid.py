@@ -41,7 +41,7 @@ import sys
 from collections import defaultdict
 
 import pandas as pd
-from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected, state_fips
 
 # lower-48 grid, aligned to even degrees
 GRID = 2.0
@@ -164,7 +164,7 @@ def build(hz, root, cents):
 
         # county centroid fallback where the report carries no usable position
         good = la.between(LAT0, LAT1) & lo.between(LON0, LON1)
-        sf = pd.to_numeric(chunk["STATE_FIPS"], errors="coerce")
+        sf = state_fips(chunk["STATE_FIPS"], chunk["BEGIN_YEARMONTH"])
         cf = pd.to_numeric(chunk["CZ_FIPS"], errors="coerce")
         has_fips = sf.notna() & cf.notna() & (chunk["CZ_TYPE"] == "C")
         geoid = (sf.where(has_fips).astype("Int64").astype(str).str.zfill(2)

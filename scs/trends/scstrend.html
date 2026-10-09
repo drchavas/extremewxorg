@@ -221,11 +221,16 @@
           <li><b>Sources.</b> Hail, tornado and thunderstorm wind come from the NOAA/NCEI Storm
               Events Database, using county-type records (<code>CZ_TYPE = C</code>). Freezing rain
               and peak wind come from NOAA/NCEI Integrated Surface Database hourly observations at
-              ASOS stations.</li>
+              ASOS stations. The remark <code>FZRANO</code> (freezing-rain sensor not operational)
+              is not counted as freezing rain, and a peak-wind group with a three-digit speed
+              (100&nbsp;kt or more) is treated as a coding error.</li>
           <li><b>Locate each report.</b> Storm Events reports are assigned to a county by
               <code>STATE_FIPS</code> + <code>CZ_FIPS</code> rather than by county name, which
-              avoids name collisions and independent cities. Station hazards stay at their
-              station.</li>
+              avoids name collisions and independent cities. Connecticut is drawn with its
+              eight historical counties, because Storm Events still files reports under them
+              rather than the planning regions the Census adopted in 2022. Puerto Rico reports
+              are included from 2009, the first year they carry municipio codes (earlier ones
+              use forecast zones). Station hazards stay at their station.</li>
           <li><b>Apply the threshold.</b> Each report is scored against the selected size or
               intensity cut. Thresholds are cumulative — a 2″ hailstone also counts as a 1″ one.</li>
           <li><b>Collapse to hazard days.</b> Count <i>distinct calendar dates</i> on which a

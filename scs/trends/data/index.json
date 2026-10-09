@@ -145,7 +145,7 @@
    "key": "fzra",
    "label": "Freezing Rain",
    "unit": "h",
-   "note": "Days with freezing rain (FZRA) in the METAR remarks at an ASOS station. Counted over a July\u2013June cold season labelled by the ending year. Higher levels count hours of freezing rain in the day, a rough proxy for how much ice had a chance to accrete.",
+   "note": "Days with freezing rain (FZRA) in the METAR remarks at an ASOS station. Counted over a July\u2013June cold season labelled by the ending year. Higher levels count hours of freezing rain in the day, a rough proxy for how much ice had a chance to accrete. The ASOS remark FZRANO (freezing-rain sensor not operational) is not counted.",
    "thresholds": [
     {
      "key": "any",
@@ -177,7 +177,7 @@
    "key": "pkwnd",
    "label": "Peak Wind",
    "unit": "kt",
-   "note": "Days on which an ASOS station reported a peak wind gust at or above the threshold, read from the 'PK WND' group in the METAR remarks.",
+   "note": "Days on which an ASOS station reported a peak wind gust at or above the threshold, read from the 'PK WND' group in the METAR remarks. Three-digit speeds (100 kt or more) are coding errors and are ignored.",
    "thresholds": [
     {
      "key": "k30",

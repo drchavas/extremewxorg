@@ -71,7 +71,7 @@ counties that had quiet years. Everything here divides by the full period: Mario
 is 3.60 mean annual hail days for 2000–2024, not 3.91.
 
 Geometry is the Census `cb_2023_us_county_500k` cartographic boundary file, simplified
-to 4% with mapshaper: 3,222 counties across 50 states + DC + Puerto Rico (the Pacific
+to 4% with mapshaper: 3,221 counties across 50 states + DC + Puerto Rico (the Pacific
 territories are dropped). Aleutians West is shifted across the antimeridian so it draws
 contiguously. State outlines are the same file dissolved by `STATEFP`.
 
@@ -150,13 +150,26 @@ overwrote good data with zero stations.
 
 Geometry:
 
+Two exceptions to the 2023 file, both because Storm Events codes counties differently:
+
+- **Connecticut** uses its eight historical counties (09001–09015) from `cb_2021`. The 2023
+  file has the nine planning regions (09110–09190) the Census adopted in 2022, which Storm
+  Events does not use — with them, every Connecticut report was dropped.
+- **Puerto Rico** is filed under state code 99, not 72. `storm_coverage.state_fips()` maps it
+  to 72 from 2009 on; before 2009 PR rows carry forecast-zone numbers, not municipio codes,
+  so they stay out.
+
 ```sh
-mapshaper cb_2023_us_county_500k.shp \
-  -filter '["60","66","68","69","78"].indexOf(STATEFP) === -1' \
-  -simplify 4% keep-shapes \
-  -each 'AREA = Math.round(ALAND/1e6)' \
-  -filter-fields GEOID,NAME,STUSPS,AREA \
-  -o format=topojson geo/counties.topo.json
+M=mapshaper
+$M cb_2023_us_county_500k.shp -filter '["60","66","68","69","78","09"].indexOf(STATEFP) === -1' \
+   -filter-fields GEOID,NAME,STUSPS,ALAND,STATEFP -o rest.json format=geojson
+$M cb_2021_us_county_500k.shp -filter 'STATEFP==="09"' \
+   -filter-fields GEOID,NAME,STUSPS,ALAND,STATEFP -o ct.json format=geojson
+# merge the two FeatureCollections, and move the part of Aleutians West (02016) east of
+# 180 deg to negative longitudes (lon - 360) so it draws contiguously -> merged.json
+$M merged.json -simplify 4% keep-shapes -each 'AREA = Math.round(ALAND/1e6)' \
+   -filter-fields GEOID,NAME,STUSPS,AREA -rename-layers counties_raw \
+   -o format=topojson geo/counties.topo.json
 gzip -9 -k geo/counties.topo.json
 ```
 

@@ -75,7 +75,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 import pandas as pd
-from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, state_fips
 from shapely.geometry import Point
 from shapely.ops import unary_union
 
@@ -450,7 +450,7 @@ def main():
         mag = pd.to_numeric(ch.MAGNITUDE, errors="coerce")
         la = pd.to_numeric(ch.BEGIN_LAT, errors="coerce")
         lo = pd.to_numeric(ch.BEGIN_LON, errors="coerce")
-        sf = pd.to_numeric(ch.STATE_FIPS, errors="coerce")
+        sf = state_fips(ch.STATE_FIPS, ch.BEGIN_YEARMONTH)
         cf = pd.to_numeric(ch.CZ_FIPS, errors="coerce")
 
         for i in range(len(ch)):

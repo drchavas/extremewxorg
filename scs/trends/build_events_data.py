@@ -35,7 +35,7 @@ import sys
 from collections import defaultdict
 
 import pandas as pd
-from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected
+from storm_coverage import read_chunks, gaps as cov_gaps, through as cov_through, last_year, selected, state_fips
 
 TOP_STATE, TOP_US = 50, 100
 
@@ -145,7 +145,7 @@ def build(hz, root, cmeta):
         yy, mm = ym // 100, ym % 100
         dd = pd.to_numeric(ch.BEGIN_DAY, errors="coerce")
         tt = pd.to_numeric(ch.BEGIN_TIME, errors="coerce")
-        sf = pd.to_numeric(ch.STATE_FIPS, errors="coerce")
+        sf = state_fips(ch.STATE_FIPS, ch.BEGIN_YEARMONTH)
         cf = pd.to_numeric(ch.CZ_FIPS, errors="coerce")
         mag = (fscale_num(ch.TOR_F_SCALE) if spec["magnitude"] == "fscale"
                else pd.to_numeric(ch.MAGNITUDE, errors="coerce"))

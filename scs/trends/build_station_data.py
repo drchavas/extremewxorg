@@ -31,7 +31,15 @@ from collections import defaultdict
 
 import pandas as pd
 
-PKWND = re.compile(r"PK WND \d{3}(\d{2,3})/\d{4}")
+# Time is hhmm, or mm alone when the gust fell in the same hour as the report.
+PKWND = re.compile(r"PK WND \d{3}(\d{2,3})/(?:\d{4}|\d{2})(?!\d)")
+# Garbled groups such as "PK WND 140254/1821" read as 254 kt. No gust anywhere
+# near this network reaches 100 kt, so a three-digit speed is a coding error.
+GUST_MAX = 99
+# FZRANO is the ASOS remark "freezing-rain sensor not operational", not freezing
+# rain. A plain substring test counted it, which put ~40% of all "freezing rain"
+# days on these stations into the record, July included.
+FZRA = re.compile(r"FZRA(?!NO)")
 COMPLETENESS = 0.90
 
 # Restrict to the 86 stations DelPizzo et al. (2025) retained after QC.  Their
@@ -80,7 +88,8 @@ HAZARDS = {
         "note": ("Days with freezing rain (FZRA) in the METAR remarks at an ASOS station. "
                  "Counted over a July–June cold season labelled by the ending year. "
                  "Higher levels count hours of freezing rain in the day, a rough proxy "
-                 "for how much ice had a chance to accrete."),
+                 "for how much ice had a chance to accrete. The ASOS remark FZRANO "
+                 "(freezing-rain sensor not operational) is not counted."),
         "thresholds": [
             {"key": "any", "label": "Any freezing rain",  "short": "any",  "min": 1},
             {"key": "h3",  "label": "≥ 3 hours in a day", "short": "≥3 h", "min": 3},
@@ -92,7 +101,8 @@ HAZARDS = {
         "unit": "kt",
         "season": "calendar",
         "note": ("Days on which an ASOS station reported a peak wind gust at or above the "
-                 "threshold, read from the 'PK WND' group in the METAR remarks."),
+                 "threshold, read from the 'PK WND' group in the METAR remarks. "
+                 "Three-digit speeds (100 kt or more) are coding errors and are ignored."),
         "thresholds": [
             {"key": "k30", "label": "≥ 30 kt (35 mph)",             "short": "≥30 kt", "min": 30},
             {"key": "k40", "label": "≥ 40 kt (46 mph)",             "short": "≥40 kt", "min": 40},
@@ -146,7 +156,10 @@ def load(path):
 
 def gust(rem):
     m = PKWND.search(rem)
-    return int(m.group(1)) if m else 0
+    if not m:
+        return 0
+    v = int(m.group(1))
+    return v if v <= GUST_MAX else 0
 
 
 def season_frames(files, year, mode):
@@ -205,7 +218,7 @@ def build(hz, data_dir, y0, y1, listed=None):
                 }
 
             if hz == "fzra":
-                hit = df[df["REM"].str.contains("FZRA", regex=False)]
+                hit = df[df["REM"].str.contains(FZRA)]
                 if hit.empty:
                     continue
                 # distinct HOURS of freezing rain per day -> a duration threshold
