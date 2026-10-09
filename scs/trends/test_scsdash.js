@@ -556,6 +556,25 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('and a stale link with a period in it still opens, ignoring it',
       boot('scsdash.html','#c=06037&p=1990-2010&sm=off')!=null);
 
+  console.log('\n--- audit fixes');
+  {
+    const links=[...lw.document.querySelectorAll('#dashBody td.haz > a')].map(a=>a.getAttribute('href'));
+    const tOf=h=>(links.find(l=>l.includes('h='+h+'&'))||'').match(/&t=(\d+)/);
+    say('each row links to its own map at the first threshold',tOf('hail')&&tOf('hail')[1]==='0'&&tOf('tornado')[1]==='0',
+        'hail t='+(tOf('hail')||[])[1]+', tornado t='+(tOf('tornado')||[])[1]);
+    say('and the selected row carries the selected threshold',tOf('wind')&&tOf('wind')[1]==='1','wind t='+(tOf('wind')||[])[1]);
+    say('a percentage never rounds across a class break',
+        lw.eval("trendPct(0.0996,1)")==='+9.9%'&&lw.eval("trendPct(0.196,1)")==='+19%'&&lw.eval("trendPct(-0.0999,1)")==='-9.9%',
+        [lw.eval("trendPct(0.0996,1)"),lw.eval("trendPct(0.196,1)")].join(' '));
+    say('the colour key covers days and events',/Days or events per year/.test(lw.document.body.innerHTML));
+    const before=errors.length;
+    const X=boot('scsdash.html','#k=nope&t=-2&h=bogus');
+    await new Promise(r=>setTimeout(r,6000));
+    const m=X.w.document.getElementById('msg');
+    say('a malformed link still loads the dashboard',errors.length===before&&!/Could not load/.test(m.textContent)&&
+        /County/.test(X.w.document.getElementById('dashTitle').textContent),X.w.document.getElementById('dashTitle').textContent);
+  }
+
   console.log('\n--- errors captured: '+errors.length);
   errors.forEach(e=>console.log('  '+e));
   process.exit(errors.length?1:0);

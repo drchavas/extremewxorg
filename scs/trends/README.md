@@ -68,7 +68,7 @@ The build emits two different things, and they are not interchangeable:
 Note also that the original per-county scripts divided each county's total by the number
 of years *present in the data* rather than by the length of the period, which inflates
 counties that had quiet years. Everything here divides by the full period: Marion County
-is 3.60 mean annual hail days for 2000–2024, not 3.91.
+was 3.60 mean annual hail days for 2000–2024 (3.58 for 2000–2025), not 3.91.
 
 Geometry is the Census `cb_2023_us_county_500k` cartographic boundary file, simplified
 to 4% with mapshaper: 3,221 counties across 50 states + DC + Puerto Rico (the Pacific

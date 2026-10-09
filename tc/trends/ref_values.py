@@ -45,7 +45,7 @@ def points():
     d = d[d.TRACK_TYPE.isin(['main', 'PROVISIONAL', 'US-PROVISIONAL'])]
     t = pd.to_datetime(d.ISO_TIME, errors='coerce')
     d = d.assign(month=t.dt.month)
-    d = d[t.dt.hour.isin([0, 6, 12, 18])]
+    d = d[(t.dt.hour.isin([0, 6, 12, 18]) & (t.dt.minute == 0)).fillna(False)]   # synoptic: whole hours only
     # ACE is defined over tropical and subtropical stages only
     d['trop'] = d.NATURE.isin(['TS', 'SS'])
     R34 = ['USA_R34_NE', 'USA_R34_SE', 'USA_R34_SW', 'USA_R34_NW']

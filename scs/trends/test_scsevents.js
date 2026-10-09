@@ -300,6 +300,62 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
   say('and it is the #1 ≥2″ hail day',
       w2.document.getElementById('rankBody').querySelector('tr').dataset.d==='2012-03-02');
 
+  console.log('\n--- audit fixes');
+  {
+    // Reports and Counties describe the same place once a state is chosen
+    $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+    await new Promise(r=>setTimeout(r,600));
+    $('regSel').value=''; $('regSel').onchange({target:{value:''}});
+    await new Promise(r=>setTimeout(r,300));
+    const rows=()=>[...$('rankBody').querySelectorAll('tr')].map(tr=>{const t=tr.querySelectorAll('td');
+      return {d:tr.dataset.d,cty:+t[2].textContent,rep:+t[3].textContent};});
+    const us=Object.fromEntries(rows().map(r=>[r.d,r.rep]));
+    $('regSel').value='IN'; $('regSel').onchange({target:{value:'IN'}});
+    await new Promise(r=>setTimeout(r,300));
+    const inr=rows();
+    say('state Reports never undercount its Counties',inr.every(r=>r.rep>=r.cty),inr.slice(0,2).map(r=>r.cty+'/'+r.rep).join(' '));
+    const both=inr.filter(r=>us[r.d]!=null);
+    say('and are the state share, not the national total',both.length>0&&both.every(r=>r.rep<=us[r.d])&&both.some(r=>r.rep<us[r.d]),
+        both.slice(0,1).map(r=>r.d+': IN '+r.rep+' vs US '+us[r.d]).join(''));
+    $('regSel').value=''; $('regSel').onchange({target:{value:''}});
+    await new Promise(r=>setTimeout(r,300));
+    // whole-number colour bar without repeated ticks
+    const ticks=[...$('cbEv').querySelectorAll('.ticks span')].map(e=>e.textContent);
+    say('colour bar ticks are distinct',ticks.length>=2&&new Set(ticks).size===ticks.length,ticks.join(','));
+    say('and no "exactly 0" chip on the day map',!/exactly 0/.test($('cbEv').innerHTML));
+    // a date NOAA has not yet published
+    const typeDay2=v=>{ const i=$('dayIn'); i.value=v; i.onchange(); };
+    typeDay2('20261115'); await new Promise(r=>setTimeout(r,300));
+    say('an unpublished date says so',/not yet published/.test($('foot').innerHTML),
+        ($('foot').innerHTML.match(/not yet published[^.]*/)||[''])[0]);
+    // tier label names the set it holds
+    $('hazSel').value='derecho'; await $('hazSel').onchange({target:{value:'derecho'}});
+    await new Promise(r=>setTimeout(r,600));
+    say('tier menu names the headline set honestly',
+        [...$('tierSel').options].some(o=>/pre-radar likely \(144\)/.test(o.textContent)),
+        [...$('tierSel').options].map(o=>o.textContent).join(' | '));
+    say('the caption states the real endpoint filter',/swath's length/.test($('foot').innerHTML));
+  }
+  {
+    // a malformed link must not take the page down
+    const before=errors.length;
+    const d3=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,
+      url:'http://localhost/scsevents.html#h=hail&t=-1&k=foo&g=zzz&d=garbage'});
+    const w3=d3.window; const err3=[];
+    w3.addEventListener('error',e=>err3.push(e.message));
+    Object.assign(w3,{fetch:w.fetch,DecompressionStream:w.DecompressionStream,Blob:w.Blob,
+      Response:w.Response,topojson:w.topojson,L:w.L});
+    w3.URL.createObjectURL=()=>'blob:x'; w3.URL.revokeObjectURL=()=>{};
+    w3.navigator.clipboard={writeText:async()=>{}};
+    w3.eval(html.match(/<script>([\s\S]*?)<\/script>/g).pop().replace(/^<script>|<\/script>$/g,''));
+    await new Promise(r=>setTimeout(r,3500));
+    const msg=w3.document.getElementById('msg');
+    say('a bad link still loads the page',!/Could not load/.test(msg.textContent)&&err3.length===0&&errors.length===before,
+        (msg.style.display==='none'?'loaded':msg.textContent)+(err3.length?' / '+err3[0]:''));
+    say('with the threshold reset to the first',w3.document.getElementById('thrSel').value==='0',
+        w3.document.getElementById('thrSel').value);
+  }
+
   console.log('\n--- errors captured: '+errors.length);
   errors.forEach(e=>console.log('  '+e));
   process.exit(errors.length?1:0);

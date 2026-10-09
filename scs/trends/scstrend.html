@@ -285,9 +285,15 @@
               SPC archive — NEXRAD-confirmed cases only, so the record begins in <b>1996</b>. It is
               counted in <b>events per year</b> rather than hazard days, because a derecho is one
               coherent storm rather than a category of report. Each event is dated by the swath's
-              own start rather than each report's local date: half these
+              own start (UTC) rather than each report's local date: half these
               swaths cross a date boundary, and dating by report counted one storm twice in any
-              county hit either side of midnight. Values are small by construction — the busiest
+              county hit either side of midnight. Two swaths that start on the same date count once
+              in a county both cross, so nationally the 96 definitive swaths fall on 93 dates.
+              A report belongs to a swath when it falls inside the archive's UTC window, keeps pace
+              along the track with the clock, lies no farther from either endpoint than the swath's
+              length plus 100&nbsp;km (the paper's three tests), and &mdash; our addition &mdash;
+              lies within 300&nbsp;km of the straight start-to-end track line, which keeps separate
+              storms far off to the side out of the swath. Values are small by construction — the busiest
               counties see about one derecho every two years — so read the map as a corridor map,
               not a frequency map, and treat trends over a record this short with the caution the yellow note
               above the trend panel describes.</li>
@@ -301,7 +307,9 @@
               Wind reports are screened by the paper's own three tests: they must fall inside the
               published UTC window, their spatial progress along the track must match their
               temporal progress (|SP&nbsp;&minus;&nbsp;TP| under 0.5 for short swaths, 0.25 above
-              1000&nbsp;km), and they must lie within 100&nbsp;km of both endpoints. Surviving
+              1000&nbsp;km), and they must lie no farther from either endpoint than the swath's
+              length plus 100&nbsp;km. We add a fourth: within 300&nbsp;km of the straight
+              start-to-end track line. Surviving
               reports are then linked into a coherent swath by growing disks of 25&nbsp;km or more
               around each until one connected group holds 90% of them, and the dashed outline is
               the boundary of that union — the paper's wind-swath polygon, not a convex hull.
@@ -657,11 +665,11 @@ function countyMetrics(){
   const gm=gapMask(d);
   const keep=[]; for(let y=i0;y<=i1;y++) if(gm.yr[y]) keep.push(y);
   const xk=keep.map(y=>y+y0), yk=new Array(keep.length);
-  const nk=keep.length||1;
+  const nk=keep.length;
   for(let c=0;c<nC;c++){
     const base=c*nY; let s=0;
     for(let j=0;j<keep.length;j++){ const v=M[base+keep[j]]; s+=v; yk[j]=v; }
-    mean[c]=s/nk;
+    mean[c]=nk?s/nk:NaN;
     const r=ols(xk,yk); if(r){ trend[c]=r.slope*10; pv[c]=r.p; }
   }
   return {mean,trend,pv,y0:a,y1:b,nyr:nk,ndrop:(i1-i0+1)-keep.length};
@@ -1048,20 +1056,7 @@ function linkMaps(a,b){
 }
 
 /* Gaussian smoother for the two county maps.
-   Sigma is 1° — about 111 km at these latitudes. Measured over the real county
-   centroids that means half the weight comes from within 116 km, 90% from
-   within 191 km, and nothing beyond the 2σ cutoff at 222 km contributes at all;
-   the kernel is half-strength at ±131 km, so a point source smears into a blob
-   roughly 260 km across. A median of 78 counties contribute, for an effective
-   sample size near 54.
-
-   The grid page uses sigma = one 2° box, twice this footprint, because its
-   field is already 2°-averaged before the blur. Counties are roughly 0.3°, so
-   the same physical kernel here removed far more structure than intended — a 1°
-   kernel is enough to turn a speckled county map into a coherent regional
-   pattern without flattening it.
-
-   Four properties that matter:
+   Properties that matter:
      - NORMALISED convolution. Only counties that actually have a value
        contribute, and the weights are renormalised by what was found, so
        coastal and border counties are not dragged towards zero by the empty
@@ -1070,9 +1065,10 @@ function linkMaps(a,b){
        them, and without area weighting a dense cluster of small counties would
        outvote a single large western one covering the same ground.
      - It never invents data. NaN in, NaN out.
-     - Distances are great-circle in km, not degrees of index, so the kernel is
-       the same physical size everywhere.
-
+     - Distances are in km on a local flat-earth approximation (longitude scaled
+       by the cosine of the mean latitude), not degrees of index, so the kernel is
+       the same physical size everywhere; against true great-circle distance this
+       moves values by well under 1%.
    The neighbour lists are built once (centroids do not move) and reused for
    every redraw. */
 /* Sigma is 2°, about 222 km at these latitudes. Measured over the real county
@@ -1509,7 +1505,7 @@ function refresh(){
   const hiT=niceUp(quantile(tv,stn?1:0.95))||1;
 
   CUR ={val:cm.mean, lo:0,    hi:hiM, div:false, dec:hiM<5?2:1, unit:countUnit()};
-  CURT={val:cm.trend,lo:-hiT, hi:hiT, div:true,  dec:2, unit:countUnit()+' per decade', pval:cm.pv};
+  CURT={val:cm.trend,lo:-hiT, hi:hiT, div:true,  dec:hiT>=1?2:Math.max(2,Math.min(4,Math.ceil(-Math.log10(hiT/4)))), unit:countUnit()+' per decade', pval:cm.pv};
 
   if(stn){
     /* Station hazards have no county values, but the counties still get drawn —
@@ -1577,8 +1573,9 @@ function eventFoot(e){
     `target="_blank" rel="noopener">Squitieri, Wade and Jirak (2026)</a> — <b>184</b> events, `+
     `1956–2025, the first comprehensive US derecho archive. Each swath carries a published UTC `+
     `start and end and start/end coordinates; the wind reports drawn here are the Storm Events `+
-    `reports falling inside that window and within ${d.meta.pad_km} km of both endpoints, which is `+
-    `the paper's own filter. The tiers are the archive's: <i>definitive</i> cases were confirmed `+
+    `reports falling inside that window, keeping pace along the track with the clock, no farther `+
+    `from either endpoint than the swath's length plus ${d.meta.pad_km} km (the paper's filters), `+
+    `and within ${d.meta.xtrack_km||300} km of the straight track line (ours). The tiers are the archive's: <i>definitive</i> cases were confirmed `+
     `against NEXRAD, pre-NEXRAD cases are <i>likely</i> or <i>possible</i>, and suspected `+
     `<i>hybrids</i> — bowing segments inside strongly forced squall lines — are kept apart.`;
   if(!e) return `Choose a swath from the <b>Derecho</b> menu to plot its wind reports. `+src;

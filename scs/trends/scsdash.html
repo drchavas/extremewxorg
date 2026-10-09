@@ -7,7 +7,7 @@
 <title>U.S. County-Level Multi-Hazard Extreme Weather Dashboard</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/topojson-client@3"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <style>
 
   :root{
@@ -967,7 +967,7 @@ function drawDash(){
        occurred, which is what the number is. Derecho counts events, not days. */
     rows+=`<tr><td class="haz">${esc(spec.label+' '+countWord(h)+'s')}`+
           (on?`<span class="yrs">${esc(ha+'–'+hb)}</span>`:'')+
-          `<a href="scstrend.html#h=${esc(h)}&t=${S.thresh}&r=${esc(STUSPS[c])}&c=${esc(S.county)}`+
+          `<a href="scstrend.html#h=${esc(h)}&t=${h===S.hazard?S.thresh:0}&r=${esc(STUSPS[c])}&c=${esc(S.county)}`+
           `&p=${ha}-${hb}">full hazard map &rarr;</a>`+
           `<span class="src">${sourceHtml(h)}</span></td>`;
     for(let i=0;i<maxLev;i++){
@@ -1073,7 +1073,7 @@ function rateBins(){ return RATE_BINS.map(b=>({lo:b.lo,col:b.col,lab:b.lab})); }
 function scaleLegend(){
   const sw=RATE_BINS.map(b=>
     `<span class="sw"><i style="background:${b.col}"></i><b>${esc(b.lab)}</b></span>`).join('');
-  return `<div class="skey"><span class="cap">Events per year</span>${sw}`+
+  return `<div class="skey"><span class="cap">Days or events per year</span>${sw}`+
          `<span class="sw"><i style="background:${ZERO_GREY}"></i><b>0</b></span></div>`+
          trendLegend();
 }
@@ -1201,8 +1201,11 @@ function fmtTrend(v){ return sgn(v, dp(v)); }
    the number behind the encoding rather than taking it on trust. */
 function trendPct(tr,mean){
   if(!isFinite(tr)||!isFinite(mean)||mean<=0) return null;
-  const r=tr/mean*100;
-  return (r>=0?'+':'') + (Math.abs(r)<10?r.toFixed(1):Math.round(r)) + '%';
+  const r=tr/mean*100, a=Math.abs(r);
+  /* Truncate rather than round: the arrow and colour classes break at 10%, 20%,
+     35% and 60%, and 9.96% printed as "10.0%" beside a flat arrow (or 19.6% as
+     "20%" in the 10-20% colour) contradicted the encoding next to it. */
+  return (r>=0?'+':'-') + (a<10?(Math.floor(a*10)/10).toFixed(1):Math.floor(a)) + '%';
 }
 /* The same number the other way round. "0.02 days/yr" is hard to feel; "one
    every 50 years" is not. It is the mean return period, 1/rate — a long-run
@@ -1329,6 +1332,9 @@ function wire(){
     readHash();
     if(gidxOf[S.county]===undefined) S.county='18157';
     if(!HAZ.includes(S.hazard)) S.hazard='hail';
+    /* Old or hand-edited links must not take the page down. */
+    if(!THEME[S.theme]) S.theme='dark';
+    if(!Number.isInteger(S.thresh)||S.thresh<0) S.thresh=0;
 
     msg.textContent='Loading storm records…';
     for(const h of HAZ) await loadHazard(h);

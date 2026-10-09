@@ -29,6 +29,14 @@ are selected by the paper's own two rules:
      700 km downstream four minutes into a thirteen-hour event is a different
      storm, and this is what says so.
   3. The report lies within (track length + 100 km) of BOTH endpoints.
+  3b. (Ours, not the paper's.) It lies within 300 km of the straight start-end
+     track line. Rule 3 alone bounds a report only by distance from the ends, so
+     separate storms far off to the side slipped through: 20 central North
+     Carolina counties 390-440 km south of the 29 Jun 2012 track, Kent County MI
+     346-378 km from 10 Aug 2020. Half the swath reports lie within 66 km of the
+     line and 99% within 300 km; the cap is set there rather than tighter because
+     some swaths bend away from the straight line (29 Jun 2023 has 100+ reports
+     at 250-300 km that belong to it).
   4. It joins the coherent swath.  The paper builds its wind-swath polygon by
      growing disks of at least 25 km around each report "until all circles
      overlapped"; here the radius grows from 25 km in 5 km steps until the
@@ -50,12 +58,11 @@ Report coverage by era (thunderstorm wind, checked against the source CSV)
     1955-1992   100.0% carry coordinates
     1993-1995     0.0%  -- placed at their county centroid instead
     1996-2024    99.5%
-    2025          absent from this extract entirely
+    2025-         present (update_storm_events.py keeps the CSVs current)
 
-Seven events therefore come up with no reports, and neither cause is a fault in
-the archive:
+Four events come up with no reports, which is not a fault in the archive
+(the 2025 swaths have reports now that the wind file runs past 2024):
 
-  * 2025-04-29, 2025-06-20, 2025-07-29 -- the report file stops at 2024.
   * 1993-06-04, 1993-06-09, 1993-06-29, 1993-07-08 -- June and July 1993 are
     MISSING OUTRIGHT from wind_events_complete_years.csv (and from the tornado
     file).  Not sparse, not uncoordinated: zero rows.  Worth knowing beyond this
@@ -100,9 +107,26 @@ USECOLS = ["BEGIN_YEARMONTH", "BEGIN_DAY", "BEGIN_TIME", "CZ_TIMEZONE", "CZ_TYPE
            "STATE_FIPS", "CZ_FIPS"]
 
 PAD_KM = 100.0        # the paper's allowance beyond the swath endpoints
+XTRACK_KM = 300.0     # our cap on distance from the start-end track line (rule 3b)
 LINK_MIN, LINK_MAX, LINK_STEP = 25.0, 75.0, 5.0   # disk radius search, section 3
 LINK_FRAC = 0.90                                   # "coherent" = holds this share
 SIMPLIFY_KM = 4.0                                  # ring simplification for the wire
+
+
+def xtrack_km(lat, lon, e):
+    """Distance (km) from a point to the straight start-end track segment, in a
+    local equirectangular projection centred on the track -- ample at these scales."""
+    R = 6371.0
+    lat0 = math.radians((e["start_lat"] + e["end_lat"]) / 2)
+    def xy(la, lo):
+        return R * math.radians(lo) * math.cos(lat0), R * math.radians(la)
+    ax, ay = xy(e["start_lat"], e["start_lon"])
+    bx, by = xy(e["end_lat"], e["end_lon"])
+    px, py = xy(lat, lon)
+    dx, dy = bx - ax, by - ay
+    L2 = dx * dx + dy * dy or 1.0
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / L2))
+    return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
 
 
 def sp_tp_tol(D):
@@ -493,6 +517,8 @@ def main():
                 d1 = km(alat, alon, e["end_lat"], e["end_lon"])
                 if d0 > lim or d1 > lim:
                     continue
+                if xtrack_km(alat, alon, e) > XTRACK_KM:      # rule 3b
+                    continue
                 # spatial progress must match temporal progress (paper eqs 1-2)
                 D = e["track_km"] or 1
                 T = (e["end"] - e["start"]).total_seconds() / 60.0 or 1
@@ -589,7 +615,7 @@ def main():
         "archive": ("Squitieri, Wade and Jirak (2026), Bull. Amer. Meteor. Soc., 107 (7): "
                     "On a Comprehensive Archive for Derechos across the Contiguous United States"),
         "doi": "https://doi.org/10.1175/BAMS-D-25-0002.1",
-        "thresholds": THRESHOLDS, "pad_km": PAD_KM,
+        "thresholds": THRESHOLDS, "pad_km": PAD_KM, "xtrack_km": XTRACK_KM,
         "nevent": len(out),
         "tiers": [{"k": k, "n": sum(1 for e in out if e["tier"] == k),
                    "note": next(e["tier_note"] for e in out if e["tier"] == k)}

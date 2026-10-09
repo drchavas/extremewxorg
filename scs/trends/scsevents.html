@@ -7,7 +7,7 @@
 <title>Historical Severe Weather Events</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/topojson-client@3"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <style>
 
   :root{
@@ -215,7 +215,7 @@
       <div class="rhead" id="rankHead">&nbsp;</div>
       <div class="rbody"><table><thead><tr>
         <th style="width:44px">#</th><th>Date</th><th style="text-align:right">Counties</th>
-        <th style="text-align:right" id="cntTh">Reports</th><th>States</th>
+        <th style="text-align:right" id="cntTh">Reports</th><th>States hit that day</th>
       </tr></thead><tbody id="rankBody"></tbody></table></div>
     </div>
     <div class="foot" id="foot"></div>
@@ -243,8 +243,8 @@
               ask for it.</li>
           <li><b>Any date.</b> The ranked lists are a way in, not a limit: the <b>Date</b> box
               takes any <code>YYYYMMDD</code> and maps that day, whether or not it ever made a top
-              50. Every date in the record is carried &mdash; 13,879 for hail, 12,741 for
-              tornadoes, 15,446 for thunderstorm wind &mdash; against roughly 3,000 ranked ones.
+              50. Every date in the record is carried &mdash; well over ten thousand per hazard
+              &mdash; against roughly 3,000 ranked ones.
               A date inside the record with nothing to report says so rather than drawing a blank
               map, and so does one outside it.</li>
           <li><b>Tornado rows are county segments, not tornadoes.</b> Storm Events splits a
@@ -352,7 +352,7 @@ const TIERLABEL={definitive:'Definitive',likely_pre:'Likely',likely_nex:'Likely'
                  possible_pre:'Possible',hybrid_nex:'Hybrid',hybrid_pre:'Hybrid'};
 const TIERSETS={
   firm:{label:'Definitive only (96)',          has:t=>t==='definitive'},
-  head:{label:'Definitive + likely (144)',     has:t=>t==='definitive'||t==='likely_pre'},
+  head:{label:'Definitive + pre-radar likely (144)', has:t=>t==='definitive'||t==='likely_pre'},
   all :{label:'All tiers, incl. hybrid (184)', has:()=>true}
 };
 const EVENT_DEFAULT='definitive-069';
@@ -481,12 +481,13 @@ function drawColorbar(el,C,title){
   const stops=(C.div?CMAP.div:CMAP.seq);
   const grad='linear-gradient(to top,'+stops.join(',')+')';
   const ticks=[];
-  for(let i=4;i>=0;i--) ticks.push(fmt(C.lo+(C.hi-C.lo)*i/4,C.dec));
+  const nt=C.nt||4;
+  for(let i=nt;i>=0;i--) ticks.push(fmt(C.lo+(C.hi-C.lo)*i/nt,C.dec));
   el.innerHTML=`<div class="cap">${esc(title)}</div><div class="row">`+
     `<div class="strip" style="background:${grad}"></div>`+
     `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
     /* say what the white means, or it reads as missing data */
-    (C.div?'':`<div class="zchip"><i></i>exactly 0</div>`);
+    (C.div||C.noZero?'':`<div class="zchip"><i></i>exactly 0</div>`);
 }
 function colorFor(v,C){
   if(!isFinite(v)) return null;
@@ -582,8 +583,10 @@ function eventFoot(e){
     `target="_blank" rel="noopener">Squitieri, Wade and Jirak (2026)</a> — <b>184</b> events, `+
     `1956–2025, the first comprehensive US derecho archive. Each swath carries a published UTC `+
     `start and end and start/end coordinates; the wind reports drawn here are the Storm Events `+
-    `reports falling inside that window and within ${d.meta.pad_km} km of both endpoints, which is `+
-    `the paper's own filter. The tiers are the archive's: <i>definitive</i> cases were confirmed `+
+    `reports falling inside that window, no farther from either endpoint than the swath's length `+
+    `plus ${d.meta.pad_km} km, and keeping pace along the track with the clock &mdash; the paper's `+
+    `own filters &mdash; and, our addition, within ${d.meta.xtrack_km||300} km of the straight track `+
+    `line, which keeps separate storms far off to the side out of the swath. The tiers are the archive's: <i>definitive</i> cases were confirmed `+
     `against NEXRAD, pre-NEXRAD cases are <i>likely</i> or <i>possible</i>, and suspected `+
     `<i>hybrids</i> — bowing segments inside strongly forced squall lines — are kept apart.`;
   if(!e) return `Choose a swath from the <b>Derecho</b> menu to plot its wind reports. `+src;
@@ -674,21 +677,23 @@ function drawDay(){
 
   const by=dayCounties(di);
   const vals=[...by.values()].sort((a,b)=>a-b);
-  const hi=Math.max(1,niceUp(quantile(vals,0.95)));
-  CUR={val:null,byGeoid:by,lo:0,hi,div:false,dec:0,unit:'reports'};
+  /* report counts are whole numbers: pick 1-4 equal integer steps so no tick repeats */
+  const top=Math.max(1,niceUp(quantile(vals,0.95))), nt=Math.min(4,top), step=Math.ceil(top/nt);
+  CUR={val:null,byGeoid:by,lo:0,hi:step*nt,nt,div:false,dec:0,unit:'reports',noZero:true};
 
   if(S.view==='pts' && PTS[S.hazard]){
     const p=PTS[S.hazard], g=L.layerGroup(), t=T();
     const min=thrSpec().min, u=hazSpec().unit;
     for(let k=p.off[di];k<p.off[di+1];k++){
       const m=p.mag[k];
-      if(m===null||m<min) continue;
+      /* a report with no magnitude is counted at the lowest threshold, so draw it there */
+      if(m===null ? S.thresh>0 : m<min) continue;
       if(p.la[k]===null||p.lo[k]===null) continue;
-      const frac=Math.max(0,Math.min(1,(m-min)/Math.max(1e-9,(CURMAX()-min)||1)));
+      const frac=m===null?0:Math.max(0,Math.min(1,(m-min)/Math.max(1e-9,(CURMAX()-min)||1)));
       L.circleMarker([p.la[k],p.lo[k]],{radius:3+4.5*frac,
         fillColor:ramp(CMAP.seq,0.15+0.85*frac),fillOpacity:.9,
         color:t.cline,weight:.7})
-       .bindTooltip(`<b>${fmt(m,u==='in'?2:0)} ${esc(u)}</b><br>${esc(cName(p.ci[k]))}`+
+       .bindTooltip(`<b>${m===null?'no magnitude reported':fmt(m,u==='in'?2:0)+' '+esc(u)}</b><br>${esc(cName(p.ci[k]))}`+
                     (p.t[k]!=null?`<br>${String(Math.floor(p.t[k]/100)).padStart(2,'0')}:`+
                                   `${String(p.t[k]%100).padStart(2,'0')} local`:''),
                     {sticky:true,className:'ctytip'})
@@ -780,8 +785,10 @@ function syncRanks(){
     let nrep=0; const st=new Set();
     for(let k=d.dcOff[di];k<d.dcOff[di+1];k++){
       const c=d.dcN[k*nlev+lev];
-      if(c>0){ nrep+=c; const gi=gidxOf[d.counties[d.dcCi[k]]];
-               if(gi!==undefined) st.add(STUSPS[gi]); }
+      if(c>0){ const gi=gidxOf[d.counties[d.dcCi[k]]];
+               if(gi!==undefined) st.add(STUSPS[gi]);
+               /* with a state chosen, Counties is that state's count, so Reports must be too */
+               if(!S.region||(gi!==undefined&&STUSPS[gi]===S.region)) nrep+=c; }
     }
     const stl=[...st].sort();
     return `<tr data-d="${esc(d.days[di])}"${d.days[di]===S.day?' class="on"':''}>`+
@@ -845,8 +852,11 @@ function dayFoot(di){
        was just nothing to report. Saying so beats a blank map. */
     const yr=+S.day.slice(0,4);
     const out = yr<d.meta.year0||yr>d.meta.year1;
+    const late = !out && d.meta.through && S.day.slice(0,7)>d.meta.through;
     return `<b>${esc(prettyDate(S.day))}</b> — `+
-      (out ? `outside the record, which runs ${d.meta.year0}–${d.meta.year1}.`
+      (late ? `not yet published: NOAA's Storm Events currently runs through `+
+              `${esc(prettyDate(d.meta.through+'-01').replace(/^\S+\s/,''))}.`
+       : out ? `outside the record, which runs ${d.meta.year0}–${d.meta.year1}.`
            : `no ${esc(hazSpec().label.toLowerCase())} reports anywhere in the United States `+
              `on this date.`)+
       (S.day.slice(0,7)==='1993-06'||S.day.slice(0,7)==='1993-07'
@@ -946,10 +956,17 @@ function syncModeCtrls(){
 /* ------------------------------------------------------------------ wire */
 function wire(){
   document.getElementById('hazSel').onchange=async e=>{
-    S.hazard=e.target.value; S.day=''; S.thresh=0;
+    const key=e.target.value, prev=S.hazard, sel=e.target;
+    const spec=INDEX.hazards.find(h=>h.key===key);
     const m=document.getElementById('msg');
-    m.textContent='Loading '+hazSpec().label.toLowerCase()+'…'; m.style.display='block';
-    await loadHazard(S.hazard);
+    m.textContent='Loading '+spec.label.toLowerCase()+'…'; m.style.display='block';
+    try{ await loadHazard(key); }
+    catch(err){ console.error(err);
+      if(sel.value===key){ sel.value=prev; m.textContent='Could not load '+spec.label.toLowerCase()+': '+err.message;
+        setTimeout(()=>{ m.style.display='none'; },4000); }
+      return; }
+    if(sel.value!==key) return;           // overtaken by a later choice
+    S.hazard=key; S.day=''; S.thresh=0;
     if(isDerecho()&&!HZ[S.hazard].byId[S.ev]) S.ev=EVENT_DEFAULT;
     if(!isDerecho()){
       /* Open on the biggest day for wherever the reader already is, rather than
@@ -1068,6 +1085,12 @@ function addTiles(){
 
     readHash();
     if(!INDEX.hazards.some(h=>h.key===S.hazard)) S.hazard=INDEX.hazards[0].key;
+    /* Old or hand-edited links must not take the page down. */
+    const nt=hazSpec().thresholds.length;
+    if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<nt)) S.thresh=0;
+    if(!THEME[S.theme]) S.theme='dark';
+    if(!TIERSETS[S.tier]) S.tier='firm';
+    if(S.day&&!/^\d{4}-\d{2}-\d{2}$/.test(S.day)) S.day='';
 
     msg.textContent='Loading events…';
     await loadHazard(S.hazard);

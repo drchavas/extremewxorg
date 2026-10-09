@@ -84,7 +84,7 @@ async function load(hash) {
      'missing', 'all of them');
   // the zonal profiles live inside the map panels and share their latitude axis
   ok('both zonal profiles drawn beside their maps',
-     g.includes('Zonal mean [') && g.includes('Zonal trend ['),
+     (g.includes('Zonal mean [') || g.includes('Zonal total [')) && g.includes('Zonal trend ['),
      'missing', 'both');
   const dy0 = w.st.S.y0, dy1 = w.st.S.y1;
   ok('opens on 1990, per Klotzbach et al. (2022)', dy0 === 1990, dy0, 1990);
@@ -435,7 +435,7 @@ async function load(hash) {
     // 0 hPa cyclone, and it squeezes the real 970-1010 range into a sliver.
     const ticks = async h => {
       const g = (await load(h)).document.getElementById('card').innerHTML;
-      const seg = g.slice(0, g.indexOf('Zonal mean'));
+      const seg = g.slice(0, g.search(/Zonal (mean|total)/));
       return [...seg.matchAll(/text-anchor="middle"[^>]*>([-\d.]+)</g)]
                .map(m => +m[1]).slice(-6);
     };
@@ -785,7 +785,7 @@ async function load(hash) {
     // the processing chain a reader would need to reproduce the numbers
     [['source', 'IBTrACS v04r01'],
      ['synoptic filter', '00, 06, 12 and 18 UTC'],
-     ['stage filter', 'Tropical and subtropical stages only'],
+     ['stage filter', 'ACE: tropical and subtropical stages only'],
      ['wind source', 'USA 1-minute sustained wind'],
      ['why not WMO', 'availability climbs from 55% to 85%'],
      ['two-stage fit', 'Then the trend is fitted to that annual series'],
@@ -963,6 +963,25 @@ async function load(hash) {
   ok('  and the NSF acknowledgement',
      mk.includes('NSF grants 2519425, 2431970 and 1945113'),
      (mk.match(/Site development[^<]*/) || ['missing'])[0], 'NSF line');
+
+  console.log('\naudit fixes');
+  {
+    // ACE is defined on tropical+subtropical positions whatever the Stages control
+    // says, so the map must not change with it (it used to blank the tropics on ET-only)
+    const card = async h => (await load(h)).document.getElementById('card').innerHTML;
+    const a = await card('v=ace&b=NA&p=1990-2024&g=tset'), b = await card('v=ace&b=NA&p=1990-2024&g=et');
+    const fills = g => (g.match(/fill="#[0-9a-f]{6}"/gi) || []).length;
+    const norm = g => g.replace(/\b(id|clip-path|href|mask)="[^"]*"/g, '').replace(/url\(#[^)]*\)/g, '');   // element ids are random
+    ok('ACE map is the same under every Stages choice', norm(a) === norm(b) && a.includes('ACE definition'),
+       fills(b) + ' fills', fills(a) + ' fills');
+    const d = await card('v=density&b=NA&p=1990-2024');
+    ok('band totals are labelled as totals', d.includes('Zonal total [') && !d.includes('Zonal mean ['), 'label', 'Zonal total');
+    const v = await card('v=vmax&b=NA&p=1990-2024');
+    ok('band means are labelled as means', v.includes('Zonal mean ['), 'label', 'Zonal mean');
+    const w2 = await load('k=nope&b=XX&t=zz');
+    const c2 = w2.document.getElementById('card').innerHTML;
+    ok('a malformed link still draws the page', c2.length > 50000 && c2.includes('Climatology'), c2.length, '> 50000');
+  }
 
   console.log(`\n${checks - fails}/${checks} checks passed`);
   process.exit(fails ? 1 : 0);

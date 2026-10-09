@@ -128,7 +128,10 @@ def prepare(df, y0, y1, grid):
     d = d[d.TRACK_TYPE.isin(['main', 'PROVISIONAL', 'US-PROVISIONAL'])]
 
     t = pd.to_datetime(d.ISO_TIME, errors='coerce')
-    d = d[t.dt.hour.isin([0, 6, 12, 18]).fillna(False)]
+    # Synoptic times only. Test the minute too: IBTrACS inserts landfall and peak
+    # points at hh:15/hh:30/hh:45, and an hour-only test let 38 of them in.
+    syn = t.dt.hour.isin([0, 6, 12, 18]) & (t.dt.minute == 0)
+    d = d[syn.fillna(False)]
     d = d.assign(month=t.dt.month,
                  prov=~d.TRACK_TYPE.isin(['main']))
 

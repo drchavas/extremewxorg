@@ -763,7 +763,9 @@ function cellMetrics(){
     // ocean, and painting it would put 95% of the globe at the bottom of the
     // colour scale and squeeze every real value into the top few percent.
     let pos=0;
-    for(let y=i0;y<=i1;y++) pos+=A.n[c*NY+y];
+    /* ACE ignores the Stages control, so whether a cell has data must too */
+    const P=S.v==='ace'?A.sumv2:A.n;
+    for(let y=i0;y<=i1;y++) pos+=P[c*NY+y];
     if(pos<=0) continue;
     seen[c]=1;
 
@@ -1460,7 +1462,8 @@ function render(){
   // carries so the scale is set by the basins and not by their fringes.
   const cells=basinCells();
   const [ya,yb]=[cm.a-Y0,cm.b-Y0];
-  const wOf=c=>{ let s=0; for(let y=ya;y<=yb;y++) s+=A.n[c*NY+y]; return s; };
+  const WP=S.v==='ace'?A.sumv2:A.n;            // ACE: weight by what it is summed from
+  const wOf=c=>{ let s=0; for(let y=ya;y<=yb;y++) s+=WP[c*NY+y]; return s; };
   const mv=[],tv=[];
   for(const c of cells){
     const wgt=wOf(c); if(wgt<=0) continue;
@@ -1493,7 +1496,7 @@ function render(){
   const pf=IX.provisional_from;
   svg+=txt(40,68,esc(thrSpec().label+'  ·  '+a+'–'+b+'  ·  '+GRID+'° grid  ·  '+
            'IBTrACS synoptic best-track positions, USA (NHC/JTWC) 1-min winds'+
-           '  ·  '+esc(stageSpec().label.toLowerCase())+
+           '  ·  '+(S.v==='ace'?'tropical + subtropical (ACE definition)':esc(stageSpec().label.toLowerCase()))+
            (pf&&b>=pf ? '  ·  '+pf+' onward is provisional, not yet reanalysed' : '')),
            {size:13,fill:t.mute});
 
@@ -1514,7 +1517,7 @@ function render(){
                  gateLabel:'grey - fewer than '+S.minPlot+' years with a storm',
                  zonal:{rows:Z,key:'mean',band:false,sym:false,
                         zero:!(S.v==='pmin'||S.v==='vmax'),
-                        title:'Zonal mean',unit:uL}});
+                        title:isExtensive()?'Zonal total':'Zonal mean',unit:uL}});
   svg+=mapPanel(40,538,1440,430,'Trend',
         /* Three separate conditions, and the wording has to keep them separate:
            "11 yrs spanning 70%" reads as one clause about one quantity, and a
@@ -1623,10 +1626,11 @@ function methodsHTML(){
       'interpolants and are dropped, so one count unit is one 6-hour position and four make '+
       'one storm-day. The dropped fraction is stable through the record, so this is not a '+
       'trend artefact.',
-    '<b>Tropical and subtropical stages only</b> (<code>NATURE</code> of TS or SS). '+
-      'Extratropical and remnant-low positions are excluded even when the wind is still above '+
-      'threshold — the standard ACE convention. Including them inflates the 2005 North '+
-      'Atlantic season to 273 against a published 245.',
+    '<b>ACE: tropical and subtropical stages only</b> (<code>NATURE</code> of TS or SS). '+
+      'For ACE, extratropical and remnant-low positions are excluded even when the wind is still '+
+      'above threshold — the standard ACE convention. Including them inflates the 2005 North '+
+      'Atlantic season to 273 against a published 245. Every other field counts the stages '+
+      'chosen in the <b>Stages</b> control, described below.',
     '<b>Cumulative intensity thresholds</b>: '+thr+'. A threshold selects the positions, not '+
       'the storms, so a cyclone contributes only the part of its track that was at least that '+
       'strong.',
@@ -1981,6 +1985,10 @@ function wire(){
       .forEach(k=>G[k]=Float32Array.from(G[k]));
 
     readHash();
+    /* Old or hand-edited links must not blank or crash the page. */
+    if(!THEME[S.theme]) S.theme='dark';
+    if(!IX.basin_cells[S.basin]) S.basin='GL';
+    if(!IX.thresholds.some(t=>t.k===S.thr)) S.thr=IX.thresholds[0].k;
     wire();
     document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
     syncStats(); syncUnits(); syncYears();

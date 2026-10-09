@@ -208,9 +208,10 @@
               thunderstorm-wind report. Only county-type records (<code>CZ_TYPE = C</code>)
               are used. Puerto Rico lies outside this grid.</li>
           <li><b>Position each report.</b> Its own <code>BEGIN_LAT</code>/<code>BEGIN_LON</code>
-              where present; otherwise the centroid of the county that reported it. The fallback
-              matters almost entirely in 1993–1995, when hail and wind reports carry no
-              coordinates at all.</li>
+              where present; otherwise the centre of the county that reported it (the average of
+              its simplified boundary points, which can differ slightly from the true centroid for
+              oddly shaped counties). The fallback matters almost entirely in 1993–1995, when hail
+              and wind reports carry no coordinates at all.</li>
           <li><b>Bin into a box.</b> A 2°&nbsp;×&nbsp;2° grid over the lower 48
               (24–50°N, 126–66°W; 390 boxes, about 260 of which ever see a hail, tornado or wind report).</li>
           <li><b>Apply the threshold.</b> Each report is scored against the selected size or
@@ -233,7 +234,8 @@
               declines to fit does not get a slope here either.</li>
           <li><b>Smoothing.</b> The two maps are drawn through a light <b>Gaussian blur</b>,
               sigma <b>2&deg;</b>, on by default and switchable to <b>Raw</b>. On this 2&deg;
-              grid that is exactly one box. The county page uses the same 2&deg; sigma, so the two
+              grid that is exactly one box, and the kernel is cut off at two boxes (a 5&nbsp;&times;&nbsp;5
+              window). The county page uses the same 2&deg; sigma, so the two
               are smoothed at a matched physical scale; it bites much harder there, because
               counties are roughly 0.3&deg; while this field is already 2&deg;-averaged by
               construction. A single 2&deg; box
@@ -1021,7 +1023,7 @@ function refresh(){
   const hiT=niceUp(quantile(tnz.length?tnz:tv,0.95))||1;
 
   CUR ={val:cm.mean, lo:0,   hi:hiM, div:false, dec:hiM<5?2:(hiM<40?1:0), unit:countUnit()};
-  CURT={val:cm.trend,lo:-hiT,hi:hiT, div:true,  dec:hiT<1?3:2, unit:countUnit()+' per decade', pval:cm.pv};
+  CURT={val:cm.trend,lo:-hiT,hi:hiT, div:true,  dec:hiT>=1?2:Math.max(2,Math.min(4,Math.ceil(-Math.log10(hiT/4)))), unit:countUnit()+' per decade', pval:cm.pv};
 
   if(!layA){
     layA=L.geoJSON(GEO,{style:styleOf(CUR),onEachFeature:bindCell}).addTo(mapA);
