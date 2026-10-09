@@ -111,7 +111,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     // the trends page loads a hazard on demand, so pick it before probing
     th.value=h; await th.onchange({target:{value:h}});
     await new Promise(r=>setTimeout(r,900));
-    const nt=tw.eval(`hazSpec().thresholds.length`);
+    const nt=Math.min(tw.eval(`hazSpec().thresholds.length`), w.eval(`dashLevels('${h}')`));   // the dashboard stops tornado at EF3+
     for(let t=0;t<nt;t++){
       const ref=JSON.parse(tw.eval(
         `JSON.stringify(probe('${h}',${t},'${COUNTY}',${A},${B},'2'))`));
@@ -556,6 +556,15 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('and a stale link with a period in it still opens, ignoring it',
       boot('scsdash.html','#c=06037&p=1990-2010&sm=off')!=null);
 
+  console.log('\n--- tornado stops at EF3+');
+  {
+    const torCells=[...lw.document.querySelectorAll('#dashBody .cell[data-h="tornado"]')];
+    const labs=torCells.map(c=>(c.querySelector('.lab')||{}).textContent);
+    say('tornado row shows EF0+ to EF3+ only',torCells.length===4&&!labs.some(l=>/EF4/.test(l)),labs.join(' '));
+    say('no column is left over for it',lw.document.querySelectorAll('#dashHead th').length===5,
+        lw.document.querySelectorAll('#dashHead th').length+' header cells');
+    say('Methods says why',/EF4\+ is\s+left out/.test(lw.document.body.innerHTML));
+  }
   console.log('\n--- audit fixes');
   {
     const links=[...lw.document.querySelectorAll('#dashBody td.haz > a')].map(a=>a.getAttribute('href'));

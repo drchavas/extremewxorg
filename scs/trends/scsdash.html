@@ -324,7 +324,7 @@
               decade, and grey below 10%. It is relative rather than absolute because no
               single absolute scale can serve a hail cell at 4.8&nbsp;days/yr and a derecho
               cell at 0.02&nbsp;events/yr at once.</li>
-          <li><b>Colour is an absolute scale.</b> Nine classes in events per year, the same in
+          <li><b>Colour is an absolute scale.</b> Nine classes in days (for derecho, events) per year, the same in
               every cell, every hazard and every county, so two cells can be compared by eye. The
               breaks step by roughly half an order of magnitude because the rates span four;
               even spacing would put nearly every cell in one class. A climatology of exactly
@@ -338,19 +338,31 @@
               are far too sparse to carry a trend on their own, which is why there is no raw
               option here; <a href="scstrend.html">the hazard page</a> has one.</li>
           <li><b>One fixed period, 2000 onward</b>, shown beside each hazard and clipped to that
-              hazard's own record. There is no period control on purpose: pre-2000 windows
+              hazard's own record. It ends on the latest year NOAA has published in full; a year
+              still being published (2026 runs only through June so far) is left out rather than
+              counted as a quiet year. There is no period control on purpose: pre-2000 windows
               measure the growth of reporting as much as the weather (see below), and this page
               is meant to be read without knowing that. Use
               <a href="scstrend.html">the hazard page</a> to choose a window.</li>
           <li><b>Severity runs left to right</b> and the thresholds are cumulative, so a 2&Prime;
               hailstone is also counted as a 1&Prime; one. Hazards have different numbers of
-              levels, so rows are ragged: tornado has five, derecho three.</li>
+              levels, so rows are ragged: tornado has four (EF0+ to EF3+), derecho three. EF4+ is
+              left out here: it is too rare to give a county a meaningful rate or trend, and
+              ratings that high are too uncertain between EF3, EF4 and EF5 to separate. The
+              <a href="scstrend.html">hazard page</a> still offers it.</li>
           <li><b>Sources.</b> Hail, tornado and thunderstorm wind are NOAA/NCEI Storm Events.
               Derecho combines the swath archive of
               <a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank"
                  rel="noopener">Squitieri, Wade and Jirak (2026)</a> with the Storm Events reports
               falling inside those swaths; that archive is NEXRAD-era only, so the derecho record
-              begins in 1996.</li>
+              begins in 1996. A report belongs to a swath when it falls inside the archive's UTC
+              window, keeps pace along the track, lies no farther from either endpoint than the
+              swath's length plus 100&nbsp;km, and lies within 300&nbsp;km of the straight
+              start-to-end track line. Two swaths that start on the same date count once in a
+              county both cross. Details are on <a href="scstrend.html">the hazard page</a>.</li>
+          <li><b>Counties.</b> Connecticut uses its eight historical counties, because Storm Events
+              still files reports under them rather than the planning regions the Census adopted in
+              2022. Puerto Rico reports count from 2009, the first year they carry municipio codes.</li>
           <li><b>Freezing rain and peak wind are not here yet.</b> They are station data &mdash; twelve
               Indiana sites, not a national county field &mdash; so there is no county value to
               show. They remain on <a href="scstrend.html">the hazard page</a>.</li>
@@ -505,6 +517,13 @@ async function gzFetch(url){
    twelve Indiana stations, not a national county field, so there is no county
    value for them to show. */
 const HAZ=['hail','tornado','wind','derechoday'];
+/* Severity levels the dashboard shows, per hazard. Tornado stops at EF3+: EF4+ is
+   too rare to carry a county climatology or trend, and ratings that high are too
+   uncertain between EF3, EF4 and EF5 to be worth separating. The hazard pages
+   still offer every level. */
+const DASH_MAXLEV={tornado:4};
+function dashLevels(h){ const s=INDEX.hazards.find(x=>x.key===h); const n=s?s.thresholds.length:0;
+  return Math.min(n, DASH_MAXLEV[h]||n); }
 
 const S={county:'18157',            // Tippecanoe, IN — home county
          y0:2000,y1:2024,theme:'dark',smooth:'2',   // y1 is reset to the data once loaded
@@ -781,7 +800,7 @@ function buildFields(){
     if(!HZ[h]) return;
     out[h]=[];
     const spec=INDEX.hazards.find(x=>x.key===h);
-    spec.thresholds.forEach((t,ti)=>{
+    spec.thresholds.slice(0,dashLevels(h)).forEach((t,ti)=>{
       S.hazard=h; S.thresh=ti;
       rebuildMatrix();
       const cm=countyMetrics();
@@ -945,7 +964,7 @@ function refreshCUR(){
 
 function drawDash(){
   const c=gidxOf[S.county], [a,b]=yearsSel();
-  const maxLev=Math.max(...HAZ.filter(covered).map(h=>hazSpec(h).thresholds.length));
+  const maxLev=Math.max(...HAZ.filter(covered).map(h=>dashLevels(h)));
 
   document.getElementById('dashTitle').textContent =
     countyLabel(c);
@@ -971,7 +990,7 @@ function drawDash(){
           `&p=${ha}-${hb}">full hazard map &rarr;</a>`+
           `<span class="src">${sourceHtml(h)}</span></td>`;
     for(let i=0;i<maxLev;i++){
-      const t=spec.thresholds[i];
+      const t=i<dashLevels(h)?spec.thresholds[i]:null;
       if(!t||!on){ rows+='<td class="cell none"></td>'; continue; }
       const d=cellOf(h,i);
       const sel=(h===S.hazard&&i===S.thresh)?' on':'';
@@ -1335,6 +1354,7 @@ function wire(){
     /* Old or hand-edited links must not take the page down. */
     if(!THEME[S.theme]) S.theme='dark';
     if(!Number.isInteger(S.thresh)||S.thresh<0) S.thresh=0;
+    S.thresh=Math.min(S.thresh,dashLevels(S.hazard)-1);
 
     msg.textContent='Loading storm records…';
     for(const h of HAZ) await loadHazard(h);
