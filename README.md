@@ -53,6 +53,11 @@ scs/                  Severe convective storms (+ other U.S. hazards)
     scstrend_grid.html  "Climatology & Trends — 2° grid"
     data/, geo/         pre-generated data + basemaps (served)
     build_*.py, *.js    build/audit scripts (not served)
+enso/                 El Nino / La Nina composites (new 2026-10-10, BETA)
+  ensogrid.html         "El Nino and La Nina: Climatology and Impacts — global grid" (linked from landing)
+  data/, geo/           ERA5 2 deg monthly fields, TC monthly 5 deg grid, RONI, Natural Earth coast
+  build_*.py, fetch_*.py  builders (not served); see enso/README.md
+                        NB: its U.S. fields read ../scs/trends/data/grid_*.json.gz in place
 .gitignore            excludes raw source CSVs, .htaccess, OS junk
 ```
 
@@ -72,6 +77,11 @@ scs/                  Severe convective storms (+ other U.S. hazards)
 **Severe Weather (wind, hail, tornado, derecho, freezing rain)**
 - *Historical Event Viewer* → `scs/trends/scsevents.html`
 - *Historical Trends* → `scs/trends/scstrend.html` (county) and `scs/trends/scstrend_grid.html` (2° grid)
+
+**Climate Variability (El Niño and La Niña)**
+- *El Niño & La Niña Impacts — global grid* → `enso/ensogrid.html` (BETA chip on the landing page)
+  — monthly ENSO composites (Jun–May) of ERA5 T/precip, IBTrACS TC activity and the U.S. 2° Storm
+  Events grids, with the RONI years shown. Details: `enso/README.md`.
 
 ---
 

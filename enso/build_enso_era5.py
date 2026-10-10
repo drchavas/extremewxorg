@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""
+Write the ERA5 monthly fields that ensogrid.html composites by ENSO phase.
+
+    python3 build_enso_era5.py COARSE_DIR data [--y0 1979] [--y1 2025]
+
+Inputs are 1 deg box means of ERA5 monthly fields produced by the two fetch scripts
+kept beside this one (fetch_era5_gdex.py, fetch_era5_arco.py, era5_coarsen.py):
+  * 1979-2022  NCAR GDEX ds633.1 "ERA5 monthly means" (the ECMWF monthly-mean product)
+  * 2023-on    ARCO-ERA5 hourly (gs://gcp-public-data-arco-era5), averaged here to
+               monthly means.  Checked against ds633.1 for Dec 2022: max |diff| over
+               all boxes 0.001 K for 2 m temperature and 0.001 mm/day for precipitation.
+Variables: 2 m temperature (K -> deg C) and mean total precipitation rate
+(kg m-2 s-1 -> mm/day).
+
+The page needs, for each of the twelve months June..May of every ENSO year
+Y = 1979..2025 (June-December of Y, January-May of Y+1), the field on a 2 deg
+grid.  It does every statistic itself -- climatology, detrending, composites, t-tests
+-- so the strength threshold, phase and period stay live controls.
+
+Output, one file per variable per month: data/era5_<var>_<MM>.bin.gz, gzip of a
+little-endian Int16Array laid out
+    [ clim(cell) | anom(year 0, cell) | anom(year 1, cell) | ... ]
+with cell = row*180 + col, row 0 = 90S..88S, col 0 = 0..2E.  clim is the mean over
+all years written; anom = value - clim.  Both are scaled by 100 (0.01 deg C, 0.01
+mm/day).  data/era5_index.json carries the grid, years and scale.
+"""
+import sys, os, json, gzip, argparse
+import numpy as np
+ap = argparse.ArgumentParser(); ap.add_argument('coarse'); ap.add_argument('out')
+ap.add_argument('--y0', type=int, default=1979); ap.add_argument('--y1', type=int, default=2025)
+A = ap.parse_args()
+MONTHS = [6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5]
+VARS = {'t2m': {'label': '2 m temperature', 'unit': '°C', 'conv': lambda a: a - 273.15},
+        'pr':  {'label': 'Precipitation', 'unit': 'mm/day', 'conv': lambda a: a * 86400.0, 'src': 'mtpr'}}
+_rda = {}
+def field(v, y, m):
+    """1 deg monthly mean (180 x 360, south->north, 0->360E)."""
+    src = VARS[v].get('src', v)
+    f = f'{A.coarse}/arco_{src}_{y}_{m:02d}.npy'
+    if os.path.exists(f) and y >= 2023: return np.load(f)
+    k = (src, y)
+    if k not in _rda: _rda[k] = np.load(f'{A.coarse}/rda_{src}_{y}.npy')
+    return _rda[k][m - 1]
+lat1 = -89.5 + np.arange(180)
+w1 = np.cos(np.deg2rad(lat1))
+def to2(a):
+    """2x2 box mean of 1 deg boxes, cos(lat) weighted -> (90, 180)."""
+    ww = np.broadcast_to(w1[:, None], a.shape)
+    s = (a * ww).reshape(90, 2, 180, 2).sum((1, 3)); n = ww.reshape(90, 2, 180, 2).sum((1, 3))
+    return s / n
+years = list(range(A.y0, A.y1 + 1))
+os.makedirs(A.out, exist_ok=True)
+stats = {}
+for v, spec in VARS.items():
+    for m in MONTHS:
+        X = np.stack([spec['conv'](to2(field(v, y if m >= 6 else y + 1, m).astype(np.float64))) for y in years])
+        clim = X.mean(0)
+        an = X - clim
+        q = np.concatenate([np.round(clim * 100).ravel(), np.round(an * 100).ravel()])
+        assert np.abs(q).max() < 32767, (v, m, np.abs(q).max())
+        with gzip.open(f'{A.out}/era5_{v}_{m:02d}.bin.gz', 'wb', compresslevel=9) as f:
+            f.write(q.astype('<i2').tobytes())
+        stats[f'{v}_{m:02d}'] = [round(float(clim.min()), 2), round(float(clim.max()), 2)]
+        print(v, m, 'clim range', stats[f'{v}_{m:02d}'], 'max|anom|', round(float(np.abs(an).max()), 2), flush=True)
+idx = {'grid': 2.0, 'lat0': -90.0, 'lon0': 0.0, 'nlat': 90, 'nlon': 180, 'scale': 100,
+       'years': years, 'months': MONTHS,
+       'vars': [{'k': k, 'label': s['label'], 'unit': s['unit']} for k, s in VARS.items()],
+       'source': 'ERA5 (ECMWF/Copernicus C3S): NCAR GDEX ds633.1 monthly means 1979-2022; '
+                 'ARCO-ERA5 hourly averaged to monthly 2023 on',
+       'clim_range': stats}
+json.dump(idx, open(f'{A.out}/era5_index.json', 'w'), indent=1)
