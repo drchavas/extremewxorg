@@ -29,20 +29,28 @@ out = {'source': URL, 'retrieved': datetime.date.today().isoformat(), 'year0': y
        'last': f'{SEAS[last % 12]} {y0 + last // 12}', 'v': series}
 json.dump(out, open(sys.argv[1] + '/roni.json', 'w'), separators=(',', ':'))
 
+def r1(x):
+    """Round half away from zero to 0.1, as CPC does before applying the +/-0.5 rule: its RONI
+    episode table colours a season warm or cold from the one-decimal value, so DJF 0.45 counts."""
+    import math
+    return None if x is None else math.copysign(math.floor(abs(x) * 10 + 0.5 + 1e-9) / 10, x)
+
 def classify(thr=0.5):
-    """ENSO year Y = Jun Y .. Feb Y+1, classified by DJF of Y+1 (centre Jan Y+1), which must
-    lie in a run of >= 5 consecutive overlapping seasons beyond +/-0.5 (CPC's episode rule)."""
+    """ENSO year Y = Jun Y .. May Y+1, classified by DJF of Y+1 (centre Jan Y+1), which must
+    lie in a run of >= 5 consecutive overlapping seasons beyond +/-0.5 (CPC's episode rule),
+    every value rounded to 0.1 first (CPC's convention)."""
     res = {}
+    series_r = [r1(x) for x in series]
     for Y in range(y0, y0 + len(series) // 12):
         i = (Y + 1 - y0) * 12          # DJF Y+1
-        if i >= len(series) or series[i] is None: continue
-        v = series[i]
+        if i >= len(series) or series_r[i] is None: continue
+        v = series_r[i]
         for sgn, lab in ((1, 'EN'), (-1, 'LN')):
             if sgn * v >= thr:
                 a = i
-                while a - 1 >= 0 and series[a - 1] is not None and sgn * series[a - 1] >= 0.5: a -= 1
+                while a - 1 >= 0 and series_r[a - 1] is not None and sgn * series_r[a - 1] >= 0.5: a -= 1
                 b = i
-                while b + 1 < len(series) and series[b + 1] is not None and sgn * series[b + 1] >= 0.5: b += 1
+                while b + 1 < len(series_r) and series_r[b + 1] is not None and sgn * series_r[b + 1] >= 0.5: b += 1
                 if b - a + 1 >= 5: res[Y] = lab
     return res
 c = classify()

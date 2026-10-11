@@ -56,10 +56,11 @@ views, plus a docked panel holding the trend by latitude and the annual series f
 region you pick, with the region's box outlined on the map. Hover any cell for a readout, click
 for its full numbers; CSV export and shareable URLs included.
 
-It shares this folder's `data/` and `geo/`, so it must stay here — moving the file alone breaks
-its relative fetches. Nothing links to it; it is here in case the approach is wanted later, for
-TCs or anything else. `test_maps.js` still covers it, and is worth running after any change to
-the data schema so it does not rot silently.
+**Not in this repo.** `trendmaps.html` was never committed here, and as of 2026-10-10 no copy
+exists anywhere in the Personal Website folder either; `test_maps.js` and `dump_maps.js`, which
+could only crash without it, were removed then. The description is kept in case the approach
+is wanted again. (Its notes below on longitude framing and °E/°W labels still apply to any
+rebuild.)
 </details>
 
 ## Fields
@@ -624,9 +625,11 @@ map cells over-counts the global total several-fold; if that check ever starts p
 someone has wired a storm panel back onto a sum.
 
 Sanity: the basin table reproduces the published climatologies — **86.4** TS+ storms per year
-globally, **47.0** at hurricane strength, **16.1** in the North Atlantic, **25.9** in the West
-Pacific, **17.0** in the East Pacific — all verified against an independent `nunique` in
-`ref_values.py`.
+globally, **47.0** at hurricane strength, **14.5** in the North Atlantic box, **25.9** in the West
+Pacific, **17.7** in the East Pacific — all verified against an independent `nunique` in
+`ref_values.py`. (The North Atlantic *box* still sits above the 13.7 storms/yr labelled `NA` by
+IBTrACS, because East Pacific storms that cross Mexico into the Gulf are counted where they went.
+Before 2026-10-10 it read 16.1: see "Basins" for the corner that was moved to the East Pacific.)
 
 ## Basins
 
@@ -637,8 +640,8 @@ cell outside Global — because it is the kind of property that quietly stops be
 
 | | lon | lat | | | lon | lat |
 |---|---|---|---|---|---|---|
-| North Atlantic | 260–40 (wraps) | 0–60 | | South Indian | 0–**90** | −60–0 |
-| Eastern N. Pacific | 180–260 | 0–60 | | **Australian region** | **90–160** | **−60–0** |
+| North Atlantic | 260–40 (wraps), **minus 260–275 × 0–15** | 0–60 | | South Indian | 0–**90** | −60–0 |
+| Eastern N. Pacific | 180–260, **plus 260–275 × 0–15** | 0–60 | | **Australian region** | **90–160** | **−60–0** |
 | Western N. Pacific | 100–180 | 0–60 | | South Pacific | **160**–290 | −60–0 |
 | North Indian | 40–100 | 0–60 | | South Atlantic | 290–360 | −60–0 |
 | | | | | Global | 0–360 | −60–60 |
@@ -669,15 +672,28 @@ stylesheet, so anything the export needs has to be a presentation attribute rath
 rule. The first version used `class="hit"` with `fill:transparent` in the page's `<style>`, and
 the exported PNG came out solid black.
 
+### The corner off Central America belongs to the East Pacific (corrected 2026-10-10)
+
+The North Atlantic box used to run from 100°W all the way to the equator. That put the cells at
+**100–85°W, 0–15°N** — the Gulf of Tehuantepec and the Pacific off Central America, the busiest
+East Pacific genesis region — in the *North Atlantic*. An independent review found ~2.4 EP storms
+a year counted as Atlantic (15% of the NA count, 3.8% of NA storm-days), 30 of them never appearing
+in the East Pacific at all. The earlier text here explained the overlap as EP storms that "cross
+Central America and keep their `EP` label into the Caribbean"; in fact 3.5 of the 4.06% of `EP`
+TS+ positions inside the old NA box were south of 16°N and west of 85°W — in the Pacific.
+
+Those nine cells now belong to the East Pacific. A basin in `BASINS` is its bounding box minus
+any `minus` boxes: NA keeps 260–40°E but loses 260–275°E × 0–15°N; EP's box runs to 275°E (85°W)
+but loses the part of that strip north of 15°N. On a 5° grid that is as close as the partition can
+follow the isthmus (the Pacific coast is at 85–92°W in that band, the Caribbean coast east of 84°W).
+The outlines on the global map are now traced from the cells, so the notch shows.
+
 ### These are geographic boxes, not IBTrACS's `BASIN` column
 
 What these pages measure is cyclone activity **at a place**, so a position belongs where the
-storm physically was — not to whichever agency's ledger the track was filed under. The two
-disagree for about **1.1%** of positions, concentrated in one place: East Pacific storms that
-cross Central America keep their `EP` label into the Caribbean, so 5.7% of IBTrACS `EP`
-positions sit outside the East Pacific box and 1,408 non-`NA` positions sit inside the North
-Atlantic one. Under the geographic reading that is not an error — those positions are counted
-where they actually were.
+storm physically was — not to whichever agency's ledger the track was filed under. Tracks that
+really do cross the isthmus (into the Bay of Campeche or the Caribbean) are counted where they
+went.
 
 Only 18 grid cells contain positions from more than one IBTrACS basin, all of them around
 Central America and the dateline, but they are busy cells holding 3.6% of all positions. Keying
@@ -760,16 +776,12 @@ to `aggregate()` in the build script.
 ```sh
 npm i jsdom topojson-client
 python3 ref_values.py          # recomputes reference values from the CSV via scipy
-node test_tctrend.js .            # tctrend.html — renders it, checks the numbers
-node test_maps.js .            # trendmaps.html — Leaflet stubbed, every control     (149)
+node test_tctrend.js .            # tctrend.html — renders it, checks the numbers  (365)
+python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (118)
 ```
 
 `ref_values.py` shares no code with either the build script or the pages: it re-derives the
 region series straight from the CSV and the statistics from scipy.
-
-`test_maps.js` covers the unmaintained map explorer. Run it anyway after changing
-`build_tc_trends.py` or the data schema — it takes two seconds and is the only thing keeping
-that page usable if it is ever wanted again.
 
 `test_tctrend.js` (161 checks) covers the least-squares slope, *p*, R² and both confidence limits
 against `scipy.stats.linregress`; the same four on thirteen real basin/band series; the full
@@ -790,29 +802,12 @@ It also pins the behaviours that are easy to "fix" back into bugs later:
 - the Methods section states every step of the chain, and quotes the *live* window and wind
   coverage rather than hardcoded numbers
 
-`test_maps.js` walks the whole page: that every cell polygon stays inside 0–360 and is exactly
-one grid box wide, that a known cell's index round-trips (25°N 280°E), that all seven basin
-boxes come out as single contiguous pieces with the right span and that a global domain is
-drawn with no vertical edges at all, that all four map metrics render with a sane colour
-range, that the panel numbers match the same reference series, that a quiet year reads as zero
-for a count but as missing for an intensity in the *same* cell, that the annual Vmax equals the
-mean over that year's positions across all 11,694 populated cell-years, that the plot and trend
-minima each thin the map, that the span and per-half gates reject a bunched or lopsided series
-while passing an even one, that the hover tooltip re-evaluates when the field or metric changes
-and that cells stay interactive across a threshold round trip, and that the cell popup (still
-labelled °E/°W), CSV export and URL state work.
-
-For a visual check of either page:
+For a visual check of the page:
 
 ```sh
 node dump_tctrend.js . out.svg 'v=density&t=hu&b=WP&p=1980-2024'
-node dump_maps.js . out.svg 'v=density&s=sum&t=ts&m=mean&r=WP&p=1980-2024&n=10&e=ols'
 python3 -c "import cairosvg; cairosvg.svg2png(url='out.svg', write_to='out.png', scale=1.3)"
 ```
-
-`dump_maps.js` re-projects the map cells into a plain plate carrée using the page's own
-`cellStyle()` and `boxRings()`, so it checks the colours, the values and the box geometry —
-everything except the tiles and Leaflet's Mercator.
 
 ## Caveat that matters
 

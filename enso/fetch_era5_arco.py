@@ -4,7 +4,7 @@ for months after the NCAR ds633.1 monthly archive ends (Dec 2022).
 mean_total_precipitation_rate: mean over the hourly rates whose accumulation hour lies inside the month
 (valid 01 UTC on day 1 through 00 UTC on day 1 of the next month).
 
-    python3 fetch_era5_arco.py COARSE_DIR
+    python3 fetch_era5_arco.py COARSE_DIR [t2m,mtpr,msr]
 
 Public bucket, no key. ~2 MB per hourly global chunk, ~1,500 chunks per month for both
 variables; nothing is written but the 1 deg monthly means. Took ~25 min for Dec 2022 (overlap
@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from era5_coarsen import coarsen
 G = 'https://storage.googleapis.com/gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'coarse'
-VAR = {'t2m': '2m_temperature', 'mtpr': 'mean_total_precipitation_rate'}
+VAR = {'t2m': '2m_temperature', 'mtpr': 'mean_total_precipitation_rate', 'msr': 'mean_snowfall_rate'}
 S = requests.Session(); S.mount('https://', requests.adapters.HTTPAdapter(pool_connections=32, pool_maxsize=32))
 codec = Blosc()
 def hidx(t): return int((t - dt.datetime(1900, 1, 1)).total_seconds() // 3600)
@@ -46,6 +46,7 @@ def month(v, y, m):
     np.save(out, coarsen(acc / n))   # ARCO latitude is 90 -> -90, same as GDEX
     print(v, y, m, n, 'hours ok', flush=True)
 if __name__ == '__main__':
+    VARS = sys.argv[2].split(',') if len(sys.argv) > 2 else ['t2m', 'mtpr', 'msr']
     os.makedirs(OUT, exist_ok=True)
     # Dec 2022 is the overlap check against GDEX; after that, every month the page uses
     # (June of year 0 through May of year +1) up to the last ENSO year built.
@@ -55,5 +56,5 @@ if __name__ == '__main__':
             if y == 2026 and m > 5: continue
             months.append((y, m))
     for (y, m) in months:
-        for v in ('t2m', 'mtpr'):
+        for v in VARS:
             month(v, y, m)

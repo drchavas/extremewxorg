@@ -35,7 +35,7 @@ Or plain git from inside this folder: `git add -A && git commit -m "…" && git 
 ## Structure
 
 ```
-index.html            Landing page (the three sections below)
+index.html            Landing page (the four sections below)
 assets/               purdue_eaps_logo.png (no longer referenced by the landing page)
   thumbs/             720x360 WebP preview shots, one per tool card on the landing page
 skewt.js              Shared skew-T plotting helper
@@ -56,7 +56,7 @@ scs/                  Severe convective storms (+ other U.S. hazards)
 enso/                 El Nino / La Nina composites (new 2026-10-10, BETA)
   ensogrid.html         "El Nino and La Nina: Climatology and Impacts — global grid" (linked from landing)
   data/, geo/           ERA5 2 deg monthly fields, TC monthly 5 deg grid, RONI, Natural Earth coast
-  build_*.py, fetch_*.py  builders (not served); see enso/README.md
+  build_*.py, fetch_*.py  builders (served too, like every repo file; nothing links to them); see enso/README.md
                         NB: its U.S. fields read ../scs/trends/data/grid_*.json.gz in place
 .gitignore            excludes raw source CSVs, .htaccess, OS junk
 ```

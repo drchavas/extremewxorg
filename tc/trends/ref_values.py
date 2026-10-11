@@ -20,11 +20,13 @@ BOX = {
     'GL': ((0, 360), (-60, 60)),
     'NA': ((260, 40), (0, 60)),
     'WP': ((100, 180), (0, 60)),
-    'EP': ((180, 260), (0, 60)),
+    'EP': ((180, 275), (0, 60)),
     'SI': ((0, 90), (-60, 0)),
     'AU': ((90, 160), (-60, 0)),
     'SP': ((160, 290), (-60, 0)),
 }
+# boxes cut out of a basin's bounding box (100-85W, 0-15N is East Pacific)
+MINUS = {'NA': [((260, 275), (0, 15))], 'EP': [((260, 275), (15, 60))]}
 CUT = {'all': -1e9, 'ts': 34, 'hu': 64, 'maj': 96}
 
 # Same stage selections as build_tc_trends.STAGE_SETS, restated on purpose.
@@ -77,6 +79,8 @@ def series(d, basin, thr, field, stat, y0=1980, y1=2024, band=None, stage='all')
     the page's Stages control."""
     (lo, hi), (la, lb) = BOX[basin]
     m = in_box(d, lo, hi, la, lb)
+    for (c0, c1), (r0, r1) in MINUS.get(basin, []):
+        m &= ~in_box(d, c0, c1, r0, r1)
     nats = STAGE_SETS[stage]
     if nats is not None:
         m &= d.NATURE.isin(nats)
@@ -184,6 +188,8 @@ def main():
                               ('vmax WP hu+ mean', 'WP', 'hu', 'vmax', 'mean')]:
         (lo, hi), (la, lb) = BOX[b]
         m = in_box(d, lo, hi, la, lb)
+        for (c0, c1), (r0, r1) in MINUS.get(b, []):
+            m &= ~in_box(d, c0, c1, r0, r1)
         if t != 'all':
             m &= d.USA_WIND >= CUT[t]
         s_ = d[m]

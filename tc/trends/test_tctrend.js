@@ -364,6 +364,8 @@ async function load(hash) {
     const at = (lon, lat) => gw.basinAt(lon, lat);
     [[300, 25, 'NA'], [10, 25, 'NA'], [355, 25, 'NA'],   // wraps the meridian
      [220, 20, 'EP'], [140, 20, 'WP'], [70, 15, 'NI'],
+     // 100-85W south of 15N is the Pacific off Central America: East Pacific
+     [262.5, 12.5, 'EP'], [272.5, 7.5, 'EP'], [272.5, 17.5, 'NA'], [277.5, 12.5, 'NA'],
      [60, -20, 'SI'], [10, -20, 'SI'],
      // the Australian region and the boundaries it introduced at 90E and 160E
      [120, -20, 'AU'], [95, -15, 'AU'], [155, -15, 'AU'],

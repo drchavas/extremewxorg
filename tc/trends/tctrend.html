@@ -91,7 +91,8 @@
 
 <header>
   <h1>Tropical Cyclone Climatology and Trends</h1>
-  <p>Where tropical cyclones happen, where that is changing, how the change is distributed with latitude,
+  <p><a class="home" href="../../" style="font-weight:650;text-decoration:none">&larr; extremewx.org</a> &middot;
+     Where tropical cyclones happen, where that is changing, how the change is distributed with latitude,
      and how the basin total has evolved — in one frame. Pick a field, an intensity threshold, a basin
      and a period.
      <b>Click a basin on the global map to zoom into it</b>, or use &ldquo;&larr; Global&rdquo; to come back.
@@ -975,15 +976,38 @@ function cpos(v,opts){
 /* Filled fresh on every render; each entry ties a drawn map group to the frame
    it was drawn with, which is all the inverse transform needs. */
 let MAPPICKS=[];
+/* A basin is its bounding box minus any `minus` boxes (the cells 100-85W, 0-15N
+   belong to the East Pacific, not the North Atlantic). */
+function inBox(lon,lat,lo,hi,la,lb){
+  const inlon = hi>lo ? (lon>=lo&&lon<hi) : (lon>=lo||lon<hi);
+  return inlon && lat>=la && lat<lb;
+}
 function basinAt(lon,lat){
   lon=((lon%360)+360)%360;
   for(const bs of IX.basins){
     if(['GL','NH','SH'].includes(bs.k)) continue;
     const [lo,hi]=bs.lon, [la,lb]=bs.lat;
-    const inlon = hi>lo ? (lon>=lo&&lon<hi) : (lon>=lo||lon<hi);
-    if(inlon && lat>=la && lat<lb) return bs.k;
+    if(!inBox(lon,lat,lo,hi,la,lb)) continue;
+    if((bs.minus||[]).some(c=>inBox(lon,lat,c.lon[0],c.lon[1],c.lat[0],c.lat[1]))) continue;
+    return bs.k;
   }
   return null;
+}
+/* The outline of a basin, traced from its cells rather than drawn as its bounding
+   box, so a basin with a cut-out corner is outlined as it really is. */
+function basinOutline(k,F){
+  const set=new Set(IX.basin_cells[k]||[]);
+  let d='';
+  set.forEach(ci=>{
+    const li=Math.floor(ci/NLON), ki=ci%NLON;
+    const lo=ki*GRID, la=li*GRID-90;
+    const x0=F.X(lo).toFixed(1), x1=F.X(lo+GRID).toFixed(1), yS=F.Y(la).toFixed(1), yN=F.Y(la+GRID).toFixed(1);
+    if(!set.has((li+1)*NLON+ki)) d+=`M${x0} ${yN}H${x1}`;
+    if(!set.has((li-1)*NLON+ki)) d+=`M${x0} ${yS}H${x1}`;
+    if(!set.has(li*NLON+(ki+NLON-1)%NLON)) d+=`M${x0} ${yN}V${yS}`;
+    if(!set.has(li*NLON+(ki+1)%NLON)) d+=`M${x1} ${yN}V${yS}`;
+  });
+  return d;
 }
 
 function basinOverlay(F){
@@ -1009,14 +1033,9 @@ function basinOverlay(F){
       g+=`<rect class="hit" x="${xL.toFixed(1)}" y="${yT.toFixed(1)}"`+
          ` width="${(xR-xL).toFixed(1)}" height="${(yB-yT).toFixed(1)}"`+
          ` fill="none" pointer-events="none"/>`;
-      // top and bottom always; sides only where the box really ends
-      let d=`M${xL.toFixed(1)} ${yT.toFixed(1)}H${xR.toFixed(1)}`+
-            `M${xL.toFixed(1)} ${yB.toFixed(1)}H${xR.toFixed(1)}`;
-      if(edgeL) d+=`M${xL.toFixed(1)} ${yT.toFixed(1)}V${yB.toFixed(1)}`;
-      if(edgeR) d+=`M${xR.toFixed(1)} ${yT.toFixed(1)}V${yB.toFixed(1)}`;
-      g+=`<path class="edge" d="${d}" fill="none" stroke="${t.basin}"`+
-         ` stroke-width="1.1" opacity=".85"/>`;
     }
+    g+=`<path class="edge" d="${basinOutline(bs.k,F)}" fill="none" stroke="${t.basin}"`+
+       ` stroke-width="1.1" opacity=".85"/>`;
     // name appears on hover only; opacity as an attribute so the export is clean
     g+='<g opacity="0" pointer-events="none">'+
        txt(cx,(yT+yB)/2+4,esc(bs.name),
@@ -1661,10 +1680,11 @@ function methodsHTML(){
     'so every cell belongs to one basin and basin totals add to the global total. They are '+
     '<i>geographic</i> regions, not IBTrACS\'s own basin labels: what is measured here is '+
     'cyclone activity at a place, so a position counts where the storm physically was rather '+
-    'than under whichever agency filed the track. The two disagree for about 1% of positions, '+
-    'mostly East Pacific storms that keep an EP label after crossing into the Caribbean. '+
-    'The North Atlantic box wraps the prime meridian (260°E–40°E) so that no strip of ocean '+
-    'falls inside Global and inside no basin. The Australian region is the Bureau of '+
+    'than under whichever agency filed the track, so a storm that crosses Mexico into the Gulf '+
+    'counts in the North Atlantic from then on. The North Atlantic box wraps the prime meridian '+
+    '(100°W–40°E) so that no strip of ocean falls inside Global and inside no basin, but its '+
+    'corner south of 15°N and west of 85°W — the Pacific off Central America — belongs to the '+
+    'East Pacific. The Australian region is the Bureau of '+
     'Meteorology\'s area of responsibility, 90°E–160°E south of the equator, carved out of '+
     'South Indian and South Pacific — a cyclone there is counted in it and not in either '+
     'neighbour. Extents are listed in the '+

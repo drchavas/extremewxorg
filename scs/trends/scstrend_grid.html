@@ -132,6 +132,7 @@
          border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
          padding:11px 16px;font-size:11.5px;color:var(--muted);line-height:1.6}
   .guide b.lead{color:var(--text)}
+  .guide a{color:var(--accent)}
   .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
   .methods a{color:var(--accent)}
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
@@ -152,7 +153,8 @@
 
 <header>
   <h1>Severe thunderstorm(+) Climatology and Trends &mdash; 2&deg; grid</h1>
-  <p>The same paired climatology and trend maps as the county version, binned into
+  <p><a class="home" href="../../" style="font-weight:650;text-decoration:none">&larr; extremewx.org</a> &middot;
+     The same paired climatology and trend maps as the county version, binned into
      2&deg;&nbsp;&times;&nbsp;2&deg; boxes. <b>Drag or zoom either map and both follow.</b>
      <b>Click a box</b> to read its series below. State and county lines are geographic reference
      only; the Place menu just re-centres the maps.
@@ -991,6 +993,25 @@ function smoothField(v){
 /* The guidance box says only what applies to the hazard on screen. The derecho
    hazard is Storm Events wind reports, but WHICH storms count is the SPC
    archive's call, so it carries that attribution too. */
+/* Two reporting-practice breaks fall INSIDE the post-2000 window and swamp any
+   real trend at the thresholds they touch (found by an independent review against
+   the raw NCEI files, 2026-10-10):
+     - hail: NWS raised the severe-hail criterion from 3/4" to 1" in January 2010
+       and sub-1" reports largely stopped -- they were ~half of hail county-days
+       through 2008, under a quarter from 2011 -- so "any hail" falls by ~30%/decade
+       over 2000-2025 while >= 1" is roughly flat;
+     - wind: through 2002 many thunderstorm-wind reports carried no speed (about a
+       third in 2002, almost none from 2003), so the speed thresholds step up at 2003. */
+function reportingBreakHtml(){
+  if(S.hazard==='hail') return ' <b>Hail: the NWS raised its severe-hail criterion from &frac34;&Prime; to 1&Prime; in January 2010</b>, '+
+    'and reports of hail smaller than 1&Prime; largely stopped &mdash; they were about half of all hail days through 2008 and '+
+    'under a quarter from 2011. So a trend in <i>any hail</i> across 2010 mostly measures that change: use '+
+    '&ge;&nbsp;1&Prime; or larger, or start the period in 2010.';
+  if(S.hazard==='wind') return ' <b>Wind: until 2003 many thunderstorm-wind reports carried no speed</b> (about a third in 2002, '+
+    'almost none from 2003), so counts at <i>&ge;&nbsp;50&nbsp;kt and above</i> step up at 2003 for reporting reasons. '+
+    'For the speed thresholds, start the period in 2003 or later.';
+  return '';
+}
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
   if(S.hazard==='derechoday'){
@@ -1005,7 +1026,7 @@ function guideHtml(){
       'applies to them: national counts rose roughly thirtyfold between 1955 and the late '+
       '1990s as population, spotter networks and radar changed.';
   }
-  return lead+'Storm Events records <i>reports</i>, not observations from a fixed network. National counts rose roughly thirtyfold between 1955 and the late 1990s as population, spotter networks, radar and NWS verification practice changed, so trends spanning that era partly measure the growth of reporting. Trends from about 2000 on are far more defensible, and the higher thresholds are much less sensitive to reporting practice than “any report”. <b>June and July 1993 are missing from the Storm Events database entirely</b> — the NWS offices\' records for those two months were lost when NCEI migrated the archive — so 1993 is dropped from maps and annual plots rather than counted as a quiet year.';
+  return lead+'Storm Events records <i>reports</i>, not observations from a fixed network. National counts rose roughly thirtyfold between 1955 and the late 1990s as population, spotter networks, radar and NWS verification practice changed, so trends spanning that era partly measure the growth of reporting. Trends from about 2000 on are far more defensible.'+reportingBreakHtml()+' <b>June and July 1993 are missing from the Storm Events database entirely</b> — the NWS offices\' records for those two months were lost when NCEI migrated the archive — so 1993 is dropped from maps and annual plots rather than counted as a quiet year.';
 }
 function refresh(){
   document.getElementById('guide').innerHTML=guideHtml();

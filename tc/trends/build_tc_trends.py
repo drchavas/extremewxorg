@@ -56,9 +56,17 @@ THRESH = [
 # excluding the entire Cape Verde main development region; these do not.)
 # Geographic boxes, not IBTrACS's own BASIN column.  What these pages measure is
 # cyclone activity *at a place*, so a position belongs where the storm physically
-# was, not to whichever agency's ledger the track was filed under.  The two differ
-# for about 1% of positions -- mostly East Pacific storms that cross Central
-# America and keep their EP label into the Caribbean.
+# was, not to whichever agency's ledger the track was filed under.
+#
+# The North Atlantic box used to start at 100W all the way down to the equator,
+# which put the Gulf of Tehuantepec and the Pacific off Central America -- the
+# busiest East Pacific genesis region -- in "North Atlantic": ~2.4 EP storms a
+# year (15% of the NA count), 30 of them never appearing in EP at all (found by
+# an independent review, 2026-10-10).  So the 5-degree cells 100-85W, 0-15N now
+# belong to EP: `minus` boxes are removed from a basin's bounding box, and EP's
+# bounding box runs to 85W with its own `minus` above 15N.  On a 5-degree grid
+# that is the closest the partition can follow the isthmus; the Pacific coast is
+# at 85-92W in that band and the Caribbean coast east of 84W.
 #
 # The seven named basins exactly tile the global box: every cell inside
 # |lat| < 60 belongs to exactly one of them, so basin sums add to the global sum.
@@ -68,8 +76,10 @@ THRESH = [
 # `mapFrame` and the cell-longitude normalisation in `mapPanel` both handle.
 BASINS = [
     {'k': 'GL', 'name': 'Global',                'lon': [0,   360], 'lat': [-60,  60]},
-    {'k': 'NA', 'name': 'North Atlantic',        'lon': [260,  40], 'lat': [  0,  60]},
-    {'k': 'EP', 'name': 'Eastern N. Pacific',    'lon': [180, 260], 'lat': [  0,  60]},
+    {'k': 'NA', 'name': 'North Atlantic',        'lon': [260,  40], 'lat': [  0,  60],
+     'minus': [{'lon': [260, 275], 'lat': [0, 15]}]},
+    {'k': 'EP', 'name': 'Eastern N. Pacific',    'lon': [180, 275], 'lat': [  0,  60],
+     'minus': [{'lon': [260, 275], 'lat': [15, 60]}]},
     {'k': 'WP', 'name': 'Western N. Pacific',    'lon': [100, 180], 'lat': [  0,  60]},
     {'k': 'NI', 'name': 'North Indian',          'lon': [ 40, 100], 'lat': [  0,  60]},
     {'k': 'SI', 'name': 'South Indian',          'lon': [  0,  90], 'lat': [-60,   0]},
@@ -407,6 +417,9 @@ def build(args):
         lo, hi = bs['lon']
         inlon = (LON >= lo) & (LON < hi) if lo < hi else ((LON >= lo) | (LON < hi))
         m = inlon & (LAT >= bs['lat'][0]) & (LAT < bs['lat'][1])
+        for cut in bs.get('minus', []):
+            m &= ~((LON >= cut['lon'][0]) & (LON < cut['lon'][1]) &
+                   (LAT >= cut['lat'][0]) & (LAT < cut['lat'][1]))
         mask[bs['k']] = m.ravel()
 
     # A season is "provisional" while most of its positions still carry a

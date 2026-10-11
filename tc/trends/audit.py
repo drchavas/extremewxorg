@@ -32,7 +32,7 @@ STAGES = {'all': None, 'ts': ['TS'], 'et': ['ET'], 'tset': ['TS', 'ET'],
 BOX = {
     'GL': ((0, 360), (-60, 60)),
     'NA': ((260, 40), (0, 60)),
-    'EP': ((180, 260), (0, 60)),
+    'EP': ((180, 275), (0, 60)),
     'WP': ((100, 180), (0, 60)),
     'NI': ((40, 100), (0, 60)),
     'SI': ((0, 90), (-60, 0)),
@@ -42,6 +42,8 @@ BOX = {
     'NH': ((0, 360), (0, 60)),
     'SH': ((0, 360), (-60, 0)),
 }
+# boxes cut out of a basin's bounding box (100-85W, 0-15N is East Pacific)
+MINUS = {'NA': [((260, 275), (0, 15))], 'EP': [((260, 275), (15, 60))]}
 SPAN_MIN, HALF_MIN, YR_MIN, YR_FRAC = 0.70, 2, 8, 0.30
 SMOOTH_SIGMA = 1.0      # one grid cell = 5 degrees
 
@@ -62,7 +64,10 @@ def load():
     d = d[d.TRACK_TYPE.isin(['main', 'PROVISIONAL', 'US-PROVISIONAL'])]
     t = pd.to_datetime(d.ISO_TIME, errors='coerce')
     d = d.assign(month=t.dt.month)
-    d = d[t.dt.hour.isin([0, 6, 12, 18]).fillna(False)]
+    # synoptic: whole hours only -- the minute test matters, IBTrACS inserts
+    # landfall/peak points at hh:15/30/45 (the builder has always had it; this
+    # audit did not, which is why it had drifted to 85/118)
+    d = d[(t.dt.hour.isin([0, 6, 12, 18]) & (t.dt.minute == 0)).fillna(False)]
     for c in ['LAT', 'LON', 'USA_WIND', 'USA_PRES'] + R34Q:
         d[c] = pd.to_numeric(d[c], errors='coerce')
     d = d[d.LAT.notna() & d.LON.notna()]
@@ -90,7 +95,10 @@ CLAT, CLON = cell_centres()
 def basin_mask(b):
     (lo, hi), (la, lb) = BOX[b]
     inlon = ((CLON >= lo) & (CLON < hi)) if lo < hi else ((CLON >= lo) | (CLON < hi))
-    return inlon & (CLAT >= la) & (CLAT < lb)
+    m = inlon & (CLAT >= la) & (CLAT < lb)
+    for (c0, c1), (r0, r1) in MINUS.get(b, []):
+        m &= ~((CLON >= c0) & (CLON < c1) & (CLAT >= r0) & (CLAT < r1))
+    return m
 
 
 def ols(x, y):

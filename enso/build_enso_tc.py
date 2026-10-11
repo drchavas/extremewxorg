@@ -16,9 +16,14 @@ Conventions follow build_tc_trends.py so the two pages agree:
   * USA_WIND (1-minute sustained) only
   * 5 deg cells, 0-360 E, latitude -60..60 (the TC page's 2,592-cell grid, |lat|<60)
 Differences, deliberate:
-  * Only tropical and subtropical stages (NATURE TS, SS).  An ENSO composite of
-    "tropical cyclone activity" should not count an extratropical remnant crossing
-    the North Atlantic in October; tctrend's default also keeps ET positions.
+  * Extratropical (ET) and disturbance (DS) stages are dropped.  An ENSO composite of
+    "tropical cyclone activity" should not count an extratropical remnant crossing the
+    North Atlantic in October; tctrend's default also keeps ET positions.
+    NR ("not reported") and MX ("mixture") are KEPT: NR is not a stage, it means the
+    agency recorded none.  IBTrACS labels every North Indian position NR in 1990-95,
+    all South Atlantic positions in 2010-11, and every provisional track (the latest
+    season) NR -- an earlier TS/SS-only filter silently erased all of those (the 1991
+    Bangladesh cyclone, most of 2026's West Pacific).
   * Positions without a wind report, or below 34 kt, are not kept: every field
     here starts at tropical-storm strength.
 
@@ -34,14 +39,15 @@ import numpy as np, pandas as pd
 
 ap = argparse.ArgumentParser()
 ap.add_argument('csv'); ap.add_argument('out')
-ap.add_argument('--y0', type=int, default=1980); ap.add_argument('--y1', type=int, default=2026)
+ap.add_argument('--y0', type=int, default=1980)
+ap.add_argument('--y1', type=int, default=None, help='last calendar year kept (default: all)')
 ap.add_argument('--grid', type=float, default=5.0)
 A = ap.parse_args()
 G = A.grid; LAT0 = -60.0; NLAT = int(120 / G); NLON = int(360 / G)
 EDGES = [34, 64, 96]
 BINS = ['34–63 kt', '64–95 kt', '≥96 kt']
 
-d = pd.read_csv(A.csv, usecols=['SID', 'ISO_TIME', 'NATURE', 'LAT', 'LON', 'USA_WIND', 'TRACK_TYPE'],
+d = pd.read_csv(A.csv, usecols=['SID', 'BASIN', 'ISO_TIME', 'NATURE', 'LAT', 'LON', 'USA_WIND', 'TRACK_TYPE'],
                 skiprows=[1], keep_default_na=False, low_memory=False)
 d = d[d.TRACK_TYPE.isin(['main', 'PROVISIONAL', 'US-PROVISIONAL'])]
 t = pd.to_datetime(d.ISO_TIME, errors='coerce')
@@ -49,8 +55,9 @@ d = d.assign(t=t)
 d = d[(t.dt.hour.isin([0, 6, 12, 18]) & (t.dt.minute == 0)).fillna(False)]
 for c in ['LAT', 'LON', 'USA_WIND']:
     d[c] = pd.to_numeric(d[c], errors='coerce')
-d = d[d.LAT.notna() & d.LON.notna() & (d.USA_WIND >= 34) & d.NATURE.isin(['TS', 'SS'])]
-d = d[(d.t.dt.year >= A.y0) & (d.t.dt.year <= A.y1) & (d.LAT.abs() < 60)]
+d = d[d.LAT.notna() & d.LON.notna() & (d.USA_WIND >= 34) & ~d.NATURE.isin(['ET', 'DS'])]
+d = d[(d.t.dt.year >= A.y0) & (d.LAT.abs() < 60)]
+if A.y1 is not None: d = d[d.t.dt.year <= A.y1]
 li = np.floor((d.LAT.to_numpy() - LAT0) / G).astype(int)
 ki = np.floor((d.LON.to_numpy() % 360.0) / G).astype(int) % NLON
 v = d.USA_WIND.to_numpy(float)
@@ -62,7 +69,7 @@ through = str(d.t.max().date())
 out = {
     'meta': {'grid': G, 'lat0': LAT0, 'lon0': 0.0, 'nlat': NLAT, 'nlon': NLON,
              'year0': A.y0, 'year1': int(d.t.dt.year.max()), 'through': through, 'bins': BINS,
-             'source': 'IBTrACS v04r01 (NOAA NCEI), USA_WIND, synoptic 6-hourly, NATURE TS/SS, Vmax >= 34 kt',
+             'source': 'IBTrACS v04r01 (NOAA NCEI), USA_WIND, synoptic 6-hourly, NATURE not ET/DS, Vmax >= 34 kt',
              'records': int(len(g)), 'storms': int(len(gen))},
     'ci': g.ci.tolist(), 'yi': g.yi.tolist(), 'mi': g.mi.tolist(), 'bi': g.bi.tolist(),
     'n': g.n.tolist(), 'a': [int(round(x / 100)) for x in g.a],
@@ -71,6 +78,8 @@ out = {
 with gzip.open(f'{A.out}/tc_month.json.gz', 'wt', compresslevel=9) as f:
     json.dump(out, f, separators=(',', ':'))
 print(f'{len(d):,} positions, {len(gen):,} storms, {len(g):,} records, through {through}')
-# Sanity: global ACE by year should match tctrend / published values (NA 2005 ~ 257 TS+SS)
-na = d[(d.LAT > 0) & (((d.LON % 360) >= 260) | ((d.LON % 360) < 40))]
-print('NA ACE 2005:', round((na[na.t.dt.year == 2005].v2.sum()) / 1e4, 1), ' 1994:', round(na[na.t.dt.year == 1994].v2.sum() / 1e4, 1))
+# Sanity: NA calendar-year ACE against the published season values (2005 245.3, 1994 32.0)
+na = d[d.BASIN == 'NA']
+print('NA ACE 2005:', round(na[na.t.dt.year == 2005].v2.sum() / 1e4, 1), ' 1994:', round(na[na.t.dt.year == 1994].v2.sum() / 1e4, 1))
+ni = d[d.BASIN == 'NI']
+print('NI ACE 1991:', round(ni[ni.t.dt.year == 1991].v2.sum() / 1e4, 1), '(was 0 under the TS/SS-only filter)')
