@@ -76,6 +76,10 @@ check this page too.**
 - **Smoothing** (count fields only): Gaussian, sigma one box, applied to each *year's* map before
   compositing so dots and colours describe the same field; panels are never smoothed.
 - **Default periods**: ERA5 1979–2025, TC 1980–2025, Storm Events **2000**–2025 (reporting).
+- **Place names / state lines**: `geo/admin1-10m.json.gz` (Natural Earth 1:10m admin-1 states and
+  provinces, `mapshaper -simplify 6% keep-shapes`, ~360 KB) is drawn as thin lines over both maps
+  (canvas renderer, three copies; faded below zoom 1.75) and used to name the place under the cursor
+  ("Indiana, United States") in the hover readout and the box panel title. Loaded after first render.
 - **Projection**: EPSG:4326 (equirectangular), Pacific-centred, with Natural Earth 110m coastlines
   (`geo/countries-110m.json`, from `world-atlas@2.0.2`) drawn in three copies at ±360°. The
   field is painted per pixel into canvas tiles (`FieldLayer`), no basemap tiles. Russia/Fiji arcs

@@ -36,6 +36,9 @@ Or plain git from inside this folder: `git add -A && git commit -m "…" && git 
 
 ```
 index.html            Landing page (the four sections below)
+404.html              Served by Cloudflare Pages (status 404) for any path that does not exist
+update_stamps.py      Rewrites every page's "Data last updated" stamp from the data it loads;
+                      ../deploy_extremewxorg.sh runs it before each commit — don't hand-edit stamps
 assets/               purdue_eaps_logo.png (no longer referenced by the landing page)
   thumbs/             720x360 WebP preview shots, one per tool card on the landing page
 skewt.js              Shared skew-T plotting helper

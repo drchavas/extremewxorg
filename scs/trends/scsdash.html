@@ -159,7 +159,11 @@
   #cols .left{flex:0 0 34%;min-width:0}
   #cols .right{flex:1 1 auto;min-width:0}
   #cols .lmap{height:420px}
-  @media (max-width:900px){ #cols{flex-direction:column} #cols .left{flex:1 1 auto;width:100%}
+  /* Stacked: stretch both columns to the page width. With align-items:flex-start
+     the right column sized itself to the table (~760 px) and the whole page
+     scrolled sideways on a phone; now only the table's own .scroll wrapper does. */
+  @media (max-width:900px){ #cols{flex-direction:column;align-items:stretch}
+                            #cols .left{flex:1 1 auto;width:100%} #cols .right{width:100%}
                             #cols .lmap{height:340px} }
   #dash{background:var(--panel);
         border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -240,8 +244,8 @@
      <a href="scstrend.html">County-level maps by hazard</a> &middot;
      <a href="scstrend_grid.html">2&deg; grid maps by hazard</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
-     <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-08 19:11 UTC</div>
+     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -1403,6 +1407,13 @@ function wire(){
     setTimeout(()=>map.invalidateSize(),120);
   }catch(e){
     console.error(e);
+    /* the message element may already have been hidden by the time something fails
+       (e.g. the map library from unpkg), so show it again rather than fail silently */
+    msg.style.display='block';
+    if(typeof L==='undefined'||typeof topojson==='undefined'){
+      msg.textContent='Could not load the map library from unpkg.com. Check your connection, or try again in a few minutes.';
+      return;
+    }
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
         'Browsers block <code>fetch()</code> of local files. From the '+

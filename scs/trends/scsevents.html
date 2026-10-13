@@ -164,6 +164,9 @@
   #ranks td.rank{color:var(--muted);width:44px}
   #ranks td.date{font-weight:600;white-space:nowrap}
   .bar .btn.on{border-color:var(--accent2);color:var(--accent2)}
+  /* the derecho event menu holds long labels; never wider than the screen */
+  #evSel{max-width:100%}
+  @media (max-width:640px){ #evSel{max-width:calc(100vw - 40px)} }
 </style>
 </head>
 <body>
@@ -179,8 +182,8 @@
      &mdash; or type any date as <b>YYYYMMDD</b> to map that day directly.
      <a href="scstrend.html">Climatology and trends</a> &middot;
      <a href="scstrend_grid.html">the same on a 2&deg; grid</a> &middot;
-     <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-08 19:11 UTC</div>
+     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -1133,6 +1136,13 @@ function addTiles(){
                      if(isDerecho()) zoomEvent(); else zoomDay(); },120);
   }catch(e){
     console.error(e);
+    /* the message element may already have been hidden by the time something fails
+       (e.g. the map library from unpkg), so show it again rather than fail silently */
+    msg.style.display='block';
+    if(typeof L==='undefined'||typeof topojson==='undefined'){
+      msg.textContent='Could not load the map library from unpkg.com. Check your connection, or try again in a few minutes.';
+      return;
+    }
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
         'Browsers block <code>fetch()</code> of local files. From the <code>extremewxorg</code> folder run:<br>'+

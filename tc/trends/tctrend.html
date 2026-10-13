@@ -54,6 +54,11 @@
 
   #wrap{padding:14px 18px 28px}
   #card{width:100%;height:auto;display:block;border-radius:10px;overflow:hidden}
+  /* On a phone the 1520-unit figure scaled to ~350 px put its text at 2-3 px. Below
+     760 px it keeps a readable minimum width and the wrapper scrolls sideways. */
+  #figscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  @media (max-width:760px){ #card{min-width:760px} #figscroll::after{content:'← scroll the figure sideways →';
+    display:block;text-align:center;font-size:11px;color:var(--muted);padding:6px 0} }
   #msg{padding:60px 18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
   #msg code{background:#0b1119;border:1px solid var(--line);border-radius:6px;padding:7px 10px;
             display:inline-block;margin:8px 0;color:var(--accent2)}
@@ -97,11 +102,11 @@
      and a period.
      <b>Click a basin on the global map to zoom into it</b>, or use &ldquo;&larr; Global&rdquo; to come back.
      <a href="https://tcviewer.org/" target="_blank" rel="noopener">Prefer a single-storm view?</a> &middot;
-     <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.
+     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.
      Opens on 1990, after which the global record is reasonably homogeneous
      (<a href="https://doi.org/10.1029/2021GL095774">Klotzbach et al. 2022</a>); earlier
      years are available from the period boxes.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-08 19:11 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-11 02:29 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas</div>
   <div class="fieldnote" id="fieldnote" hidden></div>
 
@@ -127,7 +132,7 @@
 
 <div id="wrap">
   <div id="msg">Loading…</div>
-  <svg id="card" style="display:none"></svg>
+  <div id="figscroll"><svg id="card" style="display:none"></svg></div>
   <div class="foot" id="foot"></div>
 </div>
 
@@ -590,15 +595,25 @@ function seasonValue(mi,i0,i1){
     for(let y=i0;y<=i1;y++){ const v=monthValue(mi,y); if(isFinite(v)){ s+=v; k++; } }
     return k?s/k:NaN;
   }
-  let a=0,b=0,m=-1,lo=1e9;
+  /* Maximum / Minimum: the MEAN over years of each year's monthly extreme — the same
+     statistic the climatology map shows. It used to take the single record extreme
+     over the whole period, labelled as an average: the East Pacific October read
+     185 kt (Patricia) against a typical year's 106 kt, and a record also grows with
+     sample size, so busy months were inflated twice over. */
+  if(S.stat==='ext'){
+    let s=0,k=0;
+    for(let y=i0;y<=i1;y++){ const v=monthValue(mi,y); if(isFinite(v)){ s+=v; k++; } }
+    return k?s/k:NaN;
+  }
+  let a=0,b=0;
   for(let y=i0;y<=i1;y++){
     const i=mi*NY+y;
-    if(S.v==='vmax'){ a+=T.sumv[i]; b+=T.nv[i]; if(T.maxv[i]>m)m=T.maxv[i]; }
-    else if(S.v==='size'){ a+=T.sumr[i]/R34S; b+=T.nr[i]; if(T.maxr[i]/R34S>m)m=T.maxr[i]/R34S; }
-    else { a+=T.sump[i]; b+=T.np[i]; if(T.minp[i]<lo)lo=T.minp[i]; }
+    if(S.v==='vmax'){ a+=T.sumv[i]; b+=T.nv[i]; }
+    else if(S.v==='size'){ a+=T.sumr[i]/R34S; b+=T.nr[i]; }
+    else { a+=T.sump[i]; b+=T.np[i]; }
   }
-  if(S.v==='vmax'||S.v==='size') return S.stat==='ext' ? (m>=0?cv(m):NaN) : (b>0?cv(a/b):NaN);
-  return S.stat==='ext' ? (lo<1e9?lo:NaN) : (b>0?a/b:NaN);
+  if(S.v==='vmax'||S.v==='size') return b>0?cv(a/b):NaN;
+  return b>0?a/b:NaN;
 }
 /* tolerate a stat key that does not belong to the current field */
 function statSpec(){ const st=VARS[S.v].stats; return st.find(s=>s.k===S.stat)||st[0]; }
@@ -1322,7 +1337,9 @@ function seasonalPanel(x,y,w,h){
   const fin=vals.filter(isFinite);
   let out=`<g>`+panelBox(x,y,w,h,'Seasonal cycle',
       `${VARS[S.v].label}${isExtensive()?' per month':''}, averaged over ${a}–${b}`+
-      (isExtensive()?'':' · pooled over all positions in that month'));
+      (isExtensive()?'':S.stat==='ext'
+        ? ` · mean of each year's monthly ${S.v==='pmin'?'minimum':'maximum'} (years with a storm that month)`
+        : ' · pooled over all positions in that month'));
   if(!fin.length){
     out+=txt(x+w/2,y+h/2,'no data',{size:12,fill:t.mute,anchor:'middle'});
     return out+`</g>`;
@@ -1781,7 +1798,7 @@ function methodsHTML(){
       '<i>p</i> &lt; 0.05 largely reflects how many storms crossed it, so a significant box beside '+
       'a non-significant one means nothing physical. Significance is shown only where the sample '+
       'is pooled — the zonal profile, the basin series and the monthly panels. Per-cell '+
-      '<i>p</i>-values are still computed and exported.',
+      '<i>p</i>-values are still computed, just not drawn.',
     '<b>The zonal profiles pool every cell in their band</b>, including any the map has greyed '+
       'out, so a profile is not the row-average of the visible boxes. Min plot is a display '+
       'threshold, not a claim that thin boxes had no storms.',
@@ -2025,13 +2042,20 @@ function wire(){
     rebuild(); render();
   }catch(e){
     console.error(e);
+    /* the message element may already have been hidden by the time something fails
+       (e.g. the map library from unpkg), so show it again rather than fail silently */
+    msg.style.display='block';
+    if(typeof topojson==='undefined'){
+      msg.textContent='Could not load the map library from unpkg.com. Check your connection, or try again in a few minutes.';
+      return;
+    }
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
         'Browsers block <code style="padding:2px 5px">fetch()</code> of local files. From the '+
-        '<code style="padding:2px 5px">www</code> folder run:<br>'+
+        '<code style="padding:2px 5px">extremewxorg</code> folder run:<br>'+
         '<code>python3 -m http.server 8000</code><br>'+
-        'then open <a href="http://localhost:8000/extremewx/tc/trends/tctrend.html" '+
-        'style="color:var(--accent)">localhost:8000/extremewx/tc/trends/tctrend.html</a>.';
+        'then open <a href="http://localhost:8000/tc/trends/tctrend.html" '+
+        'style="color:var(--accent)">localhost:8000/tc/trends/tctrend.html</a>.';
     } else {
       msg.textContent='Could not load the data: '+e.message;
     }

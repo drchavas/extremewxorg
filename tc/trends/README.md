@@ -39,7 +39,7 @@ does. Significance is nested, too: a pooled region can be significant while ever
 inside it is not, and vice versa. So it is shown only where the sample is pooled enough to
 carry it, in the zonal trend profile (filled markers) and in the basin series and each monthly
 panel (slope and *p*, bold when significant). Per-cell *p*-values are still
-computed and still go into the CSV; they are simply not drawn.
+computed; they are simply not drawn (this page has no CSV export — an earlier note here said they went into one).
 
 **No R² anywhere.** R² answers "how much of the interannual variance does a straight line
 explain", which is not the question these panels ask. Interannual TC variability is dominated
@@ -347,7 +347,12 @@ removed rather than left dormant.
 
 The **seasonal cycle** averages each month over the selected years — the annual total falling in
 that month for the extensive fields, and the position-pooled mean for the intensities, so a
-busy year does not count the same as a quiet one. The **month-by-month** grid plots each
+busy year does not count the same as a quiet one. Under **Maximum / Minimum** it is the mean
+over years of each year's monthly extreme (years with a storm that month) — the same statistic
+as the climatology map. Until 2026-10-10 it was the single record over the whole period while
+labelled an average (East Pacific October: 185 kt, Patricia, against a typical year's 106 kt).
+Southern Hemisphere months are indexed by IBTrACS `SEASON`, so a December point belongs to the
+following season's year. The **month-by-month** grid plots each
 month's own annual series with its own trend, on one shared vertical scale so the months stay
 comparable. For tropical cyclones that scale is dominated by the peak months, which is itself
 the point: it shows how concentrated the season is.
@@ -575,10 +580,15 @@ operational central-pressure estimate until well into the record:
 | basin | Pmin from | basin's own record from |
 |---|---|---|
 | North Atlantic | 1980 | 1980 |
-| Eastern N. Pacific | 1980 | 1980 |
-| Western N. Pacific | **1999** | 1980 |
-| North Indian, South Indian | **2001** | 1980 |
-| South Pacific | **2002** | 1980 |
+| Eastern N. Pacific | 1988 | 1980 |
+| Western N. Pacific, North Indian | **2001** | 1980 |
+| South Indian, Australian region, South Pacific | **2002** | 1980 |
+
+Since 2026-10-10 a field "starts" in the first season in which at least **25% of the basin's
+positions** carry it (`FIELD_COVER` in the builder). Before that it was the first stray value,
+which put West Pacific Pmin at 1999 because of a single Hurricane Dora position (0.1% coverage
+that year, 0% in 2000, 76% from 2001), so the page advised starting at 1999 and then drew
+"1999–2024" trends resting on 2001–2024.
 
 So a Pmin trend requested over 1990–2024 is computable in the Atlantic and East Pacific and
 **not** in the JTWC basins, where the available years span only about two thirds of the

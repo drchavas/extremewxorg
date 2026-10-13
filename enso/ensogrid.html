@@ -184,8 +184,8 @@
      every El Ni&ntilde;o and La Ni&ntilde;a year marked.
      Related: <a href="../tc/trends/tctrend.html">TC climatology &amp; trends</a> &middot;
      <a href="../scs/trends/scstrend_grid.html">U.S. severe weather, 2&deg; grid</a> &middot;
-     <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd" id="dataupd">Data last updated 2026-10-10 UTC</div>
+     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
+  <div class="hmeta dataupd" id="dataupd">Data last updated 2026-10-11 02:06 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -308,11 +308,11 @@ const CMAP={
 const THEME={
   dark :{bg:'#111c26',panel:'#16212e',ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',
          grid:'#22303f',axis:'#6d8299',pt:'#6cb6ff',fit:'#ffb14e',neu:'#5d6f82',
-         en:'#ff6b5a',ln:'#5aa9ff',coast:'rgba(128,140,152,.95)',border:'rgba(128,140,152,.5)',
+         en:'#ff6b5a',ln:'#5aa9ff',coast:'rgba(128,140,152,.95)',border:'rgba(128,140,152,.85)',admin1:'rgba(150,162,174,.6)',
          sea:'#0b1119',sel:'#ff3ecb',dot:'rgba(0,0,0,.62)',enFill:'rgba(255,107,90,.85)',lnFill:'rgba(90,169,255,.85)'},
   light:{bg:'#ffffff',panel:'#ffffff',ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',
          grid:'#e6ecf2',axis:'#8494a4',pt:'#2b7bd4',fit:'#d4770f',neu:'#b3bec9',
-         en:'#c8321f',ln:'#1f63b8',coast:'rgba(12,18,26,.78)',border:'rgba(12,18,26,.38)',
+         en:'#c8321f',ln:'#1f63b8',coast:'rgba(12,18,26,.78)',border:'rgba(12,18,26,.6)',admin1:'rgba(12,18,26,.34)',
          sea:'#eef2f6',sel:'#c2007a',dot:'rgba(0,0,0,.62)',enFill:'rgba(200,50,31,.85)',lnFill:'rgba(31,99,184,.85)'}
 };
 function T(){ return THEME[S.theme]; }
@@ -926,7 +926,49 @@ function linkMaps(a,b){
 }
 /* Coastlines and borders sit on top of the field. Three copies, so the
    Pacific-centred default and any amount of panning keep their outlines. */
-let WORLD=null, STATESGEO=null;
+let WORLD=null, ADMIN1=null, A1LINES=null, A1FEAT=null;
+/* First-level divisions worldwide (U.S. states, Canadian provinces, Indian states, ...)
+   from Natural Earth 1:10m admin-1, simplified to 6% of its vertices (geo/admin1-10m.json.gz,
+   ~360 KB). Drawn as thin lines over the field, like the state outlines on the U.S.
+   pages, so a place inside a country can be found — and used to name the place under
+   the cursor in the hover readout. Fetched after the first map is up. */
+function setAdmin1(topo){
+  ADMIN1=topo;
+  const o=Object.values(topo.objects)[0];
+  /* borders between divisions of the same country; international borders and
+     coastlines are already drawn from the 110m country file */
+  A1LINES=topojson.mesh(topo,o,(a,b)=>a!==b&&a.properties.adm0_a3===b.properties.adm0_a3);
+  A1FEAT=topojson.feature(topo,o).features.map(f=>{
+    const polys=f.geometry?(f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates):[];
+    let x0=180,x1=-180,y0=90,y1=-90;
+    polys.forEach(p=>p[0].forEach(([x,y])=>{ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }));
+    return {name:f.properties.name, adm:f.properties.admin, polys, bb:[x0,y0,x1,y1]};
+  });
+}
+function inRing(x,y,r){
+  let c=false;
+  for(let i=0,j=r.length-1;i<r.length;j=i++){
+    const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];
+    if(((yi>y)!==(yj>y)) && x<(xj-xi)*(y-yi)/(yj-yi)+xi) c=!c;
+  }
+  return c;
+}
+const ADM_SHORT={'United States of America':'United States','Russian Federation':'Russia',
+  'Democratic Republic of the Congo':'DR Congo','United Kingdom':'UK'};
+/* "Indiana, United States" for a point, or '' over the ocean or before the file loads */
+function admin1At(lat,lon){
+  if(!A1FEAT) return '';
+  const x=((lon+180)%360+360)%360-180;
+  for(const f of A1FEAT){
+    if(x<f.bb[0]||x>f.bb[2]||lat<f.bb[1]||lat>f.bb[3]) continue;
+    for(const p of f.polys){
+      if(!inRing(x,lat,p[0])) continue;
+      let hole=false; for(let h=1;h<p.length;h++) if(inRing(x,lat,p[h])) hole=true;
+      if(!hole) return (f.name?f.name+', ':'')+(ADM_SHORT[f.adm]||f.adm);
+    }
+  }
+  return '';
+}
 /* Natural Earth's Russia and Fiji cross the antimeridian, so a few of their
    arcs jump from +180 to -180 between consecutive points. Drawn on a flat map
    that jump is a line straight across the world (at 17°S and 67°N); split the
@@ -954,13 +996,22 @@ function addRefLayers(){
     const t=T();
     const coast=topojson.mesh(WORLD,WORLD.objects.land);
     const border=topojson.mesh(WORLD,WORLD.objects.countries,(a,b)=>a!==b);
+    /* one canvas renderer per map for the ~4,600 admin-1 outlines: as SVG paths in
+       three copies they made panning sluggish */
+    if(!m._a1r) m._a1r=L.canvas({padding:0.5});
     [-360,0,360].forEach(dx=>{
-      ref.push(L.geoJSON(shiftLines(border,dx),{interactive:false,style:{color:t.border,weight:.6,fill:false}}).addTo(m));
+      if(A1LINES){ const l=L.geoJSON(shiftLines(A1LINES,dx),{interactive:false,renderer:m._a1r,
+        style:{color:t.admin1,weight:.55,fill:false,opacity:a1Opacity(m)}}).addTo(m); l._a1=true; ref.push(l); }
+      ref.push(L.geoJSON(shiftLines(border,dx),{interactive:false,style:{color:t.border,weight:.8,fill:false}}).addTo(m));
       ref.push(L.geoJSON(shiftLines(coast,dx),{interactive:false,style:{color:t.coast,weight:.9,fill:false}}).addTo(m));
     });
-    if(STATESGEO) ref.push(L.geoJSON(shiftLines(STATESGEO,0),{interactive:false,
-      style:{color:t.border,weight:.6,fill:false}}).addTo(m));
   });
+}
+/* the division lines recede at the whole-globe view, where Africa and Europe would
+   otherwise be a tangle, and come up to full strength once zoomed in */
+function a1Opacity(m){ return m.getZoom()<1.75 ? 0.5 : 1; }
+function a1Zoom(){
+  [[mapA,refA],[mapB,refB]].forEach(([m,ref])=>ref.forEach(l=>{ if(l._a1) l.setStyle({opacity:a1Opacity(m)}); }));
 }
 function fullView(){
   const f=F();
@@ -1012,10 +1063,11 @@ function aggLabel(){
   if(f.src==='tc') return 'global total, all boxes';
   return `mean over all ${DS.NC} U.S. boxes`;
 }
-function tipHtml(c){
+function tipHtml(c,lat,lon){
   const s=CUR; if(!s) return '';
   const raw=CURRAW||s, d=decs();
-  let h=`<b>${esc(placeName(c))}</b><br>`;
+  const where=(lat!=null)?admin1At(lat,lon):'';
+  let h=`<b>${esc(placeName(c))}</b>${where?`<br><span style="opacity:.8">${esc(where)}</span>`:''}<br>`;
   const cl=s.clim[c], df=s.disp[c];
   h+=`${esc(tkShort())} climatology: <b>${fmt(cvC(cl),d.c)}</b> ${esc(unitAbs())}${isCount()?'/'+perWord():''}`;
   if(smoothOn()&&isFinite(raw.clim[c])&&Math.abs(raw.clim[c]-cl)>1e-3) h+=` (this box ${fmt(raw.clim[c],d.c)})`;
@@ -1039,7 +1091,7 @@ function wireHover(m,tipId){
     if(!DS||!CUR){ tip.style.display='none'; return; }
     const c=cellAt(e.latlng.lat,e.latlng.lng);
     if(c<0||!isFinite(CUR.clim[c])){ tip.style.display='none'; return; }
-    tip.innerHTML=tipHtml(c);
+    tip.innerHTML=tipHtml(c,e.latlng.lat,e.latlng.lng);
     const W=m.getContainer().clientWidth, p=e.containerPoint;
     tip.style.display='block';
     const tw=tip.offsetWidth;
@@ -1324,7 +1376,8 @@ function boxPanel(x,y,w,h,bs){
   const t=T(), [a,b]=yearsSel(), m=MSEQ[S.mi], st=bs.st, mon=S.av==='mon';
   const L=x+70,R=x+w-18,TOP=y+64,BOT=y+h-40;
   let o=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
-  const where=placeName(selCell());
+  const sc=selCell(), a1=sc>=0?admin1At(DS.lat[sc],DS.lon[sc]):'';
+  const where=placeName(sc)+(a1?` (${a1})`:'');
   o+=txt(x+14,y+22,`${tkShort()} ${qtyWord()}, year by year — ${where}`,{size:14.5,weight:650});
   if(!st){ o+=txt(x+14,y+44,'Too few years with data here to compute anything.',{size:12,fill:t.mute}); return o+'</g>'; }
   if(isCount() && bs.ys.every(v=>v===0)){
@@ -1515,6 +1568,9 @@ function methodsHtml(){
   li.push(`<b>Panels.</b> The RONI panel shows every season since ${RONI?RONI.year0:1950}, with the chosen period shaded and
     one marker per ENSO year; the years actually used are filled and labelled. The lower panel shows the selected box
     (or, with none selected, the ${aggLabel()}) as one bar per year, coloured by phase, with the two composite means.`);
+  li.push(`<b>Map outlines.</b> Coastlines and country borders from Natural Earth 1:110m; first-level divisions
+    (U.S. states, Canadian provinces, Indian states, …) from Natural Earth 1:10m admin-1, simplified, and used to name
+    the place under the cursor. Boundaries are reference only and do not change what is computed.`);
   li.push(`<b>Colour scales.</b> Fixed for ERA5 for a given averaging length (month, season or year), so the colours mean
     the same thing in every month and phase.
     For the count fields they follow the map on screen (the seasonal cycle is far too strong for one scale):
@@ -1677,15 +1733,14 @@ async function init(){
   linkMaps(mapA,mapB);
   wireHover(mapA,'tipA'); wireHover(mapB,'tipB');
   addRefLayers();
-  /* state lines are fetched lazily from the 2° page's own geometry */
-  gzFetch(SCS_BASE+'geo/states.topo.json.gz').then(st=>{
-    const o=Object.values(st.objects)[0];
-    STATESGEO=topojson.mesh(st,o,(a,b)=>a!==b); addRefLayers(); }).catch(()=>{});
+  /* state / province lines worldwide, fetched once the maps are up */
+  gzFetch('geo/admin1-10m.json.gz').then(t=>{ setAdmin1(t); addRefLayers(); drawPanels(); }).catch(()=>{});
   await refresh();
   if(v){ const [la,lo,z]=v.split(',').map(Number);
     if(isFinite(la)&&isFinite(lo)&&isFinite(z)){ syncing=true; mapA.setView([la,lo],z,{animate:false});
       mapB.setView([la,lo],z,{animate:false}); syncing=false; } }
   mapA.on('moveend',writeHash);
+  mapA.on('zoomend',a1Zoom);
   PANELW=panelLayout().W;
 }
 /* page-level const/let are not reachable from a test harness's eval; expose the

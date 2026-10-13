@@ -171,8 +171,8 @@
      For individual storms &mdash; the SPC derecho archive and the biggest days on record
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
-     <a href="mailto:drchavas@gmail.com">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-08 19:11 UTC</div>
+     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -255,8 +255,11 @@
               counties a year with no days is a real zero and is counted in the denominator; for
               stations, unobserved years are excluded rather than counted as zero.</li>
           <li><b>Trend map.</b> Ordinary least squares on the annual counts, reported per decade.
-              Significance is a two-sided <i>t</i> test on the slope; stations reaching
-              <i>p</i> &lt; 0.05 are ringed.</li>
+              A county (or station) is left grey unless it clears the same three coverage gates as
+              the 2&deg; grid page: enough years carrying a day (at least 8, or 30% of the period),
+              those years spanning at least 70% of the period, and at least 2 of them in each half.
+              The annual and monthly panels apply the same gates. Significance is a two-sided
+              <i>t</i> test on the slope; stations reaching <i>p</i> &lt; 0.05 are ringed.</li>
           <li><b>Annual and monthly panels.</b> For a selected county, that county alone. For a
               state, calendar dates on which <i>anywhere</i> in the state qualified — deliberately
               not the sum of county-days, since one storm can cross twenty counties in an
@@ -656,7 +659,32 @@ function yearsSel(){
   const a=Math.max(S.y0,d.meta.year0), b=Math.min(Math.max(S.y1,a),d.meta.year1);
   return [a,b,b-a+1];
 }
-function countyMetrics(){
+/* Coverage gates for a trend — the same three rules, and the same numbers, as the
+   2° grid page and the TC page. This page used to fit every county unconditionally,
+   so a county with one EF2+ tornado day in 26 years got a slope, and the 2° smoothing
+   then spread those noise fits into a continuous-looking field (an independent review
+   counted 1,751 of 3,221 counties failing the grid page's gates at EF2+, 2000-2025).
+     - enough years carrying a day: at least 8, or 30% of the period;
+     - those years spanning at least 70% of the period;
+     - at least 2 of them in each half. */
+const SPAN_MIN=0.70, HALF_MIN=2, YR_MIN=8, YR_FRAC=0.30;
+function yearsNeeded(n){ return Math.max(YR_MIN,Math.ceil(YR_FRAC*n)); }
+function gateOf(ys,nwin){
+  let ne=0,e0=-1,e1=-1,nfh=0,nsh=0;
+  const mid=nwin/2;
+  ys.forEach((v,i)=>{ if(v>0){ ne++; if(e0<0)e0=i; e1=i; if(i<mid) nfh++; else nsh++; } });
+  const need=yearsNeeded(nwin);
+  const ok = ne>=need && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN;
+  let why='';
+  if(!ok){
+    if(ne<need) why=`only ${ne} of ${nwin} years carry a${countWord()==='event'?'n':''} ${countWord()}, needs ${need}`;
+    else if((e1-e0+1)<SPAN_MIN*nwin)
+      why=`active years span ${e1-e0+1} of ${nwin}, needs ${Math.ceil(SPAN_MIN*nwin)}`;
+    else why=`needs ${HALF_MIN} active years in each half, has ${nfh} and ${nsh}`;
+  }
+  return {ok,why,ne};
+}
+function countyMetrics(gated=true){
   const d=HZ[S.hazard],M=d.M,nY=d.nY,y0=d.meta.year0,nC=GEOID.length;
   const [a,b,nyr]=yearsSel(), i0=a-y0, i1=b-y0;
   const mean=new Float32Array(nC), trend=new Float32Array(nC).fill(NaN), pv=new Float32Array(nC).fill(1);
@@ -672,6 +700,7 @@ function countyMetrics(){
     const base=c*nY; let s=0;
     for(let j=0;j<keep.length;j++){ const v=M[base+keep[j]]; s+=v; yk[j]=v; }
     mean[c]=nk?s/nk:NaN;
+    if(gated && !gateOf(yk,nk).ok) continue;       // too sparse: no trend, drawn grey
     const r=ols(xk,yk); if(r){ trend[c]=r.slope*10; pv[c]=r.p; }
   }
   return {mean,trend,pv,y0:a,y1:b,nyr:nk,ndrop:(i1-i0+1)-keep.length};
@@ -788,7 +817,8 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid){
   const vmax=Math.max(1,...vals), AX=niceAxis(vmax,5), vTop=AX.top;
   const X=yr=>L+(R-L)*(years.length<2?0.5:(yr-a)/Math.max(1,b-a));
   const Y=v=>BOT-(BOT-TOP)*(v/vTop);
-  const r=ols(years,vals);
+  const gate=gateOf(vals,vals.length);
+  const r=gate.ok?ols(years,vals):null;        // same gate as the trend map
 
   let out=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   out+=txt(x+14,y+22,'Annual number of '+esc(label)+' '+countWord()+'s',{size:14.5,weight:650});
@@ -826,6 +856,8 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid){
     const per=r.slope*10;
     const stat=`slope ${per>=0?'+':''}${per.toFixed(2)} ${countWord()}s/decade · R² = ${r.r2.toFixed(3)} · p = ${r.p<0.001?'<0.001':r.p.toFixed(3)}`;
     out+=txt(L+6,TOP+14,stat,{size:11.5,fill:r.p<0.05?t.fit:t.mute,weight:r.p<0.05?650:400});
+  } else if(years.length>=3){
+    out+=txt(L+6,TOP+14,'No trend fitted — '+gate.why,{size:11.5,fill:t.mute});
   }
   out+=txt((L+R)/2,BOT+38,'Year',{size:12,fill:t.mute,anchor:'middle'});
   out+=`<text x="${x+16}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+16} ${(TOP+BOT)/2})"`+
@@ -869,7 +901,8 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
     out+=txt(L-4,Y(vTop)+4,fmt(vTop,vTop<10?1:0),{size:9,fill:t.mute,anchor:'end'});
     out+=txt(L-4,BOT+3,'0',{size:9,fill:t.mute,anchor:'end'});
     out+=`<line x1="${L}" y1="${BOT}" x2="${R}" y2="${BOT}" stroke="${t.axis}" stroke-width=".8"/>`;
-    const r=ols(years,vals);
+    /* gated per month: one month is far sparser than the year it feeds */
+    const r=gateOf(vals,vals.length).ok?ols(years,vals):null;
     if(r){
       out+=`<path class="ciband" d="${ciBand(r,a,b,X,Y,vTop,28)}" fill="${t.band}"`+
            ` stroke="${t.bandEdge}" stroke-width="0.6" stroke-dasharray="2 2"/>`;
@@ -1155,7 +1188,10 @@ function probe(hazard,thresh,geoid,y0,y1,smooth){
   const keep={h:S.hazard,t:S.thresh,a:S.y0,b:S.y1,s:S.smooth};
   S.hazard=hazard; S.thresh=thresh; S.y0=y0; S.y1=y1; S.smooth=smooth;
   rebuildMatrix();
-  const cm=countyMetrics();
+  /* Ungated: probe() is the reference test_scsdash.js checks the dashboard against,
+     and the dashboard does not apply the coverage gates (its numbers are being left
+     as they are for now), so the comparison has to be like for like. */
+  const cm=countyMetrics(false);
   const m=smoothField(cm.mean), tr=smoothField(cm.trend);
   const c=gidxOf[geoid];
   const out={mean:m[c], trend:tr[c], p:cm.pv[c], nyr:cm.nyr};
@@ -1331,8 +1367,12 @@ function countyTip(c){
   const sm=smoothOn();
   const rv=RAWM?RAWM[c]:NaN, rt=RAWT?RAWT[c]:NaN;
   const nt=(x,r)=>(sm&&isFinite(r)&&Math.abs(r-x)>0.005)?` (this county ${fmt(r,2)})`:'';
-  return `<b>${esc(NAME[c])}, ${esc(STUSPS[c])}</b><br>${fmt(v,2)} ${countUnit()}${nt(v,rv)}<br>`+
-         `${sgn(t,2)} per decade`;
+  /* the trend line used to omit the county's own number, so a smoothed −1.11 could
+     sit over a county whose own trend was +0.79 */
+  const ntS=(x,r)=>(sm&&isFinite(r)&&Math.abs(r-x)>0.005)?` (this county ${sgn(r,2)})`:'';
+  const tl = isFinite(t) ? `${sgn(t,2)} per decade${ntS(t,rt)}`
+           : 'no trend: too few years with a day here';
+  return `<b>${esc(NAME[c])}, ${esc(STUSPS[c])}</b><br>${fmt(v,2)} ${countUnit()}${nt(v,rv)}<br>`+tl;
 }
 function stStyle(f){
   const on=f.properties.STUSPS===S.region;
@@ -1558,7 +1598,7 @@ function refresh(){
   document.getElementById('climSub').innerHTML =
     esc(`Mean annual ${lab} ${countWord()}s per ${stn?'station':'county'}, ${a}–${b}`)+smTag();
   document.getElementById('trendSub').innerHTML =
-    esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade')+smTag();
+    esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade · grey counties are too sparse to fit a trend')+smTag();
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -2092,6 +2132,13 @@ function zoomUS(){
     setTimeout(()=>{ mapA.invalidateSize(); mapB.invalidateSize(); },80);
   }catch(e){
     console.error(e);
+    /* the message element may already have been hidden by the time something fails
+       (e.g. the map library from unpkg), so show it again rather than fail silently */
+    msg.style.display='block';
+    if(typeof L==='undefined'||typeof topojson==='undefined'){
+      msg.textContent='Could not load the map library from unpkg.com. Check your connection, or try again in a few minutes.';
+      return;
+    }
     if(location.protocol==='file:'){
       msg.innerHTML='<b>This page has to be served over HTTP.</b><br><br>'+
         'Browsers block <code>fetch()</code> of local files. From the <code>extremewxorg</code> folder run:<br>'+

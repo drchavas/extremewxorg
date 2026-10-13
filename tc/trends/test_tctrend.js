@@ -505,11 +505,11 @@ async function load(hash) {
        w1.basinCells().filter(c => isFinite(cm1.mean[c])).length, '> 100');
     const g1 = w1.document.getElementById('card').innerHTML;
     ok('  and the panel says why, naming the year',
-       g1.includes('does not begin until 2001') && g1.includes('Set the start year'),
+       g1.includes('does not begin until '+w1.st.IX.field_start.pmin.SH) && g1.includes('Set the start year'),
        'unexplained', 'names the start year');
 
     // start at the field's own first year and trends appear
-    const w2 = await load('v=pmin&b=SH&p=2001-2024');
+    const w2 = await load('v=pmin&b=SH&p='+w1.st.IX.field_start.pmin.SH+'-2024');
     ok('  starting at that year restores the map',
        w2.basinCells().some(c => isFinite(w2.cellMetrics().trend[c])), 'still empty', 'populated');
     ok('    and the note reverts to the noise caveat',

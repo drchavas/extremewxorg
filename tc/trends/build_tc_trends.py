@@ -517,14 +517,31 @@ def build(args):
         # and that is not the same kind of fact as JTWC not issuing pressures
         # until 2001.  The pages only warn when a field starts later than the
         # basin's own record does.
+        #
+        # A field "starts" in the first season in which at least FIELD_COVER of the
+        # basin's positions carry it -- not the first stray value.  Keying on the
+        # first non-missing value put West Pacific Pmin at 1999 because of a single
+        # Hurricane Dora position (0.1% coverage; 0% in 2000; 76% from 2001), so the
+        # page told readers to start at 1999 and then drew "1999-2024" trends that
+        # really rested on 2001-2024.
+        FIELD_COVER = 0.25
         starts = {}
         for fld, col in (('any', None), ('vmax', wc), ('pmin', pc), ('r34', 'r34')):
-            ok = d if col is None else d[pd.to_numeric(d[col], errors='coerce').notna()]
+            has = np.ones(len(d), bool) if col is None else \
+                pd.to_numeric(d[col], errors='coerce').notna().to_numpy()
             per = {}
+            ci, ssn = d.ci.to_numpy(), d.SEASON.to_numpy()
             for bs in BASINS:
-                m = mask[bs['k']][ok.ci.to_numpy()]
-                if m.any():
-                    per[bs['k']] = int(ok.SEASON[m].min())
+                m = mask[bs['k']][ci]
+                if not m.any():
+                    continue
+                if col is None:
+                    per[bs['k']] = int(ssn[m].min())
+                    continue
+                tab = pd.DataFrame({'s': ssn[m], 'h': has[m]}).groupby('s').h.mean()
+                good = tab[tab >= FIELD_COVER]
+                if len(good):
+                    per[bs['k']] = int(good.index.min())
             starts[fld] = per
         index['field_start'] = starts
 

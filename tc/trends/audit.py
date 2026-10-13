@@ -294,7 +294,12 @@ def season_cycle(sub, field, stat, i0, i1, nwin):
             if not len(v):
                 out.append(None)
             elif stat == 'ext':
-                out.append(float(v.max() if field != 'pmin' else v.min()))
+                # mean over years of each year's monthly extreme (the page's statistic
+                # since 2026-10-10; it used to be the period record)
+                g = s.dropna(subset=[col]).groupby('yi')[col]
+                e = (g.min() if field == 'pmin' else g.max())
+                e = e[(e.index >= i0) & (e.index <= i1)]
+                out.append(float(e.mean()) if len(e) else None)
             else:
                 out.append(float(v.mean()))
     return out
