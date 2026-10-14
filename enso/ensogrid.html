@@ -1394,7 +1394,7 @@ function writeTitles(domD){
   const when = S.av==='mon' ? `${MFULL[MSEQ[S.mi]-1]} of` : S.av==='yr' ? 'averaged over' : `${AV().label} of`;
   document.getElementById('climTitle').textContent=`Climatology · ${tkLong()}`;
   document.getElementById('climSub').innerHTML=
-    esc(`${per}, ${when} all ${win.length} ENSO years ${a}–${b} (${unitP})`)+smTag();
+    esc(`${per}, ${when} all ${win.length} years, ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} (${unitP})`)+smTag();
   const phs=S.ph==='en'?`<span class="ph-en">El Niño</span> minus climatology`
           :S.ph==='ln'?`<span class="ph-ln">La Niña</span> minus climatology`
           :`<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>`;
@@ -1402,7 +1402,7 @@ function writeTitles(domD){
   const nTxt=S.ph==='en'?`${nE} El Niño years`:S.ph==='ln'?`${nL} La Niña years`
             :`${nE} El Niño and ${nL} La Niña years`;
   document.getElementById('diffSub').innerHTML=esc(
-    `${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${a}–${b} · `+
+    `${per} · ${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} · `+
     (pctOn()?'% of climatology':unitAbs())+` · `+
     (S.dt==='on'?'linear trend removed':'trend kept')+
     (S.sig?' · dots: significant patches':''))+smTag();
