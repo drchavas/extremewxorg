@@ -82,7 +82,9 @@
   #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
   #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext,#monthbar.avg #mPlay{opacity:.35}
   #monthbar .btn:disabled{cursor:not-allowed}
-  .seg button.on[data-av]{background:var(--accent2);color:#111;font-weight:650}
+  .seg button.on[data-av],.seg button.on[data-per]{background:var(--accent2);color:#111;font-weight:650}
+  .srctag{color:var(--text);opacity:.85}
+  .percustom{display:none} body.custom-period .percustom{display:flex}
   .emptychip{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);z-index:640;display:none;max-width:80%;
              text-align:center;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;
              padding:8px 14px;font-size:13px;line-height:1.35;pointer-events:none}
@@ -202,8 +204,12 @@
       <label for="strSel">Strength (RONI)</label>
       <select id="strSel"><option value="0.5">&ge; 0.5&deg;C (all events)</option>
         <option value="1">&ge; 1.0&deg;C (moderate+)</option><option value="1.5">&ge; 1.5&deg;C (strong)</option></select></div>
-    <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
-    <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
+    <div class="fld" title="Which years go into the maps: the whole satellite-era record, or only the years since 2000."><label>Period</label>
+      <div class="seg" id="perSeg" role="group" aria-label="Period">
+        <button data-per="all">1979&ndash;2025</button><button data-per="recent">2000&ndash;2025</button><button data-per="custom" title="Choose your own first and last ENSO year">Custom&hellip;</button>
+      </div></div>
+    <div class="fld percustom"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
+    <div class="fld percustom"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
     <div class="fld" title="Remove each box's linear trend over the period before compositing, so a run of recent El Niño (or La Niña) years does not pick up the warming trend, or a reporting trend, as an ENSO signal."><label for="dtSel">Trend</label>
       <select id="dtSel"><option value="on">Removed</option><option value="off">Kept</option></select></div>
     <div class="fld" id="pcBox"><label for="pcSel">Difference as</label>
@@ -344,13 +350,17 @@ function isCount(){ return F().src!=='era5'; }
 function isTemp(){ return F().k==='t2m'; }
 function isPrecip(){ return F().k==='pr'||F().k==='sf'; }   // the two water fluxes
 function isSnow(){ return F().k==='sf'; }
-/* Default periods. ERA5 and IBTrACS (USA winds) are taken over their whole
-   satellite-era record. Storm Events opens at 2000, as the dashboard does:
-   report counts rose about thirtyfold into the late 1990s, and a composite
-   over that era would be partly a composite of reporting practice. */
+/* Two periods, the same for every field: the satellite era from 1979 (the
+   default), or 2000 on. Each is clipped to the field's own record: IBTrACS
+   starts in 1980 here, the derecho archive in 1996. Storm Events reports grew
+   steeply into the late 1990s; the per-box trend removal handles that well
+   enough for these composites (U.S.-total El Nino - La Nina differences move by
+   a few percent at most between linear, quadratic and cubic detrending over
+   1979-2025), and 2000 on is there for the more uniform part of the record. */
+const PERIOD_START={all:1979,recent:2000};
 function defaultPeriod(){
-  if(F().src==='scs') return [Math.max(2000,DS?DS.ey0:2000), DS?DS.ey1:2025];
-  return DS?[DS.ey0,DS.ey1]:[1979,2025];
+  const a=PERIOD_START[S.per]||1979;
+  return DS?[Math.max(a,DS.ey0),DS.ey1]:[a,2025];
 }
 
 /* --------------------------------------------------------------- numerics */
@@ -469,7 +479,7 @@ function classify(thr){
    need: for a slider month, a dense (ENSO year x box) matrix of values, NaN
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
-const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,y0:null,y1:null,dt:'on',pc:'abs',un:'C',
+const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,per:'all',y0:null,y1:null,dt:'on',pc:'abs',un:'C',
          sm:'on',sig:1,pt:null,theme:'dark'};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
@@ -661,7 +671,8 @@ function windowYears(){
   return out;
 }
 function yearsSel(){
-  const [d0,d1]=defaultPeriod();
+  if(S.per!=='custom') return defaultPeriod();
+  const [d0,d1]=[Math.max(1979,DS.ey0),DS.ey1];
   let a=S.y0==null?d0:S.y0, b=S.y1==null?d1:S.y1;
   if(a>b) [a,b]=[b,a];                                // a reversed range is a typo, not a request
   a=Math.max(DS.ey0,Math.min(a,DS.ey1)); b=Math.min(DS.ey1,Math.max(b,a));
@@ -1394,7 +1405,7 @@ function writeTitles(domD){
   const when = S.av==='mon' ? `${MFULL[MSEQ[S.mi]-1]} of` : S.av==='yr' ? 'averaged over' : `${AV().label} of`;
   document.getElementById('climTitle').textContent=`Climatology · ${tkLong()}`;
   document.getElementById('climSub').innerHTML=
-    esc(`${per}, ${when} all ${win.length} years, ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} (${unitP})`)+smTag();
+    esc(`${per}, ${when} all ${win.length} years, ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} (${unitP})`)+srcTag()+smTag();
   const phs=S.ph==='en'?`<span class="ph-en">El Niño</span> minus climatology`
           :S.ph==='ln'?`<span class="ph-ln">La Niña</span> minus climatology`
           :`<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>`;
@@ -1405,7 +1416,7 @@ function writeTitles(domD){
     `${per} · ${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} · `+
     (pctOn()?'% of climatology':unitAbs())+` · `+
     (S.dt==='on'?'linear trend removed':'trend kept')+
-    (S.sig?' · dots: significant patches':''))+smTag();
+    (S.sig?' · dots: significant patches':''))+srcTag()+smTag();
   const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
   drawColorbar(document.getElementById('cbClim'),CURDOM.clim,climCap,false);
   drawColorbar(document.getElementById('cbDiff'),domD,pctOn()?'% of clim.':unitAbs(),true);
@@ -1431,6 +1442,15 @@ function writeTitles(domD){
     bt.classList.toggle('on',on); bt.setAttribute('aria-pressed',on); });
   document.getElementById('monthbar').classList.toggle('avg',S.av!=='mon');
   ['mRange','mPrev','mNext','mPlay'].forEach(id=>document.getElementById(id).disabled=S.av!=='mon');
+}
+/* where the numbers come from, on both map headers */
+function srcTag(){
+  const f=F();
+  const s = f.src==='era5' ? 'ERA5 reanalysis (ECMWF)'
+          : f.src==='tc' ? 'IBTrACS best tracks (NOAA NCEI)'
+          : f.k==='derechoday' ? 'Squitieri, Wade & Jirak derecho archive'
+          : 'NOAA NCEI Storm Events';
+  return ` · <span class="srctag">Data: ${esc(s)}</span>`;
 }
 function smTag(){
   if(!isCount()) return '';
@@ -1662,19 +1682,20 @@ function guideHtml(){
       `and August</b>. It holds no cool-season derechos, so the Dec–Feb, Sep–Nov and cool-month maps are empty and the `+
       `ENSO-year map is a warm-season map. With so few events in any box, treat these composites as exploratory. ` : '';
   return lead+dere+'Storm Events records <i>reports</i>, not observations from a fixed network, and report counts rose '+
-    'steeply into the late 1990s, so the period opens at 2000 by default, the maps open on <b>Dec–Feb</b>, and the '+
-    'per-box trend is removed before compositing. The best-documented ENSO links to U.S. hail and tornadoes are in '+
+    'steeply into the late 1990s, so the per-box trend is removed before compositing (the 2000–2025 period uses only '+
+    'the more uniform recent record), and the maps open on <b>Dec–Feb</b>. The best-documented ENSO links to U.S. hail and tornadoes are in '+
     '<b>winter</b>: in Dec–Feb, El Niño brings fewer tornado and hail days to the Mid-South and Ohio Valley and more '+
     'to Florida and the Gulf Coast. <b>Spring</b> is less settled. '+
     '<a href="https://doi.org/10.1038/ngeo2385" target="_blank" rel="noopener">Allen, Tippett &amp; Sobel (2015)</a> '+
     'found fewer spring tornadoes and hailstorms in the southern Plains after El Niño over 1979–2013, and these data '+
-    'agree for that period (ENSO years 1980–2012: fewer ≥1″ hail days, little change in tornadoes). Over the default '+
-    '2000–2025, though, the Mar–May maps show <i>more</i> southern-Plains tornado days after El Niño, because the '+
-    'springs of 2015, 2016, 2019 and 2024 were very active: a dozen years can overturn a modest signal. '+
+    'agree for that period (fewer ≥1″ hail days, little change in tornadoes). Since then, though, the springs of '+
+    '2015, 2016, 2019 and 2024, all after El Niño, were very active there, so the Mar–May maps show slightly '+
+    '<i>more</i> southern-Plains tornado days after El Niño over 1979–2025, and clearly more over 2000–2025: a '+
+    'handful of years can overturn a modest signal. '+
     (()=>{ const w=windowYears(), [a,b]=yearsSel(); return `${a}–${b} holds only ${w.filter(x=>x.c==='EN').length} El Niño and `+
       `${w.filter(x=>x.c==='LN').length} La Niña years at this strength, and its 2° boxes are noisy, so `+
       `patches here rarely pass the significance test; a pattern that recurs in neighbouring months or seasons, `+
-      `or over a longer period (e.g. 1980–2025), deserves more trust than any single map. `; })()+
+      `and in both periods, deserves more trust than any single map. `; })()+
     'Storm Events reporting also changed <i>within</i> the period: hail reports under 1″ largely stopped after the NWS '+
     'made 1″ its severe criterion in 2010, and many wind reports carried no speed until 2003, so <b>any-hail and '+
     'wind-speed thresholds</b> are least comparable across those years.'+common;
@@ -1799,6 +1820,12 @@ function syncControls(){
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
   document.querySelectorAll('#phSeg button').forEach(b=>b.classList.toggle('on',b.dataset.ph===S.ph));
+  /* period buttons, labelled with the years they give for this field */
+  document.querySelectorAll('#perSeg button').forEach(b=>{ const on=b.dataset.per===S.per;
+    const a=Math.max(PERIOD_START[b.dataset.per],DS.ey0);
+    if(b.dataset.per!=='custom') b.textContent=`${a}–${DS.ey1}`;
+    b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
+  document.body.classList.toggle('custom-period',S.per==='custom');
   const [a,b]=yearsSel(), i0=document.getElementById('y0In'), i1=document.getElementById('y1In');
   i0.min=i1.min=DS.ey0; i0.max=i1.max=DS.ey1; i0.value=a; i1.value=b;
   document.getElementById('fldSel').value=S.f;
@@ -1809,7 +1836,8 @@ function writeHash(){
   const p=new URLSearchParams();
   p.set('f',S.f); if(F().thresholds) p.set('t',S.thr);
   p.set('ph',S.ph); p.set('s',S.str); p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
-  const [a,b]=yearsSel(); p.set('p',a+'-'+b);
+  if(S.per==='recent') p.set('p','recent');
+  else if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
   if(S.dt!=='on') p.set('dt',S.dt);
   if(S.pc!=='abs') p.set('pc',S.pc);
   if(S.un!=='C') p.set('u',S.un);
@@ -1831,7 +1859,13 @@ function readHash(){
   if(mq && AVGS.some(a=>a.k===mq&&a.k!=='mon')) S.av=mq;
   else if(mq && MSEQ.includes(+mq)){ S.av='mon'; S.mi=MSEQ.indexOf(+mq); }
   else if(F().src==='scs'){ S.av='djf'; AUTOAV=true; }   // a bare U.S. link opens on Dec-Feb
-  if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){ S.y0=a; S.y1=b; } }
+  /* p=recent, or p=YYYY-YYYY for a custom range. Older links always carried a range:
+     one that is just a preset (1979/1980-2025, 2000-2025) opens as that preset */
+  const pq=p.get('p');
+  if(pq==='recent') S.per='recent';
+  else if(pq){ const [a,b]=pq.split('-').map(Number);
+    if(a&&b){ if(b>=2025&&a<=1980) S.per='all'; else if(b>=2025&&a===2000) S.per='recent';
+      else { S.per='custom'; S.y0=a; S.y1=b; } } }
   if(p.get('dt')==='off') S.dt='off';
   if(p.get('pc')==='pct') S.pc='pct';
   if(p.get('u')==='F') S.un='F';
@@ -1873,7 +1907,7 @@ function wire(){
     const o=document.createElement('option'); o.value=f.k; o.textContent=f.label; og.appendChild(o); });
   fs.value=S.f;
   fs.onchange=e=>{ const prev=F().src; S.f=e.target.value;
-    if(F().src!==prev){ S.y0=S.y1=null; S.thr=0;      // each source has its own default period
+    if(F().src!==prev){ S.thr=0;
       /* U.S. fields open on Dec-Feb, where the ENSO links are best established; the
          ENSO-year total is dominated by summer, where they are weakest. Only the
          default is switched, and switched back on leaving: a chosen average stays. */
@@ -1883,8 +1917,12 @@ function wire(){
   document.getElementById('thrSel').onchange=e=>{ S.thr=+e.target.value; refresh(); };
   document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{ S.ph=b.dataset.ph; refresh(); });
   document.getElementById('strSel').onchange=e=>{ S.str=+e.target.value; refresh(); };
-  document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; if(S.y1==null) S.y1=yearsSel()[1]; refresh(); };
-  document.getElementById('y1In').onchange=e=>{ S.y1=+e.target.value; if(S.y0==null) S.y0=yearsSel()[0]; refresh(); };
+  document.querySelectorAll('#perSeg button').forEach(b=>b.onclick=()=>{
+    /* Custom opens on the range on screen, so nothing changes until a year is edited */
+    if(b.dataset.per==='custom'&&S.per!=='custom'){ const [a,c]=yearsSel(); S.y0=a; S.y1=c; }
+    S.per=b.dataset.per; refresh(); });
+  document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; refresh(); };
+  document.getElementById('y1In').onchange=e=>{ S.y1=+e.target.value; refresh(); };
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
   document.getElementById('pcSel').onchange=e=>{ S.pc=e.target.value; refresh(); };
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; refresh(); };
