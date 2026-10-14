@@ -83,6 +83,9 @@
   #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext,#monthbar.avg #mPlay{opacity:.35}
   #monthbar .btn:disabled{cursor:not-allowed}
   .seg button.on[data-av]{background:var(--accent2);color:#111;font-weight:650}
+  .emptychip{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);z-index:640;display:none;max-width:80%;
+             text-align:center;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;
+             padding:8px 14px;font-size:13px;line-height:1.35;pointer-events:none}
   .loadchip{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:650;display:none;
             background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;
             padding:4px 12px;font-size:12px;pointer-events:none}
@@ -209,7 +212,7 @@
       <select id="unSel"><option value="C">&deg;C</option><option value="F">&deg;F</option></select></div>
     <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="on">1 box</option><option value="off">Raw</option></select></div>
-    <div class="fld"><label>&nbsp;</label><label class="chk" title="Dot every box where the composite difference is significant at p < 0.05 (two-sided t-test)"><input type="checkbox" id="sigChk" checked> Dots: p&nbsp;&lt;&nbsp;0.05</label></div>
+    <div class="fld"><label>&nbsp;</label><label class="chk" title="Dot the patches of boxes where the composite difference is significant: each box at p < 0.05 (two-sided t-test), and the patch as a whole stronger than chance (permutation test; see Methods)"><input type="checkbox" id="sigChk" checked> Dots: significant patches</label></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole field">&#8592; Full view</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
@@ -239,13 +242,13 @@
     <div id="maps">
       <div class="mapcol">
         <div class="maphead"><h2 id="climTitle">Climatology</h2><p id="climSub">&nbsp;</p></div>
-        <div class="lmap" id="mapClim"><div class="cbar" id="cbClim"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div>
+        <div class="lmap" id="mapClim"><div class="cbar" id="cbClim"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
           <div class="hint">drag &middot; scroll to zoom &middot; click a box to select it</div></div>
       </div>
       <div class="mapcol">
         <div class="maphead"><h2 id="diffTitle">Difference</h2><p id="diffSub">&nbsp;</p>
           <p class="warn" id="diffWarn">&nbsp;</p></div>
-        <div class="lmap" id="mapDiff"><div class="cbar" id="cbDiff"></div><div class="tip" id="tipB"></div><div class="loadchip">Loading&hellip;</div>
+        <div class="lmap" id="mapDiff"><div class="cbar" id="cbDiff"></div><div class="tip" id="tipB"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
           <div class="hint">both maps share one view</div></div>
       </div>
     </div>
@@ -730,6 +733,130 @@ function mapStats(X,win){
   }
   return {clim,diff,p};
 }
+/* ------------------------------------------------- field significance */
+/* Which boxes get a dot. A box-by-box t-test dots about one box in twenty by
+   chance, and on a smooth field those chance dots come in clumps that look like
+   patterns; shrinking the boxes, on the other hand, makes every box noisier and
+   real patterns harder to dot. A cluster-based permutation test (Maris &
+   Oostenveld 2007) sidesteps both: it asks whether a whole *patch* is stronger
+   than chance, and it learns what chance looks like from the data themselves.
+     1. Each box gets a Welch t for the composite (as in seriesStats); boxes at
+        |t| beyond the two-sided 5% point join same-sign neighbours (8-connected,
+        wrapping in longitude on a global grid) into patches.
+     2. A patch's strength is its mass: the sum of |t| times box area (cos lat),
+        so a patch means the same thing whatever the box size.
+     3. The El Nino / La Nina labels are shuffled across the years NPERM times and
+        steps 1-2 redone on the whole map each time (on the same, possibly
+        smoothed, maps, so the shuffles share their spatial correlation); the
+        largest chance patch anywhere on the map is recorded each time.
+     4. A real patch is significant if fewer than 5% of shuffles produced a
+        chance patch as strong; its boxes are dotted.
+   This holds the chance of dotting any spurious patch on the map to 5%.
+   Shuffling treats years as exchangeable, so back-to-back La Nina years make it
+   somewhat generous; detrending is done once, before shuffling, since the trend
+   does not depend on the labels. */
+const NPERM=500;
+let CL_P=0.05;                                        // the cluster-forming threshold (two-sided p)
+const _TCRIT={};
+function tcrit(df){                                  // two-sided CL_P point of Student's t
+  const T=_TCRIT[CL_P]||(_TCRIT[CL_P]=new Float64Array(802).fill(NaN));
+  const k=Math.min(801,Math.max(2,Math.round(df*2)));
+  let v=T[k]; if(v===v) return v;
+  let lo=0.5, hi=60; const d=k/2;
+  for(let i=0;i<50;i++){ const m=(lo+hi)/2; if(tp(m,d)>CL_P) lo=m; else hi=m; }
+  return (T[k]=(lo+hi)/2);
+}
+function mulberry(a){ return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function nb8(ds){
+  if(ds.nb8) return ds.nb8;
+  const g=ds.grid, out=new Int32Array(ds.NC*8).fill(-1);
+  for(let c=0;c<ds.NC;c++){
+    const gi=ds.cells[c], li=Math.floor(gi/g.nlon), ki=gi%g.nlon; let q=0;
+    for(let dy=-1;dy<=1;dy++){ const lj=li+dy; if(lj<0||lj>=g.nlat) continue;
+      for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue;
+        let kj=ki+dx;
+        if(g.global) kj=((kj%g.nlon)+g.nlon)%g.nlon; else if(kj<0||kj>=g.nlon) continue;
+        const n=ds.cidx[lj*g.nlon+kj]; if(n>=0) out[c*8+(q++)]=n; } }
+  }
+  return (ds.nb8=out);
+}
+/* X: the (year x box) matrix the map was computed from (smoothed if the map is);
+   win: windowYears(); ok(c): may box c carry a dot; alive(): is this state still on
+   screen. Resolves to {sig: Uint8Array per box, nPatch, nSig}, null if there is
+   nothing to test, or undefined if abandoned. The shuffles are seeded from the
+   state, so the same settings always give the same dots. */
+async function clusterTest(X,win,ok,alive,seedKey){
+  const ds=DS, NC=ds.NC, ph=S.ph, det=S.dt==='on';
+  const labA=ph==='ln'?'LN':'EN';
+  const J=[]; win.forEach((w,j)=>{ if(ph!=='enln'||w.c==='EN'||w.c==='LN') J.push(j); });
+  const n=J.length, aObs=[]; J.forEach((j,jj)=>{ if(win[j].c===labA) aObs.push(jj); });
+  const kA=aObs.length;
+  if(kA<2||n-kA<2) return null;
+  /* residuals over the whole window (the trend line uses every year, as on the map),
+     kept for the tested years only; totals over those years per box */
+  const E=[]; for(let c=0;c<NC;c++) if(ok(c)) E.push(c);
+  const R=new Float64Array(E.length*n).fill(NaN), tS=new Float64Array(E.length), tQ=new Float64Array(E.length),
+        tN=new Int32Array(E.length), wt=new Float64Array(E.length), loc=new Int32Array(NC).fill(-1);
+  const m=win.length;
+  E.forEach((c,e)=>{
+    loc[c]=e; wt[e]=ds.w[c];
+    let k=0,sx=0,sy=0; for(let j=0;j<m;j++){ const v=X[win[j].y*NC+c]; if(v===v){ k++; sx+=win[j].Y; sy+=v; } }
+    if(k<3) return;
+    const mx=sx/k, my=sy/k; let b=0;
+    if(det){ let sxx=0,sxy=0; for(let j=0;j<m;j++){ const v=X[win[j].y*NC+c]; if(v===v){ const dx=win[j].Y-mx; sxx+=dx*dx; sxy+=dx*(v-my); } }
+      b=sxx>0?sxy/sxx:0; }
+    for(let jj=0;jj<n;jj++){ const j=J[jj], v=X[win[j].y*NC+c];
+      if(v===v){ const r=v-(my+b*(win[j].Y-mx)); R[e*n+jj]=r; tS[e]+=r; tQ[e]+=r*r; tN[e]++; } }
+  });
+  const NE=E.length, t=new Float64Array(NE), sg=new Int8Array(NE), lab=new Int32Array(NE), stack=new Int32Array(NE);
+  const NB=nb8(ds);
+  /* t and the threshold sign for one labelling (A = list of tested-year indices) */
+  const tmap=A=>{
+    for(let e=0;e<NE;e++){
+      let sA=0,qA=0,nA=0; const o=e*n;
+      for(let i=0;i<A.length;i++){ const r=R[o+A[i]]; if(r===r){ sA+=r; qA+=r*r; nA++; } }
+      const nB=tN[e]-nA; sg[e]=0; t[e]=0;
+      if(nA<2||nB<2) continue;
+      const sB=tS[e]-sA, qB=tQ[e]-qA, mA=sA/nA, mB=sB/nB;
+      let vA=(qA-sA*mA)/(nA-1), vB=(qB-sB*mB)/(nB-1);
+      const sc=1e-9*((qA+qB)/(nA+nB)+1e-30);       // round-off, not spread
+      if(vA<sc) vA=0; if(vB<sc) vB=0;
+      const a=vA/nA, c=vB/nB, se2=a+c; if(!(se2>0)) continue;
+      const tt=(mA-mB)/Math.sqrt(se2), df=se2*se2/((a*a)/(nA-1)+(c*c)/(nB-1));
+      t[e]=tt; if(Math.abs(tt)>=tcrit(df)) sg[e]=tt>0?1:-1;
+    }
+  };
+  /* label patches; returns array of masses (index = patch id - 1) */
+  const patches=()=>{
+    lab.fill(0); const mass=[];
+    for(let e0=0;e0<NE;e0++){
+      if(!sg[e0]||lab[e0]) continue;
+      const id=mass.length+1, s=sg[e0]; let sp=0, ms=0;
+      stack[sp++]=e0; lab[e0]=id;
+      while(sp){ const e=stack[--sp]; ms+=Math.abs(t[e])*wt[e];
+        const c=E[e]; for(let q=0;q<8;q++){ const nc=NB[c*8+q]; if(nc<0) break; const f=loc[nc];
+          if(f>=0&&!lab[f]&&sg[f]===s){ lab[f]=id; stack[sp++]=f; } } }
+      mass.push(ms);
+    }
+    return mass;
+  };
+  tmap(aObs); const obs=patches(), obsLab=Int32Array.from(lab);
+  if(!obs.length) return {sig:new Uint8Array(NC),nPatch:0,nSig:0};
+  const rnd=mulberry(hashStr(seedKey)), idx=Int32Array.from({length:n},(_,i)=>i), A=new Int32Array(kA);
+  const maxes=new Float64Array(NPERM);
+  let t0=performance.now();
+  for(let p=0;p<NPERM;p++){
+    for(let i=0;i<kA;i++){ const r=i+Math.floor(rnd()*(n-i)); const x=idx[i]; idx[i]=idx[r]; idx[r]=x; A[i]=idx[i]; }
+    tmap(A); const ms=patches(); let mx=0; for(const v of ms) if(v>mx) mx=v; maxes[p]=mx;
+    if(performance.now()-t0>40){ await new Promise(r=>setTimeout(r,0)); if(!alive()) return undefined; t0=performance.now(); }
+  }
+  const sigP=obs.map(ms=>{ let k=0; for(let p=0;p<NPERM;p++) if(maxes[p]>=ms) k++; return (k+1)/(NPERM+1); });
+  const sig=new Uint8Array(NC);
+  for(let e=0;e<NE;e++){ const id=obsLab[e]; if(id&&sigP[id-1]<0.05) sig[E[e]]=1; }
+  return {sig,nPatch:obs.length,nSig:sigP.filter(p=>p<0.05).length};
+}
 /* the series for the panel: one box, or the dataset's aggregate */
 async function boxSeries(key){
   const X=await DS.XK(key), win=windowYears(), NC=DS.NC, c=selCell();
@@ -843,13 +970,9 @@ function rgbaFor(vals,dom){
   }
   return out;
 }
-function sigMask(st){
+function sigMask(res){
   const g=DS.grid, out=new Uint8Array(g.nlat*g.nlon);
-  /* no dots on a water flux where there is essentially none: a difference of
-     hundredths of a mm/day over the Sahara is quantisation, not a teleconnection */
-  const dry=isPrecip()?minFlux():-Infinity;
-  for(let c=0;c<DS.NC;c++){ const p=st.p[c];
-    if(isFinite(p)&&p<0.05&&isFinite(st.diff[c])&&!(st.clim[c]<dry)) out[DS.cells[c]]=1; }
+  for(let c=0;c<DS.NC;c++) if(res.sig[c]) out[DS.cells[c]]=1;
   return out;
 }
 
@@ -1016,9 +1139,12 @@ function a1Zoom(){
 function fullView(){
   const f=F();
   syncing=true;
-  if(f.src==='scs') mapA.fitBounds([[24,-126],[50,-66]],{padding:[8,8]});
-  else if(f.src==='tc') mapA.fitBounds([[-50,25],[55,385]],{padding:[4,4]});
-  else mapA.fitBounds([[-75,20],[82,380]],{padding:[0,0]});
+  /* not animated: a second fit during a zoom animation is undone when the first
+     animation ends (Leaflet re-applies its target), which could leave a global
+     field on the U.S. view after quick field switches */
+  if(f.src==='scs') mapA.fitBounds([[24,-126],[50,-66]],{padding:[8,8],animate:false});
+  else if(f.src==='tc') mapA.fitBounds([[-50,25],[55,385]],{padding:[4,4],animate:false});
+  else mapA.fitBounds([[-75,20],[82,380]],{padding:[0,0],animate:false});
   mapB.setView(mapA.getCenter(),mapA.getZoom(),{animate:false});
   syncing=false;
 }
@@ -1045,7 +1171,7 @@ function drawColorbar(el,dom,title,isDiff){
   el.innerHTML=`<div class="cap">${esc(title)}</div><div class="row">`+
     `<div class="strip" style="background:${grad}"></div>`+
     `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
-    (isDiff&&S.sig?`<div class="zchip"><i></i>p &lt; 0.05</div>`:'');
+    (isDiff&&S.sig?`<div class="zchip"><i></i><span>${sigChipText()}</span></div>`:'');
 }
 
 /* --------------------------------------------------------- hover readout */
@@ -1076,6 +1202,7 @@ function tipHtml(c,lat,lon){
     h+=`${esc(phaseName())}: <b>${sgn(df,d.d)}</b> ${pctOn()?'%':esc(unitAbs())}`;
     if(smoothOn()&&isFinite(raw.disp[c])&&Math.abs(raw.disp[c]-df)>1e-3) h+=` (this box ${sgn(raw.disp[c],d.d)})`;
     const p=s.p[c]; h+=` · p ${p<0.001?'< 0.001':'= '+fmt(p,3)}`;
+    if(SIGNOW&&SIGNOW!=='pending'&&SIGNOW.sig[c]) h+=' · in a significant patch';
   } else h+=`${esc(phaseName())}: —`;
   return h;
 }
@@ -1110,13 +1237,35 @@ function wireHover(m,tipId){
 
 /* ------------------------------------------------------------- refresh */
 let CUR=null, CURRAW=null, CURDOM=null, TOKEN=0, STATS=null;
+/* which view the maps were last fitted to (U.S. or global). Decided by the refresh
+   that actually draws, so switching fields quickly cannot leave a U.S. field
+   on the world view. */
+let VIEWSCOPE=null;
 function statKey(){
   return [S.f,S.thr,S.ph,S.str,yearsSel().join('-'),S.dt,S.pc,S.un,S.sm].join('|');
 }
 async function computeKey(key,smooth){
   const X0=await DS.XK(key);
   const X=smooth?smoothX(DS,X0):X0;
-  return mapStats(X,windowYears());
+  const st=mapStats(X,windowYears()); st.X=X;      // kept for the significance test
+  return st;
+}
+/* significance results by state (see clusterTest); CURSK is the state on screen */
+const SIGCACHE=new Map(), SIGRUN=new Map(); let SIGNOW=null, CURSK=null;
+function sigChipText(){ return SIGNOW==='pending' ? 'testing patches…' : 'significant patch'; }
+function runSig(st,sk){
+  if(SIGRUN.has(sk)) return;
+  const dry=isPrecip()?minFlux():-Infinity, win=windowYears();
+  const ok=c=>isFinite(st.p[c])&&isFinite(st.diff[c])&&!(st.clim[c]<dry);
+  const job=clusterTest(st.X,win,ok,()=>CURSK===sk,sk).then(res=>{
+    if(res===undefined) return;                          // abandoned: the state moved on
+    if(!res) res={sig:new Uint8Array(DS.NC),nPatch:0,nSig:0};
+    SIGCACHE.set(sk,res); if(SIGCACHE.size>40) SIGCACHE.delete(SIGCACHE.keys().next().value);
+    if(CURSK!==sk) return;
+    SIGNOW=res; REND.B.sig=sigMask(res); layB.redraw();
+    document.querySelectorAll('#cbDiff .zchip span').forEach(e=>e.textContent=sigChipText());
+  }).catch(err=>console.error(err)).finally(()=>SIGRUN.delete(sk));
+  SIGRUN.set(sk,job);
 }
 async function refresh(){
   const tok=++TOKEN;
@@ -1126,13 +1275,12 @@ async function refresh(){
   catch(err){ console.error(err); msg.style.display='block';
     msg.textContent='Could not load '+F().label.toLowerCase()+': '+err.message; return; }
   if(tok!==TOKEN) return;
-  const scopeChange = !DS || (DS.f.src==='scs')!==(ds.f.src==='scs');
   DS=ds;
   syncControls();
-  let st, raw;
+  let st, raw, tk, need=0;
   try{
     loading(true);
-    const tk=curKey();
+    tk=curKey();
     if(isCount()){
       const key=statKey()+'|'+tk;
       if(!STATS||STATS.key!==key){
@@ -1158,7 +1306,7 @@ async function refresh(){
     /* one El Nino (or La Nina) year is not a composite: say so and draw nothing,
        rather than a full map of a single year's anomaly titled "minus climatology" */
     const w=windowYears(), nE=w.filter(x=>x.c==='EN').length, nL=w.filter(x=>x.c==='LN').length;
-    const need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
+    need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
     if(need<2){ st={...st,disp:new Float32Array(st.disp.length).fill(NaN),p:new Float32Array(st.p.length).fill(NaN)}; }
     loading(false);
   } catch(err){
@@ -1175,14 +1323,20 @@ async function refresh(){
     domD={lo:-50,hi:50,st:CMAP.div};
   }
   REND.A={grid:DS.grid,rgba:rgbaFor(climDisp,CURDOM.clim),sig:null};
-  REND.B={grid:DS.grid,rgba:rgbaFor(st.disp,domD),sig:S.sig?sigMask(st):null};
+  /* dots come from the patch test, which takes up to a second or two on the ERA5
+     grid: draw the map at once, and add the dots when the test is done */
+  const sk=statKey()+'|'+tk;
+  CURSK=sk;
+  SIGNOW = (S.sig && need>=2) ? (SIGCACHE.get(sk)||'pending') : null;
+  REND.B={grid:DS.grid,rgba:rgbaFor(st.disp,domD),sig:(SIGNOW&&SIGNOW!=='pending')?sigMask(SIGNOW):null};
   if(!layA){
     layA=new FieldLayer({which:'A',className:'fieldlayer',tileSize:256,updateWhenZooming:false,keepBuffer:4}).addTo(mapA);
     layB=new FieldLayer({which:'B',className:'fieldlayer',tileSize:256,updateWhenZooming:false,keepBuffer:4}).addTo(mapB);
   } else { layA.redraw(); layB.redraw(); }
-  if(scopeChange) fullView();
+  if(VIEWSCOPE!==(DS.f.src==='scs')){ VIEWSCOPE=(DS.f.src==='scs'); fullView(); }
   drawSelection();
   writeTitles(domD);
+  if(SIGNOW==='pending') runSig(st,sk);
   document.getElementById('guide').innerHTML=guideHtml();
   document.getElementById('methodsBody').innerHTML=methodsHtml();
   await drawPanels();
@@ -1251,7 +1405,7 @@ function writeTitles(domD){
     `${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${a}–${b} · `+
     (pctOn()?'% of climatology':unitAbs())+` · `+
     (S.dt==='on'?'linear trend removed':'trend kept')+
-    (S.sig?' · dots: p < 0.05':''))+smTag();
+    (S.sig?' · dots: significant patches':''))+smTag();
   const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
   drawColorbar(document.getElementById('cbClim'),CURDOM.clim,climCap,false);
   drawColorbar(document.getElementById('cbDiff'),domD,pctOn()?'% of clim.':unitAbs(),true);
@@ -1262,6 +1416,12 @@ function writeTitles(domD){
   warn.textContent = need<2
     ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
     : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years: read coherent, dotted patterns, not the value in any single box.`;
+  /* derechos: the archive has no events outside April-August, so a cool season is
+     empty by construction; say so on the maps instead of drawing a blank */
+  const empty = f.k==='derechoday' && CUR && !CUR.clim.some(v=>isFinite(v)&&v>0);
+  document.querySelectorAll('.emptychip').forEach(e=>{ e.style.display=empty?'block':'none';
+    e.textContent=empty?`No derechos in ${S.av==='mon'?MFULL[MSEQ[S.mi]-1]:AV().label}: the archive holds only April–August events.`:''; });
+  if(empty) warn.textContent='The derecho archive holds only April–August events, so this season or month is empty by construction.';
   const m=MSEQ[S.mi];
   document.getElementById('mNow').innerHTML = S.av==='mon'
     ? `${MFULL[m-1]} <small>${m>=6?'of the developing year (0)':'of the following year (+1)'}</small>`
@@ -1476,9 +1636,18 @@ function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
   const common=' The difference map is a <b>composite</b> — the average over a dozen or so years — so it '+
     'describes what El Niño or La Niña <i>tends</i> to do; any single event can look quite different. '+
-    'Dots mark where that average is unlikely to be chance (p&nbsp;&lt;&nbsp;0.05); with many thousands of boxes, '+
-    'about one in twenty will be dotted by chance alone, so trust patterns, not isolated dots.';
-  if(f.src==='era5') return lead+'ERA5 is a <b>reanalysis</b>: a weather model continually corrected by observations. '+
+    'Dots mark <b>significant patches</b>: neighbouring boxes that each pass a t-test (p&nbsp;&lt;&nbsp;0.05) and that '+
+    'together are stronger than the strongest patch chance produces anywhere on the map in 95% of 500 reshufflings '+
+    'of the El Niño and La Niña labels across the years. A broad region of boxes that each only just pass can be '+
+    'dotted, while an isolated box rarely is. The test is strict — it allows a 5% chance of <i>any</i> '+
+    'spurious patch on the whole map — so an undotted pattern is not evidence of no effect, only that this sample '+
+    'cannot rule out chance.';
+  const kept=(isTemp()&&S.dt==='off')?(()=>{ const w=windowYears().slice(-8), k=w.filter(x=>x.c==='LN').length;
+    return '<b>Trend kept:</b> the composites now carry the warming trend, in proportion to when each phase happened. '+
+      `${k} of the last ${w.length} ENSO years of the period were La Niña, so La Niña inherits the recent warmth: `+
+      'La Niña looks warm, and El Niño − La Niña cool, over much of the Arctic and northern continents. That is the '+
+      'trend, not ENSO; <i>Trend: removed</i> shows the ENSO signal. '; })():'';
+  if(f.src==='era5') return lead+kept+'ERA5 is a <b>reanalysis</b>: a weather model continually corrected by observations. '+
     'Its temperatures are well constrained almost everywhere; its <b>precipitation and snowfall are model products</b> and '+
     'are least certain over the tropical oceans and wherever gauges are sparse, so read them at continental scale. '+
     'Snowfall is the <i>water equivalent</i> (1 mm of water is very roughly 1 cm of fresh snow); boxes that essentially '+
@@ -1488,12 +1657,24 @@ function guideHtml(){
     'fewer Atlantic storms and an eastward, equatorward shift of West Pacific activity in El Niño years are the '+
     'textbook signals — rather than single boxes. Records begin in 1980, when satellite coverage made the best tracks '+
     'broadly comparable across basins.'+common;
-  return lead+'Storm Events records <i>reports</i>, not observations from a fixed network, and report counts rose '+
-    'steeply into the late 1990s, so the period opens at 2000 by default and the per-box trend is removed before '+
-    'compositing. The best-documented ENSO links to U.S. hail and tornadoes are in <b>winter and spring</b> (January–May '+
-    'of year +1), as the event decays. '+
+  const dere=f.k==='derechoday' ? `<b>Derechos:</b> the archive (Squitieri, Wade &amp; Jirak 2026) lists `+
+      `${DS&&DS.meta&&DS.meta.nswath||96} high-confidence derechos in 1996–2025, about three a year, <b>all between April `+
+      `and August</b>. It holds no cool-season derechos, so the Dec–Feb, Sep–Nov and cool-month maps are empty and the `+
+      `ENSO-year map is a warm-season map. With so few events in any box, treat these composites as exploratory. ` : '';
+  return lead+dere+'Storm Events records <i>reports</i>, not observations from a fixed network, and report counts rose '+
+    'steeply into the late 1990s, so the period opens at 2000 by default, the maps open on <b>Dec–Feb</b>, and the '+
+    'per-box trend is removed before compositing. The best-documented ENSO links to U.S. hail and tornadoes are in '+
+    '<b>winter</b>: in Dec–Feb, El Niño brings fewer tornado and hail days to the Mid-South and Ohio Valley and more '+
+    'to Florida and the Gulf Coast. <b>Spring</b> is less settled. '+
+    '<a href="https://doi.org/10.1038/ngeo2385" target="_blank" rel="noopener">Allen, Tippett &amp; Sobel (2015)</a> '+
+    'found fewer spring tornadoes and hailstorms in the southern Plains after El Niño over 1979–2013, and these data '+
+    'agree for that period (ENSO years 1980–2012: fewer ≥1″ hail days, little change in tornadoes). Over the default '+
+    '2000–2025, though, the Mar–May maps show <i>more</i> southern-Plains tornado days after El Niño, because the '+
+    'springs of 2015, 2016, 2019 and 2024 were very active: a dozen years can overturn a modest signal. '+
     (()=>{ const w=windowYears(), [a,b]=yearsSel(); return `${a}–${b} holds only ${w.filter(x=>x.c==='EN').length} El Niño and `+
-      `${w.filter(x=>x.c==='LN').length} La Niña years at this strength. `; })()+
+      `${w.filter(x=>x.c==='LN').length} La Niña years at this strength, and its 2° boxes are noisy, so `+
+      `patches here rarely pass the significance test; a pattern that recurs in neighbouring months or seasons, `+
+      `or over a longer period (e.g. 1980–2025), deserves more trust than any single map. `; })()+
     'Storm Events reporting also changed <i>within</i> the period: hail reports under 1″ largely stopped after the NWS '+
     'made 1″ its severe criterion in 2010, and many wind reports carried no speed until 2003, so <b>any-hail and '+
     'wind-speed thresholds</b> are least comparable across those years.'+common;
@@ -1517,7 +1698,10 @@ function methodsHtml(){
     (Jun–Aug and Sep–Nov of year 0, Dec–Feb, Mar–May of year +1), or a single month. ERA5 fields are the mean of the
     monthly means (months weighted equally); the count fields are totals over the months, so an ENSO-year value is
     storm-days, hazard days or storms per year. A year missing any of its months (Storm Events June/July 1993) is left
-    out of that average rather than counted short.`);
+    out of that average rather than counted short. Because years are classified by the winter, Jun–Aug and Sep–Nov
+    are the <b>developing season</b>: they show an event as it builds and are weaker than Dec–Feb. Mar–May is the
+    <b>decaying season</b>, and a spring can also see the next event begin (Mar–May 2023 ended a La Niña while El Niño
+    was forming); it is counted with the winter before it.`);
   li.push(`<b>Climatology map.</b> The mean of the chosen month, season or year over every ENSO year of the period — all years, whatever their phase.`);
   li.push(`<b>Difference map.</b> For each box, every year's value is first turned into an anomaly: its departure from
     the least-squares line through the period (<i>Trend: removed</i>, the default) or from the period mean
@@ -1525,12 +1709,22 @@ function methodsHtml(){
     years differ from a typical year; <i>El Niño − La Niña</i> is the difference of the two. Removing the trend matters:
     the recent run of La Niña years would otherwise inherit some of the warming of the 2020s as a "La Niña" signal, and
     the reporting growth in Storm Events would leak into whichever phase dominated the later years.`);
-  li.push(`<b>Significance.</b> Welch's two-sample t-test (two-sided) on the anomalies: El Niño (or La Niña) years against
-    all the other years of the period, and for <i>El Niño − La Niña</i> the two phases against each other. Boxes at
-    p &lt; 0.05 are dotted. Where both groups have no spread at all there is nothing to test and no dot. Water fluxes are
-    not dotted where the climatology is below ${isSnow()?'0.05':'0.1'} mm/day, and count fields not where it is below 5%
-    of the field's typical value. Years are treated as independent, and no correction is made for testing thousands of
-    boxes at once.`);
+  li.push(`<b>Significance.</b> A cluster-based permutation test
+    (<a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener">Maris &amp; Oostenveld 2007</a>),
+    which judges patches rather than single boxes. (1) Each box gets Welch's two-sample t on the anomalies: El Niño (or
+    La Niña) years against all the other years of the period, and for <i>El Niño − La Niña</i> the two phases against
+    each other. (2) Boxes with p &lt; 0.05 join neighbouring boxes of the same sign (including diagonals) into patches,
+    and each patch is scored by its <i>mass</i>, the sum of |t| × box area, so a patch means the same thing whatever the
+    box size. (3) The phase labels are then shuffled at random across the years 500 times, and steps 1–2 are repeated on
+    the same maps (smoothed, where the map is), recording the heaviest patch anywhere on the map each time. (4) A patch is
+    dotted if fewer than 5% of the shuffles produced a patch as heavy. Because the shuffles reuse the real maps, they
+    carry the real spatial correlation, so neighbouring boxes are not mistaken for independent evidence; and because each
+    patch is compared with the heaviest chance patch on the whole map, the chance of dotting any spurious patch is held to
+    5%. The shuffles are seeded from the settings, so the same settings always give the same dots. Detrending is done once,
+    before shuffling. Shuffling treats years as exchangeable, so back-to-back events (the La Niña of 2020–23, say) make
+    the test somewhat generous. Where both groups have no spread there is nothing to test and no dot; water fluxes are not
+    dotted where the climatology is below ${isSnow()?'0.05':'0.1'} mm/day, and count fields not where it is below 5% of
+    the field's typical value. The p shown on hover is the box's own t-test.`);
   li.push(`<b>% of climatology</b> divides the difference by the box's climatology, and is left blank where that is too
     small to divide by — below 0.1 mm/day of precipitation (0.05 for snowfall), or below 5% of the field's typical
     (98th percentile) climatology for the count fields.`);
@@ -1544,6 +1738,12 @@ function methodsHtml(){
       global-mean temperatures also match Copernicus's published values to 0.003°C).
       The 0.25° fields are averaged to 1° boxes (trapezoid rule, cos-latitude weighted) and then to the
       <b>2° boxes</b> shown. The period runs to the 2025–26 ENSO year (May 2026).`);
+    li.push(`<b>Reading the temperatures.</b> Over the ocean, the 2 m air temperature anomaly is smaller than the
+      sea-surface temperature anomaly beneath it (roughly 0.7–0.8 times), and the ENSO-year mean also takes in the onset
+      and decay: in Dec–Feb the El Niño composite warms the Niño-3.4 region by about 0.9°C, against about 1.2°C in the
+      SST index for the same years. Two large volcanic eruptions, El Chichón (1982) and Pinatubo (1991), cooled the globe
+      in years that were also El Niño years (1982–83, 1991–92 and 1992–93); this damps the El Niño composite of
+      global-mean temperature slightly (by about 0.015°C over the ENSO year).`);
   } else if(f.src==='tc'){
     li.push(`<b>Tropical cyclone data.</b> NOAA NCEI's IBTrACS v04r01: main and provisional tracks, synoptic 6-hourly
       positions only, the 1-minute <code>USA_WIND</code>, at ≥ 34 kt, leaving out extratropical and disturbance stages —
@@ -1554,7 +1754,10 @@ function methodsHtml(){
       default also keeps extratropical positions. Recent seasons are provisional.`);
     li.push(`<b>Smoothing.</b> The maps (not the panels) use a Gaussian of sigma one box (5°), cut off at two boxes,
       normalised over the boxes present and wrapping in longitude — the same smoother as the TC page — applied to each
-      year's map before the composite is formed, so the colours and the dots describe the same field.`);
+      year's map before the composite is formed, so the colours and the dots describe the same field. The smoother
+      does not know about land: across Central America it blurs the Atlantic and eastern Pacific into each other, so a
+      strong Atlantic signal can spill a box or two into the Pacific off Mexico (and back). Turn smoothing off to check
+      a coastal box.`);
   } else {
     li.push(`<b>U.S. severe weather data.</b> The same 2° hazard-day grid as
       <a href="../scs/trends/scstrend_grid.html">the 2° climatology page</a>, from NOAA/NCEI Storm Events: for each box,
@@ -1627,6 +1830,7 @@ function readHash(){
   const mq=p.get('m');
   if(mq && AVGS.some(a=>a.k===mq&&a.k!=='mon')) S.av=mq;
   else if(mq && MSEQ.includes(+mq)){ S.av='mon'; S.mi=MSEQ.indexOf(+mq); }
+  else if(F().src==='scs'){ S.av='djf'; AUTOAV=true; }   // a bare U.S. link opens on Dec-Feb
   if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){ S.y0=a; S.y1=b; } }
   if(p.get('dt')==='off') S.dt='off';
   if(p.get('pc')==='pct') S.pc='pct';
@@ -1660,7 +1864,8 @@ function exportPNG(){
 let PLAY=null;
 function stopPlay(){ if(PLAY){ clearTimeout(PLAY); PLAY=null;
   document.getElementById('mPlay').innerHTML='&#9654;&#xFE0E; Play'; } }
-async function setMonth(mi){ S.av='mon'; S.mi=(mi+NM)%NM; document.getElementById('mRange').value=S.mi; await refresh(); }
+let AUTOAV=false;
+async function setMonth(mi){ S.av='mon'; AUTOAV=false; S.mi=(mi+NM)%NM; document.getElementById('mRange').value=S.mi; await refresh(); }
 function wire(){
   const fs=document.getElementById('fldSel');
   let grp=null, og=null;
@@ -1668,7 +1873,12 @@ function wire(){
     const o=document.createElement('option'); o.value=f.k; o.textContent=f.label; og.appendChild(o); });
   fs.value=S.f;
   fs.onchange=e=>{ const prev=F().src; S.f=e.target.value;
-    if(F().src!==prev){ S.y0=S.y1=null; S.thr=0; }   // each source has its own default period
+    if(F().src!==prev){ S.y0=S.y1=null; S.thr=0;      // each source has its own default period
+      /* U.S. fields open on Dec-Feb, where the ENSO links are best established; the
+         ENSO-year total is dominated by summer, where they are weakest. Only the
+         default is switched, and switched back on leaving: a chosen average stays. */
+      if(F().src==='scs'&&S.av==='yr'){ S.av='djf'; AUTOAV=true; }
+      else if(prev==='scs'&&AUTOAV&&S.av==='djf'){ S.av='yr'; AUTOAV=false; } }
     stopPlay(); refresh(); };
   document.getElementById('thrSel').onchange=e=>{ S.thr=+e.target.value; refresh(); };
   document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{ S.ph=b.dataset.ph; refresh(); });
@@ -1690,7 +1900,7 @@ function wire(){
     navigator.clipboard.writeText(location.href).then(()=>{ const s=this.textContent; this.textContent='Copied';
       setTimeout(()=>this.textContent=s,1200); }).catch(()=>{}); };
   /* averaging: ENSO year, a season, or a single month */
-  document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ stopPlay(); S.av=b.dataset.av; refresh(); });
+  document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ stopPlay(); S.av=b.dataset.av; AUTOAV=false; refresh(); });
   /* month strip */
   const tk=document.getElementById('mTicks');
   MSEQ.forEach((m,i)=>{ const s=document.createElement('span');
@@ -1731,6 +1941,12 @@ async function init(){
   document.getElementById('body').style.display='';
   mapA=makeMap('mapClim',true); mapB=makeMap('mapDiff',false);
   linkMaps(mapA,mapB);
+  /* Leaflet re-measures its maps on a window resize only; a map whose box changes
+     size for any other reason (a scrollbar appearing, the guidance text reflowing)
+     would keep painting tiles for its old size. */
+  if('ResizeObserver' in window){
+    const ro=new ResizeObserver(()=>{ mapA.invalidateSize({pan:false}); mapB.invalidateSize({pan:false}); });
+    ro.observe(document.getElementById('mapClim')); ro.observe(document.getElementById('mapDiff')); }
   wireHover(mapA,'tipA'); wireHover(mapB,'tipB');
   addRefLayers();
   /* state / province lines worldwide, fetched once the maps are up */

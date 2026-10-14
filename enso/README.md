@@ -10,7 +10,7 @@ the lower map answers a different question: not "how has this changed" but "how 
 1. **Climatology map** — the chosen average over every ENSO year of the period: the **whole ENSO
    year (default)**, a season (Jun–Aug, Sep–Nov, Dec–Feb, Mar–May) or a single month.
 2. **Difference map** — El Niño minus climatology, La Niña minus climatology, or El Niño − La Niña
-   (segmented control), dotted where p < 0.05.
+   (segmented control), dots on significant patches (cluster permutation test, below).
 3. **Averaging strip** — ENSO year / four seasons / Month; in Month mode a slider June (year 0) →
    May (year +1) with step + Play.
 4. **RONI panel** — every season since 1950, period shaded, one marker per ENSO year on its DJF
@@ -62,8 +62,20 @@ check this page too.**
 - **Tests**: Welch's t, phase years vs **all other years** (EN−LN: EN vs LN). The first version
   used a one-sample t-test of the phase anomalies vs 0, which breaks for rare events: an all-zero
   El Niño group has residuals equal to the trend line, ~0 variance and p ≈ 0 — 25 of 25 dots on
-  July derechos were that artefact. No dot where both groups have zero spread. No
-  field-significance correction; the guidance box says so.
+  July derechos were that artefact. No dot where both groups have zero spread.
+- **Dots (Oct 2026)**: cluster-based permutation test (Maris & Oostenveld 2007), `clusterTest` in
+  the page. Boxes at p < 0.05 (Welch t vs the two-sided 5% point of its Welch df) join same-sign
+  8-neighbours (longitude-wrapping on global grids) into patches; patch mass = Σ|t|·cos(lat). The
+  phase labels are shuffled 500× (EN−LN: within EN∪LN years; EN or LN: across all years), seeded
+  from the state string; residuals are detrended once, before shuffling. A patch is dotted if
+  < 5% of shuffles produced a heavier patch anywhere on the map (family-wise 5% for any spurious
+  patch). It runs on the displayed field, smoothed when smoothing is on, so the shuffles share the
+  smoothing. Cost: ~1.5 s for an ERA5 map, ~0.1–0.4 s for TC/U.S.; the map draws at once and the
+  dots follow. It is strict: U.S. 2° maps rarely pass (e.g. Dec–Feb tornado EN−LN: 15 boxes at
+  p < 0.05, no significant patch), while ERA5/TC keep the main teleconnections. The hover p is
+  still the box's own test.
+- **U.S. default average**: Dec–Feb (switching to a U.S. field from the ENSO-year default, or a
+  bare `#f=hail` link); a chosen average is kept, and the switch is undone on leaving.
 - **Count fields**: a box below 2% of the field's 98th-percentile monthly climatology is blank; below
   5% it is drawn but not dotted (a t-test on an almost-all-zero series calls a fraction of a
   storm-day "significant"). `% of climatology` is blanked below 5% (counts) / 0.1 mm/day (precip)
