@@ -80,7 +80,7 @@
             border-radius:10px;padding:10px 16px 8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   #monthbar .mlab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
   #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
-  #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext,#monthbar.avg #mPlay{opacity:.35}
+  #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext{opacity:.35}
   #monthbar .btn:disabled{cursor:not-allowed}
   .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc]{background:var(--accent2);color:#111;font-weight:650}
   .srctag{color:var(--text);opacity:.85}
@@ -239,7 +239,6 @@
       <div class="mticks" id="mTicks"></div>
     </div>
     <button class="btn" id="mNext" title="Next month" aria-label="Next month">&#9654;</button>
-    <button class="btn" id="mPlay" title="Step through June to May (single months)">&#9654;&#xFE0E; Play</button>
   </div>
   <div id="msg">Loading&hellip;</div>
   <div id="body" style="display:none">
@@ -1423,7 +1422,7 @@ function activeMask(s,climRef){
   }
 }
 /* In single-month mode, fetch the next and previous months quietly so stepping
-   and Play do not stall. Only those two: prefetching all twelve (~12 MB) starved a
+   does not stall. Only those two: prefetching all twelve (~12 MB) starved a
    slow connection, so a field change could sit for ten seconds behind it. */
 function prefetch(){
   if(S.av!=='mon') return;
@@ -1502,7 +1501,7 @@ function writeTitles(domD){
   document.querySelectorAll('#avSeg button').forEach(bt=>{ const on=bt.dataset.av===S.av;
     bt.classList.toggle('on',on); bt.setAttribute('aria-pressed',on); });
   document.getElementById('monthbar').classList.toggle('avg',S.av!=='mon');
-  ['mRange','mPrev','mNext','mPlay'].forEach(id=>document.getElementById(id).disabled=S.av!=='mon');
+  ['mRange','mPrev','mNext'].forEach(id=>document.getElementById(id).disabled=S.av!=='mon');
 }
 /* where the numbers come from, on both map headers */
 function srcTag(){
@@ -1997,9 +1996,7 @@ function exportPNG(){
   img.onerror=()=>{ URL.revokeObjectURL(url); alert('PNG export failed.'); };
   img.src=url;
 }
-let PLAY=null;
-function stopPlay(){ if(PLAY){ clearTimeout(PLAY); PLAY=null;
-  document.getElementById('mPlay').innerHTML='&#9654;&#xFE0E; Play'; } }
+
 let AUTOAV=false;
 async function setMonth(mi){ S.av='mon'; AUTOAV=false; S.mi=(mi+NM)%NM; document.getElementById('mRange').value=S.mi; await refresh(); }
 function wire(){
@@ -2016,7 +2013,7 @@ function wire(){
          default is switched, and switched back on leaving: a chosen average stays. */
       if(F().src==='scs'&&S.av==='yr'){ S.av='djf'; AUTOAV=true; }
       else if(prev==='scs'&&AUTOAV&&S.av==='djf'){ S.av='yr'; AUTOAV=false; } }
-    stopPlay(); refresh(); };
+    refresh(); };
   document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{
     if(b.dataset.ph==='clim') S.mode='clim'; else { S.mode='diff'; S.ph=b.dataset.ph; }
     refresh(); });
@@ -2043,22 +2040,16 @@ function wire(){
     navigator.clipboard.writeText(location.href).then(()=>{ const s=this.textContent; this.textContent='Copied';
       setTimeout(()=>this.textContent=s,1200); }).catch(()=>{}); };
   /* averaging: ENSO year, a season, or a single month */
-  document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ stopPlay(); S.av=b.dataset.av; AUTOAV=false; refresh(); });
+  document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ S.av=b.dataset.av; AUTOAV=false; refresh(); });
   /* month strip */
   const tk=document.getElementById('mTicks');
   MSEQ.forEach((m,i)=>{ const s=document.createElement('span');
     s.innerHTML=`${MONTHS[m-1]}<span class="yr">${m>=6?'(0)':'(+1)'}</span>`;
-    s.onclick=()=>{ stopPlay(); setMonth(i); }; tk.appendChild(s); });
+    s.onclick=()=>{ setMonth(i); }; tk.appendChild(s); });
   const rg=document.getElementById('mRange');
-  rg.oninput=e=>{ stopPlay(); setMonth(+e.target.value); };
-  document.getElementById('mPrev').onclick=()=>{ stopPlay(); setMonth(S.mi-1); };
-  document.getElementById('mNext').onclick=()=>{ stopPlay(); setMonth(S.mi+1); };
-  document.getElementById('mPlay').onclick=function(){
-    if(PLAY){ stopPlay(); return; }
-    this.textContent='❚❚ Pause';
-    const step=async()=>{ await setMonth(S.mi+1); if(PLAY) PLAY=setTimeout(step,1300); };
-    PLAY=setTimeout(step,10);
-  };
+  rg.oninput=e=>{ setMonth(+e.target.value); };
+  document.getElementById('mPrev').onclick=()=>{ setMonth(S.mi-1); };
+  document.getElementById('mNext').onclick=()=>{ setMonth(S.mi+1); };
 }
 function applyTheme(){
   document.documentElement.dataset.theme=S.theme;

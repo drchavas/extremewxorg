@@ -17,7 +17,7 @@ map header and hidden for Climatology. Hash: `ph=en|ln|enln|clim`.
 2. **El Niño / La Niña** (default El Niño) — minus climatology, or El Niño − La Niña; dots on
    significant patches (cluster permutation test, below).
 3. **Averaging strip** — ENSO year / four seasons / Month; in Month mode a slider June (year 0) →
-   May (year +1) with step + Play.
+   May (year +1) with step buttons.
 4. **RONI panel** — every season since 1950, period shaded, one marker per ENSO year on its DJF
    season; the years actually used are filled and labeled with the ENSO year ("1997–1998"). The year lists are also printed in
    the footer as text.
