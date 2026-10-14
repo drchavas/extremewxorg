@@ -57,7 +57,7 @@ scs/                  Severe convective storms (+ other U.S. hazards)
     data/, geo/         pre-generated data + basemaps (served)
     build_*.py, *.js    build/audit scripts (not served)
 climate/              EarthVis: present-day (1996-2025) climate through the year (new 2026-10-14, BETA)
-  earthvis.html         animated ERA5 climatologies + TC / U.S. severe-weather counts, MP4/GIF export (linked from landing)
+  earthvis.html         animated ERA5 climatologies + TC / U.S. severe-weather counts, MP4/GIF export (UNLISTED: no links to it anywhere yet)
   data/                 ERA5 monthly climatologies, 1 deg, one gz file per variable (~16 MB)
   lib/                  vendored gifenc + mp4-muxer (MIT)
   build/                fetch/build scripts (served, unlinked); see climate/README.md
@@ -87,11 +87,6 @@ enso/                 El Nino / La Nina composites (new 2026-10-10, BETA)
 - *Historical Event Viewer* → `scs/trends/scsevents.html`
 - *Historical Trends* → `scs/trends/scstrend.html` (county) and `scs/trends/scstrend_grid.html` (2° grid)
 
-**Climate (present-day climate through the year)**
-- *EarthVis: Climate and Extremes Through the Year* → `climate/earthvis.html` (BETA chip) — animated
-  1996–2025 monthly climatologies of 30 ERA5 fields plus TC and U.S. severe-weather counts, on world,
-  globe or regional maps, with seasonal-cycle panels and MP4/GIF/PNG export. Details: `climate/README.md`.
-
 **Climate Variability (El Niño and La Niña)**
 - *El Niño & La Niña Impacts — global grid* → `enso/ensogrid.html` (BETA chip on the landing page)
   — monthly ENSO composites (Jun–May) of ERA5 T/precip, IBTrACS TC activity and the U.S. 2° Storm
@@ -119,7 +114,7 @@ These stay on the Purdue site only (linked from `web.ics.purdue.edu/~dchavas/ext
   TC Ventilation Explorer, TC Potential Size, TC Potential Intensity Explorer (external, MIT-hosted,
   co-developed with Jonathan Lin, Cornell), Atlantic TC Landfall Risk Explorer, SCS Environmental
   Sounding Explorer, Sounding Plotter.
-- (The old Purdue `earthvis.html` GIF page stays there, now pointing to `climate/earthvis.html` here.)
+- (The old Purdue `earthvis.html` GIF page stays there. `climate/earthvis.html` here is its unlisted successor, not linked from anywhere until Dan is ready.)
 
 If any of these should later move here, copy the page + its data into this repo and add a
 link to `index.html`.

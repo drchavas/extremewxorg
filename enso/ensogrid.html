@@ -128,7 +128,18 @@
   .maphead p{margin:2px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
   .maphead .smtag{color:var(--accent2);font-weight:700}
   .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
-  .lmap{height:470px;background:var(--sea);position:relative}
+  /* one map: as tall as the world is at the map's width (lat 75S-82N over 360 deg
+     of longitude), so the global view has no empty bands above or below */
+  .lmap{height:auto;aspect-ratio:2.3/1;min-height:360px;max-height:640px;background:var(--sea);position:relative}
+  .mainbar{gap:14px 22px}
+  .mainbar .fld label{font-size:11px}
+  .seg.big button{font-size:14px;padding:7px 15px}
+  .seg button.on[data-ph="clim"]{background:var(--accent2);color:#111;font-weight:650}
+  #enlnBtn{display:none} body.cmp #enlnBtn{display:inline-block}
+  select.big{font-size:14px;padding:7px 9px;width:min(420px,100%)}
+  .mainbar .fld{max-width:100%}
+  .advanced .advbar{padding:2px 0 4px}
+  #maps .mapcol .maphead.hastog .mhtext h2{font-size:15.5px}
   .lmap .leaflet-container{background:var(--sea)}
   .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
         border:1px solid var(--line);border-radius:8px;padding:8px 9px 6px;
@@ -177,7 +188,8 @@
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
   .alertbar b{color:#fff}
-  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} .lmap{height:300px}
+  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} .lmap{min-height:380px}
+    .mainbar .fld:last-child{width:100%}
                             #monthbar .mnow{min-width:0} }
   /* overlap the canvas tiles by a pixel: at fractional zoom the browser
      otherwise leaves a hairline seam between them */
@@ -193,26 +205,60 @@
 <header>
   <h1>El Ni&ntilde;o and La Ni&ntilde;a: Climatology and Impacts &mdash; global grid</h1>
   <p><a class="home" href="../">&larr; extremewx.org</a> &middot;
-     What a typical year looks like (top map), and how it differs in El Ni&ntilde;o or La Ni&ntilde;a years (bottom map).
-     An <b>ENSO year</b> runs from June of the developing year through May of the next (1997&ndash;1998 = June 1997 &ndash; May 1998),
-     the twelve months over which an event usually grows, peaks and decays. Choose the <b>whole year, a season, or a single month</b>
-     with the bar above the maps.
-     <b>Drag or zoom either map and both follow; click a box</b> to see every year's value there below.
-     The years in each composite come from NOAA's Relative Oce&shy;anic Ni&ntilde;o Index, plotted at the bottom with
-     every El Ni&ntilde;o and La Ni&ntilde;a year marked.
+     What happens around the world in El Ni&ntilde;o and La Ni&ntilde;a years, compared with a normal year.
+     Pick <b>El Ni&ntilde;o</b>, <b>La Ni&ntilde;a</b> or the normal <b>Climatology</b>, and a <b>variable</b>; choose the
+     whole year, a season or a single month with the bar above the map. An <b>ENSO year</b> runs from June to May
+     (1997&ndash;1998 = June 1997 &ndash; May 1998), the twelve months over which an event usually grows, peaks and decays.
+     <b>Click a box</b> on the map to see every year's value there, below the map. More options are under
+     <b>Advanced settings</b>.
      Related: <a href="../tc/trends/tctrend.html">TC climatology &amp; trends</a> &middot;
      <a href="../scs/trends/scstrend_grid.html">U.S. severe weather, 2&deg; grid</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
   <div class="hmeta dataupd" id="dataupd">Data last updated 2026-10-11 02:06 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
-  <div class="bar">
-    <div class="fld"><label for="fldSel">Field</label><select id="fldSel"></select></div>
-    <div class="fld" id="thrBox"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
-    <div class="fld"><label>Phase</label>
-      <div class="seg" id="phSeg">
-        <button data-ph="en" title="El Niño years minus all years">El Ni&ntilde;o</button><button data-ph="ln" title="La Niña years minus all years">La Ni&ntilde;a</button><button data-ph="enln" title="El Niño composite minus La Niña composite">El Ni&ntilde;o &minus; La Ni&ntilde;a</button>
+  <div class="bar mainbar">
+    <div class="fld"><label>Show</label>
+      <div class="seg big" id="phSeg" role="group" aria-label="Show">
+        <button data-ph="en" title="El Niño years compared with all years">El Ni&ntilde;o</button><button data-ph="ln" title="La Niña years compared with all years">La Ni&ntilde;a</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button><button data-ph="enln" id="enlnBtn" title="El Niño years compared directly with La Niña years (Advanced settings)">El Ni&ntilde;o &minus; La Ni&ntilde;a</button>
       </div></div>
+    <div class="fld"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
+  </div>
+</header>
+
+<div id="wrap">
+  <div id="monthbar">
+    <div><div class="mlab">Average over</div>
+      <div class="seg" id="avSeg" role="group" aria-label="Average over">
+        <button data-av="yr" title="The whole ENSO year, June (year 0) to May (year +1)">ENSO year</button><button data-av="jja" title="June–August of year 0">Jun–Aug</button><button data-av="son" title="September–November of year 0">Sep–Nov</button><button data-av="djf" title="December (year 0) – February (year +1)">Dec–Feb</button><button data-av="mam" title="March–May of year +1">Mar–May</button><button data-av="mon" title="One month at a time, with the slider">Month</button>
+      </div></div>
+    <div><div class="mlab">Showing</div><div class="mnow" id="mNow">&nbsp;</div></div>
+    <button class="btn" id="mPrev" title="Previous month" aria-label="Previous month">&#9664;</button>
+    <div class="mtrack">
+      <input type="range" id="mRange" min="0" max="11" step="1" value="6" aria-label="Month">
+      <div class="mticks" id="mTicks"></div>
+    </div>
+    <button class="btn" id="mNext" title="Next month" aria-label="Next month">&#9654;</button>
+    <button class="btn" id="mPlay" title="Step through June to May (single months)">&#9654;&#xFE0E; Play</button>
+  </div>
+  <div id="msg">Loading&hellip;</div>
+  <div id="body" style="display:none">
+    <div id="maps">
+      <div class="mapcol">
+        <div class="maphead hastog"><div class="mhtext"><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p>
+          <p class="warn" id="mapWarn"></p></div>
+          <div class="pcwrap" id="pcWrap"><span class="pclab">Show as</span>
+          <div class="seg" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
+            <button data-pc="pct">% change</button><button data-pc="abs">Absolute</button></div></div></div>
+        <div class="lmap" id="mapMain"><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
+          <div class="hint">drag &middot; scroll to zoom &middot; click a box to select it</div></div>
+      </div>
+    </div>
+    <details class="methods advanced" id="advanced">
+      <summary>Advanced settings</summary>
+      <div class="body">
+  <div class="bar advbar">
+    <div class="fld"><label>&nbsp;</label><label class="chk" title="Show El Niño years minus La Niña years, instead of either one minus all years"><input type="checkbox" id="cmpChk"> Compare El Ni&ntilde;o with La Ni&ntilde;a directly</label></div>
     <div class="fld" title="An ENSO year is El Niño (La Niña) when its Dec–Feb RONI is at or beyond this value, within an episode of at least five consecutive overlapping seasons beyond ±0.5 °C.">
       <label for="strSel">Strength (RONI)</label>
       <select id="strSel"><option value="0.5">&ge; 0.5&deg;C (all events)</option>
@@ -236,42 +282,9 @@
     <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn" title="Export the lower panels">PNG</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
   </div>
-</header>
-
-<div id="wrap">
-  <div id="monthbar">
-    <div><div class="mlab">Average over</div>
-      <div class="seg" id="avSeg" role="group" aria-label="Average over">
-        <button data-av="yr" title="The whole ENSO year, June (year 0) to May (year +1)">ENSO year</button><button data-av="jja" title="June–August of year 0">Jun–Aug</button><button data-av="son" title="September–November of year 0">Sep–Nov</button><button data-av="djf" title="December (year 0) – February (year +1)">Dec–Feb</button><button data-av="mam" title="March–May of year +1">Mar–May</button><button data-av="mon" title="One month at a time, with the slider">Month</button>
-      </div></div>
-    <div><div class="mlab">Showing</div><div class="mnow" id="mNow">&nbsp;</div></div>
-    <button class="btn" id="mPrev" title="Previous month" aria-label="Previous month">&#9664;</button>
-    <div class="mtrack">
-      <input type="range" id="mRange" min="0" max="11" step="1" value="6" aria-label="Month">
-      <div class="mticks" id="mTicks"></div>
-    </div>
-    <button class="btn" id="mNext" title="Next month" aria-label="Next month">&#9654;</button>
-    <button class="btn" id="mPlay" title="Step through June to May (single months)">&#9654;&#xFE0E; Play</button>
-  </div>
-  <div id="msg">Loading&hellip;</div>
-  <div id="body" style="display:none">
-    <div id="maps">
-      <div class="mapcol">
-        <div class="maphead"><h2 id="climTitle">Climatology</h2><p id="climSub">&nbsp;</p></div>
-        <div class="lmap" id="mapClim"><div class="cbar" id="cbClim"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
-          <div class="hint">drag &middot; scroll to zoom &middot; click a box to select it</div></div>
       </div>
-      <div class="mapcol">
-        <div class="maphead hastog"><div class="mhtext"><h2 id="diffTitle">Difference</h2><p id="diffSub">&nbsp;</p>
-          <p class="warn" id="diffWarn">&nbsp;</p></div>
-          <div class="pcwrap"><span class="pclab">Show as</span>
-          <div class="seg" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
-            <button data-pc="pct">% change</button><button data-pc="abs">Absolute</button></div></div></div>
-        <div class="lmap" id="mapDiff"><div class="cbar" id="cbDiff"></div><div class="tip" id="tipB"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
-          <div class="hint">both maps share one view</div></div>
-      </div>
-    </div>
-    <div id="panels"><svg id="card" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </details>
+<svg id="card" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div class="foot" id="foot"></div>
     <details class="methods" id="methods">
       <summary>Methods</summary>
@@ -358,6 +371,22 @@ const FIELDS=[
   {k:'wind', grp:'U.S. severe weather — 2° grid (Storm Events)', label:'Thunderstorm wind', src:'scs', file:'grid_wind.json.gz'},
   {k:'derechoday', grp:'U.S. severe weather — 2° grid (Storm Events)', label:'Derecho', src:'scs', file:'grid_derechoday.json.gz', countword:'event'}
 ];
+/* The variable menu: every field at every intensity, so a choice says exactly
+   what it shows. [field, threshold index, label]. */
+const MENU=[
+  {g:'Global climate (ERA5 reanalysis)', items:[['t2m',0,'Temperature'],['pr',0,'Precipitation'],['sf',0,'Snowfall']]},
+  {g:'Tropical cyclones, worldwide (IBTrACS)', items:[
+    ['tcd',0,'Tropical cyclone days — all storms (≥ 39 mph)'],['tcd',1,'Tropical cyclone days — hurricanes & typhoons (≥ 74 mph)'],
+    ['tcd',2,'Tropical cyclone days — major (≥ 111 mph)'],['tcace',0,'Tropical cyclone energy (ACE)'],
+    ['tcgen',0,'Tropical cyclone formation']]},
+  {g:'U.S. severe weather (NOAA Storm Events)', items:[
+    ['hail',0,'Hail — all reports'],['hail',1,'Hail — ≥ 1 inch'],['hail',2,'Hail — ≥ 2 inches'],['hail',3,'Hail — ≥ 3 inches'],
+    ['tornado',0,'Tornadoes — all (EF0+)'],['tornado',1,'Tornadoes — EF1+'],['tornado',2,'Tornadoes — EF2+'],['tornado',3,'Tornadoes — EF3+'],
+    ['wind',0,'Thunderstorm wind — all reports'],['wind',1,'Thunderstorm wind — ≥ 58 mph'],['wind',2,'Thunderstorm wind — ≥ 75 mph'],
+    ['wind',3,'Thunderstorm wind — ≥ 92 mph'],
+    ['derechoday',0,'Derechos — all'],['derechoday',1,'Derechos — gusts ≥ 74 mph'],['derechoday',2,'Derechos — gusts ≥ 85 mph']]}];
+function menuItem(){ for(const g of MENU) for(const it of g.items) if(it[0]===S.f&&it[1]===S.thr) return it;
+  for(const g of MENU) for(const it of g.items) if(it[0]===S.f) return it; return MENU[0].items[0]; }
 const SCS_BASE='../scs/trends/';
 function F(){ return FIELDS.find(f=>f.k===S.f)||FIELDS[0]; }
 function isCount(){ return F().src!=='era5'; }
@@ -495,7 +524,7 @@ function classify(thr){
    need: for a slider month, a dense (ENSO year x box) matrix of values, NaN
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
-const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
+const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
          sm:'on',sig:1,pt:null,theme:'dark'};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
@@ -1154,7 +1183,7 @@ function shiftLines(gj,dx){
     coordinates:splitJumps(lines).map(l=>l.map(c=>[c[0]+dx,c[1]]))}};
 }
 function addRefLayers(){
-  [[mapA,refA],[mapB,refB]].forEach(([m,ref])=>{
+  [[mapA,refA]].forEach(([m,ref])=>{
     ref.forEach(l=>m.removeLayer(l)); ref.length=0;
     const t=T();
     const coast=topojson.mesh(WORLD,WORLD.objects.land);
@@ -1174,7 +1203,7 @@ function addRefLayers(){
    otherwise be a tangle, and come up to full strength once zoomed in */
 function a1Opacity(m){ return m.getZoom()<1.75 ? 0.5 : 1; }
 function a1Zoom(){
-  [[mapA,refA],[mapB,refB]].forEach(([m,ref])=>ref.forEach(l=>{ if(l._a1) l.setStyle({opacity:a1Opacity(m)}); }));
+  refA.forEach(l=>{ if(l._a1) l.setStyle({opacity:a1Opacity(mapA)}); });
 }
 function fullView(){
   const f=F();
@@ -1185,19 +1214,16 @@ function fullView(){
   if(f.src==='scs') mapA.fitBounds([[24,-126],[50,-66]],{padding:[8,8],animate:false});
   else if(f.src==='tc') mapA.fitBounds([[-50,25],[55,385]],{padding:[4,4],animate:false});
   else mapA.fitBounds([[-75,20],[82,380]],{padding:[0,0],animate:false});
-  mapB.setView(mapA.getCenter(),mapA.getZoom(),{animate:false});
   syncing=false;
 }
 function drawSelection(){
   const t=T();
-  [[mapA,selA],[mapB,selB]].forEach(([m,arr])=>{ arr.forEach(l=>m.removeLayer(l)); arr.length=0; });
+  selA.forEach(l=>mapA.removeLayer(l)); selA.length=0;
   const c=selCell(); if(c<0) return;
   const g=DS.grid, la=DS.lat[c]-g.g/2, lo=DS.lon[c]-g.g/2;
   const shifts = g.global?[-360,0,360]:[0];
-  [[mapA,selA],[mapB,selB]].forEach(([m,arr])=>{
-    shifts.forEach(dx=>arr.push(L.rectangle([[la,lo+dx],[la+g.g,lo+g.g+dx]],
-      {interactive:false,color:t.sel,weight:2.6,fill:false}).addTo(m)));
-  });
+  shifts.forEach(dx=>selA.push(L.rectangle([[la,lo+dx],[la+g.g,lo+g.g+dx]],
+    {interactive:false,color:t.sel,weight:2.6,fill:false}).addTo(mapA)));
 }
 function drawColorbar(el,dom,title,isDiff){
   const grad='linear-gradient(to top,'+dom.st.join(',')+')';
@@ -1302,8 +1328,8 @@ function runSig(st,sk){
     if(!res) res={sig:new Uint8Array(DS.NC),nPatch:0,nSig:0};
     SIGCACHE.set(sk,res); if(SIGCACHE.size>40) SIGCACHE.delete(SIGCACHE.keys().next().value);
     if(CURSK!==sk) return;
-    SIGNOW=res; REND.B.sig=sigMask(res); layB.redraw();
-    document.querySelectorAll('#cbDiff .zchip span').forEach(e=>e.textContent=sigChipText());
+    SIGNOW=res; REND.D.sig=sigMask(res); if(S.mode!=='clim') layA.redraw();
+    document.querySelectorAll('#cbMain .zchip span').forEach(e=>e.textContent=sigChipText());
   }).catch(err=>console.error(err)).finally(()=>SIGRUN.delete(sk));
   SIGRUN.set(sk,job);
 }
@@ -1362,17 +1388,18 @@ async function refresh(){
   if(!domD){   // ERA5 temperature as % is not offered; guard anyway
     domD={lo:-50,hi:50,st:CMAP.div};
   }
-  REND.A={grid:DS.grid,rgba:rgbaFor(climDisp,CURDOM.clim),sig:null};
+  /* one map: it shows the climatology or the composite difference */
+  REND.C={grid:DS.grid,rgba:rgbaFor(climDisp,CURDOM.clim),sig:null};
   /* dots come from the patch test, which takes up to a second or two on the ERA5
      grid: draw the map at once, and add the dots when the test is done */
   const sk=statKey()+'|'+tk;
   CURSK=sk;
-  SIGNOW = (S.sig && need>=2) ? (SIGCACHE.get(sk)||'pending') : null;
-  REND.B={grid:DS.grid,rgba:rgbaFor(st.disp,domD),sig:(SIGNOW&&SIGNOW!=='pending')?sigMask(SIGNOW):null};
+  SIGNOW = (S.sig && need>=2 && S.mode!=='clim') ? (SIGCACHE.get(sk)||'pending') : null;
+  REND.D={grid:DS.grid,rgba:rgbaFor(st.disp,domD),sig:(SIGNOW&&SIGNOW!=='pending')?sigMask(SIGNOW):null};
+  REND.A=new Proxy({},{get:(o,k)=>(S.mode==='clim'?REND.C:REND.D)[k]});
   if(!layA){
     layA=new FieldLayer({which:'A',className:'fieldlayer',tileSize:256,updateWhenZooming:false,keepBuffer:4}).addTo(mapA);
-    layB=new FieldLayer({which:'B',className:'fieldlayer',tileSize:256,updateWhenZooming:false,keepBuffer:4}).addTo(mapB);
-  } else { layA.redraw(); layB.redraw(); }
+  } else layA.redraw();
   if(VIEWSCOPE!==(DS.f.src==='scs')){ VIEWSCOPE=(DS.f.src==='scs'); fullView(); }
   drawSelection();
   writeTitles(domD);
@@ -1432,31 +1459,35 @@ function writeTitles(domD){
   const per = f.src==='era5' ? (isTemp()?'Mean 2 m temperature':isSnow()?'Mean snowfall rate (water equivalent)':'Mean precipitation rate')
             : `${qtyWord()[0].toUpperCase()+qtyWord().slice(1)} per ${grid}`;
   const when = S.av==='mon' ? `${MFULL[MSEQ[S.mi]-1]} of` : S.av==='yr' ? 'averaged over' : `${AV().label} of`;
-  document.getElementById('climTitle').textContent=`Climatology · ${tkLong()}`;
-  document.getElementById('climSub').innerHTML=
-    esc(`${per}, ${when} all ${win.length} years, ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} (${unitP})`)+srcTag()+smTag();
+  const range=`${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)}`;
   const phs=S.ph==='en'?`<span class="ph-en">El Niño</span> minus climatology`
           :S.ph==='ln'?`<span class="ph-ln">La Niña</span> minus climatology`
           :`<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>`;
-  document.getElementById('diffTitle').innerHTML=`${phs} · ${esc(tkLong())}`;
   const nTxt=S.ph==='en'?`${nE} El Niño years`:S.ph==='ln'?`${nL} La Niña years`
             :`${nE} El Niño and ${nL} La Niña years`;
-  document.getElementById('diffSub').innerHTML=esc(
-    `${per} · ${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} · `+
-    (pctOn()?'% change from climatology':unitAbs())+` · `+
-    (S.dt==='on'?'linear trend removed':'trend kept')+
-    (S.sig?' · dots: significant patches':''))+srcTag()+smTag();
-  writeBubbles();
-  const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
-  drawColorbar(document.getElementById('cbClim'),CURDOM.clim,climCap,false);
-  drawColorbar(document.getElementById('cbDiff'),domD,pctOn()?'% change':unitAbs(),true);
-  /* name the empty case instead of drawing a blank map */
-  const warn=document.getElementById('diffWarn');
   const need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
   const short=S.ph==='en'?'El Niño':S.ph==='ln'?'La Niña':(nE<=nL?'El Niño':'La Niña');
-  warn.textContent = need<2
-    ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
-    : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years: read coherent, dotted patterns, not the value in any single box.`;
+  const title=document.getElementById('mapTitle'), sub=document.getElementById('mapSub'),
+        warn=document.getElementById('mapWarn');
+  if(S.mode==='clim'){
+    title.textContent=`Climatology · ${tkLong()}`;
+    sub.innerHTML=esc(`${per}, ${when} all ${win.length} years, ${range} (${unitP})`)+srcTag()+smTag();
+    warn.textContent='';
+    const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
+    drawColorbar(document.getElementById('cbMain'),CURDOM.clim,climCap,false);
+  } else {
+    title.innerHTML=`${phs} · ${esc(tkLong())}`;
+    sub.innerHTML=esc(`${per} · ${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${range} · `+
+      (pctOn()?'% change from climatology':unitAbs())+` · `+
+      (S.dt==='on'?'linear trend removed':'trend kept')+
+      (S.sig?' · dots: significant patches':''))+srcTag()+smTag();
+    /* name the empty case instead of drawing a blank map */
+    warn.textContent = need<2
+      ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
+      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years: read coherent, dotted patterns, not the value in any single box.`;
+    drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':unitAbs(),true);
+  }
+  writeBubbles();
   /* derechos: the archive has no events outside April-August, so a cool season is
      empty by construction; say so on the maps instead of drawing a blank */
   const empty = f.k==='derechoday' && CUR && !CUR.clim.some(v=>isFinite(v)&&v>0);
@@ -1504,10 +1535,9 @@ function writeBubbles(){
   const ph = S.ph==='en'?'<span class="ph-en">El Niño</span> minus climatology'
            : S.ph==='ln'?'<span class="ph-ln">La Niña</span> minus climatology'
            : '<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>';
-  const v=`<div class="bv">${esc(varName())}</div>`;
-  const a=document.getElementById('mapClimBubble'), b=document.getElementById('mapDiffBubble');
-  if(a) a.innerHTML=v+`<div class="bs">Climatology · ${esc(when)}</div>`;
-  if(b) b.innerHTML=v+`<div class="bs">${ph} · ${esc(when)}${pctOn()?' · % change':''}</div>`;
+  const v=`<div class="bv">${esc(menuItem()[2])}</div>`, a=document.getElementById('mapMainBubble');
+  if(a) a.innerHTML=v+(S.mode==='clim' ? `<div class="bs">Climatology · ${esc(when)}</div>`
+                                        : `<div class="bs">${ph} · ${esc(when)}${pctOn()?' · % change':''}</div>`);
 }
 function smTag(){
   if(!isCount()) return '';
@@ -1668,7 +1698,7 @@ function boxPanel(x,y,w,h,bs){
   }
   o+=`<line x1="${L}" y1="${TOP}" x2="${L}" y2="${BOT}" stroke="${t.axis}"/>`;
   o+=`<text x="${x+20}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+20} ${(TOP+BOT)/2})" font-family="${FF}" font-size="12" fill="${t.mute}" text-anchor="middle">${xesc('Departure ('+unit+')')}</text>`;
-  o+=txt((L+R)/2,BOT+35,`ENSO year (June – May)${mon?`, ${MONTHS[m-1]} of ${m>=6?'that year':'the following year'}`:''} · click a box on either map to change place, click it again for the ${aggLabel()}`,{size:11,fill:t.mute,anchor:'middle'});
+  o+=txt((L+R)/2,BOT+35,`ENSO year (June – May)${mon?`, ${MONTHS[m-1]} of ${m>=6?'that year':'the following year'}`:''} · click a box on the map to change place, click it again for the ${aggLabel()}`,{size:11,fill:t.mute,anchor:'middle'});
   return o+'</g>';
 }
 async function drawPanels(){
@@ -1711,8 +1741,8 @@ window.addEventListener('resize',()=>{
 /* ------------------------------------------------------- guidance text */
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
-  const common=' The difference map is a <b>composite</b> — the average over a dozen or so years — so it '+
-    'describes what El Niño or La Niña <i>tends</i> to do; any single event can look quite different. '+
+  const common=' The El Niño and La Niña maps are <b>composites</b> — the average over a dozen or so years — so they '+
+    'describe what El Niño or La Niña <i>tends</i> to do; any single event can look quite different. '+
     'Dots mark <b>significant patches</b>: neighboring boxes that each pass a t-test (p&nbsp;&lt;&nbsp;0.05) and that '+
     'together are stronger than the strongest patch chance produces anywhere on the map in 95% of 500 reshufflings '+
     'of the El Niño and La Niña labels across the years. A broad region of boxes that each only just pass can be '+
@@ -1780,8 +1810,8 @@ function methodsHtml(){
     are the <b>developing season</b>: they show an event as it builds and are weaker than Dec–Feb. Mar–May is the
     <b>decaying season</b>, and a spring can also see the next event begin (Mar–May 2023 ended a La Niña while El Niño
     was forming); it is counted with the winter before it.`);
-  li.push(`<b>Climatology map.</b> The mean of the chosen month, season or year over every ENSO year of the period — all years, whatever their phase.`);
-  li.push(`<b>Difference map.</b> For each box, every year's value is first turned into an anomaly: its departure from
+  li.push(`<b>Climatology.</b> The mean of the chosen month, season or year over every ENSO year of the period — all years, whatever their phase.`);
+  li.push(`<b>El Niño and La Niña maps.</b> For each box, every year's value is first turned into an anomaly: its departure from
     the least-squares line through the period (<i>Trend: removed</i>, the default) or from the period mean
     (<i>Trend: kept</i>). The El Niño (La Niña) map is the mean anomaly over the El Niño (La Niña) years, i.e. how those
     years differ from a typical year; <i>El Niño − La Niña</i> is the difference of the two. Removing the trend matters:
@@ -1868,12 +1898,6 @@ function methodsHtml(){
 /* ------------------------------------------------------------ controls */
 function syncControls(){
   const f=F();
-  const thr=document.getElementById('thrSel'), tb=document.getElementById('thrBox');
-  const ths=f.thresholds;
-  if(ths){
-    thr.innerHTML=''; ths.forEach((t,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=t.label; thr.appendChild(o); });
-    S.thr=Math.min(S.thr,ths.length-1); thr.value=S.thr; thr.disabled=false; tb.classList.remove('off');
-  } else { thr.innerHTML='<option>—</option>'; thr.disabled=true; tb.classList.add('off'); }
   const tog=(id,on)=>{ const b=document.getElementById(id); b.classList.toggle('off',!on);
     b.querySelectorAll('select,input').forEach(e=>e.disabled=!on); };
   tog('unBox',isTemp()); tog('smBox',isCount());
@@ -1889,7 +1913,14 @@ function syncControls(){
   document.getElementById('smSel').value=S.sm; document.getElementById('dtSel').value=S.dt;
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
-  document.querySelectorAll('#phSeg button').forEach(b=>b.classList.toggle('on',b.dataset.ph===S.ph));
+  /* Show: El Nino / La Nina / Climatology; El Nino - La Nina appears only when the
+     Advanced "compare" box is ticked */
+  const shown=S.mode==='clim'?'clim':S.ph;
+  document.querySelectorAll('#phSeg button').forEach(b=>{ b.classList.toggle('on',b.dataset.ph===shown);
+    b.setAttribute('aria-pressed',b.dataset.ph===shown); });
+  document.body.classList.toggle('cmp',S.ph==='enln');
+  document.getElementById('cmpChk').checked=S.ph==='enln';
+  document.getElementById('pcWrap').style.visibility=S.mode==='clim'?'hidden':'';
   /* period buttons, labeled with the years they give for this field */
   document.querySelectorAll('#perSeg button').forEach(b=>{ const on=b.dataset.per===S.per;
     const a=Math.max(PERIOD_START[b.dataset.per],DS.ey0);
@@ -1898,14 +1929,13 @@ function syncControls(){
   document.body.classList.toggle('custom-period',S.per==='custom');
   const [a,b]=yearsSel(), i0=document.getElementById('y0In'), i1=document.getElementById('y1In');
   i0.min=i1.min=DS.ey0; i0.max=i1.max=DS.ey1; i0.value=a; i1.value=b;
-  document.getElementById('fldSel').value=S.f;
+  document.getElementById('fldSel').value=S.f+':'+menuItem()[1];
   document.getElementById('mRange').value=S.mi;
-  document.querySelectorAll('#phSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ph===S.ph));
 }
 function writeHash(){
   const p=new URLSearchParams();
-  p.set('f',S.f); if(F().thresholds) p.set('t',S.thr);
-  p.set('ph',S.ph); p.set('s',S.str); p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
+  p.set('f',S.f); if(S.thr) p.set('t',S.thr);
+  p.set('ph',S.mode==='clim'?'clim':S.ph); p.set('s',S.str); p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
   if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
   else if(S.per!==defaultPer()) p.set('p',S.per);
   if(S.dt!=='on') p.set('dt',S.dt);
@@ -1923,7 +1953,9 @@ function readHash(){
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
   if(p.get('t')) S.thr=Math.max(0,+p.get('t')||0);
-  if(['en','ln','enln'].includes(p.get('ph'))) S.ph=p.get('ph');
+  S.thr=menuItem()[1];                                  // only menu combinations exist
+  if(['en','ln','enln'].includes(p.get('ph'))){ S.ph=p.get('ph'); S.mode='diff'; }
+  else if(p.get('ph')==='clim') S.mode='clim';
   if(['0.5','1','1.5'].includes(p.get('s'))) S.str=+p.get('s');
   const mq=p.get('m');
   if(mq && AVGS.some(a=>a.k===mq&&a.k!=='mon')) S.av=mq;
@@ -1972,12 +2004,11 @@ let AUTOAV=false;
 async function setMonth(mi){ S.av='mon'; AUTOAV=false; S.mi=(mi+NM)%NM; document.getElementById('mRange').value=S.mi; await refresh(); }
 function wire(){
   const fs=document.getElementById('fldSel');
-  let grp=null, og=null;
-  FIELDS.forEach(f=>{ if(f.grp!==grp){ grp=f.grp; og=document.createElement('optgroup'); og.label=grp; fs.appendChild(og); }
-    const o=document.createElement('option'); o.value=f.k; o.textContent=f.label; og.appendChild(o); });
-  fs.value=S.f;
-  fs.onchange=e=>{ const prev=F().src; S.f=e.target.value;
-    if(F().src!==prev){ S.thr=0;
+  MENU.forEach(g=>{ const og=document.createElement('optgroup'); og.label=g.g; fs.appendChild(og);
+    g.items.forEach(([k,t,lab])=>{ const o=document.createElement('option'); o.value=k+':'+t; o.textContent=lab; og.appendChild(o); }); });
+  fs.value=S.f+':'+menuItem()[1];
+  fs.onchange=e=>{ const prev=F().src, [k,t]=e.target.value.split(':'); S.f=k; S.thr=+t;
+    if(F().src!==prev){
       /* each source opens on its own default period, unless one was chosen */
       if(S.per===defaultPer(FIELDS.find(x=>x.src===prev))) S.per=defaultPer();
       /* U.S. fields open on Dec-Feb, where the ENSO links are best established; the
@@ -1986,8 +2017,10 @@ function wire(){
       if(F().src==='scs'&&S.av==='yr'){ S.av='djf'; AUTOAV=true; }
       else if(prev==='scs'&&AUTOAV&&S.av==='djf'){ S.av='yr'; AUTOAV=false; } }
     stopPlay(); refresh(); };
-  document.getElementById('thrSel').onchange=e=>{ S.thr=+e.target.value; refresh(); };
-  document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{ S.ph=b.dataset.ph; refresh(); });
+  document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{
+    if(b.dataset.ph==='clim') S.mode='clim'; else { S.mode='diff'; S.ph=b.dataset.ph; }
+    refresh(); });
+  document.getElementById('cmpChk').onchange=e=>{ S.ph=e.target.checked?'enln':'en'; S.mode='diff'; refresh(); };
   document.getElementById('strSel').onchange=e=>{ S.str=+e.target.value; refresh(); };
   document.querySelectorAll('#perSeg button').forEach(b=>b.onclick=()=>{
     /* Custom opens on the range on screen, so nothing changes until a year is edited */
@@ -2050,22 +2083,21 @@ async function init(){
     RONI=roni; WORLD=world;
   } catch(err){ document.getElementById('msg').textContent='Could not load: '+err.message; return; }
   document.getElementById('body').style.display='';
-  mapA=makeMap('mapClim',true); mapB=makeMap('mapDiff',false);
-  linkMaps(mapA,mapB);
+  mapA=makeMap('mapMain',true);
   /* Leaflet re-measures its maps on a window resize only; a map whose box changes
      size for any other reason (a scrollbar appearing, the guidance text reflowing)
      would keep painting tiles for its old size. */
   if('ResizeObserver' in window){
-    const ro=new ResizeObserver(()=>{ mapA.invalidateSize({pan:false}); mapB.invalidateSize({pan:false}); });
-    ro.observe(document.getElementById('mapClim')); ro.observe(document.getElementById('mapDiff')); }
-  wireHover(mapA,'tipA'); wireHover(mapB,'tipB');
+    const ro=new ResizeObserver(()=>{ mapA.invalidateSize({pan:false}); });
+    ro.observe(document.getElementById('mapMain')); }
+  wireHover(mapA,'tipA');
   addRefLayers();
   /* state / province lines worldwide, fetched once the maps are up */
   gzFetch('geo/admin1-10m.json.gz').then(t=>{ setAdmin1(t); addRefLayers(); drawPanels(); }).catch(()=>{});
   await refresh();
   if(v){ const [la,lo,z]=v.split(',').map(Number);
     if(isFinite(la)&&isFinite(lo)&&isFinite(z)){ syncing=true; mapA.setView([la,lo],z,{animate:false});
-      mapB.setView([la,lo],z,{animate:false}); syncing=false; } }
+      syncing=false; } }
   mapA.on('moveend',writeHash);
   mapA.on('zoomend',a1Zoom);
   PANELW=panelLayout().W;

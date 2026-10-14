@@ -2,15 +2,20 @@
 
 **El Niño and La Niña: Climatology and Impacts — global grid.** Built 2026-10-10.
 
-Laid out like `../scs/trends/scstrend_grid.html` (two linked Leaflet maps stacked, controls in the
-header, SVG panels below, Methods at the bottom) but global like `../tc/trends/tctrend.html`, and
-the lower map answers a different question: not "how has this changed" but "how is this year
-(season, month) different in El Niño (or La Niña) years".
+**Layout (Oct 2026, simplified for a general audience):** one Leaflet map. Above it are two main
+controls: **Show** (El Niño · La Niña · Climatology; the El Niño − La Niña button appears only when
+"Compare El Niño with La Niña directly" is ticked under Advanced) and **Variable**, a single menu
+with every field at every intensity ("Hail — ≥ 1 inch", "Tornadoes — EF2+", …; values `field:thr`).
+The averaging strip sits under them. Everything else (strength, period, trend, units, smoothing,
+dots, compare, view/theme/PNG/link buttons) is in a collapsed **Advanced settings** box below the
+map. Below that come the panels, the year lists, Methods and the guidance box. A title bubble in
+the map's top-left corner names the variable. The "Show as" (% change / Absolute) toggle is in the
+map header and hidden for Climatology. Hash: `ph=en|ln|enln|clim`.
 
-1. **Climatology map** — the chosen average over every ENSO year of the period: the **whole ENSO
+1. **Climatology** — the chosen average over every ENSO year of the period: the **whole ENSO
    year (default)**, a season (Jun–Aug, Sep–Nov, Dec–Feb, Mar–May) or a single month.
-2. **Difference map** — El Niño minus climatology, La Niña minus climatology, or El Niño − La Niña
-   (segmented control), dots on significant patches (cluster permutation test, below).
+2. **El Niño / La Niña** (default El Niño) — minus climatology, or El Niño − La Niña; dots on
+   significant patches (cluster permutation test, below).
 3. **Averaging strip** — ENSO year / four seasons / Month; in Month mode a slider June (year 0) →
    May (year +1) with step + Play.
 4. **RONI panel** — every season since 1950, period shaded, one marker per ENSO year on its DJF
@@ -78,8 +83,13 @@ check this page too.**
   bare `#f=hail` link); a chosen average is kept, and the switch is undone on leaving.
 - **Count fields**: a box below 2% of the field's 98th-percentile monthly climatology is blank; below
   5% it is drawn but not dotted (a t-test on an almost-all-zero series calls a fraction of a
-  storm-day "significant"). `% of climatology` is blanked below 5% (counts) / 0.1 mm/day (precip)
-  / 0.05 mm/day (snowfall), and the same flux floors suppress dots in Amount mode (no Sahara dots).
+  storm-day "significant"). The same flux floors (0.1 mm/day precip, 0.05 snowfall) suppress dots
+  (no Sahara dots).
+- **Percent change (Oct 2026) is the default** for every field except temperature (always °C/°F;
+  the control is disabled). Precip divides by max(clim, 0.1 mm/day), so deserts read as modest
+  percentages rather than holes; counts are blank below 2% of the 98th-percentile climatology (where
+  the maps stop anyway). Scales saturate: ERA5 ±50% (EN−LN ±100%); counts 95th percentile of the
+  map, capped at ±200%. Hash: `pc=abs` for absolute change; no `pc` = percent.
   Snowfall boxes below 0.01 mm/day climatology are blank on both maps.
 - **Color scales**: fixed for ERA5 per averaging length, so the slider never re-scales
   (T clim −30…30 °C; T diff month ±3 / season ±2 / year ±1.5 °C, EN−LN ±5 / ±3 / ±2.5;
