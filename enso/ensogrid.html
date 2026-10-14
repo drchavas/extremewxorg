@@ -82,8 +82,15 @@
   #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
   #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext,#monthbar.avg #mPlay{opacity:.35}
   #monthbar .btn:disabled{cursor:not-allowed}
-  .seg button.on[data-av],.seg button.on[data-per]{background:var(--accent2);color:#111;font-weight:650}
+  .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc]{background:var(--accent2);color:#111;font-weight:650}
   .srctag{color:var(--text);opacity:.85}
+  .mapbubble{background:rgba(22,33,46,.94);color:var(--text);border:1px solid var(--line);border-radius:8px;
+             padding:7px 12px 8px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;max-width:min(460px,62vw);
+             line-height:1.25;margin:10px 0 0 10px!important}
+  .mapbubble .bv{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .mapbubble .bs{font-size:12px;color:var(--muted);margin-top:2px}
+  html[data-theme="light"] .mapbubble{background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  @media (max-width:640px){ .mapbubble{padding:5px 9px 6px;margin:6px 0 0 6px!important} .mapbubble .bv{font-size:14px} .mapbubble .bs{font-size:10.5px} }
   .percustom{display:none} body.custom-period .percustom{display:flex}
   .emptychip{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);z-index:640;display:none;max-width:80%;
              text-align:center;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;
@@ -110,8 +117,13 @@
   .mapcol{flex:0 0 auto;min-width:0;background:var(--panel);border:1px solid var(--line);
           border-radius:10px;overflow:hidden}
   .maphead{padding:10px 14px 8px}
+  .maphead.hastog{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .maphead .mhtext{flex:1 1 420px;min-width:0}
+  .pcwrap{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .pclab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
   .maphead h2{margin:0;font-size:14.5px;font-weight:650}
-  .maphead h2 .ph-en{color:var(--en)} .maphead h2 .ph-ln{color:var(--ln)}
+  .maphead h2 .ph-en,.mapbubble .ph-en{color:var(--en)} .maphead h2 .ph-ln,.mapbubble .ph-ln{color:var(--ln)}
+  .mapbubble .ph-en,.mapbubble .ph-ln{font-weight:650}
   .maphead p{margin:2px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
   .maphead .smtag{color:var(--accent2);font-weight:700}
   .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
@@ -212,8 +224,6 @@
     <div class="fld percustom"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
     <div class="fld" title="Remove each box's linear trend over the period before compositing, so a run of recent El Niño (or La Niña) years does not pick up the warming trend, or a reporting trend, as an ENSO signal."><label for="dtSel">Trend</label>
       <select id="dtSel"><option value="on">Removed</option><option value="off">Kept</option></select></div>
-    <div class="fld" id="pcBox" title="Show the difference as a percentage of the climatology (saturating where the climatology is very small), or as the change itself. Temperature is always shown as a change in degrees."><label for="pcSel">Difference as</label>
-      <select id="pcSel"><option value="pct">Percent change</option><option value="abs">Absolute change</option></select></div>
     <div class="fld" id="unBox"><label for="unSel">Units</label>
       <select id="unSel"><option value="C">&deg;C</option><option value="F">&deg;F</option></select></div>
     <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
@@ -251,8 +261,11 @@
           <div class="hint">drag &middot; scroll to zoom &middot; click a box to select it</div></div>
       </div>
       <div class="mapcol">
-        <div class="maphead"><h2 id="diffTitle">Difference</h2><p id="diffSub">&nbsp;</p>
+        <div class="maphead hastog"><div class="mhtext"><h2 id="diffTitle">Difference</h2><p id="diffSub">&nbsp;</p>
           <p class="warn" id="diffWarn">&nbsp;</p></div>
+          <div class="pcwrap"><span class="pclab">Show as</span>
+          <div class="seg" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
+            <button data-pc="pct">% change</button><button data-pc="abs">Absolute</button></div></div></div>
         <div class="lmap" id="mapDiff"><div class="cbar" id="cbDiff"></div><div class="tip" id="tipB"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
           <div class="hint">both maps share one view</div></div>
       </div>
@@ -1056,8 +1069,14 @@ function paintTile(cv,coords,which){
 }
 function makeMap(id,zoomCtl){
   const m=L.map(id,{crs:L.CRS.EPSG4326,zoomSnap:0.25,zoomDelta:0.5,minZoom:-1,maxZoom:7,
-    zoomControl:zoomCtl,worldCopyJump:false,maxBounds:[[-90,-220],[90,580]],maxBoundsViscosity:0.9,
+    zoomControl:false,worldCopyJump:false,maxBounds:[[-90,-220],[90,580]],maxBoundsViscosity:0.9,
     attributionControl:zoomCtl});
+  /* a title bubble in the top-left corner, so the variable is never lost; added
+     before the zoom buttons so they stack underneath it */
+  const tb=L.control({position:'topleft'});
+  tb.onAdd=()=>{ const d=L.DomUtil.create('div','mapbubble'); d.id=id+'Bubble'; return d; };
+  tb.addTo(m);
+  if(zoomCtl) L.control.zoom({position:'topleft'}).addTo(m);
   if(zoomCtl) m.attributionControl.setPrefix(false).addAttribution(
     'ERA5: ECMWF/C3S · IBTrACS, Storm Events: NOAA NCEI · RONI: NOAA CPC · coast: Natural Earth');
   return m;
@@ -1426,6 +1445,7 @@ function writeTitles(domD){
     (pctOn()?'% change from climatology':unitAbs())+` · `+
     (S.dt==='on'?'linear trend removed':'trend kept')+
     (S.sig?' · dots: significant patches':''))+srcTag()+smTag();
+  writeBubbles();
   const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
   drawColorbar(document.getElementById('cbClim'),CURDOM.clim,climCap,false);
   drawColorbar(document.getElementById('cbDiff'),domD,pctOn()?'% change':unitAbs(),true);
@@ -1460,6 +1480,33 @@ function srcTag(){
           : f.k==='derechoday' ? 'Squitieri, Wade & Jirak derecho archive'
           : 'NOAA NCEI Storm Events';
   return ` · <span class="srctag">Data: ${esc(s)}</span>`;
+}
+/* the map title bubbles: the variable in large type, then what the map shows */
+function thrShort(){
+  const f=F(); if(!f.thresholds) return '';
+  const l=f.thresholds[Math.min(S.thr,f.thresholds.length-1)].label||'';
+  const par=(l.match(/\(([^)]*)\)/)||[])[1]||'';
+  if(/^Vmax/.test(l)) return par;                       // TS+, Cat 1+, Cat 3+
+  if(/^Any/.test(l)) return /^EF/.test(par)?par:'';     // "Any tornado (EF0+)" -> EF0+; any hail/wind -> ''
+  return l.replace(/\s*\(.*\)\s*$/,'');             // "≥ 1.00″ (severe)" -> "≥ 1.00″"
+}
+function varName(){
+  const f=F();
+  const base = f.k==='t2m'?'2 m temperature' : f.k==='pr'?'Precipitation' : f.k==='sf'?'Snowfall'
+    : f.k==='tcd'?'Tropical cyclone track density' : f.k==='tcace'?'Tropical cyclone energy (ACE)'
+    : f.k==='tcgen'?'Tropical cyclone formation' : f.k==='derechoday'?'Derechos'
+    : f.k==='wind'?'Thunderstorm wind days' : f.label+' days';
+  const t=thrShort(); return t?`${base} · ${t}`:base;
+}
+function writeBubbles(){
+  const when = S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO year (Jun–May)' : AV().label;
+  const ph = S.ph==='en'?'<span class="ph-en">El Niño</span> minus climatology'
+           : S.ph==='ln'?'<span class="ph-ln">La Niña</span> minus climatology'
+           : '<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>';
+  const v=`<div class="bv">${esc(varName())}</div>`;
+  const a=document.getElementById('mapClimBubble'), b=document.getElementById('mapDiffBubble');
+  if(a) a.innerHTML=v+`<div class="bs">Climatology · ${esc(when)}</div>`;
+  if(b) b.innerHTML=v+`<div class="bs">${ph} · ${esc(when)}${pctOn()?' · % change':''}</div>`;
 }
 function smTag(){
   if(!isCount()) return '';
@@ -1828,8 +1875,12 @@ function syncControls(){
   } else { thr.innerHTML='<option>—</option>'; thr.disabled=true; tb.classList.add('off'); }
   const tog=(id,on)=>{ const b=document.getElementById(id); b.classList.toggle('off',!on);
     b.querySelectorAll('select,input').forEach(e=>e.disabled=!on); };
-  tog('pcBox',!isTemp()); tog('unBox',isTemp()); tog('smBox',isCount());
-  document.getElementById('pcSel').value=isTemp()?'abs':S.pc;   // temperature: always the change in degrees document.getElementById('unSel').value=S.un;
+  tog('unBox',isTemp()); tog('smBox',isCount());
+  document.getElementById('unSel').value=S.un;
+  /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
+  const pg=document.getElementById('pcSeg'); pg.style.display=isTemp()?'none':'';
+  pg.querySelectorAll('button').forEach(b=>{ const on=b.dataset.pc===S.pc;
+    b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
   document.getElementById('smSel').value=S.sm; document.getElementById('dtSel').value=S.dt;
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
@@ -1940,7 +1991,7 @@ function wire(){
   document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; refresh(); };
   document.getElementById('y1In').onchange=e=>{ S.y1=+e.target.value; refresh(); };
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
-  document.getElementById('pcSel').onchange=e=>{ S.pc=e.target.value; refresh(); };
+  document.querySelectorAll('#pcSeg button').forEach(b=>b.onclick=()=>{ S.pc=b.dataset.pc; refresh(); });
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; refresh(); };
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
