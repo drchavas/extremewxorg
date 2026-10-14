@@ -5,9 +5,9 @@
  * Ported verbatim from web/index.html of the TCPI project: same geometry
  * (MetPy SkewT rotation 47°, p 1050 -> 50 hPa, surface-temperature-dependent
  * x-bounds), same background (cornflower dry and moist adiabats, black dashed
- * saturation mixing-ratio lines, blue dashed 0 and -20 °C isotherms, grey
+ * saturation mixing-ratio lines, blue dashed 0 and -20 °C isotherms, gray
  * isobars, bold black tick labels), same fonts, same line widths, and the same
- * SounderPy-derived curve palette. Curves are labelled in place rather than
+ * SounderPy-derived curve palette. Curves are labeled in place rather than
  * through a legend.
  *
  * The background depends only on the axes, so it is rendered once to an

@@ -4,7 +4,7 @@ Three live pages over the same NOAA/NCEI Storm Events record, plus the SPC derec
 
 **`scstrend.html`** — climatology and trend side by side on one shared, pannable map: drag
 or zoom either and both follow, so the pair is always over the same ground. Click a *new* state
-to centre on it; clicking inside the state you are already on leaves the view where you put it,
+to center on it; clicking inside the state you are already on leaves the view where you put it,
 so your own zoom survives. Pick a county from the County menu to pin it, with an annual series
 (95% confidence band) and all twelve months as small multiples below. Covers hail, tornado,
 thunderstorm wind, derecho, freezing rain and peak wind.
@@ -90,7 +90,7 @@ county line: 3 April 1974 holds 239 segments for 148 tornadoes. County-based qua
 unaffected and in fact *want* segments — each of those counties genuinely had a tornado —
 which is why `scsevents.html` ranks days by counties. Segments cannot be collapsed back into
 tornadoes across the record: `TOR_OTHER_CZ_FIPS` is empty for every row before ~1990 and
-populated on only 13% of rows since 2010. So the column is labelled *Segments*, not *Reports*.
+populated on only 13% of rows since 2010. So the column is labeled *Segments*, not *Reports*.
 
 **1993–1995 carries no coordinates.** Report lat/lon is ~100% present 1955–1992 and 1996 on,
 and 0% in between. Anything needing a position (the 2° grid, the derecho swaths) falls back

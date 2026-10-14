@@ -96,9 +96,9 @@ dT/dlnp = (1 + rv/ε)(Rd T + L rv) / (cpd + rt cl + L² rv (1 + rv/ε)/(Rv T²))
 
 with `rt = rv` for pseudoadiabatic and `rt = r0` conserved for reversible (Emanuel 1994, Eq. 4.7.3,
 converted from height to log-pressure). Because the only difference is `rt`, the comparison between
-the two is clean rather than an artefact of two different formulas.
+the two is clean rather than an artifact of two different formulas.
 
-The **ice** toggle blends the latent heat of fusion and the saturation vapour pressure over ice
+The **ice** toggle blends the latent heat of fusion and the saturation vapor pressure over ice
 linearly across 0 to −40 °C, following the mixed-phase treatment of Peters et al. (2022); it adds a
 few tens of J/kg.
 
@@ -149,9 +149,9 @@ drift is about −0.065 K over a 700 m BL. This is the paper's own §2b point (E
 energy and potential temperature are dynamically equivalent but not identical — not a bug, and
 far too small to matter to CM1.
 
-**CAPE here will not match your favourite sounding package.** Parcel ascent is pseudoadiabatic
+**CAPE here will not match your favorite sounding package.** Parcel ascent is pseudoadiabatic
 (condensate removed), buoyancy from virtual temperature, on the model's own vertical grid,
-with Bolton (1980) saturation vapour pressure and CM1's constants. Reversible ascent, ice, or a
+with Bolton (1980) saturation vapor pressure and CM1's constants. Reversible ascent, ice, or a
 different `es` formula each shift CAPE by order 100–300 J/kg.
 
 ---
@@ -161,9 +161,9 @@ different `es` formula each shift CAPE by order 100–300 J/kg.
 The skew-*T* on this page is drawn entirely by **`../skewt.js`**, which is the renderer lifted out of
 the [TC potential-intensity explorer](../../) — same geometry (MetPy `skew_deg`, rotation 47°,
 p 1050 → 50 hPa, surface-temperature-dependent x-bounds), same background (cornflower dry and moist
-adiabats, black dashed saturation mixing-ratio lines, blue dashed 0 and −20 °C isotherms, grey
+adiabats, black dashed saturation mixing-ratio lines, blue dashed 0 and −20 °C isotherms, gray
 isobars across the plot, bold black tick labels), same fonts, same line widths, and the same
-SounderPy-derived curve palette. Curves are labelled in place rather than through a legend. So the
+SounderPy-derived curve palette. Curves are labeled in place rather than through a legend. So the
 PI page, the SCS sounding explorer and the sounding plotter all produce the same figure; only the
 curve set differs.
 
@@ -175,8 +175,8 @@ Curves, following the PI page but with a single parcel and a single CAPE:
 | `Td` | green, lw 3 | environment dewpoint |
 | `Tv` | dark red dotted, lw 2.2 | environment virtual temperature |
 | `Tw` | light blue, lw 1.8 | environment wet bulb (plotter only, optional) |
-| `T_parcel` | grey dashed, lw 1.8 | parcel temperature |
-| `T_v,parcel` | magenta fine-dotted, lw 1.6 | parcel virtual temperature (vapour only) |
+| `T_parcel` | gray dashed, lw 1.8 | parcel temperature |
+| `T_v,parcel` | magenta fine-dotted, lw 1.6 | parcel virtual temperature (vapor only) |
 | `T_ρ,parcel` | magenta dashed, lw 2.6 | parcel **density** temperature — bounds the shading |
 
 `T_v,parcel` and `T_ρ,parcel` coincide exactly under pseudoadiabatic ascent, because there is no

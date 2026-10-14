@@ -121,7 +121,7 @@
       <p class="byline funding">Supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a> funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a>, and <a href="https://mrcc.purdue.edu/" target="_blank" rel="noopener">Midwestern Regional Climate Center</a>, in partnership with the <a href="https://circs.niu.edu/" target="_blank" rel="noopener">NSF Center for Interdisciplinary Research on Convective Storms</a></p>
       <p class="byline">Lead: <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Professor · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a></p>
       <h2 class="about-title">What is this site?</h2>
-      <p class="subtitle">Interactive maps and explorers for extreme weather. Site development is ongoing, new updates expected regularly. <a href="mailto:dchavas@purdue.edu">Email me</a> if there is a feature you would like to see added!</p>
+      <p class="subtitle">Interactive maps and explorers for extreme weather. Site development is ongoing, new updates expected regularly. <a href="#feedback" data-feedback>Send feedback</a> if you spot a problem or there is a feature you would like to see added!</p>
       <hr class="rule" />
     </section>
 
@@ -161,7 +161,7 @@
       <div class="cat">Historical Event Viewer</div>
       <div class="cards">
         <a class="card" href="https://tcviewer.org/" target="_blank" rel="noopener">
-          <div class="shot"><img src="assets/thumbs/tcviewer.webp" width="720" height="360" alt="Hurricane best-track points coloured by category with wind-swath outlines along the U.S. East Coast" /></div>
+          <div class="shot"><img src="assets/thumbs/tcviewer.webp" width="720" height="360" alt="Hurricane best-track points colored by category with wind-swath outlines along the U.S. East Coast" /></div>
           <div class="txt">
             <h3>tcviewer.org: IBTrACS TC Track &amp; Wind Footprint Map Explorer<span class="ext">external site</span></h3>
             <p class="desc">Maps of all global tropical cyclones: individual storm, day in history, month in history, and date range</p>
@@ -204,7 +204,7 @@
       <div class="cat">Historical Event Viewer</div>
       <div class="cards">
         <a class="card" href="scs/trends/scsevents.html">
-          <div class="shot"><img src="assets/thumbs/scsevents.webp" width="720" height="360" loading="lazy" alt="Derecho wind-gust reports strung west to east across the Midwest, coloured by gust speed" /></div>
+          <div class="shot"><img src="assets/thumbs/scsevents.webp" width="720" height="360" loading="lazy" alt="Derecho wind-gust reports strung west to east across the Midwest, colored by gust speed" /></div>
           <div class="txt">
             <h3>Historical Severe Weather Events</h3>
             <p class="desc">Maps of any severe thunderstorm and derecho day from the historical record</p>
@@ -226,6 +226,30 @@
           <div class="txt">
             <h3>Climatology &amp; Trends — 2° grid</h3>
             <p class="desc">Paired climatology and trend maps of hail, tornado, thunderstorm wind and derecho, binned into a regular 2° grid.</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- CLIMATE -->
+    <section id="climate">
+      <h2 class="sec-title">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M3.6 9h16.8M3.6 15h16.8"/>
+          <path d="M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/>
+        </svg>
+        <span>Climate
+          <span class="qual">Present-day climate through the year</span>
+        </span>
+      </h2>
+
+      <div class="cards">
+        <a class="card" href="climate/earthvis.html">
+          <div class="shot"><img src="assets/thumbs/earthvis.webp" width="720" height="360" loading="lazy" alt="World map of average July precipitation, with the rain band of the Intertropical Convergence Zone and the Asian monsoon, and streaks showing the 850 hPa winds" /></div>
+          <div class="txt">
+            <h3>EarthVis: Climate and Extremes Through the Year<span class="beta">new &mdash; in beta</span></h3>
+            <p class="desc">Animated maps of the average year, 1996&ndash;2025, for 30 ERA5 fields: temperature, precipitation, clouds, radiation, winds and pressure, and severe-storm ingredients. Also included are global tropical cyclone activity and U.S. hail, tornado, wind and derecho days. Choose month by month, a season, the annual mean, the size of the seasonal cycle or the month of the peak. Use a world map, a globe you can spin or a regional view, with wind flow on top. Click anywhere for its seasonal cycle, and export any animation as an MP4 or GIF for teaching.</p>
           </div>
         </a>
       </div>
@@ -255,10 +279,11 @@
     </section>
 
     <footer>
-      <p class="dataupd">Data last updated 2026-10-13 03:20 UTC</p>
+      <p class="dataupd">Data last updated 2026-10-14 21:02 UTC</p>
       <p>© <span id="y"></span> <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a>. All rights reserved.</p>
     </footer>
   </main>
   <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+<script src="assets/feedback.js" defer></script>
 </body>
 </html>

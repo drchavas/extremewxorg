@@ -22,8 +22,8 @@
   header p{margin:4px 0 0;font-size:12.5px;color:var(--muted);max-width:1100px;line-height:1.5}
   header .hmeta{margin:5px 0 0;font-size:11px;color:var(--muted)}
   /* The meta line is a quiet footnote, so its link sits in the same muted
-     colour and weight as the text around it -- underlined rather than
-     coloured, so it still reads as a link without pulling the eye. */
+     color and weight as the text around it -- underlined rather than
+     colored, so it still reads as a link without pulling the eye. */
   header .hmeta a{color:inherit;font-weight:inherit;
                   text-decoration:underline;text-underline-offset:2px;
                   text-decoration-thickness:from-font}
@@ -47,7 +47,7 @@
        font-size:12px;padding:6px 11px;cursor:pointer;font-family:inherit}
   .btn:hover{border-color:var(--accent)}
   .btn:disabled{opacity:.4;cursor:default;border-color:var(--line)}
-  /* The way back out of a basin, so it should read as the one coloured control
+  /* The way back out of a basin, so it should read as the one colored control
      in the bar.  The disabled rule above still greys it on the global view. */
   .btn-back{color:var(--accent2);font-weight:700}
   .btn-back:hover:not(:disabled){border-color:var(--accent2)}
@@ -102,7 +102,7 @@
      and a period.
      <b>Click a basin on the global map to zoom into it</b>, or use &ldquo;&larr; Global&rdquo; to come back.
      <a href="https://tcviewer.org/" target="_blank" rel="noopener">Prefer a single-storm view?</a> &middot;
-     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.
+     <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.
      Opens on 1990, after which the global record is reasonably homogeneous
      (<a href="https://doi.org/10.1029/2021GL095774">Klotzbach et al. 2022</a>); earlier
      years are available from the period boxes.</p>
@@ -116,10 +116,10 @@
     <div class="fld"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
     <div class="fld"><label for="basSel">Region</label><select id="basSel"></select></div>
     <div class="fld" title="Whether positions after extratropical transition (and other non-tropical stages) are counted."><label for="stgSel">Stages</label><select id="stgSel"></select></div>
-    <div class="fld" title="A Gaussian blur over the two maps, sigma = 5 degrees. Gaps and greyed cells are excluded and stay grey; the zonal profiles and the series panels are unaffected."><label for="smSel">Smoothing</label><select id="smSel"></select></div>
+    <div class="fld" title="A Gaussian blur over the two maps, sigma = 5 degrees. Gaps and grayed cells are excluded and stay gray; the zonal profiles and the series panels are unaffected."><label for="smSel">Smoothing</label><select id="smSel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" title="A cell is greyed out unless at least this many years actually contain a storm."><label for="minPIn">Min plot</label><input type="number" id="minPIn" step="1" min="1"></div>
+    <div class="fld" title="A cell is grayed out unless at least this many years actually contain a storm."><label for="minPIn">Min plot</label><input type="number" id="minPIn" step="1" min="1"></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="unitBtn">m/s</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn">PNG</button></div>
@@ -213,8 +213,8 @@ const CMAP={
 const THEME={
   dark :{bg:'#111c26',panel:'#16212e',ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',
          grid:'#22303f',axis:'#6d8299',land:'#243447',sea:'#0d151d',nodata:'#1a2635',
-         /* cells that hold storms but fail a coverage gate: a neutral grey that
-            appears in neither colour ramp, so it cannot be misread as a value */
+         /* cells that hold storms but fail a coverage gate: a neutral gray that
+            appears in neither color ramp, so it cannot be misread as a value */
          gate:'#42505d',basin:'#4ade80',hilite:'#ffd54a',
          pt:'#6cb6ff',fit:'#ffb14e',band:'rgba(255,177,78,.10)',
          bandEdge:'rgba(255,177,78,.42)',cline:'rgba(0,0,0,.35)',coast:'#ffd24a'},
@@ -356,7 +356,7 @@ function erfc(x){
    on this particular field: a single 5-degree cell has many years with no
    storms at all, so a majority of the pairwise slopes between years are exactly
    zero, and so is their median.  The map then goes blank over most of the
-   tropics for a reason that is an artefact of the estimator rather than
+   tropics for a reason that is an artifact of the estimator rather than
    anything about the storms.  It was offered as an option here and the option
    only invited the wrong reading, so it is gone. */
 function fit(xs,ys){
@@ -368,11 +368,11 @@ function fit(xs,ys){
 
 function quantile(s,q){ if(!s.length)return 0; const h=(s.length-1)*q,l=Math.floor(h),u=Math.ceil(h);
   return s[l]+(s[u]-s[l])*(h-l); }
-/* Weighted quantile over (value, weight) pairs.  The colour domains use the
+/* Weighted quantile over (value, weight) pairs.  The color domains use the
    number of storm positions in a cell as the weight, because an unweighted
    quantile is dominated by the ring of marginal cells that see one storm in
    forty-five years, and that pushes the whole scale down until the basins
-   themselves are all one saturated colour. */
+   themselves are all one saturated color. */
 function wquantile(pairs,q){
   if(!pairs.length) return 0;
   pairs.sort((a,b)=>a[0]-b[0]);
@@ -597,7 +597,7 @@ function seasonValue(mi,i0,i1){
   }
   /* Maximum / Minimum: the MEAN over years of each year's monthly extreme — the same
      statistic the climatology map shows. It used to take the single record extreme
-     over the whole period, labelled as an average: the East Pacific October read
+     over the whole period, labeled as an average: the East Pacific October read
      185 kt (Patricia) against a typical year's 106 kt, and a record also grows with
      sample size, so busy months were inflated twice over. */
   if(S.stat==='ext'){
@@ -630,7 +630,7 @@ function fieldStartYear(){
   return fs?fs[S.basin]:null;
 }
 function storms(){ return S.v==='storms'; }
-/* both count fields share the same accumulators and colour handling */
+/* both count fields share the same accumulators and color handling */
 function isCount(){ return S.v==='density' || S.v==='storms'; }
 /* one latitude band of the selected basin, and the basin as a whole */
 function bandValue(li,cells,y){
@@ -708,17 +708,17 @@ function basinCells(){ return IX.basin_cells[S.basin]||[]; }
 
 /* Gaussian smoother for the two maps.
    Sigma is one grid cell (5 degrees), a 5x5 kernel with about 16% of the
-   weight on the centre box: enough to make the coherent basin-scale pattern the
+   weight on the center box: enough to make the coherent basin-scale pattern the
    first thing the eye finds, at the cost of visibly pulling in isolated peaks.
 
    Three properties that matter:
-     - It is a NORMALISED convolution: only cells that actually have a value
-       contribute, and the weights are renormalised by what was found.  A plain
+     - It is a NORMALIZED convolution: only cells that actually have a value
+       contribute, and the weights are renormalized by what was found.  A plain
        convolution treating gaps as zero would drag every coastal and basin-edge
        cell towards nothing.
      - It never invents data.  Output stays NaN wherever the input was NaN, so a
-       cell greyed out by Min plot or by the trend rule stays grey; smoothing
-       changes colours, not which boxes are drawn.
+       cell grayed out by Min plot or by the trend rule stays gray; smoothing
+       changes colors, not which boxes are drawn.
      - Longitude wraps, latitude does not.  The grid is global in longitude, so
        the dateline and the prime meridian are not edges.
 
@@ -769,7 +769,7 @@ function cellMetrics(){
         cov=new Float32Array(NCELL),
         /* Cells that saw at least one storm in the window.  Distinguishes
            "empty ocean" from "had storms but fell short of a gate": the first
-           is not drawn at all, the second is drawn grey rather than dropped,
+           is not drawn at all, the second is drawn gray rather than dropped,
            so tightening Min plot visibly shrinks the map instead of
            silently deleting cells the reader never knew were there. */
         seen=new Uint8Array(NCELL);
@@ -777,7 +777,7 @@ function cellMetrics(){
   for(const c of basinCells()){
     // A cell that never sees a storm in this window is not data — it is empty
     // ocean, and painting it would put 95% of the globe at the bottom of the
-    // colour scale and squeeze every real value into the top few percent.
+    // color scale and squeeze every real value into the top few percent.
     let pos=0;
     /* ACE ignores the Stages control, so whether a cell has data must too */
     const P=S.v==='ace'?A.sumv2:A.n;
@@ -822,10 +822,10 @@ function zonalMetrics(){
   const lis=[...rows.keys()].sort((p,q)=>p-q);
   for(const li of lis){
     const cells=rows.get(li);
-    /* Every cell in the band is pooled, including ones the map has greyed out.
+    /* Every cell in the band is pooled, including ones the map has grayed out.
        This is deliberate and it is why the profile does not track `Min plot`.
 
-       Min plot is a *display* threshold — "do not colour a box I cannot read" —
+       Min plot is a *display* threshold — "do not color a box I cannot read" —
        not a statement that the storms in a thin box did not happen.  Dropping
        those cells here would not clean the profile up, it would change what the
        profile is: for the extensive fields a band value is the TOTAL across the
@@ -908,7 +908,7 @@ const TREND_CAVEAT='Trends are inherently far noisier: focus on coherent spatial
 
 /* --------------------------------------------------------------- the map */
 /* Plate carree.  The data grid is in 0-360 longitude, so the default global
-   view is Pacific-centred and every basin is contiguous, including the North
+   view is Pacific-centered and every basin is contiguous, including the North
    Atlantic (260-360).  Land rings are unwrapped and drawn at every 360-degree
    shift that overlaps the window, then clipped, which keeps polygons that cross
    the antimeridian or the prime meridian in one piece. */
@@ -957,16 +957,16 @@ function landPath(F){
   return d;
 }
 
-/* Position in the colour ramp for a value.  `pow` < 1 stretches the low end,
+/* Position in the color ramp for a value.  `pow` < 1 stretches the low end,
    which is what track density needs: the field spans four orders of magnitude
    and a linear ramp leaves every basin but the West Pacific in the bottom
-   tenth of the scale.  The colour BAR stays linear in value and carries the
+   tenth of the scale.  The color BAR stays linear in value and carries the
    same transform, so the mapping is still readable off the figure. */
-/* Position of a value along its colour ramp, 0..1.
+/* Position of a value along its color ramp, 0..1.
    `rev` flips the ramp for a field where *low* is the intense end.  Central
    pressure is the only one: a deep cyclone is a small number, so the default
    mapping would paint the strongest storms white and the weakest red.  Applied
-   here rather than at the two call sites so the map cells and the colour bar
+   here rather than at the two call sites so the map cells and the color bar
    cannot disagree. */
 function cpos(v,opts){
   let f=(v-opts.lo)/(opts.hi-opts.lo);
@@ -986,7 +986,7 @@ function cpos(v,opts){
    just retrace the frame.  A box that wraps the prime meridian (the North
    Atlantic) becomes two rectangles, with the shared inner edges left off so the
    pair reads as one region. */
-/* Which named basin contains a lon/lat.  Mirrors the build's cell-centre test,
+/* Which named basin contains a lon/lat.  Mirrors the build's cell-center test,
    including the wrapped North Atlantic. */
 /* Filled fresh on every render; each entry ties a drawn map group to the frame
    it was drawn with, which is all the inverse transform needs. */
@@ -1093,7 +1093,7 @@ function mapPanel(x,y,w,h,title,sub,vals,opts){
     const px=F.X(lon), py=F.Y(lat+GRID);
     if(!has) ngrey++;
     const col=has?ramp(opts.div?CMAP.div:CMAP.seq,cpos(v,opts)):t.gate;
-    /* With smoothing on, the drawn value is a neighbourhood average and can sit
+    /* With smoothing on, the drawn value is a neighborhood average and can sit
        far from the box's own number -- at sigma = 1 cell the global peak moves
        by about half.  Show both, so hovering never conceals the actual data. */
     const rv=opts.raw?opts.raw[c]:NaN;
@@ -1137,7 +1137,7 @@ function mapPanel(x,y,w,h,title,sub,vals,opts){
   if(opts.zonal) out+=zonalStrip(F,F.w+cbw+gap,ZW,opts.zonal);
   out+=`</g>`;
 
-  // colour bar, tucked between the map and the profile
+  // color bar, tucked between the map and the profile
   const bx=ox+F.w+18, by=y+72, bh=h-138;
   const gid='cb'+Math.random().toString(36).slice(2,8);
   const stops=(opts.div?CMAP.div:CMAP.seq);
@@ -1155,7 +1155,7 @@ function mapPanel(x,y,w,h,title,sub,vals,opts){
     out+=txt(bx+20,yy+3.5,fmt(v,opts.dec),{size:10,fill:t.mute});
   }
   out+=txt(bx+6.5,by-9,esc(opts.unit),{size:9.5,fill:t.mute,anchor:'middle'});
-  /* Grey swatch: only shown when something actually got greyed, so the legend
+  /* Gray swatch: only shown when something actually got grayed, so the legend
      does not advertise a category the current settings never produce. */
   if(ngrey){
     const sy=by+bh+14;
@@ -1487,14 +1487,14 @@ function render(){
   const t=T(), bs=basinSpec(), [a,b]=yearsSel();
   MAPPICKS=[];
   const cm=cellMetrics(), Z=zonalMetrics();
-  /* Smooth before the colour domains are chosen, so the scale matches what is
+  /* Smooth before the color domains are chosen, so the scale matches what is
      actually drawn.  The zonal profiles are left alone: they are pooled from the
      raw positions, which is the whole point of having them beside the map. */
   const rawMean=cm.mean, rawTrend=cm.trend;
   cm.mean =smoothField(rawMean, basinCells());
   cm.trend=smoothField(rawTrend,basinCells());
 
-  // Robust colour domains, weighted by how many storm positions a cell actually
+  // Robust color domains, weighted by how many storm positions a cell actually
   // carries so the scale is set by the basins and not by their fringes.
   const cells=basinCells();
   const [ya,yb]=[cm.a-Y0,cm.b-Y0];
@@ -1533,7 +1533,7 @@ function render(){
   svg+=txt(40,68,esc(thrSpec().label+'  ·  '+a+'–'+b+'  ·  '+GRID+'° grid  ·  '+
            'IBTrACS synoptic best-track positions, USA (NHC/JTWC) 1-min winds'+
            '  ·  '+(S.v==='ace'?'tropical + subtropical (ACE definition)':esc(stageSpec().label.toLowerCase()))+
-           (pf&&b>=pf ? '  ·  '+pf+' onward is provisional, not yet reanalysed' : '')),
+           (pf&&b>=pf ? '  ·  '+pf+' onward is provisional, not yet reanalyzed' : '')),
            {size:13,fill:t.mute});
 
   /* Two full-width map rows, each with its zonal profile pinned to the same
@@ -1545,12 +1545,12 @@ function render(){
         ` · the profile on the right bins the same data directly by latitude, `+
         `ignoring longitude`+
         // at the default of 1 the gate is a no-op, so saying so is only clutter
-        (S.minPlot>1?` · needs ≥ ${S.minPlot} yrs with a storm, grey falls short`+
-                     ` · the profile includes the grey cells`:''),
+        (S.minPlot>1?` · needs ≥ ${S.minPlot} yrs with a storm, gray falls short`+
+                     ` · the profile includes the gray cells`:''),
         cm.mean,{lo:loM,hi:hiM,div:false,dec,unit:uL,pow:powM,cov:cm.cov,needCov:true,
                  raw:rawMean, rev:S.v==='pmin',
                  gate:cm.seen,gateShort:'< '+S.minPlot+' yrs',
-                 gateLabel:'grey - fewer than '+S.minPlot+' years with a storm',
+                 gateLabel:'gray - fewer than '+S.minPlot+' years with a storm',
                  zonal:{rows:Z,key:'mean',band:false,sym:false,
                         zero:!(S.v==='pmin'||S.v==='vmax'),
                         title:isExtensive()?'Zonal total':'Zonal mean',unit:uL}});
@@ -1561,7 +1561,7 @@ function render(){
            second half as a restatement of the first. */
         `Change per decade · ≥ ${yearsNeeded(b-a+1)} yrs with a storm, first and last `+
         `≥ ${Math.round(SPAN_MIN*100)}% of the period apart, ≥ ${HALF_MIN} per half`+
-        ` · grey falls short`+
+        ` · gray falls short`+
         ` · `+smoothTag()+
         ` · profile bins by latitude, ignoring longitude`,
         cm.trend,{lo:-hiT,hi:hiT,div:true,dec:hiT<1?3:(hiT<10?2:1),pow:powT,
@@ -1570,7 +1570,7 @@ function render(){
                   // intensification: flip the ramp to keep red = stronger on both maps
                   raw:rawTrend, rev:S.v==='pmin',
                   gate:cm.seen,gateShort:'too sparse',
-                   gateLabel:'grey - storms here, but not spread widely enough to fit a trend',
+                   gateLabel:'gray - storms here, but not spread widely enough to fit a trend',
                   zonal:{rows:Z,key:'slope',band:true,sym:true,
                          title:'Zonal trend',unit:uL+'/dec'}});
 
@@ -1652,16 +1652,16 @@ function methodsHTML(){
     '<p>NOAA <b>IBTrACS v04r01</b> global best-track archive'+
     (IX.meta&&IX.meta.built?', built '+esc(IX.meta.built):'')+'. Seasons '+IX.y0+'–'+IX.y1+
     ', on a '+GRID+'° longitude–latitude grid.'+
-    (pf ? ' Best tracks are reanalysed after each season; '+pf+' onward is still flagged '+
+    (pf ? ' Best tracks are reanalyzed after each season; '+pf+' onward is still flagged '+
           'PROVISIONAL in the archive and its intensities can change, so the default '+
           'window stops at '+(pf-1)+'. The provisional seasons are still selectable and are '+
-          'labelled in the subtitle when the period reaches them.' : '')+'</p>')+
+          'labeled in the subtitle when the period reaches them.' : '')+'</p>')+
 
   h('Which positions are counted', ul([
     '<b>Synoptic only.</b> 00, 06, 12 and 18 UTC. Roughly half of IBTrACS rows are 3-hourly '+
       'interpolants and are dropped, so one count unit is one 6-hour position and four make '+
       'one storm-day. The dropped fraction is stable through the record, so this is not a '+
-      'trend artefact.',
+      'trend artifact.',
     '<b>ACE: tropical and subtropical stages only</b> (<code>NATURE</code> of TS or SS). '+
       'For ACE, extratropical and remnant-low positions are excluded even when the wind is still '+
       'above threshold — the standard ACE convention. Including them inflates the 2005 North '+
@@ -1704,7 +1704,7 @@ function methodsHTML(){
     'East Pacific. The Australian region is the Bureau of '+
     'Meteorology\'s area of responsibility, 90°E–160°E south of the equator, carved out of '+
     'South Indian and South Pacific — a cyclone there is counted in it and not in either '+
-    'neighbour. Extents are listed in the '+
+    'neighbor. Extents are listed in the '+
     '<a href="README.md">README</a>.</p>')+
 
   h('Fields', '<p><b>'+esc(V.label)+'.</b> '+esc(V.desc)+'</p>'+
@@ -1737,19 +1737,19 @@ function methodsHTML(){
       'all, its maximum is the same at every threshold in 100% of cases — if the peak is ≥ 96 kt '+
       'then restricting to ≥ 96 kt positions cannot change it — so on this statistic the '+
       'threshold decides which cells appear, not what they show.',
-    '<b>One artefact of the synoptic-only rule falls on the maximum.</b> Agencies sometimes '+
+    '<b>One artifact of the synoptic-only rule falls on the maximum.</b> Agencies sometimes '+
       'insert an off-synoptic position specifically to capture peak intensity, and those rows '+
       'are dropped here. Measured across 1980–2025 it lowers the recorded peak for 1.3% of '+
       'storms, by 5.7 kt on average, moving the global mean peak from 70.91 to 70.83 kt. The '+
       'practice has become more common, so the shortfall drifts: 0.00 kt in the 1980s against '+
       '0.23 kt in 2020–2025. That is a slight downward pressure on maximum-Vmax trends of order '+
-      '0.05 kt/decade, against typical slopes of 1–2 kt/decade — small, but an artefact of the '+
+      '0.05 kt/decade, against typical slopes of 1–2 kt/decade — small, but an artifact of the '+
       'filter rather than of the storms.'
   ]))+
 
   h('Trends', '<p>Every slope on this page is <b>ordinary least squares</b>, reported per decade '+
     'with a <i>t</i>-test and a 95% band of slope ± <i>t</i>(0.975, <i>n</i>−2)·SE. '+
-    'We use least-squares because Theil–Sen, while more general and often preferred to minimise '+
+    'We use least-squares because Theil–Sen, while more general and often preferred to minimize '+
     'the effect of outliers, doesn\'t work well for the map: many gridboxes have multiple years '+
     'with zero storms, which means the median of pairwise slopes will come out simply as zero. '+
     'On this grid that silenced 88% of cells at the TS+ threshold.</p>'+
@@ -1761,11 +1761,11 @@ function methodsHTML(){
         'so that a fixed count is not simultaneously too strict on a short window and too lax on '+
         'a long one',
       'first and last of those years at least <b>'+Math.round(SPAN_MIN*100)+'%</b> of the period '+
-        'apart, so a cell\'s slope refers to the labelled epoch and not to some sub-period inside it',
+        'apart, so a cell\'s slope refers to the labeled epoch and not to some sub-period inside it',
       'at least <b>'+HALF_MIN+'</b> of them in each half, which bounds the leverage of one '+
         'isolated year'
     ])+
-    '<p>None of the three implies another. Cells that fail are drawn <b>grey</b> rather than '+
+    '<p>None of the three implies another. Cells that fail are drawn <b>gray</b> rather than '+
     'deleted, so raising a threshold visibly costs you coverage instead of quietly removing boxes '+
     'you never knew were there. Unpainted ocean means no storm ever crossed that box in this window.</p>')+
 
@@ -1774,15 +1774,15 @@ function methodsHTML(){
     'single 5° box is a small sample and the eye is drawn to isolated extremes; blurring makes '+
     'the coherent basin-scale pattern the thing you see first, which is how these maps are meant '+
     'to be read.</p>'+
-    ul(['<b>It never invents data.</b> Cells with no value stay empty and greyed cells stay grey, '+
-        'so smoothing changes colours, not which boxes are drawn.',
-        '<b>Gaps are excluded, not treated as zero.</b> The kernel is renormalised by the '+
-        'neighbours it actually found, so a coastal or basin-edge cell is not dragged towards '+
+    ul(['<b>It never invents data.</b> Cells with no value stay empty and grayed cells stay gray, '+
+        'so smoothing changes colors, not which boxes are drawn.',
+        '<b>Gaps are excluded, not treated as zero.</b> The kernel is renormalized by the '+
+        'neighbors it actually found, so a coastal or basin-edge cell is not dragged towards '+
         'nothing. The cost is that totals are not conserved: summing the smoothed map comes out '+
-        'about 4% above the raw one, because renormalisation lifts edge cells.',
+        'about 4% above the raw one, because renormalization lifts edge cells.',
         '<b>Longitude wraps; latitude does not.</b> The prime meridian is not an edge.',
         '<b>The drawn value is not the box value.</b> At this sigma the global peak moves by '+
-        'about half, so the colour bar rescales with it. Hovering any cell shows both the '+
+        'about half, so the color bar rescales with it. Hovering any cell shows both the '+
         'smoothed number and that box\'s own.',
         '<b>The zonal profiles are never smoothed</b>, nor is any series panel. Only the two '+
         'map fields pass through the blur.',
@@ -1799,7 +1799,7 @@ function methodsHTML(){
       'a non-significant one means nothing physical. Significance is shown only where the sample '+
       'is pooled — the zonal profile, the basin series and the monthly panels. Per-cell '+
       '<i>p</i>-values are still computed, just not drawn.',
-    '<b>The zonal profiles pool every cell in their band</b>, including any the map has greyed '+
+    '<b>The zonal profiles pool every cell in their band</b>, including any the map has grayed '+
       'out, so a profile is not the row-average of the visible boxes. Min plot is a display '+
       'threshold, not a claim that thin boxes had no storms.',
     '<b>Neither map is an estimate for a particular place inside a cell.</b> Risk at a point '+
@@ -1898,7 +1898,7 @@ function readHash(){
     if(S.stat==='storms') S.v='storms';
     S.stat='mean';
   }
-  // ACE's lone statistic was keyed 'sum' when it was labelled Total
+  // ACE's lone statistic was keyed 'sum' when it was labeled Total
   if(S.v==='ace'&&S.stat==='sum') S.stat='mean';
   if(p.get('t')) S.thr=p.get('t');
   if(p.get('b')) S.basin=p.get('b');
@@ -2062,5 +2062,6 @@ function wire(){
   }
 })();
 </script>
+<script src="../../assets/feedback.js" defer></script>
 </body>
 </html>

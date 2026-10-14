@@ -44,7 +44,7 @@ definitions are the same, which is why the residual is a *source* difference rat
   This page takes the restriction as fixed for ACE regardless of its own **Stages** control, for
   the same reason: ACE under a non-standard stage set would be a non-standard number wearing a
   standard name.
-- **Southern Hemisphere seasons run July–June, labelled by the year the season ends.** That is
+- **Southern Hemisphere seasons run July–June, labeled by the year the season ends.** That is
   exactly IBTrACS `SEASON`, which this page uses unmodified. Tested both alternatives — filing SH
   storms by calendar year drops *r* from 0.974 to 0.947, and shifting the SH label by ±1 year
   drops it to 0.88.

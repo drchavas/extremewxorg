@@ -86,7 +86,7 @@ HAZARDS = {
         "unit": "h",
         "season": "JulJun",          # cold season, labelled by the ending year
         "note": ("Days with freezing rain (FZRA) in the METAR remarks at an ASOS station. "
-                 "Counted over a July–June cold season labelled by the ending year. "
+                 "Counted over a July–June cold season labeled by the ending year. "
                  "Higher levels count hours of freezing rain in the day, a rough proxy "
                  "for how much ice had a chance to accrete. The ASOS remark FZRANO "
                  "(freezing-rain sensor not operational) is not counted."),

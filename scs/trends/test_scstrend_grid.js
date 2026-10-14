@@ -113,7 +113,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('panels name the national scope',/mean over all \d+ boxes/.test($('card').innerHTML),
       ($('card').innerHTML.match(/mean over all \d+ boxes/)||[''])[0]);
   say('panels drawn',$('card').innerHTML.length>4000,$('card').innerHTML.length+' chars');
-  say('two colour bars',$('cbClim').innerHTML.includes('linear-gradient')&&
+  say('two color bars',$('cbClim').innerHTML.includes('linear-gradient')&&
                         $('cbTrend').innerHTML.includes('linear-gradient'));
   say('trend bar is diverging',$('cbTrend').innerHTML.includes('#2166ac'));
 
@@ -154,8 +154,8 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   console.log('\n--- the state menu only moves the camera');
   const cellBefore=$('ctySel').value, fitBefore=A._fit;
   $('regSel').value='TX'; fire('regSel','change');
-  say('state choice re-centres',A._fit>fitBefore);
-  say('state choice leaves the analysed box alone',$('ctySel').value===cellBefore,
+  say('state choice re-centers',A._fit>fitBefore);
+  say('state choice leaves the analyzed box alone',$('ctySel').value===cellBefore,
       $('ctySel').value+' vs '+cellBefore);
   say('both maps still together',A.getCenter().lat===Bm.getCenter().lat);
   $('regSel').value=''; fire('regSel','change');
@@ -261,16 +261,16 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       Math.max(...smoothed.filter(isFinite))<Math.max(...raw.filter(isFinite)),
       'peak '+Math.max(...raw.filter(isFinite)).toFixed(2)+' -> '+
       Math.max(...smoothed.filter(isFinite)).toFixed(2));
-  say('and keeps the field roughly centred',Math.abs(mean(smoothed)-mean(raw))/mean(raw)<0.15,
+  say('and keeps the field roughly centered',Math.abs(mean(smoothed)-mean(raw))/mean(raw)<0.15,
       mean(raw).toFixed(3)+' -> '+mean(smoothed).toFixed(3));
-  /* Trend gates must survive: a greyed box stays grey. */
+  /* Trend gates must survive: a grayed box stays gray. */
   $('smSel').value='2'; fire('smSel','change');
   await new Promise(r=>setTimeout(r,200));
   const gt=w.eval("(function(){const m=cellMetrics();let n=0;"+
     "for(let i=0;i<m.trend.length;i++) if(!isFinite(m.trend[i]))n++;return n;})()");
   const gd=w.eval("(function(){const t=smoothField(cellMetrics().trend);let n=0;"+
     "for(let i=0;i<t.length;i++) if(!isFinite(t[i]))n++;return n;})()");
-  say('boxes without a fitted trend stay unfitted',gt===gd,gt+' gated, '+gd+' grey');
+  say('boxes without a fitted trend stay unfitted',gt===gd,gt+' gated, '+gd+' gray');
   say('the panels are never smoothed',
       w.eval("(function(){const s=seriesMonthYear();return [...s.my].reduce((a,b)=>a+b,0);})()")>0);
   // capture the hash while it is off, or the message reports the state after
@@ -283,7 +283,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       !/[?&]sm=/.test(w.location.hash),
       'raw -> "'+(offHash.match(/sm=\w+/)||[''])[0]+'", 2° default -> omitted');
   /* 1° is half a box here: it must do something, but gently enough that local
-     maxima are not pulled into their neighbours. */
+     maxima are not pulled into their neighbors. */
   const f=a=>a.filter(v=>v!==null&&isFinite(v));
   say('it blurs, but keeps a distinct maximum',
       Math.max(...f(smoothed))<Math.max(...f(raw))&&
@@ -320,7 +320,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   const nBox=w.eval('cellMetrics().mean.length');
   say('boxes populated',nBox>100,nBox+' boxes');
   /* White marks a true zero so the edge of the affected area is visible. It has
-     to stay distinct from no-data, which is the land colour, and must not leak
+     to stay distinct from no-data, which is the land color, and must not leak
      onto the diverging trend ramp where zero is mid-scale. */
   say('exact zero is pure white',w.eval("colorFor(0,{div:false,lo:0,hi:1})")==='#ffffff',
       w.eval("colorFor(0,{div:false,lo:0,hi:1})"));

@@ -199,7 +199,7 @@ Where each falls relative to a storm's tropical/subtropical phase:
 
 So **`ET` is in effect the post-tropical stage** — 95% of it follows the tropical phase.
 **`DS` is not**, being split almost evenly between the pre-genesis disturbance and the decaying
-remnant; labelling it post-tropical would be wrong about half the time. Splitting it by position
+remnant; labeling it post-tropical would be wrong about half the time. Splitting it by position
 within the track would give a genuine remnant-low category, but that is a derived quantity, not
 one the file carries. `SS` is always mid-life, never a transition state.
 
@@ -262,7 +262,7 @@ years stay one keystroke away in the period control.
 > (2022). Trends in Global Tropical Cyclone Activity: 1990–2021. *Geophysical Research Letters*
 > **49**(6), e2021GL095774. [doi:10.1029/2021GL095774](https://doi.org/10.1029/2021GL095774)
 
-**The last season is provisional.** IBTrACS best tracks are reanalysed after the season, and
+**The last season is provisional.** IBTrACS best tracks are reanalyzed after the season, and
 until that happens the positions carry a `PROVISIONAL` track type and intensities can still
 move — 70% of 2025's synoptic positions are provisional as of this build. The season is
 complete in coverage (105 storms, 97 at TS+, comparable with recent years), so it is included
@@ -298,9 +298,9 @@ inherits that climb as a spurious upward trend, so it is not used. This is the m
 departure from the source notebook.
 
 **Empty ocean is not zero.** A grid cell that never sees a storm is left unpainted, and the
-colour ranges are quantiles weighted by how many positions a cell carries. Without both, the
+color ranges are quantiles weighted by how many positions a cell carries. Without both, the
 ~95% of cells that are empty or marginal set the scale and every basin collapses into the
-bottom few percent of the colour bar.
+bottom few percent of the color bar.
 
 ## Statistics
 
@@ -314,7 +314,7 @@ and re-checks the slope and CI on thirteen real basin/band series.
 Theil–Sen with Mann–Kendall significance is the more general choice, and is usually preferred
 because the median of pairwise slopes resists outliers. It does not work on this field:
 
-> We use least-squares because Theil–Sen, while more general and often preferred to minimise
+> We use least-squares because Theil–Sen, while more general and often preferred to minimize
 > the effect of outliers, doesn't work well for the map since many gridboxes have multiple
 > years with zero storms, which means the median of pairwise slopes will come out simply as
 > zero.
@@ -350,7 +350,7 @@ that month for the extensive fields, and the position-pooled mean for the intens
 busy year does not count the same as a quiet one. Under **Maximum / Minimum** it is the mean
 over years of each year's monthly extreme (years with a storm that month) — the same statistic
 as the climatology map. Until 2026-10-10 it was the single record over the whole period while
-labelled an average (East Pacific October: 185 kt, Patricia, against a typical year's 106 kt).
+labeled an average (East Pacific October: 185 kt, Patricia, against a typical year's 106 kt).
 Southern Hemisphere months are indexed by IBTrACS `SEASON`, so a December point belongs to the
 following season's year. The **month-by-month** grid plots each
 month's own annual series with its own trend, on one shared vertical scale so the months stay
@@ -396,7 +396,7 @@ at all: 15,301 at "all positions", 11,964 at TS+, 5,984 at Cat 1+, 2,449 at Cat 
 Maximum statistic the threshold is a coverage filter, not an intensity filter, which is not
 obvious from the control.
 
-**One artefact of the synoptic-only rule lands here specifically.** Agencies sometimes insert an
+**One artifact of the synoptic-only rule lands here specifically.** Agencies sometimes insert an
 off-synoptic position precisely to capture peak intensity — the JTWC report says so explicitly —
 and those rows are dropped. Measured over 1980–2025 it lowers the recorded peak for **57 of 4,435
 storms (1.3%)**, by 5.7 kt on average, moving the global mean peak from 70.91 to 70.83 kt.
@@ -413,31 +413,31 @@ The shortfall is not stationary, which is what makes it worth recording:
 
 Intermediate points have become more common, so this imparts a slight *downward* pressure on
 maximum-Vmax trends of order 0.05 kt/decade, against typical slopes of 1–2 kt/decade. Small, but
-it is an artefact of the filter rather than of the storms. Computing the maximum over all rows
+it is an artifact of the filter rather than of the storms. Computing the maximum over all rows
 including 3-hourly ones would remove it, at the cost of a statistic that no longer matches the
 rest of the page.
 
 ### Smoothing
 
 Both maps pass through a **Gaussian blur, sigma = 5°** — one grid cell, a 5×5 kernel with about
-16% of the weight on the centre box — on by default with an Off switch. A single 5° box is a small sample and the eye goes straight to isolated extremes;
+16% of the weight on the center box — on by default with an Off switch. A single 5° box is a small sample and the eye goes straight to isolated extremes;
 blurring makes the coherent pattern the thing you see first, which is how the page asks these
 maps to be read.
 
-It is a **normalised convolution**: only cells that have a value contribute, and the weights are
-renormalised by what was found. A plain convolution treating gaps as zero would drag every
+It is a **normalized convolution**: only cells that have a value contribute, and the weights are
+renormalized by what was found. A plain convolution treating gaps as zero would drag every
 coastal and basin-edge cell towards nothing.
 
-| property | behaviour |
+| property | behavior |
 |---|---|
-| gated / empty cells | stay NaN — smoothing changes colours, never which boxes are drawn |
+| gated / empty cells | stay NaN — smoothing changes colors, never which boxes are drawn |
 | longitude | wraps (verified symmetric across the seam); latitude clamps |
 | spatial variance | falls, 0.861 → 0.645 for global TS+ storm-days |
 | peak cell | 6.90 → 3.25, about **−53%** |
-| sum over cells | rises ~3.7% — renormalisation lifts edge cells, so totals are *not* conserved |
+| sum over cells | rises ~3.7% — renormalization lifts edge cells, so totals are *not* conserved |
 | zonal profiles, series panels | untouched |
 
-Two consequences worth stating plainly. The colour-bar maximum rescales with the smoothed field
+Two consequences worth stating plainly. The color-bar maximum rescales with the smoothed field
 (7.0 → 4.0 on the global default view), so it no longer corresponds to any real box. And because
 the drawn value can sit far from the box's own number, **the hover tooltip shows both** —
 `0.72 storm-days/yr (smoothed; this box 1.31)`. Without that, smoothing would quietly conceal
@@ -473,7 +473,7 @@ distinction is what makes the thresholds work at all for counts: a count uses ev
 the window, so testing "years used" would always pass and a cell with two storms in
 forty-five years would still be drawn a trend.
 
-**To be drawn in colour: `Min plot` years, default 1** — that is, show everything by default and
+**To be drawn in color: `Min plot` years, default 1** — that is, show everything by default and
 let the reader tighten it. Applies to every view, so the map keeps
 the same cells as you switch between climatology, trend, change and single-year — the
 membership does not shift under you.
@@ -486,7 +486,7 @@ answer.
 | condition | value | why |
 |---|---|---|
 | years carrying a storm | **max(8, 30% of the period)** | sample size, scaled to how much record there is to be present for |
-| those years span ≥ **70%** of the period | fixed | every cell's slope then refers to roughly the same epoch, instead of one cell reporting 1980–95 and its neighbour 2005–24 |
+| those years span ≥ **70%** of the period | fixed | every cell's slope then refers to roughly the same epoch, instead of one cell reporting 1980–95 and its neighbor 2005–24 |
 | ≥ **2** of them in each half | fixed | bounds leverage |
 
 At the 1990–2024 default that first rule asks for 11 years; over 1980–2025 it asks for 14, and
@@ -523,11 +523,11 @@ TS+ map, 1990–2024:
 For four of the five fields the span rule is nearly redundant — but Pmin is exactly why it
 stays. JTWC central pressure does not begin until 1999–2002, so a Pmin cell can satisfy any
 year count entirely within the back two-thirds of the window and report a 2002–2024 trend
-labelled 1990–2024. Span is the only rule that catches that.
+labeled 1990–2024. Span is the only rule that catches that.
 
 **The zonal profiles do not respond to `Min plot`, on purpose.** They pool every cell in the
-band, including any the map has greyed out, so the profile beside a map is *not* the row-average
-of the boxes you can see. `Min plot` is a display threshold — "do not colour a box I cannot
+band, including any the map has grayed out, so the profile beside a map is *not* the row-average
+of the boxes you can see. `Min plot` is a display threshold — "do not color a box I cannot
 read" — not a claim that the storms in a thin box did not happen.
 
 Making the profile follow the map would break it rather than reconcile it. For the extensive
@@ -547,16 +547,16 @@ a year with data, nothing more — and the panel subtitle says the profile pools
 The trend profile keeps the trend rule at band level, which is a statement about the band's own
 series rather than about the map's display.
 
-**A cell that fails a gate is drawn grey, not deleted.** Grey means "storms happened here, but
+**A cell that fails a gate is drawn gray, not deleted.** Gray means "storms happened here, but
 not enough of them, or not spread widely enough, to put a number on it" — distinct from the
 unpainted ocean, which means no storm ever crossed the box in this window. Both maps carry a
-grey swatch in the legend, and hovering a grey cell says which gate it missed.
+gray swatch in the legend, and hovering a gray cell says which gate it missed.
 
 The reason not to simply drop them: a reader cannot see an absent cell, so raising `Min plot`
-would appear to shrink the storm track itself rather than to raise the evidentiary bar. Greying
-makes the cost of the setting visible, and the grey fringe on the climatology map is
+would appear to shrink the storm track itself rather than to raise the evidentiary bar. Graying
+makes the cost of the setting visible, and the gray fringe on the climatology map is
 informative in its own right — it is the outer envelope of where cyclones have ever reached, as
-opposed to where they reliably recur. The grey is chosen from outside both colour ramps so it
+opposed to where they reliably recur. The gray is chosen from outside both color ramps so it
 cannot be read as a value.
 
 The per-half rule earns its place against a cell like
@@ -637,7 +637,7 @@ someone has wired a storm panel back onto a sum.
 Sanity: the basin table reproduces the published climatologies — **86.4** TS+ storms per year
 globally, **47.0** at hurricane strength, **14.5** in the North Atlantic box, **25.9** in the West
 Pacific, **17.7** in the East Pacific — all verified against an independent `nunique` in
-`ref_values.py`. (The North Atlantic *box* still sits above the 13.7 storms/yr labelled `NA` by
+`ref_values.py`. (The North Atlantic *box* still sits above the 13.7 storms/yr labeled `NA` by
 IBTrACS, because East Pacific storms that cross Mexico into the Gulf are counted where they went.
 Before 2026-10-10 it read 16.1: see "Basins" for the corner that was moved to the East Pacific.)
 
@@ -659,7 +659,7 @@ cell outside Global — because it is the kind of property that quietly stops be
 The **Australian region** is the Bureau of Meteorology's area of responsibility, 90°E–160°E
 south of the equator. It was carved out of South Indian (which previously ran to 135°E) and
 South Pacific (which began there), so a cyclone in the Australian region is counted there and
-**not** in either neighbour. The three remain disjoint and the global partition is unchanged —
+**not** in either neighbor. The three remain disjoint and the global partition is unchanged —
 `test_tctrend.js` checks that SI + AU + SP + SA still equals the southern hemisphere exactly.
 
 ### Picking a basin off the map
@@ -798,10 +798,10 @@ against `scipy.stats.linregress`; the same four on thirteen real basin/band seri
 45-year annual series for five field/basin/threshold combinations; that the zonal bands and the
 map cells each sum back to the region total; and that the SVG export is well formed.
 
-It also pins the behaviours that are easy to "fix" back into bugs later:
+It also pins the behaviors that are easy to "fix" back into bugs later:
 
-- raising `Min plot` must **grey** map cells, not remove them — the count of drawn boxes stays
-  fixed while the grey count rises
+- raising `Min plot` must **gray** map cells, not remove them — the count of drawn boxes stays
+  fixed while the gray count rises
 - the zonal profile must **not** move when `Min plot` does, even as the map collapses from 755
   drawn cells to 23
 - each of the three trend conditions is given a series that breaks only that one, and each must

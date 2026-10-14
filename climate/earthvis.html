@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EarthVis &mdash; Climate and Extremes Through the Year</title>
+<meta name="description" content="Interactive, animated maps of the annual mean and seasonal cycle of Earth's climate from ERA5 (temperature, precipitation, clouds, radiation, winds, pressure, severe-storm ingredients) and of weather extremes (tropical cyclones, U.S. hail, tornadoes, damaging wind, derechos), averaged over 1996-2025, with animation export.">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="referrer" content="no-referrer">
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script src="lib/mp4-muxer.js"></script>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#16212e; --panel2:#1d2a3a; --line:#2a3a4d;
+    --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e; --sea:#0b1119;
+  }
+  html[data-theme="light"]{
+    --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a; --sea:#eef2f6;
+  }
+  html[data-theme="light"] body{
+    background:
+      radial-gradient(1100px 520px at 80% -10%, rgba(43,111,184,.07), transparent 60%),
+      radial-gradient(900px 460px at 0% 0%, rgba(179,100,10,.06), transparent 55%),
+      linear-gradient(180deg,#f7f9fb 0%, #ffffff 100%);
+  }
+  html[data-theme="light"] .btn.on, html[data-theme="light"] .seg button.on{background:rgba(43,111,184,.14)}
+  html[data-theme="light"] .tip{background:#ffffff;color:#16212e;border-color:#c9d4de}
+  html[data-theme="light"] .mapbtns button{background:rgba(255,255,255,.92)}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            background:var(--bg);color:var(--text)}
+  body{background:
+      radial-gradient(1100px 520px at 80% -10%, rgba(70,163,255,.10), transparent 60%),
+      radial-gradient(900px 460px at 0% 0%, rgba(255,177,78,.07), transparent 55%),
+      linear-gradient(180deg,#0d141c 0%, #0f1720 100%);}
+  a{color:var(--accent)}
+  .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
+            padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
+  .alertbar b{color:#fff}
+  header{padding:11px 18px 0;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{margin:0;font-size:17px;font-weight:650}
+  header p{margin:4px 0 0;font-size:12.5px;color:var(--muted);max-width:1180px;line-height:1.5}
+  header .hmeta{margin:5px 0 0;font-size:11px;color:var(--muted)}
+  header .home{font-weight:650;text-decoration:none}
+
+  .bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;padding:10px 0 11px}
+  .fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .fld>label,.fld .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  .fld.off{opacity:.38;pointer-events:none}
+  select{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+       border-radius:6px;padding:5px 7px;font-size:12.5px;font-family:inherit;max-width:100%}
+  select:focus{outline:none;border-color:var(--accent)}
+  #fldSel{max-width:290px}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;
+       font-size:12px;padding:6px 11px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .btn:hover{border-color:var(--accent)}
+  .btn.on{background:rgba(70,163,255,.2);border-color:var(--accent)}
+  .btn.hot{background:var(--accent2);border-color:var(--accent2);color:#111;font-weight:650}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex-wrap:nowrap}
+  .seg button{background:var(--panel2);color:var(--text);border:0;border-right:1px solid var(--line);
+              font:inherit;font-size:12.5px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:rgba(70,163,255,.22);color:var(--text);font-weight:650;box-shadow:inset 0 -2px 0 var(--accent)}
+  .seg button:disabled{opacity:.4;cursor:not-allowed}
+  .chk{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text);padding:4px 0;cursor:pointer;white-space:nowrap}
+  .chk input{accent-color:var(--accent);margin:0}
+  .chks{display:flex;gap:4px 12px;flex-wrap:wrap}
+  :focus-visible{outline:2px solid var(--accent2)!important;outline-offset:2px}
+
+  #wrap{padding:14px 18px 28px;max-width:1500px;margin:0 auto}
+  #msg{padding:60px 18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .maphead{padding:10px 14px 6px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .maphead h2{margin:0;font-size:15px;font-weight:650}
+  .maphead p{margin:2px 0 0;font-size:11.5px;color:var(--muted);line-height:1.4}
+  .maphead .warn{color:var(--accent2)}
+  .bigmonth{font-size:22px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--accent2)}
+  #stage{position:relative;background:var(--sea);touch-action:none;user-select:none;cursor:grab}
+  #stage.drag{cursor:grabbing}
+  #stage canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+  .mapbtns{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;z-index:5}
+  .mapbtns button{width:30px;height:30px;border-radius:6px;border:1px solid var(--line);background:rgba(22,33,46,.88);
+       color:var(--text);font-size:16px;line-height:1;cursor:pointer;padding:0}
+  .mapbtns button:hover{border-color:var(--accent)}
+  .loadchip{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:6;display:none;
+            background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;
+            padding:4px 12px;font-size:12px;pointer-events:none}
+  .tip{position:absolute;z-index:7;pointer-events:none;background:#101b27;color:#e6edf3;
+       border:1px solid #2a3a4d;border-radius:7px;font-size:11.5px;padding:6px 9px;line-height:1.45;
+       white-space:nowrap;display:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tip b{font-weight:650}
+  .hint{position:absolute;left:8px;bottom:8px;z-index:5;font-size:10.5px;color:var(--muted);
+        background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);border-radius:6px;padding:3px 8px;pointer-events:none}
+  #cbar{display:block;width:100%;height:58px}
+  .cbwrap{padding:4px 14px 2px}
+
+  /* time bar */
+  #timebar{display:flex;align-items:center;gap:10px;padding:8px 14px 12px;flex-wrap:wrap;border-top:1px solid var(--line)}
+  #playBtn{min-width:78px}
+  .ttrack{flex:1 1 360px;min-width:220px}
+  .ttrack input[type=range]{width:100%;margin:0;accent-color:var(--accent2)}
+  .tticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);padding:0 1px;user-select:none}
+  .tticks span{cursor:pointer;width:2.2em;text-align:center}
+  .tticks span.on{color:var(--accent2);font-weight:700}
+
+  /* side card */
+  .side{display:flex;flex-direction:column;gap:14px}
+  .about{padding:12px 15px 13px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+  .about h3{margin:0 0 2px;font-size:14px;color:var(--text)}
+  .about .src{font-size:11px;margin:0 0 8px}
+  .about ul{margin:6px 0 0;padding-left:18px}
+  .about li{margin:4px 0}
+  .about b{color:var(--text);font-weight:650}
+  .about .xp{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:11.5px}
+  .about .xp b{color:var(--accent2)}
+  .readout{padding:10px 15px;font-size:12px;color:var(--muted);line-height:1.55}
+  .readout .v{font-size:20px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+
+  #panels{display:grid;grid-template-columns:1.25fr .8fr 1.25fr;gap:16px;margin-top:16px}
+  .pcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px 8px;min-width:0;position:relative}
+  .pcard h4{margin:0;font-size:12.5px;font-weight:650}
+  .pcard .ps{margin:1px 0 4px;font-size:11px;color:var(--muted);line-height:1.35;min-height:15px}
+  .pcard svg{width:100%;height:auto;display:block}
+  .legend{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:2px}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+
+  .methods{margin:16px 0 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .methods>summary{cursor:pointer;user-select:none;padding:11px 16px;font-size:13px;font-weight:650;list-style:none}
+  .methods>summary::-webkit-details-marker{display:none}
+  .methods>summary::before{content:'\25B8  ';color:var(--muted);font-size:11px}
+  .methods[open]>summary::before{content:'\25BE  '}
+  .methods .body{padding:0 18px 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .methods li{margin:6px 0}
+  .methods b{color:var(--text);font-weight:650}
+  .guide{margin:0 0 14px;border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
+         padding:10px 15px;font-size:12px;color:var(--muted);line-height:1.6}
+  .guide b{color:var(--text)}
+  .tours{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .chip{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:14px;font:inherit;font-size:12px;
+        padding:3px 10px;cursor:pointer}
+  .chip:hover{border-color:var(--accent2);color:var(--accent2)}
+  .foot{margin-top:14px;font-size:11.5px;color:var(--muted);line-height:1.6}
+
+  /* export dialog */
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:0;
+         width:min(520px,calc(100vw - 32px));box-shadow:0 18px 50px rgba(0,0,0,.45)}
+  dialog::backdrop{background:rgba(5,10,16,.55)}
+  .dlg{padding:16px 18px}
+  .dlg h3{margin:0 0 4px;font-size:15px}
+  .dlg p{margin:0 0 12px;font-size:12px;color:var(--muted);line-height:1.5}
+  .dgrid{display:grid;grid-template-columns:120px 1fr;gap:10px 12px;align-items:center;font-size:12.5px}
+  .dgrid .lab{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .prog{height:8px;background:var(--panel2);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:12px;display:none}
+  .prog i{display:block;height:100%;width:0;background:var(--accent2);transition:width .1s}
+  .dstat{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px}
+  .dbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+  #expPrev{width:100%;border:1px solid var(--line);border-radius:8px;margin-top:10px;display:block;background:var(--sea)}
+
+  @media (max-width:1100px){ .main{grid-template-columns:1fr} #panels{grid-template-columns:1fr 1fr} #pHov{grid-column:1 / -1} }
+  @media (max-width:640px){
+    .alertbar{font-size:12px;padding:7px 12px}
+    #wrap{padding:10px 10px 24px} header{padding:10px 12px 0}
+    #panels{grid-template-columns:1fr} .bigmonth{font-size:17px}
+    .bar{gap:8px 10px} #fldSel{max-width:100%} .fld.wide{flex:1 1 100%}
+    .hint{display:none}
+    .mapbtns button{width:26px;height:26px;font-size:14px}
+    .seg{flex-wrap:wrap}
+  }
+  @media (prefers-reduced-motion:reduce){ .prog i{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="alertbar">&#9888; <b>EXPERIMENTAL: beta version, in testing</b></div>
+
+<header>
+  <h1>EarthVis: Climate and Extremes Through the Year</h1>
+  <p><a class="home" href="../">&larr; extremewx.org</a> &middot;
+     Watch the climate move through the year. Pick a field and press <b>Play</b> to animate the average seasonal cycle month by month,
+     or switch to the <b>annual mean</b>, a <b>season</b>, the <b>size of the seasonal cycle</b> or the <b>month of the peak</b>.
+     Every map is the average over <b>1996&ndash;2025</b>: our present-day climate.
+     Drag to pan or spin the globe, scroll to zoom, <b>click anywhere</b> for its seasonal cycle, and <b>Export</b> any animation as a video or GIF for teaching.
+     Related: <a href="../enso/ensogrid.html">El Ni&ntilde;o &amp; La Ni&ntilde;a impacts</a> &middot;
+     <a href="../tc/trends/tctrend.html">TC climatology &amp; trends</a> &middot;
+     <a href="../scs/trends/scstrend_grid.html">U.S. severe weather, 2&deg; grid</a> &middot;
+     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
+  <div class="hmeta dataupd" id="dataupd">Data last updated 2026-10-14 21:01 UTC</div>
+  <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
+
+  <div class="bar" id="bar">
+    <div class="fld wide"><label for="fldSel">Field</label><select id="fldSel"></select></div>
+    <div class="fld" id="thrBox"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
+    <div class="fld"><span class="lab">Show</span>
+      <div class="seg" id="viewSeg" role="group" aria-label="Show">
+        <button data-v="month" title="Each month of the average year, animated">Months</button><button data-v="season" title="A three-month season (pick it on the right)">Season</button><button data-v="annual" title="The average over the whole year (for counts: the yearly total)">Annual</button><button data-v="range" title="Size of the seasonal cycle: the largest monthly value minus the smallest">Range</button><button data-v="peak" title="The calendar month with the largest value">Peak month</button>
+      </div></div>
+    <div class="fld" id="seasBox"><label for="seasSel">Season</label>
+      <select id="seasSel"><option value="djf">Dec&ndash;Feb</option><option value="mam">Mar&ndash;May</option><option value="jja">Jun&ndash;Aug</option><option value="son">Sep&ndash;Nov</option></select></div>
+    <div class="fld" id="relBox"><label for="relSel">Relative to</label>
+      <select id="relSel">
+        <option value="val">Nothing (actual value)</option>
+        <option value="anom">Annual mean (seasonal anomaly)</option>
+        <option value="zonal">Zonal mean (east&ndash;west departure)</option>
+      </select></div>
+    <div class="fld"><label for="mapSel">Map</label>
+      <select id="mapSel">
+        <option value="ee">World (Equal Earth)</option>
+        <option value="eq">World (latitude&ndash;longitude)</option>
+        <option value="globe">Globe</option>
+        <option value="na">North America</option>
+        <option value="us">Contiguous U.S.</option>
+        <option value="eu">Europe &amp; N. Africa</option>
+        <option value="as">South &amp; East Asia</option>
+        <option value="af">Africa</option>
+        <option value="sa">South America</option>
+        <option value="au">Australia</option>
+        <option value="np">Arctic</option>
+        <option value="sp">Antarctic</option>
+      </select></div>
+    <div class="fld" id="unBox"><label for="unSel">Units</label><select id="unSel"></select></div>
+    <div class="fld"><label for="flowSel">Wind flow</label>
+      <select id="flowSel"><option value="off">Off</option><option value="10">10 m</option><option value="850">850 hPa</option>
+        <option value="500">500 hPa</option><option value="250">250 hPa</option></select></div>
+    <div class="fld"><span class="lab">Overlays</span>
+      <div class="chks">
+        <label class="chk"><input type="checkbox" id="cntChk"> Contours</label>
+        <label class="chk"><input type="checkbox" id="bandChk" checked> Banded colors</label>
+        <label class="chk"><input type="checkbox" id="bordChk" checked> Borders</label>
+        <label class="chk"><input type="checkbox" id="gratChk"> Lat/lon grid</label>
+      </div></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn hot" id="expBtn" title="Save the animation as a video or GIF, or the current frame as a PNG">&#11015;&#xFE0E; Export</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn" title="Copy a link to exactly this view">Copy link</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the default view">Reset</button></div>
+  </div>
+</header>
+
+<div id="wrap">
+  <div class="guide" id="guide"></div>
+  <div id="msg">Loading&hellip;</div>
+  <div id="body" style="display:none">
+    <div class="main">
+      <div class="card" id="mapcard">
+        <div class="maphead">
+          <div><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p></div>
+          <div class="bigmonth" id="bigMonth">&nbsp;</div>
+        </div>
+        <div id="stage">
+          <canvas id="cvMap"></canvas><canvas id="cvFlow"></canvas><canvas id="cvTop"></canvas>
+          <div class="mapbtns"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zHome" title="Reset the map view" aria-label="Reset the map view">&#8962;</button></div>
+          <div class="loadchip" id="loadchip">Loading&hellip;</div>
+          <div class="tip" id="tip"></div>
+          <div class="hint" id="hint">drag to pan &middot; scroll to zoom &middot; click for the seasonal cycle there</div>
+        </div>
+        <div class="cbwrap"><canvas id="cbar"></canvas></div>
+        <div id="timebar">
+          <button class="btn" id="playBtn" title="Play / pause (space bar)">&#9654;&#xFE0E; Play</button>
+          <button class="btn" id="prevBtn" title="Previous month (&larr;)" aria-label="Previous month">&#9664;</button>
+          <div class="ttrack">
+            <input type="range" id="tRange" min="0" max="12" step="0.001" value="6" aria-label="Time of year">
+            <div class="tticks" id="tTicks"></div>
+          </div>
+          <button class="btn" id="nextBtn" title="Next month (&rarr;)" aria-label="Next month">&#9654;</button>
+          <div class="fld"><label for="spdSel">Speed</label>
+            <select id="spdSel"><option value="0.35">Slow</option><option value="0.7" selected>Normal</option><option value="1.4">Fast</option></select></div>
+          <label class="chk" title="Glide smoothly between monthly means rather than jumping from one month to the next"><input type="checkbox" id="smoothChk" checked> Smooth between months</label>
+        </div>
+      </div>
+      <div class="side">
+        <div class="card about" id="about"></div>
+        <div class="card readout" id="readout"></div>
+      </div>
+    </div>
+    <div id="panels">
+      <div class="pcard" id="pCyc"><h4 id="cycTitle">Seasonal cycle</h4><div class="ps" id="cycSub"></div><svg id="cycSvg"></svg><div class="legend" id="cycLeg"></div><div class="tip" id="cycTip"></div></div>
+      <div class="pcard" id="pZon"><h4>Zonal mean</h4><div class="ps" id="zonSub"></div><svg id="zonSvg"></svg></div>
+      <div class="pcard" id="pHov"><h4>Zonal mean through the year</h4><div class="ps" id="hovSub"></div><svg id="hovSvg"></svg></div>
+    </div>
+    <div class="foot" id="foot"></div>
+    <details class="methods" id="methods"><summary>Methods, data and caveats</summary><div class="body" id="methodsBody"></div></details>
+  </div>
+</div>
+
+<dialog id="expDlg">
+  <form method="dialog" class="dlg" id="expForm">
+    <h3>Export</h3>
+    <p id="expNote">Saves exactly what the map shows, with a title, color bar, month label and credit line.</p>
+    <div class="dgrid">
+      <span class="lab">Format</span>
+      <select id="exFmt">
+        <option value="mp4">MP4 video (PowerPoint, Keynote, web)</option>
+        <option value="gif">Animated GIF</option>
+        <option value="png">PNG image of this frame</option>
+      </select>
+      <span class="lab">Size</span>
+      <select id="exSize">
+        <option value="1920x1080">1920 &times; 1080 (HD 16:9)</option>
+        <option value="1280x720" selected>1280 &times; 720 (16:9)</option>
+        <option value="1080x1080">1080 &times; 1080 (square)</option>
+        <option value="960x540">960 &times; 540</option>
+        <option value="720x405">720 &times; 405 (small GIF)</option>
+      </select>
+      <span class="lab" id="exDurLab">Length</span>
+      <select id="exDur">
+        <option value="0.6">One year in 7 s</option>
+        <option value="1" selected>One year in 12 s</option>
+        <option value="1.6">One year in 19 s</option>
+        <option value="2.5">One year in 30 s</option>
+      </select>
+      <span class="lab">Frames</span>
+      <select id="exFps">
+        <option value="30">30 per second (smooth)</option>
+        <option value="15" selected>15 per second</option>
+        <option value="8">8 per second (small file)</option>
+        <option value="1">1 per month (step)</option>
+      </select>
+    </div>
+    <div class="prog" id="exProg"><i></i></div>
+    <div class="dstat" id="exStat"></div>
+    <canvas id="expPrev" width="640" height="360"></canvas>
+    <div class="dbtns">
+      <button class="btn" type="button" id="exCancel">Close</button>
+      <button class="btn hot" type="button" id="exGo">Export</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ==========================================================================
+   EarthVis — climate and extremes through the year.
+
+   The average seasonal cycle of a field (12 monthly climatologies) is drawn on a
+   canvas in any d3-geo projection: every output pixel is inverse-projected once
+   per view into a look-up table of grid indices and bilinear weights, so a new
+   frame costs one pass over the pixels however exotic the projection. Animation
+   glides between monthly means (centered on mid-month) with a clamped
+   Catmull-Rom curve, which never overshoots the two months it sits between.
+
+   Everything is computed here from the monthly climatologies: seasons, annual
+   means/totals, the size of the seasonal cycle, the month of the peak, the
+   seasonal anomaly and the departure from the zonal mean. ERA5 fields are
+   pre-built for 1996–2025 (build/build_climo.py); the extremes are binned per
+   year by the parent pages and averaged here over the same years.
+   ========================================================================== */
+
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MFULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SEASONS={djf:{label:'December–February',short:'Dec–Feb',m:[11,0,1]},mam:{label:'March–May',short:'Mar–May',m:[2,3,4]},
+               jja:{label:'June–August',short:'Jun–Aug',m:[5,6,7]},son:{label:'September–November',short:'Sep–Nov',m:[8,9,10]}};
+/* One period for now: the most recent 30 years, present-day climate. The data layout
+   (era5_<var>_<period>.bin.gz) and monthly(f,p) keep room for more periods later. */
+const PERIODS=[{k:'p9625',label:'1996–2025',y0:1996,y1:2025}];
+const LINE={dark:'#ffb14e',light:'#b3640a'};
+
+/* Color ramps (ColorBrewer / cmocean-style, perceptually ordered; no rainbows except the
+   cyclic month palette, where hue *is* the information). */
+const CMAP={
+  temp:['#2a0a4a','#313695','#4575b4','#74add1','#abd9e9','#e0f3f8','#ffffbf','#fee090','#fdae61','#f46d43','#d73027','#a50026','#5c0012'],
+  div:['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#fddbc7','#f4a582','#d6604d','#b2182b','#67001f'],
+  brbg:['#543005','#8c510a','#bf812d','#dfc27d','#f6e8c3','#f5f5f5','#c7eae5','#80cdc1','#35978f','#01665e','#003c30'],
+  wet:['#fbfdf6','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#2d0a63'],
+  snow:['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b','#3f007d'],
+  ice:['#0b2a4a','#1f4e79','#3a76a8','#6aa3cf','#a3cbe8','#d6eaf7','#ffffff'],
+  vap:['#ffffd9','#edf8b1','#c7e9b4','#7fcdbb','#41b6c4','#1d91c0','#225ea8','#253494','#081d58'],
+  cloud:['#0b1a2e','#1d3149','#334a66','#506884','#7189a3','#97abc0','#bfccd9','#e3e9f0','#ffffff'],
+  ir:['#ffffff','#e3e9ef','#c2ccd6','#9eabb9','#7b8a9b','#5b697a','#3e4a59','#262f3a','#141a21'],
+  wind:['#f7fcfd','#e0ecf4','#bfd3e6','#9ebcda','#8c96c6','#8c6bb1','#88419d','#810f7c','#4d004b'],
+  rad:['#000004','#1b0c41','#4a0c6b','#781c6d','#a52c60','#cf4446','#ed6925','#fb9b06','#f7d13d','#fcffa4'],
+  seq:['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'],
+  dew:['#6b4423','#9a7448','#c7a87a','#e8dcbc','#e7f0d8','#b7e0b0','#74c08a','#35996a','#11704f','#03473a'],
+  height:['#2a0a4a','#313695','#4575b4','#74add1','#abd9e9','#e0f3f8','#ffffbf','#fee090','#fdae61','#f46d43','#d73027','#a50026'],
+  /* month of peak: winter blues, spring greens, summer yellows/reds, autumn purples */
+  month:['#1f3fbf','#2f7fd9','#26a8b8','#2fb36b','#8cc63e','#f2d43d','#f7a531','#f26b2a','#d93838','#c23aa8','#8a46c8','#4b3aa8']
+};
+
+/* Every field. `era`: ERA5 variables the field is made from (+ `fn` to combine them,
+   cell by cell, already in display base units); `src:'tc'|'scs'`: extremes, counts.
+   `lv`: color levels in the base unit — {lo,hi,step} or an explicit list `l`.
+   `clear`: values below this are left transparent (no ice, no snow, no storms).
+   `flow`: the wind level drawn by default. `kind` picks the unit choices.        */
+const G={T:'Temperature',W:'Water, clouds & snow',E:'Energy & radiation',C:'Circulation & pressure',
+         S:'Severe-storm ingredients',X:'Tropical cyclones (IBTrACS, global)',U:'U.S. severe weather (Storm Events, 2° grid)'};
+const FIELDS=[
+ {k:'t2m',grp:G.T,label:'Surface air temperature (2 m)',era:['t2m'],kind:'temp',cmap:'temp',lv:{lo:-40,hi:40,step:5},cnt:10},
+ {k:'sst',grp:G.T,label:'Sea surface temperature',era:['sst'],kind:'temp',cmap:'temp',lv:{lo:-2,hi:32,step:2},cnt:2},
+ {k:'t850',grp:G.T,label:'Temperature at 850 hPa (~1.5 km)',era:['t850'],kind:'temp',cmap:'temp',lv:{lo:-35,hi:30,step:5},cnt:5,flow:'850'},
+ {k:'ci',grp:G.T,label:'Sea-ice concentration',era:['ci'],kind:'pct',cmap:'ice',lv:{l:[15,30,50,70,85,95,100]},clear:15},
+ {k:'sd',grp:G.T,label:'Snow depth (water equivalent)',era:['sd'],kind:'mm',cmap:'snow',lv:{l:[1,5,10,25,50,100,200,400]},clear:1},
+
+ {k:'pr',grp:G.W,label:'Precipitation',era:['mtpr'],kind:'rate',cmap:'wet',lv:{l:[0,0.5,1,2,3,4,5,6,8,10,12,15,20]}},
+ {k:'cpf',grp:G.W,label:'Convective share of precipitation',era:['mcpr','mtpr'],kind:'pct',cmap:'seq',lv:{lo:0,hi:100,step:10},
+  fn:(c,p)=>p<0.3?NaN:Math.min(100,100*c/p)},
+ {k:'sf',grp:G.W,label:'Snowfall (water equivalent)',era:['msr'],kind:'rate',cmap:'snow',lv:{l:[0.05,0.1,0.25,0.5,1,1.5,2,3,4,6]},clear:0.05},
+ {k:'pme',grp:G.W,label:'Precipitation minus evaporation',era:['mtpr','mer'],kind:'rate',cmap:'brbg',lv:{lo:-8,hi:8,step:1},
+  fn:(p,e)=>p+e, div:true},
+ {k:'tcwv',grp:G.W,label:'Water vapor in the column (precipitable water)',era:['tcwv'],kind:'mm',cmap:'vap',lv:{lo:0,hi:60,step:5}},
+ {k:'q850',grp:G.W,label:'Specific humidity at 850 hPa',era:['q850'],kind:'gkg',cmap:'vap',lv:{lo:0,hi:18,step:1.5},flow:'850'},
+ {k:'tcc',grp:G.W,label:'Total cloud cover',era:['tcc'],kind:'pct',cmap:'cloud',lv:{lo:0,hi:100,step:10}},
+
+ {k:'insol',grp:G.E,label:'Incoming sunlight at the top of the atmosphere',era:['mtdwswrf'],kind:'wm2',cmap:'rad',lv:{lo:0,hi:550,step:50}},
+ {k:'asr',grp:G.E,label:'Absorbed sunlight (TOA net shortwave)',era:['mtnswrf'],kind:'wm2',cmap:'rad',lv:{lo:0,hi:400,step:25}},
+ {k:'alb',grp:G.E,label:'Planetary albedo (fraction of sunlight reflected)',era:['mtnswrf','mtdwswrf'],kind:'pct',cmap:'cloud',lv:{lo:0,hi:80,step:5},
+  fn:(a,i)=>i<20?NaN:100*(1-a/i)},
+ {k:'olr',grp:G.E,label:'Outgoing longwave radiation (OLR)',era:['mtnlwrf'],kind:'wm2',cmap:'ir',lv:{lo:110,hi:320,step:10},fn:x=>-x},
+ {k:'net',grp:G.E,label:'Net radiation at the top of the atmosphere',era:['mtnswrf','mtnlwrf'],kind:'wm2',cmap:'div',lv:{lo:-150,hi:150,step:25},
+  fn:(s,l)=>s+l, div:true},
+ {k:'lhf',grp:G.E,label:'Surface latent heat flux (evaporative cooling)',era:['mslhf'],kind:'wm2',cmap:'vap',lv:{lo:0,hi:250,step:25},fn:x=>-x},
+ {k:'shf',grp:G.E,label:'Surface sensible heat flux',era:['msshf'],kind:'wm2',cmap:'div',lv:{lo:-100,hi:100,step:20},fn:x=>-x,div:true},
+
+ {k:'msl',grp:G.C,label:'Sea-level pressure',era:['msl'],kind:'hpa',cmap:'div',lv:{lo:984,hi:1040,step:4},cnt:4,flow:'10'},
+ {k:'w10',grp:G.C,label:'Wind at 10 m',era:['u10','v10'],kind:'wind',cmap:'wind',lv:{lo:0,hi:12,step:1},fn:Math.hypot,flow:'10'},
+ {k:'w850',grp:G.C,label:'Wind at 850 hPa (~1.5 km)',era:['u850','v850'],kind:'wind',cmap:'wind',lv:{lo:0,hi:20,step:2},fn:Math.hypot,flow:'850'},
+ {k:'w500',grp:G.C,label:'Wind at 500 hPa (~5.5 km)',era:['u500','v500'],kind:'wind',cmap:'wind',lv:{lo:0,hi:40,step:4},fn:Math.hypot,flow:'500'},
+ {k:'w250',grp:G.C,label:'Wind at 250 hPa (jet stream, ~10 km)',era:['u250','v250'],kind:'wind',cmap:'wind',lv:{lo:0,hi:60,step:5},fn:Math.hypot,flow:'250'},
+ {k:'z500',grp:G.C,label:'500 hPa geopotential height',era:['z500'],kind:'dam',cmap:'height',lv:{lo:492,hi:592,step:6},cnt:6,flow:'500',
+  fn:z=>z/10},
+ {k:'omega',grp:G.C,label:'Rising and sinking air at 500 hPa (omega)',era:['w500'],kind:'omega',cmap:'brbg',lv:{lo:-80,hi:80,step:10},
+  fn:w=>w*864, div:true, rev:true},
+
+ {k:'cape',grp:G.S,label:'Convective available potential energy (CAPE)',era:['cape'],kind:'jkg',cmap:'seq',lv:{l:[0,50,100,200,300,500,750,1000,1500,2000,3000]},flow:'850'},
+ {k:'s06',grp:G.S,label:'Deep-layer wind shear (500 hPa minus 10 m)',era:['s06'],kind:'wind',cmap:'wind',lv:{lo:0,hi:30,step:2.5},flow:'500'},
+ {k:'d2m',grp:G.S,label:'Dewpoint (2 m)',era:['d2m'],kind:'temp',cmap:'dew',lv:{lo:-30,hi:25,step:5},flow:'10'},
+
+ {k:'s200',grp:G.X,label:'Vertical wind shear for TCs (200 minus 850 hPa)',era:['s200'],kind:'wind',cmap:'wind',lv:{lo:0,hi:40,step:4}},
+ {k:'tcd',grp:G.X,label:'Tropical-cyclone track density',src:'tc',tck:'n',kind:'count',unitWord:'storm-days',cmap:'seq',
+  thresholds:[{label:'Vmax ≥ 34 kt (tropical storm+)',bins:[0,1,2]},{label:'Vmax ≥ 64 kt (hurricane / Cat 1+)',bins:[1,2]},
+              {label:'Vmax ≥ 96 kt (major / Cat 3+)',bins:[2]}]},
+ {k:'tcace',grp:G.X,label:'Accumulated cyclone energy (ACE)',src:'tc',tck:'a',kind:'count',unitWord:'10⁴ kt²',cmap:'seq'},
+ {k:'tcgen',grp:G.X,label:'Tropical-cyclone genesis',src:'tc',tck:'g',kind:'count',unitWord:'storms',cmap:'seq'},
+
+ {k:'hail',grp:G.U,label:'Hail',src:'scs',file:'grid_hail.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
+ {k:'tornado',grp:G.U,label:'Tornado',src:'scs',file:'grid_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
+ {k:'wind',grp:G.U,label:'Thunderstorm wind',src:'scs',file:'grid_wind.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
+ {k:'derechoday',grp:G.U,label:'Derecho',src:'scs',file:'grid_derechoday.json.gz',kind:'count',unitWord:'events',cmap:'seq'}
+];
+const FBYK=Object.fromEntries(FIELDS.map(f=>[f.k,f]));
+const FLOWV={'10':['u10','v10'],'850':['u850','v850'],'500':['u500','v500'],'250':['u250','v250']};
+
+/* Units. `to` converts from the base unit; levels are re-derived in the new unit. */
+const UNITS={
+  temp:[{k:'C',u:'°C',to:x=>x,d:x=>x},{k:'F',u:'°F',to:x=>x*1.8+32,d:x=>x*1.8}],
+  rate:[{k:'mmd',u:'mm/day',to:x=>x,d:x=>x},{k:'inmo',u:'in/month',to:x=>x*30.44/25.4,d:x=>x*30.44/25.4},{k:'mmmo',u:'mm/month',to:x=>x*30.44,d:x=>x*30.44}],
+  wind:[{k:'ms',u:'m/s',to:x=>x,d:x=>x},{k:'kt',u:'kt',to:x=>x*1.943844,d:x=>x*1.943844},{k:'mph',u:'mph',to:x=>x*2.236936,d:x=>x*2.236936}],
+  mm:[{k:'mm',u:'mm',to:x=>x,d:x=>x},{k:'in',u:'in',to:x=>x/25.4,d:x=>x/25.4}],
+  pct:[{k:'pct',u:'%',to:x=>x,d:x=>x}], gkg:[{k:'gkg',u:'g/kg',to:x=>x,d:x=>x}], wm2:[{k:'wm2',u:'W/m²',to:x=>x,d:x=>x}],
+  hpa:[{k:'hpa',u:'hPa',to:x=>x,d:x=>x},{k:'inhg',u:'inHg',to:x=>x*0.0295300,d:x=>x*0.0295300}],
+  dam:[{k:'dam',u:'dam',to:x=>x,d:x=>x},{k:'m',u:'m',to:x=>x*10,d:x=>x*10}],
+  omega:[{k:'hpad',u:'hPa/day',to:x=>x,d:x=>x},{k:'pas',u:'Pa/s',to:x=>x/864,d:x=>x/864}],
+  jkg:[{k:'jkg',u:'J/kg',to:x=>x,d:x=>x}], count:[{k:'n',u:'',to:x=>x,d:x=>x}]
+};
+
+/* What to look for. Short, checkable statements a student can verify on the map,
+   then one note for the expert (`xp`). Keep them true for every period. */
+const ABOUT={
+ t2m:{d:'Air temperature 2 m above the ground, the "official" temperature of weather stations.',
+  look:['The seasonal swing is <b>small over the oceans and the tropics, huge over the continents</b>: Siberia and northern Canada swing by 40–60 °C between January and July. Water stores heat; land does not (select <b>Range</b>).',
+        'Each hemisphere\'s winter cold pool sits over its <b>continent interior</b>, not at the pole in the Northern Hemisphere: compare Yakutia with the Arctic Ocean in January.',
+        'The <b>0 °C line</b> (contours on) sweeps across the mid-latitude continents through the year, setting where snow can lie.',
+        'Use <b>Relative to → Zonal mean</b> to see the warm west coasts and cold east coasts of the northern continents in winter.'],
+  xp:'Land–sea contrast in heat capacity sets the amplitude; the phase lag (peak in July/August, not at the solstice) is visible in <b>Peak month</b>. Over Antarctica and Greenland 2 m temperature is at the ice-sheet surface elevation.'},
+ sst:{d:'Temperature of the ocean surface (ERA5 uses observed SSTs as a boundary condition).',
+  look:['The tropical <b>warm pool</b> of the western Pacific and Indian Ocean stays above 28 °C all year: the fuel tank for deep convection and tropical cyclones.',
+        'The <b>cold tongue</b> of the eastern equatorial Pacific and the cold upwelling coasts (Peru, California, Benguela) stand out from the zonal mean.',
+        'Western boundary currents (Gulf Stream, Kuroshio) carry warm water poleward: tight temperature gradients off the U.S. East Coast and Japan.',
+        'The 26 °C isotherm (contours on, every 2 °C) roughly bounds where tropical cyclones form; watch it advance poleward in late summer.'],
+  xp:'Ocean seasonal ranges are a few °C at most except in western boundary current regions, where winter cold-air outbreaks cool the surface strongly. Grid boxes with less than a quarter ocean are left blank.'},
+ t850:{d:'Air temperature at 850 hPa, about 1.5 km up, above most of the daily heating and nighttime cooling of the surface.',
+  look:['Forecasters use the <b>0 °C line at 850 hPa</b> as a rough rain/snow line in winter storms.',
+        'Monsoon heat lows: the Sahara, Arabia, the Tibetan foothills and the U.S. Southwest heat up strongly in summer.',
+        'The temperature contrast across the mid-latitudes is what drives the jet stream: compare with 250 hPa wind.'],
+  xp:'850 hPa lies below ground over high terrain (Tibet, the Andes, Antarctica); ERA5 extrapolates there, so read those values with care.'},
+ ci:{d:'Fraction of the ocean surface covered by sea ice. Below 15% is left blank (the usual definition of the ice edge).',
+  look:['Arctic sea ice is largest in <b>March</b> and smallest in <b>September</b>; Antarctic ice does the reverse.',
+        'Antarctic sea ice grows out to about 60°S every winter and nearly vanishes every summer: a far larger seasonal cycle than the Arctic\'s.'],
+  xp:'ERA5 takes its sea ice (and SST) from HadISST2 until August 2007 and from OSTIA afterwards. The sea-ice edge is smoothed by the 1° boxes.'},
+ sd:{d:'Depth of the snowpack, expressed as the depth of water it would melt to (1 mm water ≈ 1 cm of fresh snow).',
+  look:['The Northern Hemisphere snowpack reaches its maximum in <b>February–March</b> and is gone from most land by June.',
+        'Deepest seasonal snow: northern Russia, Canada and the mountain ranges (Rockies, Alps, Himalaya).',
+        'Greenland and Antarctica are permanently white: ERA5 holds snow depth fixed over the ice sheets.'],
+  xp:'Snow depth in ERA5 is a model snowpack constrained by station snow-depth and satellite snow-cover analyses; mountain snow at 1° is heavily smoothed.'},
+ pr:{d:'Rain plus snow (water equivalent), as a daily rate averaged over the month.',
+  look:['The <b>Intertropical Convergence Zone</b> is the band of heavy rain near the equator. Press Play: it follows the Sun north in July and south in January.',
+        'The <b>monsoons</b> switch on: South Asia in June–September, West Africa in July–August, northern Australia in December–February, the North American monsoon in July–August.',
+        'The subtropical <b>deserts</b> (Sahara, Arabia, Australia, the Atacama) sit under sinking air: compare with <b>rising and sinking air</b>.',
+        'The storm tracks off Japan and the U.S. East Coast deliver mid-latitude rain in winter.'],
+  xp:'Precipitation is a short-range forecast product in ERA5, not assimilated; it is good in the extratropics and less so in the deep tropics. Try <b>Peak month</b> for the timing of the wet season everywhere.'},
+ cpf:{d:'The fraction of precipitation that ERA5\'s convection scheme produces (showers and thunderstorms) rather than its large-scale cloud scheme. Blank where precipitation is under 0.3 mm/day.',
+  look:['Almost all tropical rain is convective.',
+        'Mid-latitude winter precipitation is mostly <b>stratiform</b> (frontal); summer rain over the continents turns convective.',
+        'Watch the central U.S. turn convective from April to August.'],
+  xp:'This is a model diagnostic: the split depends on the convection parameterisation and on grid spacing, so read it as a guide to the type of weather, not an observation.'},
+ sf:{d:'Snowfall as a water-equivalent rate (multiply by roughly 10 for snow depth). Blank under 0.05 mm/day.',
+  look:['Snow piles up on the windward side of mountains and downwind of open water: the Cascades and Coast Mountains, the Japanese Alps facing the Sea of Japan. The Great Lakes snow belts are only hinted at on a 1° grid.',
+        'Snowfall peaks in early winter at high latitudes but in late winter and spring on the mountains.',
+        'Southern Ocean and Antarctic coast snowfall continues all year.'],
+  xp:'Precipitation phase is decided by the ERA5 microphysics; at 1° the orographic maxima are strongly smoothed.'},
+ pme:{d:'Precipitation minus evaporation: where the atmosphere delivers more water than it takes up (green, wet) or the reverse (brown, a moisture source).',
+  look:['The <b>subtropical oceans are the planet\'s water sources</b>: strongly negative under the trade winds.',
+        'The ITCZ and the storm tracks are sinks, where that water comes down.',
+        'Over land the annual mean must be positive (rivers carry the excess back to the sea), but in summer evapotranspiration can exceed rain.'],
+  xp:'The annual global mean should be close to zero; ERA5\'s is slightly positive, a known imbalance of the model water budget.'},
+ tcwv:{d:'All the water vapor in a column of air, as the depth of liquid water it would condense to.',
+  look:['Moisture follows temperature: the warm tropics hold 40–60 mm, polar air a few mm (warmer air can hold about 7% more vapor per °C).',
+        'The South Asian and North American monsoons draw a tongue of moist air far inland in summer.',
+        'Atmospheric rivers carry moisture poleward along the storm tracks (clearer in daily data than in these monthly means).'],
+  xp:'Precipitable water is set mainly by temperature through Clausius–Clapeyron, with relative humidity varying much less; compare the patterns with 2 m temperature.'},
+ q850:{d:'Mass of water vapor per kilogram of air at 850 hPa (~1.5 km).',
+  look:['The Gulf of Mexico low-level moisture surge into the U.S. Plains in spring and summer: the fuel for severe storms.',
+        'Moist monsoon inflow over India and West Africa in boreal summer.'],
+  xp:'Values over high terrain are below ground and extrapolated.'},
+ tcc:{d:'The fraction of the sky covered by cloud at any level.',
+  look:['The cloudiest places are the <b>Southern Ocean</b> and the storm tracks, where low cloud is nearly permanent.',
+        'Clear skies over the subtropical deserts and the sinking branches of the Hadley circulation.',
+        'Bright stratocumulus decks off California, Peru and Namibia, over the cold upwelling water.'],
+  xp:'Cloud cover is a model field; ERA5 has known biases in low cloud. Compare with <b>planetary albedo</b>.'},
+ insol:{d:'Sunlight arriving at the top of the atmosphere, averaged over day and night. Set by astronomy alone.',
+  look:['At the <b>summer pole the daily-mean sunlight beats the equator</b> (24 hours of daylight).',
+        'Polar night: zero sunlight inside the polar circle for part of the year.',
+        'Earth is closest to the Sun in early January, so daily-mean sunlight in December–January is about 7% stronger than in June–July (the southern summer is also a few days shorter).'],
+  xp:'This is the forcing for everything else on this page. Compare its Peak month (June/December) with the temperature Peak month (July/August, lagged by heat storage).'},
+ asr:{d:'Sunlight absorbed by the Earth system: incoming minus reflected at the top of the atmosphere.',
+  look:['Dark oceans in the summer hemisphere absorb the most.',
+        'Snow, ice, deserts and cloud decks reflect much of what arrives: compare with <b>incoming sunlight</b>.'],
+  xp:'Annual global mean is about 240 W/m², balanced almost exactly by the outgoing longwave radiation.'},
+ alb:{d:'The fraction of incoming sunlight reflected back to space by clouds, snow, ice and the surface. Blank where there is almost no sunlight.',
+  look:['Ice sheets and sea ice are the brightest surfaces; the Sahara is brighter than the vegetated tropics.',
+        'Clouds make the storm tracks and the Southern Ocean bright.',
+        'Dark oceans under clear skies reflect less than 10%.'],
+  xp:'Planetary albedo averages about 0.29 globally. This is computed from monthly means (1 − absorbed/incoming), not from instantaneous fluxes.'},
+ olr:{d:'Infrared radiation leaving the top of the atmosphere. Low values mean cold, high cloud tops — like a satellite infrared image, where deep thunderstorm clouds look white.',
+  look:['The <b>ITCZ and monsoon convection</b> show as low OLR (white): the cold tops of deep clouds.',
+        'The highest OLR comes from <b>hot, clear deserts</b> and the clear subtropical oceans.',
+        'Watch the convection over South America, Africa and Indonesia follow the Sun.'],
+  xp:'OLR minima are a classic proxy for tropical rainfall; compare with precipitation and <b>Relative to → Zonal mean</b>.'},
+ net:{d:'Absorbed sunlight minus outgoing longwave radiation at the top of the atmosphere.',
+  look:['Annual mean (select <b>Annual</b>): the tropics gain energy and the high latitudes lose it. The atmosphere and ocean must carry heat poleward to balance this.',
+        'In each month the summer hemisphere gains energy while the winter hemisphere loses it.'],
+  xp:'The global annual mean is the planetary energy imbalance; ERA5\'s TOA budget is not closed to the ~1 W/m² precision of the observed imbalance, so do not read that number from here.'},
+ lhf:{d:'Energy carried from the surface into the atmosphere by evaporation (upward positive).',
+  look:['Largest over the <b>warm western boundary currents in winter</b> (Gulf Stream, Kuroshio) when cold, dry continental air blows over warm water.',
+        'Trade-wind oceans evaporate steadily all year.'],
+  xp:'1 mm/day of evaporation ≈ 29 W/m² of latent heat flux.'},
+ shf:{d:'Heat conducted from the surface to the air (upward positive).',
+  look:['Deserts and dry continents heat the air strongly in summer.',
+        'Over winter continents the flux is downward: the ground and snow cool the air from below.'],
+  xp:'Large positive values over winter western boundary currents mark cold-air outbreaks over warm water.'},
+ msl:{d:'Air pressure reduced to sea level.',
+  look:['The <b>semi-permanent highs</b> over the subtropical oceans (Bermuda–Azores, North Pacific) strengthen in summer.',
+        'The <b>Aleutian and Icelandic lows</b> deepen in winter: the average imprint of winter storms.',
+        'The <b>Siberian High</b> builds over the cold Asian continent in winter, then gives way to the Asian monsoon low in summer.',
+        'Turn on the 10 m wind: air spirals out of highs and into lows, turned by the Coriolis effect.'],
+  xp:'Over high terrain the reduction to sea level is fictitious; ignore the values over Tibet and the Andes.'},
+ w10:{d:'Wind speed of the monthly-mean wind 10 m above the surface.',
+  look:['The <b>trade winds</b> blow from the east in the tropics; the <b>westerlies</b> roar over the Southern Ocean.',
+        'The <b>Somali jet</b> and the Indian monsoon: the low-level winds over the Arabian Sea reverse between January and July.',
+        'The animated streaks follow the flow; their speed and brightness scale with wind speed.'],
+  xp:'Speeds are of the monthly-mean vector, which is smaller than the mean instantaneous speed wherever wind direction varies (most of the mid-latitudes).'},
+ w850:{d:'Wind at 850 hPa, above the friction of the surface.',
+  look:['The <b>Great Plains low-level jet</b>: southerly flow carrying Gulf moisture into the central U.S. in late spring and summer.',
+        'The Somali jet over the western Arabian Sea feeds the Indian monsoon in June–September.'],
+  xp:'Monthly-mean vectors; the nocturnal Plains jet is stronger in individual nights.'},
+ w500:{d:'Wind at 500 hPa, the middle of the troposphere, which steers weather systems.',
+  look:['The mid-latitude westerlies move poleward and weaken in summer.',
+        'Compare with the 500 hPa height map: the wind blows along the height contours (geostrophic balance).'],
+  xp:'The westerlies are strongest over the eastern seaboards of Asia and North America in winter, downstream of the stationary troughs.'},
+ w250:{d:'Wind near the tropopause, where the jet streams live.',
+  look:['The <b>subtropical jet</b> over Japan exceeds 60 m/s (135 mph) in winter.',
+        'The jets shift poleward and weaken in summer; the Southern Hemisphere jet varies much less through the year.',
+        'In northern summer the <b>tropical easterly jet</b> appears over India and Africa above the monsoon.'],
+  xp:'The strength of the jet follows the pole-to-equator temperature contrast through thermal wind balance.'},
+ z500:{d:'The height of the 500 hPa pressure surface (in decameters, 10 m). High heights = warm columns of air, low heights = cold.',
+  look:['Wind blows along the contours, faster where they are packed together.',
+        'Use <b>Relative to → Zonal mean</b> to see the <b>stationary waves</b>: troughs over eastern North America and East Asia, ridges over the Rockies and Europe in winter.',
+        'Heights rise everywhere in summer as the troposphere warms.'],
+  xp:'The stationary-wave pattern is forced by mountains (Rockies, Tibet) and land–sea heating contrasts; its winter amplitude in the north dwarfs the southern one.'},
+ omega:{d:'Vertical motion at 500 hPa. Negative omega (green) = rising air (pressure decreases following the parcel); positive (brown) = sinking air.',
+  look:['Rising air under the <b>ITCZ and the monsoons</b>, sinking over the <b>subtropical deserts and highs</b>: the Hadley and Walker circulations.',
+        'The <b>Walker circulation</b>: rising over Indonesia, sinking over the eastern Pacific (look along the equator).',
+        'The rising branch follows the Sun into the summer hemisphere.'],
+  xp:'Shown in hPa/day (1 Pa/s = 864 hPa/day). Monthly means average over many storms; the mid-latitude signal is weak compared with individual systems.'},
+ cape:{d:'Convective available potential energy: the energy a rising air parcel can gain from buoyancy. Higher CAPE allows stronger updrafts.',
+  look:['CAPE peaks over the <b>tropical oceans and the summer continents</b>.',
+        'The central and southern U.S. Plains build large CAPE from <b>April to July</b> as Gulf moisture streams north under warm, dry air aloft.',
+        'Compare with the <b>deep-layer shear</b>: severe storms need both, and they overlap most over the U.S. in spring.'],
+  xp:'ERA5 CAPE is computed from the most unstable parcel among the model levels below 350 hPa, so it is close to most-unstable CAPE; monthly means blend many stable days with a few very unstable ones.'},
+ s06:{d:'The difference between the wind at 500 hPa (~5.5 km) and at 10 m, a measure of deep-layer vertical wind shear. Computed from 6-hourly winds, then averaged.',
+  look:['Shear is large in the mid-latitudes in winter and spring, under the jet stream.',
+        'Supercells need shear of roughly 20 m/s (40 kt) or more over the lowest 6 km: the U.S. has that in <b>spring</b>, together with growing CAPE.',
+        'In summer the shear retreats north into Canada while CAPE stays high: storms become less organized.'],
+  xp:'500 hPa minus 10 m approximates 0–6 km bulk shear. It is the mean of the 6-hourly magnitudes (not the magnitude of the mean wind difference), sampled every other two days (and every day from 2023).'},
+ d2m:{d:'The temperature at which the air at 2 m would become saturated: a direct measure of low-level moisture.',
+  look:['Dewpoints above 15–18 °C (60–65 °F) are a classic ingredient for severe storms and oppressive humidity.',
+        'Watch the moisture return from the Gulf of Mexico into the central U.S. between March and June.'],
+  xp:'Dewpoint is easier to compare between places than relative humidity, which depends on temperature.'},
+ s200:{d:'The difference between the wind at 200 hPa and 850 hPa. Strong vertical shear tears tropical cyclones apart.',
+  look:['Tropical cyclones form where shear is low, typically below about 10 m/s (20 kt), over warm water.',
+        'Atlantic hurricane season: shear over the Caribbean and Main Development Region drops in <b>August–October</b>.',
+        'The subtropical jet makes shear strong over the Gulf of Mexico and the Caribbean in winter and spring.'],
+  xp:'Mean of the 6-hourly shear magnitudes (WeatherBench2 1.5° copy of ERA5 through 2022, CDS after).'},
+ tcd:{d:'Storm-days per month with a tropical cyclone center in each 5° box (one 6-hourly position = ¼ storm-day), averaged over 1996–2025.',
+  look:['Every basin has its own season: the North Atlantic peaks in <b>September</b>, the western North Pacific stays active all year, the Southern Hemisphere peaks in <b>January–March</b>.',
+        'The western North Pacific is the most active basin on Earth.',
+        'No tropical cyclones cross the equator, and almost none form in the South Atlantic or eastern South Pacific (cold water, strong shear).'],
+  xp:'IBTrACS v04r01, USA agency winds, synoptic 6-hourly positions, ET and disturbance stages excluded.'},
+ tcace:{d:'Accumulated cyclone energy: the sum of the squared maximum wind (in 10⁴ kt²) of every 6-hourly position, a measure combining the number, strength and duration of storms.',
+  look:['ACE concentrates where storms are strongest and longest-lived: the western North Pacific dominates.',
+        'Compare with track density: intense storms count far more than weak ones.'],
+  xp:'ACE is computed from 6-hourly positions with Vmax ≥ 34 kt, as on the TC trends page.'},
+ tcgen:{d:'Where tropical cyclones first reach 34 kt: storms per month per 5° box.',
+  look:['Genesis happens in a few preferred regions: the Main Development Region of the Atlantic, the eastern Pacific off Mexico, the western Pacific monsoon trough, the Bay of Bengal.',
+        'Almost no genesis within ~5° of the equator, where the Coriolis effect vanishes.'],
+  xp:'The first 6-hourly fix with Vmax ≥ 34 kt in IBTrACS.'},
+ hail:{d:'Days per month with at least one hail report (at the chosen size) in each 2° box, from NOAA\'s Storm Events Database.',
+  look:['Hail season moves north: the southern Plains in <b>April–May</b>, the northern Plains and High Plains in <b>June–July</b>.',
+        'The High Plains (Colorado, Nebraska, the Dakotas, Kansas) are the hail capital of North America.'],
+  xp:'Report counts depend on population density and reporting practice, which changed enormously over time; a box with many reports may simply have many people.'},
+ tornado:{d:'Days per month with at least one tornado (at the chosen EF rating) in each 2° box (Storm Events Database).',
+  look:['Tornado season moves north and east through spring: the Gulf Coast in <b>winter and early spring</b>, the southern Plains in <b>May</b>, the northern Plains and Midwest in <b>June</b>.',
+        'A secondary autumn season appears in the Southeast in <b>November</b>.'],
+  xp:'Weak (EF0) tornado reports rose strongly with better detection after the 1990s; strong tornadoes (EF2+) are the more consistent record.'},
+ wind:{d:'Days per month with at least one thunderstorm wind report (at the chosen speed) in each 2° box (Storm Events Database).',
+  look:['Damaging thunderstorm wind peaks in <b>June–July</b>, broadly across the East and Midwest.',
+        'Measured gusts of 65 kt and more are concentrated in the Plains.'],
+  xp:'Most wind reports are estimated from damage, not measured, so they follow trees and people.'},
+ derechoday:{d:'Derecho events per month touching each 2° box (Squitieri et al. 2026 catalog, 1996 on).',
+  look:['Derechos are a <b>warm-season</b> phenomenon, peaking in June–July along the northern edge of the summer heat ("ring of fire").'],
+  xp:'Squitieri et al. catalog, 1996 on.'}
+};
+
+/* ------------------------------------------------------------------ utils */
+function fmt(v,d){ return (v==null||!isFinite(v))?'—':v.toFixed(d==null?1:d); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hex2rgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function clamp(x,a,b){ return x<a?a:x>b?b:x; }
+function niceStep(raw){
+  const e=Math.pow(10,Math.floor(Math.log10(raw))), m=raw/e;
+  return (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*e;
+}
+function decFor(step){ step=Math.abs(step); if(!(step>0)) return 0;
+  for(let d=0;d<4;d++){ const x=step*Math.pow(10,d); if(Math.abs(x-Math.round(x))<1e-6*Math.max(1,x)) return d; } return 3; }
+function niceUp(x){
+  if(!(x>0)) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(x))), m=x/e;
+  for(const s of [1,1.2,1.5,2,2.5,3,4,5,6,8,10]) if(m<=s*1.0001) return s*e;
+  return 10*e;
+}
+async function gzFetch(url,binary){
+  if(!('DecompressionStream' in window)) throw new Error('this browser cannot decompress the data (please update it)');
+  const r=await fetch(url); if(!r.ok) throw new Error('could not fetch '+url+' ('+r.status+')');
+  const st=new Blob([await r.arrayBuffer()]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const res=new Response(st);
+  return binary ? await res.arrayBuffer() : JSON.parse(await res.text());
+}
+
+/* ------------------------------------------------------------------ state */
+const S={f:'t2m',thr:0,p:'p9625',view:'month',seas:'jja',rel:'val',map:'ee',un:{},flow:'auto',
+         cnt:'auto',band:1,bord:1,grat:0,smooth:1,spd:0.7,t:6,theme:'dark',pt:null,
+         rot:null,zoom:1,pan:[0,0]};
+let IX=null;                       // data/index.json
+const VCACHE=new Map();            // 'var|period' -> Promise<Float32Array(12*64800)>
+const RAW={tc:null,scs:{}};
+const GRID1={lat0:-90,lon0:0,g:1,nlat:180,nlon:360,global:true,key:'g1'};
+
+function F(){ return FBYK[S.f]||FIELDS[0]; }
+function isCount(f){ return (f||F()).kind==='count'; }
+function U(f){ f=f||F(); const list=UNITS[f.kind]||UNITS.count; return list.find(u=>u.k===S.un[f.kind])||list[0]; }
+
+/* ERA5 variable for one period: delta-coded Int16 -> Float32 (NaN = missing) */
+function loadVar(v,p){
+  const key=v+'|'+p;
+  if(VCACHE.has(key)) return VCACHE.get(key);
+  const pr=(async()=>{
+    const meta=IX.vars[v]; if(!meta) throw new Error('no data for '+v);
+    const buf=await gzFetch(`data/era5_${v}_${p}.bin.gz`,true);
+    const d=new Uint16Array(buf), N=180*360;
+    if(d.length!==12*N) throw new Error('unexpected file size for '+v);
+    const out=new Float32Array(12*N), sc=meta.scale, off=meta.offset;
+    for(let r=0;r<12*180;r++){
+      let q=0; const o=r*360;
+      for(let c=0;c<360;c++){ q=(q+d[o+c])&0xFFFF; out[o+c]= q===32768 ? NaN : (q>32767?q-65536:q)*sc+off; }
+    }
+    return out;
+  })();
+  VCACHE.set(key,pr); pr.catch(()=>VCACHE.delete(key));
+  return pr;
+}
+
+/* Monthly climatology of a field for one period: {grid, A:Float32Array(12*N), info} */
+const MCACHE=new Map();
+async function monthly(f,p){
+  const key=f.k+'|'+p+'|'+(f.thresholds||f.src==='scs'?S.thr:'');
+  if(MCACHE.has(key)) return MCACHE.get(key);
+  let out;
+  if(f.era){
+    const arrs=await Promise.all(f.era.map(v=>loadVar(v,p)));
+    let A;
+    if(!f.fn) A=arrs[0];
+    else {
+      A=new Float32Array(arrs[0].length); const fn=f.fn;
+      if(arrs.length===1){ const a=arrs[0]; for(let i=0;i<A.length;i++) A[i]=fn(a[i]); }
+      else { const a=arrs[0], b=arrs[1]; for(let i=0;i<A.length;i++) A[i]=fn(a[i],b[i]); }
+    }
+    const per=PERIODS.find(x=>x.k===p);
+    /* a variable may cover fewer years than the period (index.json records which) */
+    const yr=f.era.map(v=>(IX.vars[v].periods||{})[p]).filter(Boolean);
+    const y0=Math.max(per.y0,...yr.map(q=>q.y0||per.y0)), y1=Math.min(per.y1,...yr.map(q=>q.y1||per.y1));
+    out={grid:GRID1,A,years:[y0,y1],n:y1-y0+1};
+  } else if(f.src==='tc') out=await monthlyTC(f,p);
+  else out=await monthlySCS(f,p);
+  MCACHE.set(key,out);
+  return out;
+}
+
+/* Tropical cyclones: IBTrACS binned by the ENSO page (5° boxes, year, month). */
+async function monthlyTC(f,p){
+  if(!RAW.tc) RAW.tc=await gzFetch('../enso/data/tc_month.json.gz');
+  const d=RAW.tc, m=d.meta, per=PERIODS.find(x=>x.k===p);
+  const grid={lat0:m.lat0,lon0:m.lon0,g:m.grid,nlat:m.nlat,nlon:m.nlon,global:true,key:'tc'};
+  const N=m.nlat*m.nlon, [ty,tm]=m.through.split('-').map(Number);
+  /* whole years only: a year counts if all 12 months are published */
+  const lastFull=tm===12?ty:ty-1;
+  const y0=Math.max(per.y0,m.year0), y1=Math.min(per.y1,lastFull,m.year1);
+  const A=new Float32Array(12*N);
+  /* a period needs at least two-thirds of its years, or it would not be comparable */
+  if(y1-y0+1<20) return {grid,A:A.fill(NaN),years:null,n:0};
+  const ny=y1-y0+1;
+  if(f.tck==='g'){
+    for(let k=0;k<d.gci.length;k++){ const Y=m.year0+d.gyi[k]; if(Y<y0||Y>y1) continue;
+      A[(d.gmi[k]-1)*N+d.gci[k]]+=1; }
+  } else {
+    const keep=new Uint8Array(3);
+    (f.tck==='n'?f.thresholds[Math.min(S.thr,f.thresholds.length-1)].bins:[0,1,2]).forEach(b=>keep[b]=1);
+    for(let k=0;k<d.ci.length;k++){
+      const Y=m.year0+d.yi[k]; if(Y<y0||Y>y1||!keep[d.bi[k]]) continue;
+      A[(d.mi[k]-1)*N+d.ci[k]] += f.tck==='n' ? d.n[k]/4 : d.a[k]/100;
+    }
+  }
+  for(let i=0;i<A.length;i++) A[i]/=ny;
+  return {grid,A,years:[y0,y1],n:ny};
+}
+
+/* U.S. Storm Events 2° grids, read in place from the severe-weather pages. A box that never
+   had a report of this hazard is outside the domain (NaN), so the map shows the U.S. outline. */
+async function monthlySCS(f,p){
+  if(!RAW.scs[f.k]) RAW.scs[f.k]=await gzFetch('../scs/trends/data/'+f.file);
+  const d=RAW.scs[f.k], m=d.meta, per=PERIODS.find(x=>x.k===p);
+  if(!f.thresholds) f.thresholds=m.thresholds.map(t=>({label:t.label}));
+  const ti=Math.min(S.thr,d.v.length-1), v=d.v[ti];
+  const grid={lat0:m.lat0,lon0:m.lon0,g:m.grid,nlat:m.nlat,nlon:m.nlon,global:false,key:'us2'};
+  const N=m.nlat*m.nlon;
+  const thr=m.through?m.through.split('-').map(Number):[m.year1,12];
+  const lastFull=thr[1]===12?thr[0]:thr[0]-1;
+  const y0=Math.max(per.y0,m.year0), y1=Math.min(per.y1,lastFull,m.year1);
+  const A=new Float32Array(12*N).fill(NaN);
+  if(y1-y0+1<20) return {grid,A,years:null,n:0};
+  const inDom=new Uint8Array(N); for(const c of d.ci) inDom[c]=1;
+  for(let mo=0;mo<12;mo++) for(let c=0;c<N;c++) if(inDom[c]) A[mo*N+c]=0;
+  /* months missing from the archive (June/July 1993) are averaged over the years that exist */
+  const gaps=new Set((m.gaps||[]).map(([y,mm])=>y*12+mm-1));
+  const nmo=new Float32Array(12);
+  for(let Y=y0;Y<=y1;Y++) for(let mo=0;mo<12;mo++) if(!gaps.has(Y*12+mo)) nmo[mo]++;
+  for(let k=0;k<d.ci.length;k++){
+    const Y=m.year0+d.yi[k]; if(Y<y0||Y>y1) continue;
+    if(gaps.has(Y*12+d.mi[k]-1)) continue;
+    A[(d.mi[k]-1)*N+d.ci[k]]+=v[k];
+  }
+  for(let mo=0;mo<12;mo++) for(let c=0;c<N;c++) A[mo*N+c]/=nmo[mo]||NaN;
+  return {grid,A,years:[y0,y1],n:y1-y0+1,gaps:m.gaps||[]};
+}
+
+/* ----------------------------------------------------------- statistics
+   A "stat" is a function of the 12 monthly fields. Counts sum over months
+   (a season's total, the yearly total); everything else averages.            */
+function monthAt(A,N,t,out,smooth){
+  /* t in [0,12): t = m means the middle of month m. */
+  const m0=Math.floor(t), a=t-m0, i0=((m0%12)+12)%12, i1=(i0+1)%12;
+  if(!smooth || a<1e-6){ const s=(a<0.5?i0:i1)*N; for(let c=0;c<N;c++) out[c]=A[s+c]; return out; }
+  const im=(i0+11)%12, i2=(i0+2)%12, a2=a*a, a3=a2*a;
+  const wm=-0.5*a3+a2-0.5*a, w0=1.5*a3-2.5*a2+1, w1=-1.5*a3+2*a2+0.5*a, w2=0.5*a3-0.5*a2;
+  const om=im*N,o0=i0*N,o1=i1*N,o2=i2*N;
+  for(let c=0;c<N;c++){
+    const p0=A[o0+c], p1=A[o1+c];
+    let v=wm*A[om+c]+w0*p0+w1*p1+w2*A[o2+c];
+    if(!(v===v)) v=p0*(1-a)+p1*a;                      // a neighbor month missing: linear
+    const lo=p0<p1?p0:p1, hi=p0<p1?p1:p0; out[c]=v<lo?lo:v>hi?hi:v;   // never overshoot
+  }
+  return out;
+}
+function meanOver(A,N,ms,sum){
+  const out=new Float32Array(N);
+  for(let c=0;c<N;c++){ let s=0; for(const m of ms) s+=A[m*N+c]; out[c]=sum?s:s/ms.length; }
+  return out;
+}
+const ALLM=[0,1,2,3,4,5,6,7,8,9,10,11];
+function annualOf(A,N,sum){ return meanOver(A,N,ALLM,sum); }
+function rangeOf(A,N){
+  const out=new Float32Array(N);
+  for(let c=0;c<N;c++){ let lo=Infinity,hi=-Infinity; for(let m=0;m<12;m++){ const v=A[m*N+c]; if(v<lo)lo=v; if(v>hi)hi=v; }
+    out[c]=isFinite(lo)&&isFinite(hi)?hi-lo:NaN; }
+  return out;
+}
+function peakOf(A,N,ampMin){
+  const out=new Float32Array(N);
+  for(let c=0;c<N;c++){ let best=-Infinity,bi=-1,lo=Infinity;
+    for(let m=0;m<12;m++){ const v=A[m*N+c]; if(v>best){best=v;bi=m;} if(v<lo)lo=v; }
+    out[c]=(bi<0||!(best-lo>ampMin))?NaN:bi; }
+  return out;
+}
+/* subtract each latitude row's mean (finite cells only) */
+function zonalDep(X,grid){
+  const out=new Float32Array(X.length), nl=grid.nlon;
+  for(let r=0;r<grid.nlat;r++){
+    let s=0,n=0; for(let c=0;c<nl;c++){ const v=X[r*nl+c]; if(v===v){s+=v;n++;} }
+    const mu=n?s/n:NaN; for(let c=0;c<nl;c++) out[r*nl+c]=X[r*nl+c]-mu;
+  }
+  return out;
+}
+function zonalMean(X,grid){
+  const z=new Float32Array(grid.nlat), nl=grid.nlon;
+  for(let r=0;r<grid.nlat;r++){ let s=0,n=0; for(let c=0;c<nl;c++){ const v=X[r*nl+c]; if(v===v){s+=v;n++;} } z[r]=n?s/n:NaN; }
+  return z;
+}
+
+/* ------------------------------------------------------------- map views
+   A MapView owns a projection fitted to a canvas, the per-pixel look-up tables
+   and the cached basemap paths. The page has one for the screen; the exporter
+   makes its own at the export size with the same view parameters.            */
+const REGIONS={
+  ee:{label:'World',kind:'world',make:()=>d3.geoEqualEarth(),lon0:0},
+  eq:{label:'World',kind:'world',make:()=>d3.geoEquirectangular(),lon0:0},
+  globe:{label:'Globe',kind:'globe',make:()=>d3.geoOrthographic().clipAngle(90),rot:[95,-28]},
+  na:{label:'North America',kind:'region',make:()=>d3.geoConicEqualArea().parallels([20,60]).rotate([100,0]),bb:[-168,12,-52,72]},
+  us:{label:'Contiguous U.S.',kind:'region',make:()=>d3.geoConicEqualArea().parallels([29.5,45.5]).rotate([96,0]),bb:[-125,24.5,-66.5,49.5]},
+  eu:{label:'Europe & N. Africa',kind:'region',make:()=>d3.geoConicEqualArea().parallels([35,65]).rotate([-15,0]),bb:[-25,20,45,72]},
+  as:{label:'South & East Asia',kind:'region',make:()=>d3.geoConicEqualArea().parallels([10,40]).rotate([-105,0]),bb:[60,-10,150,55]},
+  af:{label:'Africa',kind:'region',make:()=>d3.geoAzimuthalEqualArea().rotate([-20,-2]),bb:[-20,-36,55,38]},
+  sa:{label:'South America',kind:'region',make:()=>d3.geoAzimuthalEqualArea().rotate([60,20]),bb:[-84,-56,-34,13]},
+  au:{label:'Australia',kind:'region',make:()=>d3.geoConicEqualArea().parallels([-18,-36]).rotate([-135,0]),bb:[110,-45,160,-9]},
+  np:{label:'Arctic',kind:'polar',make:()=>d3.geoAzimuthalEqualArea().rotate([100,-90]).clipAngle(55),cap:47},
+  sp:{label:'Antarctic',kind:'polar',make:()=>d3.geoAzimuthalEqualArea().rotate([0,90]).clipAngle(55),cap:-47}
+};
+function regionGeo(R){
+  if(R.kind==='world'||R.kind==='globe') return {type:'Sphere'};
+  if(R.kind==='polar'){ const pts=[]; for(let l=-180;l<=180;l+=5) pts.push([l,R.cap]); return {type:'MultiPoint',coordinates:pts}; }
+  const [w,s,e,n]=R.bb, pts=[];
+  for(let i=0;i<=24;i++){ const x=w+(e-w)*i/24, y=s+(n-s)*i/24; pts.push([x,s],[x,n],[w,y],[e,y]); }
+  return {type:'MultiPoint',coordinates:pts};
+}
+/* aspect (height/width) a region wants at a given width */
+function regionAspect(key){
+  const R=REGIONS[key];
+  if(R.kind==='globe'||R.kind==='polar') return 1;
+  const p=R.make(); if(R.kind==='world') p.rotate([0,0]);
+  p.fitWidth(1000,regionGeo(R));
+  const b=d3.geoPath(p).bounds(regionGeo(R));
+  return (b[1][1]-b[0][1])/1000;
+}
+
+class MapView{
+  constructor(canvas){ this.cv=canvas; this.W=0; this.H=0; this.dpr=1; this.lut=null; this.glut=new Map(); this.paths=null; }
+  /* v: {map, rot:[λ,φ]|null, zoom, pan:[fx,fy] as fractions of width} */
+  setup(W,H,dpr,v){
+    this.W=W; this.H=H; this.dpr=dpr; this.v=v;
+    this.cv.width=Math.round(W*dpr); this.cv.height=Math.round(H*dpr);
+    this.fit();
+  }
+  fit(){
+    const v=this.v, R=REGIONS[v.map], p=R.make(), m=R.kind==='world'?4:R.kind==='globe'?10:2;
+    if(R.kind==='world') p.rotate([-(v.rot?v.rot[0]:R.lon0),0]);
+    if(R.kind==='globe') p.rotate(v.rot||R.rot);
+    p.fitExtent([[m,m],[this.W-m,this.H-m]],regionGeo(R));
+    this.s0=p.scale(); this.t0=p.translate();
+    const k=v.zoom||1, pan=v.pan||[0,0];
+    p.scale(this.s0*k);
+    /* zoom about the canvas center, then pan (fractions of the width keep exports consistent) */
+    const cx=this.W/2, cy=this.H/2;
+    p.translate([cx-(cx-this.t0[0])*k+pan[0]*this.W, cy-(cy-this.t0[1])*k+pan[1]*this.W]);
+    this.proj=p; this.R=R;
+    if(R.kind==='globe'){ const r=p.rotate(); this.ctr=[-r[0],-r[1]]; }
+    else if(R.kind==='polar'){ const r=p.rotate(); this.ctr=[-r[0],-r[1]]; }
+    else this.ctr=null;
+    if(this.ctr){ const r=Math.PI/180; this.l0=this.ctr[0]*r; this.sp0=Math.sin(this.ctr[1]*r); this.cp0=Math.cos(this.ctr[1]*r);
+      this.cosLim=Math.cos((R.kind==='globe'?89.9:55)*r); }
+    this.lut=null; this.glut.clear(); this.paths=null;
+  }
+  visible(lon,lat){
+    if(!this.ctr) return true;
+    /* cos of the angular distance from the view center, without the haversine */
+    const r=Math.PI/180, ph=lat*r;
+    return this.sp0*Math.sin(ph)+this.cp0*Math.cos(ph)*Math.cos(lon*r-this.l0) > this.cosLim;
+  }
+  /* per-pixel lon/lat at field resolution fs (pixels per CSS px) */
+  buildLonLat(fs){
+    const w=Math.max(1,Math.round(this.W*fs)), h=Math.max(1,Math.round(this.H*fs)), n=w*h;
+    const lon=new Float32Array(n), lat=new Float32Array(n), p=this.proj, inv=p.invert;
+    const world=this.R.kind==='world';
+    for(let j=0;j<h;j++){
+      const y=(j+0.5)/fs;
+      for(let i=0;i<w;i++){
+        const x=(i+0.5)/fs, k=j*w+i, ll=inv([x,y]);
+        if(!ll||!isFinite(ll[0])||!isFinite(ll[1])||Math.abs(ll[1])>90.0001){ lon[k]=NaN; continue; }
+        /* round trip: rejects points outside the map outline or behind the globe */
+        if(this.ctr && !this.visible(ll[0],ll[1])){ lon[k]=NaN; continue; }
+        if(world||this.R.kind==='polar'){
+          const q=p(ll); if(!q||Math.abs(q[0]-x)>0.75||Math.abs(q[1]-y)>0.75){ lon[k]=NaN; continue; }
+        }
+        lon[k]=ll[0]; lat[k]=ll[1];
+      }
+    }
+    this.lut={w,h,fs,lon,lat}; this.glut.clear();
+    this.img=new ImageData(w,h); this.img32=new Uint32Array(this.img.data.buffer);
+    if(!this.off) this.off=document.createElement('canvas');
+    this.off.width=w; this.off.height=h; this.offx=this.off.getContext('2d');
+  }
+  /* bilinear corner indices + weights for one grid */
+  gridLUT(grid){
+    if(this.glut.has(grid.key)) return this.glut.get(grid.key);
+    const {w,h,lon,lat}=this.lut, n=w*h, g=grid.g, nl=grid.nlon, nr=grid.nlat;
+    const i00=new Int32Array(n).fill(-1), i01=new Int32Array(n), i10=new Int32Array(n), i11=new Int32Array(n);
+    const fx=new Float32Array(n), fy=new Float32Array(n), inear=new Int32Array(n).fill(-1);
+    for(let k=0;k<n;k++){
+      const lo=lon[k]; if(!(lo===lo)) continue;
+      let x=(lo-grid.lon0)/g; const y=(lat[k]-grid.lat0)/g;
+      if(grid.global){ x=((x%nl)+nl)%nl; }
+      else if(x<0||x>=nl||y<0||y>=nr) continue;
+      if(y<0||y>nr) continue;
+      /* nearest box (for "boxes" display of counts) */
+      const cn=Math.min(nl-1,Math.floor(x)), rn=Math.min(nr-1,Math.max(0,Math.floor(y)));
+      inear[k]=rn*nl+cn;
+      /* bilinear between box centers */
+      let xc=x-0.5, yc=y-0.5;
+      let c0=Math.floor(xc), r0=Math.floor(yc), ax=xc-c0, ay=yc-r0, c1=c0+1, r1=r0+1;
+      if(grid.global){ c0=(c0+nl)%nl; c1=c1%nl; }
+      else { if(c0<0){c0=0;ax=0;} if(c1>nl-1){c1=nl-1;} }
+      if(r0<0){ r0=0; ay=0; } if(r1>nr-1){ r1=nr-1; }
+      i00[k]=r0*nl+c0; i01[k]=r0*nl+c1; i10[k]=r1*nl+c0; i11[k]=r1*nl+c1; fx[k]=ax; fy[k]=ay;
+    }
+    const o={i00,i01,i10,i11,fx,fy,inear};
+    this.glut.set(grid.key,o);
+    return o;
+  }
+  /* paint grid values X through colorizer C ({lut:Uint32Array(n), lo, hi, nan, clear}) */
+  drawField(X,grid,C,boxes){
+    const L=this.gridLUT(grid), out=this.img32, n=out.length, lo=C.lo, sc=(C.lut.length-1)/(C.hi-C.lo), top=C.lut.length-1;
+    const lut=C.lut, clr=C.clear, zc=C.zero;
+    for(let k=0;k<n;k++){
+      let v;
+      if(boxes){ const i=L.inear[k]; if(i<0){ out[k]=0; continue; } v=X[i]; }
+      else {
+        const i=L.i00[k]; if(i<0){ out[k]=0; continue; }
+        const a=X[i], b=X[L.i01[k]], c=X[L.i10[k]], d=X[L.i11[k]], ax=L.fx[k], ay=L.fy[k];
+        if(a===a&&b===b&&c===c&&d===d) v=(a*(1-ax)+b*ax)*(1-ay)+(c*(1-ax)+d*ax)*ay;
+        else {      /* a coastline: renormalize over the finite corners */
+          let s=0,ww=0,wk;
+          wk=(1-ax)*(1-ay); if(a===a){s+=a*wk;ww+=wk;}
+          wk=ax*(1-ay); if(b===b){s+=b*wk;ww+=wk;}
+          wk=(1-ax)*ay; if(c===c){s+=c*wk;ww+=wk;}
+          wk=ax*ay; if(d===d){s+=d*wk;ww+=wk;}
+          v=ww>=0.35?s/ww:NaN;
+        }
+      }
+      if(!(v===v)){ out[k]=0; continue; }
+      if(v<clr){ out[k]=(zc&&v<=1e-9)?zc:0; continue; }
+      let j=((v-lo)*sc)|0; if(j<0) j=0; else if(j>top) j=top;
+      out[k]=lut[j];
+    }
+    this.offx.putImageData(this.img,0,0);
+    /* mean luminance of the painted field: decides whether flow streaks are drawn dark or light */
+    let s=0,m=0; for(let k=0;k<n;k+=97){ const p=out[k]; if(!(p>>>24)) continue; s+=0.2126*(p&255)+0.7152*((p>>8)&255)+0.0722*((p>>16)&255); m++; }
+    this.lum=m?s/m/255:0;
+  }
+  ctx(){ const c=this.cv.getContext('2d'); c.setTransform(this.dpr,0,0,this.dpr,0,0); return c; }
+  buildPaths(){
+    if(this.paths) return this.paths;
+    const p=this.proj, mk=g=>{ const P=new Path2D(); d3.geoPath(p,P)(g); return P; };
+    const out={sphere:mk({type:'Sphere'})};
+    if(GEO.land) out.land=mk(GEO.land);
+    if(GEO.coast) out.coast=mk(GEO.coast);
+    if(GEO.borders) out.borders=mk(GEO.borders);
+    if(GEO.states && ['us','na'].includes(this.v.map)) out.states=mk(GEO.states);
+    const step=this.R.kind==='region'?10:30;
+    out.grat=mk(d3.geoGraticule().step([step,step]).extentMinor([[-180,-89.999],[180,89.999]])());
+    return (this.paths=out);
+  }
+  /* full composite: background, field, contours, basemap lines */
+  render(X,grid,C,opt){
+    const c=this.ctx(), T=THEME[opt.theme], P=this.buildPaths();
+    c.clearRect(0,0,this.W,this.H);
+    c.save();
+    c.fillStyle=T.sea; c.fill(P.sphere);
+    if(P.land){ c.fillStyle=T.land; c.fill(P.land); }
+    c.clip(P.sphere);
+    if(X){
+      c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high';
+      c.drawImage(this.off,0,0,this.W,this.H);
+    }
+    if(opt.contours&&X) this.drawContours(c,X,grid,opt.contours,T);
+    c.lineJoin='round';
+    if(opt.grat){ c.strokeStyle=T.grat; c.lineWidth=0.6; c.stroke(P.grat); }
+    /* basemap lines are dark with a faint light halo, so they read on pale fields, dark fields and bare land alike */
+    const reg=this.R.kind==='region';
+    if(opt.bord&&P.borders){ c.strokeStyle=T.halo; c.lineWidth=1.4; c.stroke(P.borders); c.strokeStyle=T.border; c.lineWidth=0.55; c.stroke(P.borders); }
+    if(opt.bord&&P.states){ c.strokeStyle=T.halo; c.lineWidth=1.3; c.stroke(P.states); c.strokeStyle=T.border; c.lineWidth=0.5; c.stroke(P.states); }
+    if(P.coast){ c.strokeStyle=T.halo; c.lineWidth=reg?2.1:1.7; c.stroke(P.coast); c.strokeStyle=T.coast; c.lineWidth=reg?1:0.8; c.stroke(P.coast); }
+    c.restore();
+    c.strokeStyle=T.rim; c.lineWidth=1; c.stroke(P.sphere);
+  }
+  /* marching squares on the grid, drawn as projected segments (fast enough to redo each frame) */
+  drawContours(c,X,grid,cs,T){
+    const nl=grid.nlon, nr=grid.nlat, g=grid.g, p=this.proj, levels=cs.levels;
+    if(!levels.length) return;
+    const W=this.W, wrap=grid.global, segs=new Map();
+    const ncol=wrap?nl:nl-1;
+    for(let r=0;r<nr-1;r++){
+      const la0=grid.lat0+(r+0.5)*g, la1=la0+g;
+      for(let cc=0;cc<ncol;cc++){
+        const c1=(cc+1)%nl;
+        const a=X[r*nl+cc], b=X[r*nl+c1], d=X[(r+1)*nl+cc], e=X[(r+1)*nl+c1];
+        if(!(a===a&&b===b&&d===d&&e===e)) continue;
+        const mn=Math.min(a,b,d,e), mx=Math.max(a,b,d,e);
+        const lo0=grid.lon0+(cc+0.5)*g, lo1=lo0+g;
+        for(let li=0;li<levels.length;li++){
+          const L=levels[li]; if(L<=mn||L>mx) continue;
+          /* corners: a(lo0,la0) b(lo1,la0) d(lo0,la1) e(lo1,la1); edges: bottom a-b, right b-e, top d-e, left a-d */
+          const pts=[];
+          if((a<L)!==(b<L)) pts.push([lo0+(L-a)/(b-a)*g,la0]);
+          if((b<L)!==(e<L)) pts.push([lo1,la0+(L-b)/(e-b)*g]);
+          if((d<L)!==(e<L)) pts.push([lo0+(L-d)/(e-d)*g,la1]);
+          if((a<L)!==(d<L)) pts.push([lo0,la0+(L-a)/(d-a)*g]);
+          let arr=segs.get(li); if(!arr){ arr=[]; segs.set(li,arr); }
+          if(pts.length===2) arr.push(pts[0],pts[1]);
+          else if(pts.length===4){ arr.push(pts[0],pts[1],pts[2],pts[3]); }
+        }
+      }
+    }
+    c.lineCap='round';
+    for(const [li,arr] of segs){
+      const L=levels[li], bold=cs.bold!=null&&Math.abs(L-cs.bold)<1e-9;
+      c.beginPath();
+      for(let i=0;i<arr.length;i+=2){
+        const A=arr[i], B=arr[i+1];
+        if(this.ctr&&(!this.visible(A[0],A[1])||!this.visible(B[0],B[1]))) continue;
+        const pa=p(A), pb=p(B); if(!pa||!pb) continue;
+        if(Math.abs(pa[0]-pb[0])>W/4) continue;          // wrapped across the map edge
+        c.moveTo(pa[0],pa[1]); c.lineTo(pb[0],pb[1]);
+      }
+      c.strokeStyle=bold?T.cntBold:T.cnt; c.lineWidth=bold?1.6:0.8; c.stroke();
+    }
+  }
+}
+
+/* --------------------------------------------------------------- flow
+   Particles advected by the monthly-mean wind, drawn as fading streaks.
+   Positions live in lon/lat, so they survive any projection.               */
+class Flow{
+  constructor(view,canvas){ this.view=view; this.cv=canvas; this.P=null; this.seed=1; }
+  rand(){ this.seed=(this.seed*16807)%2147483647; return (this.seed-1)/2147483646; }
+  reset(n,seed){
+    this.seed=seed||12345; this.n=n;
+    this.P={lon:new Float32Array(n),lat:new Float32Array(n),age:new Float32Array(n),life:new Float32Array(n),x:new Float32Array(n),y:new Float32Array(n)};
+    for(let i=0;i<n;i++){ this.spawn(i); this.P.age[i]=Math.floor(this.rand()*this.P.life[i]); }
+    const c=this.cv.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,this.cv.width,this.cv.height);
+  }
+  spawn(i){
+    const L=this.view.lut, P=this.P;
+    for(let tries=0;tries<30;tries++){
+      const k=Math.floor(this.rand()*L.lon.length), lo=L.lon[k];
+      if(lo===lo){ P.lon[i]=lo; P.lat[i]=L.lat[k]; break; }
+    }
+    P.age[i]=0; P.life[i]=40+this.rand()*70; P.x[i]=NaN;
+  }
+  /* one step; U,V on the 1° grid */
+  step(U,V,T,frac){
+    const P=this.P, view=this.view, p=view.proj, c=this.cv.getContext('2d'), dpr=view.dpr;
+    c.setTransform(1,0,0,1,0,0);
+    c.globalCompositeOperation='destination-out';
+    c.fillStyle=`rgba(0,0,0,${frac==null?0.075:frac})`; c.fillRect(0,0,this.cv.width,this.cv.height);
+    c.globalCompositeOperation='source-over';
+    c.setTransform(dpr,0,0,dpr,0,0);
+    /* degrees per frame per m/s, scaled so streaks keep a similar on-screen speed when zoomed */
+    /* 10 m/s moves a streak about 1.1 px per frame wherever you are zoomed */
+    const K=0.11/(p.scale()*Math.PI/180);
+    const W=view.W;
+    c.lineWidth=1.15; c.lineCap='round';
+    const buckets=[[],[],[]];
+    for(let i=0;i<this.n;i++){
+      let lo=P.lon[i], la=P.lat[i];
+      P.age[i]++;
+      if(P.age[i]>P.life[i]){ this.spawn(i); continue; }
+      /* bilinear wind at the particle */
+      let x=(((lo%360)+360)%360)-0.5, y=la+89.5;
+      let c0=Math.floor(x), r0=Math.floor(y), ax=x-c0, ay=y-r0;
+      if(r0<0){r0=0;ay=0;} if(r0>178){r0=178;ay=1;}
+      const ca=(c0+360)%360, cb=(c0+1)%360, o0=r0*360, o1=o0+360;
+      const u=(U[o0+ca]*(1-ax)+U[o0+cb]*ax)*(1-ay)+(U[o1+ca]*(1-ax)+U[o1+cb]*ax)*ay;
+      const v=(V[o0+ca]*(1-ax)+V[o0+cb]*ax)*(1-ay)+(V[o1+ca]*(1-ax)+V[o1+cb]*ax)*ay;
+      if(!(u===u&&v===v)){ this.spawn(i); continue; }
+      const cl=Math.max(0.15,Math.cos(la*Math.PI/180));
+      lo+=u*K/cl; la+=v*K;
+      if(la>89.5||la<-89.5){ this.spawn(i); continue; }
+      P.lon[i]=lo; P.lat[i]=la;
+      if(!view.visible(lo,la)){ this.spawn(i); continue; }
+      const q=p([lo,la]); if(!q){ this.spawn(i); continue; }
+      const px=P.x[i], py=P.y[i];
+      P.x[i]=q[0]; P.y[i]=q[1];
+      if(q[0]<-5||q[0]>W+5||q[1]<-5||q[1]>view.H+5){ this.spawn(i); continue; }
+      if(px===px && Math.abs(px-q[0])<W/4){
+        const sp=Math.hypot(u,v), b=sp<4?0:sp<12?1:2;
+        buckets[b].push(px,py,q[0],q[1]);
+      }
+    }
+    const al=T.flowA;
+    for(let b=0;b<3;b++){
+      const s=buckets[b]; if(!s.length) continue;
+      c.strokeStyle=(this.ink||T.flow).replace('A',al[b]); c.beginPath();
+      for(let j=0;j<s.length;j+=4){ c.moveTo(s[j],s[j+1]); c.lineTo(s[j+2],s[j+3]); }
+      c.stroke();
+    }
+  }
+}
+
+const GEO={land:null,coast:null,borders:null,states:null};
+async function loadGeo(){
+  const r=await fetch('../enso/geo/countries-110m.json'); if(!r.ok) throw new Error('could not load the coastlines');
+  const w=await r.json();
+  GEO.land=topojson.feature(w,w.objects.land);
+  GEO.coast=topojson.mesh(w,w.objects.land);
+  GEO.borders=topojson.mesh(w,w.objects.countries,(a,b)=>a!==b);
+  try{
+    const st=await gzFetch('../scs/trends/geo/states.topo.json.gz');
+    const o=st.objects[Object.keys(st.objects)[0]];
+    GEO.states=topojson.mesh(st,o,(a,b)=>a!==b);
+  }catch(e){ /* state lines are optional */ }
+}
+
+const THEME={
+  dark:{sea:'#0b1119',land:'#1a2430',coast:'rgba(8,12,18,.92)',border:'rgba(8,12,18,.6)',halo:'rgba(235,240,245,.42)',grat:'rgba(200,210,220,.18)',
+        rim:'rgba(160,175,190,.5)',cnt:'rgba(10,14,20,.55)',cntBold:'rgba(10,14,20,.9)',flow:'rgba(255,255,255,A)',flowA:['.35','.6','.85'],
+        ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',grid:'#22303f',panel:'#16212e',sel:'#ff3ecb',zero:'rgba(255,255,204,.18)'},
+  light:{sea:'#e8eef4',land:'#d5dbe1',coast:'rgba(15,22,30,.88)',border:'rgba(15,22,30,.5)',halo:'rgba(255,255,255,.45)',grat:'rgba(30,40,55,.16)',
+        rim:'rgba(60,75,90,.5)',cnt:'rgba(10,14,20,.5)',cntBold:'rgba(10,14,20,.85)',flow:'rgba(12,18,30,A)',flowA:['.3','.55','.8'],
+        ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',grid:'#e6ecf2',panel:'#ffffff',sel:'#c2007a',zero:'rgba(140,140,90,.14)'}
+};
+
+/* ------------------------------------------------------------- color scales */
+const WATERY=new Set(['pr','sf','pme','tcwv','q850','cpf','d2m','tcc','tcd','tcace','tcgen','hail','tornado','wind','derechoday']);
+const _ramp=new Map();
+function ramp(name,t,rev){
+  let st=_ramp.get(name); if(!st){ st=CMAP[name].map(hex2rgb); _ramp.set(name,st); }
+  if(rev) t=1-t;
+  t=clamp(t,0,1);
+  const x=t*(st.length-1), i=Math.min(st.length-2,Math.floor(x)), f=x-i, a=st[i], b=st[i+1];
+  return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f];
+}
+function pack(r,g,b,a){ return ((a==null?255:a)<<24)|((b&255)<<16)|((g&255)<<8)|(r&255); }
+function sig2(x){ if(x===0) return 0; const e=Math.pow(10,Math.floor(Math.log10(Math.abs(x)))-1); return Math.round(x/e)*e; }
+function uniformLevels(lo,hi,step){ const L=[]; for(let v=lo;v<=hi+step*1e-6;v+=step) L.push(+v.toFixed(6)); return L; }
+function quant(arr,q,abs,pos){
+  const s=[]; for(let i=0;i<arr.length;i+=1){ let v=arr[i]; if(!(v===v)) continue; if(abs) v=Math.abs(v); if(pos&&!(v>0)) continue; s.push(v); }
+  if(!s.length) return 0; s.sort((a,b)=>a-b); return s[Math.min(s.length-1,Math.floor(q*(s.length-1)))];
+}
+/* kind: abs | cnt | div | pos | cat.  sample: the displayed values (display units) the scale must hold */
+function buildScale(f,kind,sample){
+  const u=U(f); let levels, cmap=f.cmap, rev=!!f.rev, clear=-Infinity, zero=0;
+  if(kind==='cat'){
+    const lut=new Uint32Array(12); for(let m=0;m<12;m++){ const c=hex2rgb(CMAP.month[m]); lut[m]=pack(c[0],c[1],c[2]); }
+    return {kind,lo:-0.5,hi:11.5,lut,levels:[],cat:true,clear:-Infinity,zero:0,unit:''};
+  }
+  if(kind==='abs'){
+    const L=f.lv;
+    if(L.l) levels=u.to(1)===1&&u.to(0)===0?L.l.slice():L.l.map(v=>sig2(u.to(v)));
+    else if(u.to(1)===1&&u.to(0)===0) levels=uniformLevels(L.lo,L.hi,L.step);
+    else { const lo=u.to(L.lo), hi=u.to(L.hi), nb=Math.round((L.hi-L.lo)/L.step), st=niceStep((hi-lo)/nb);
+           levels=uniformLevels(Math.floor(lo/st)*st,Math.ceil(hi/st)*st,st); }
+    if(f.clear!=null) clear=u.to(f.clear);
+  } else if(kind==='cnt'){
+    const hi=niceUp(quant(sample,0.995,false,true)||1), n=10;
+    levels=[0]; for(let i=1;i<=n;i++){ const v=sig2(hi*Math.pow(i/n,2)); if(v>levels[levels.length-1]) levels.push(v); }
+    clear=1e-6; if(f.src==='scs') zero=S.theme==='dark'?pack(255,255,204,46):pack(150,150,100,40);   // inside the U.S. domain, no events
+  } else if(kind==='pos'){
+    const hi=niceUp(quant(sample,0.98,true)||1), st=niceStep(hi/10); levels=uniformLevels(0,Math.ceil(hi/st)*st,st);
+    cmap=f.kind==='temp'?'seq':f.cmap==='div'||f.cmap==='brbg'?'seq':f.cmap; rev=false;
+  } else { /* div */
+    let M=quant(sample,0.98,true); if(!(M>1e-6)) M=1;
+    const st=niceStep(2*M/10); M=Math.max(st,Math.ceil(M/st)*st);
+    levels=uniformLevels(-M,M,st);
+    cmap=f.div?f.cmap:(WATERY.has(f.k)?'brbg':'div'); rev=f.div?!!f.rev:false;
+  }
+  if(!(levels.length>1&&levels[levels.length-1]>levels[0])) levels=[0,1];   // never a zero-width scale
+  const lo=levels[0], hi=levels[levels.length-1], nb=levels.length-1, NL=2048, lut=new Uint32Array(NL);
+  const band=S.band&&kind!=='cat';
+  for(let j=0;j<NL;j++){
+    const v=lo+(hi-lo)*(j+0.5)/NL;
+    let i=0; while(i<nb-1&&v>levels[i+1]) i++;
+    const fr=clamp((v-levels[i])/(levels[i+1]-levels[i]),0,1);
+    const t=band?(i+0.5)/nb:(i+fr)/nb;
+    const c=ramp(cmap,t,rev); lut[j]=pack(Math.round(c[0]),Math.round(c[1]),Math.round(c[2]));
+  }
+  const step=levels.length>2?Math.min(...levels.slice(1).map((v,i)=>v-levels[i])):1;
+  return {kind,lo,hi,levels,lut,cmap,rev,band,clear,zero,dec:Math.max(decFor(step),Math.abs(lo)<10&&hi<10&&step<1?1:0),unit:u.u};
+}
+
+/* ------------------------------------------------------------- the prepared state */
+let D=null, VIEW=null, FLOW=null, PLAY=false, LASTTS=0, DIRTY=true, PANELT=0;
+const BUF={X:null,Xd:null,U:null,V:null};
+function viewKind(){
+  const f=F();
+  if(S.view==='peak') return 'cat';
+  if(S.view==='range') return 'pos';
+  if(effRel()!=='val') return 'div';
+  if(isCount(f)) return 'cnt';
+  return 'abs';
+}
+function relAllowed(){ return S.view==='month'||S.view==='season'; }
+function effRel(){
+  if(S.rel==='zonal'&&D_GLOBAL===false) return 'val';          // no latitude circles on the U.S. grid
+  return relAllowed()?S.rel:(S.rel==='zonal'&&S.view==='annual'?'zonal':'val');
+}
+let D_GLOBAL=true, PREP_GEN=0;
+function subAnnual(A,N,count){
+  const mu=annualOf(A,N,false), out=new Float32Array(A.length);
+  for(let m=0;m<12;m++) for(let c=0;c<N;c++) out[m*N+c]=A[m*N+c]-mu[c];
+  return out;
+}
+function zonalMonthly(A,grid){
+  const N=grid.nlat*grid.nlon, out=new Float32Array(A.length);
+  for(let m=0;m<12;m++) out.set(zonalDep(A.subarray(m*N,(m+1)*N),grid),m*N);
+  return out;
+}
+async function prepare(){
+  const f=F(), pers=[S.p], gen=++PREP_GEN;
+  loading(true);
+  try{
+    const ms=await Promise.all(pers.map(p=>monthly(f,p)));
+    if(gen!==PREP_GEN) return;                                     // a newer choice superseded this one
+    const grid=ms[0].grid; D_GLOBAL=grid.global;
+    const N=grid.nlat*grid.nlon, cnt=isCount(f), rel=effRel(), u=U(f);
+    const eff=A=> rel==='anom'?subAnnual(A,N,cnt) : rel==='zonal'?zonalMonthly(A,grid) : A;
+    let E=eff(ms[0].A);
+    const kind=viewKind(), absUnits=(kind==='abs'||kind==='cnt');
+    const conv=kind==='cat'?(x=>x):absUnits?u.to:u.d;
+    let stat=null;
+    if(S.view==='annual') stat=annualOf(E,N,cnt);
+    else if(S.view==='season') stat=meanOver(E,N,SEASONS[S.seas].m,cnt);
+    else if(S.view==='range') stat=rangeOf(ms[0].A,N);
+    else if(S.view==='peak'){
+      const amp=cnt? quant(annualOf(ms[0].A,N,true),0.98,false,true)*0.03 : (f.lv.l?f.lv.l[f.lv.l.length-1]-f.lv.l[0]:f.lv.hi-f.lv.lo)*0.01;
+      stat=peakOf(ms[0].A,N,amp);
+    }
+    if(stat&&kind!=='cat') for(let i=0;i<N;i++) stat[i]=conv(stat[i]);
+    /* sample for the color scale: all twelve months of what will be shown, so animation never rescales */
+    let sample;
+    if(stat) sample=stat;
+    else { sample=new Float32Array(E.length); for(let i=0;i<E.length;i++) sample[i]=conv(E[i]); }
+    const C=buildScale(f,kind,sample);
+    /* the actual values (no anomaly, no change), for the panels */
+    /* counts are drawn as their boxes, honestly; so is the peak month, which must not be blended */
+    const nd={f,grid,N,E,stat,C,kind,conv,ms,pers,rel,cnt,boxes:cnt||kind==='cat'};
+    await prepareFlow(nd);
+    if(gen!==PREP_GEN) return;
+    D=nd; BUF.X=new Float32Array(N); BUF.Xd=new Float32Array(N);
+    if(FLOW&&VIEW&&VIEW.lut){ if(D.flow) FLOW.reset(particleCount(VIEW)); else { FLOW.P=null; clearFlow(); } }
+    writeTitles(); drawColorbar(); writeAbout(); syncControls(); writeHash();
+    DIRTY=true; PANELT=0;
+    panelsSoon(true);
+  } catch(e){ console.error(e); setMsg('Could not load this field: '+e.message); }
+  finally{ loading(false); }
+}
+function flowLevel(){
+  if(S.flow==='auto') return F().flow||'off';
+  return S.flow;
+}
+async function prepareFlow(d){
+  d=d||D; const lv=flowLevel();
+  if(lv==='off'){ d.flow=null; return; }
+  const [u,v]=await Promise.all(FLOWV[lv].map(x=>loadVar(x,S.p)));
+  const fl={u,v,lv,U:new Float32Array(64800),V:new Float32Array(64800)};
+  if(S.view==='annual'||S.view==='range'||S.view==='peak'){ fl.U=annualOf(u,64800,false); fl.V=annualOf(v,64800,false); fl.static=true; }
+  else if(S.view==='season'){ const ms=SEASONS[S.seas].m; fl.U=meanOver(u,64800,ms,false); fl.V=meanOver(v,64800,ms,false); fl.static=true; }
+  d.flow=fl;
+}
+function flowInk(v){ return v.lum>0.52?'rgba(10,16,28,A)':'rgba(255,255,255,A)'; }
+function particleCount(v){ return Math.round(clamp(v.W*v.H/170,500,4500)); }
+function clearFlow(){ const c=document.getElementById('cvFlow'); c.getContext('2d').clearRect(0,0,c.width,c.height); }
+
+/* the field to draw at time t (display units) */
+function frameX(t){
+  if(D.stat) return D.stat;
+  monthAt(D.E,D.N,t,BUF.X,S.smooth);
+  const X=BUF.X, Xd=BUF.Xd, cv=D.conv;
+  for(let i=0;i<D.N;i++) Xd[i]=cv(X[i]);
+  return Xd;
+}
+function flowUV(t){
+  const F_=D.flow; if(!F_) return null;
+  if(F_.static) return F_;
+  monthAt(F_.u,64800,t,F_.U,S.smooth); monthAt(F_.v,64800,t,F_.V,S.smooth);
+  return F_;
+}
+
+/* ------------------------------------------------------------- titles & text */
+function perLabel(){ return PERIODS.find(p=>p.k===S.p).label; }
+function statLabel(){
+  const f=F(), cnt=isCount(f);
+  switch(S.view){
+    case 'month': return 'Month by month';
+    case 'season': return SEASONS[S.seas].label+(cnt?' total':' mean');
+    case 'annual': return cnt?'Yearly total':'Annual mean';
+    case 'range': return 'Seasonal range (largest minus smallest month)';
+    case 'peak': return 'Month of the peak';
+  }
+}
+function relLabel(){
+  const r=effRel();
+  return r==='anom'?'departure from the annual mean':r==='zonal'?'departure from the zonal mean':'';
+}
+function thrLabel(){ const f=F(); return f.thresholds&&f.thresholds[S.thr]?' ('+f.thresholds[S.thr].label+')':''; }
+function unitLabel(){
+  const f=F(), u=U(f);
+  if(S.view==='peak') return '';
+  if(isCount(f)){
+    const per=S.view==='annual'?'per year':S.view==='season'?'per season':'per month';
+    const box=f.src==='tc'?'5° box':'2° box';
+    return `${f.unitWord} ${per} per ${box}`;
+  }
+  return u.u;
+}
+function yearsUsed(){
+  if(!D) return '';
+  const out=D.pers.map((p,i)=>{ const m=D.ms[i], P=PERIODS.find(x=>x.k===p);
+    if(!m.years) return `${P.label}: no data`;
+    return (m.years[0]!==P.y0||m.years[1]!==P.y1)?`${P.label} uses ${m.years[0]}–${m.years[1]}`:''; }).filter(Boolean);
+  return out.join('; ');
+}
+function writeTitles(){
+  const f=F();
+  const rl=relLabel();
+  document.getElementById('mapTitle').textContent=f.label+thrLabel()+(rl?' — '+rl:'');
+  const src=f.src==='tc'?'IBTrACS':f.src==='scs'?'NOAA Storm Events':'ERA5';
+  let sub=`${statLabel()} · ${perLabel()} · ${src}`;
+  const yu=yearsUsed(); if(yu) sub+=` · ${yu}`;
+  const el=document.getElementById('mapSub'); el.innerHTML=esc(sub);
+  const w=warnings(); if(w) el.innerHTML+=`<br><span class="warn">${esc(w)}</span>`;
+  document.title='EarthVis — '+f.label;
+}
+function warnings(){
+  const f=F(), w=[];
+  if(f.src==='scs') w.push('Counts of storm reports depend on where people live and report; read them as where storms are reported.');
+  return w.join(' ');
+}
+function monthName(t){ return MFULL[((Math.round(t)%12)+12)%12]; }
+function bigMonthText(){
+  if(S.view==='month') return monthName(S.t);
+  if(S.view==='season') return SEASONS[S.seas].short;
+  if(S.view==='annual') return isCount()?'Year':'Annual';
+  if(S.view==='range') return 'Range';
+  return 'Peak month';
+}
+function writeAbout(){
+  const f=F(), a=ABOUT[f.k]||{};
+  const src=f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI), 1980 on':f.src==='scs'?'NOAA/NCEI Storm Events Database, 2° boxes':
+            'ERA5 reanalysis (ECMWF / Copernicus), 1° boxes';
+  let h=`<h3>${esc(f.label)}</h3><div class="src">${esc(src)} · ${esc(unitLabel()||'')}</div>`;
+  if(a.d) h+=`<div>${a.d}</div>`;
+  if(a.look&&a.look.length) h+=`<div style="margin-top:8px"><b>What to look for</b><ul>${a.look.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  if(a.xp) h+=`<div class="xp"><b>For experts:</b> ${a.xp}</div>`;
+  document.getElementById('about').innerHTML=h;
+}
+
+/* ------------------------------------------------------------- color bar */
+function drawColorbar(target,W,H,opt){
+  const cv=target||document.getElementById('cbar');
+  let c, w, h;
+  if(target&&opt){ c=target; w=W; h=H; }
+  else {
+    const dpr=Math.min(2,window.devicePixelRatio||1); w=cv.clientWidth||600; h=58;
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,h);
+  }
+  const T=THEME[(opt&&opt.theme)||S.theme], C=D.C, fs=(opt&&opt.fs)||11;
+  c.save();
+  c.font=`${fs}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
+  c.fillStyle=(opt&&opt.ink)||T.ink; c.textBaseline='alphabetic';
+  if(C.cat){
+    const n=12, x0=8, bw=(w-16)/n, y0=h*0.18, bh=h*0.36;
+    for(let m=0;m<n;m++){ c.fillStyle=CMAP.month[m]; c.fillRect(x0+m*bw+1,y0,bw-2,bh); }
+    c.fillStyle=(opt&&opt.ink)||T.ink; c.textAlign='center';
+    for(let m=0;m<n;m++) c.fillText(MONTHS[m],x0+(m+0.5)*bw,y0+bh+fs+3);
+    c.restore(); return;
+  }
+  const L=C.levels, nb=L.length-1, x0=Math.max(18,w*0.03), x1=w-x0, y0=h*0.14, bh=Math.max(9,h*0.26);
+  const tri=bh*0.9, X0=x0+tri, X1=x1-tri, bw=(X1-X0)/nb;
+  const lut=C.lut, NL=lut.length;
+  const colAt=v=>{ const j=clamp(Math.floor((v-C.lo)/(C.hi-C.lo)*(NL-1)),0,NL-1), p=lut[j]; return `rgb(${p&255},${(p>>8)&255},${(p>>16)&255})`; };
+  if(C.band){ for(let i=0;i<nb;i++){ c.fillStyle=colAt((L[i]+L[i+1])/2); c.fillRect(X0+i*bw,y0,bw+0.6,bh); } }
+  else { const steps=Math.max(60,nb*12); for(let s=0;s<steps;s++){ const t=(s+0.5)/steps, i=Math.min(nb-1,Math.floor(t*nb)), fr=t*nb-i;
+      c.fillStyle=colAt(L[i]+(L[i+1]-L[i])*fr); c.fillRect(X0+(X1-X0)*s/steps,y0,(X1-X0)/steps+0.6,bh); } }
+  /* extension triangles: values beyond the ends take the end colors */
+  c.fillStyle=colAt(L[0]); c.beginPath(); c.moveTo(X0,y0); c.lineTo(X0-tri,y0+bh/2); c.lineTo(X0,y0+bh); c.fill();
+  c.fillStyle=colAt(L[nb]); c.beginPath(); c.moveTo(X1,y0); c.lineTo(X1+tri,y0+bh/2); c.lineTo(X1,y0+bh); c.fill();
+  c.strokeStyle=T.line; c.lineWidth=1; c.strokeRect(X0,y0,X1-X0,bh);
+  c.fillStyle=(opt&&opt.ink)||T.ink; c.textAlign='center';
+  const labW=c.measureText('-0000.0').width+6, every=Math.max(1,Math.ceil(labW/bw));
+  for(let i=0;i<=nb;i+=every){
+    const v=L[i], s=Math.abs(v)<1e-9?'0':String(+v.toFixed(C.dec)).replace('-','−');
+    c.fillText(s,X0+i*bw,y0+bh+fs+2);
+  }
+  c.textAlign='left'; c.fillStyle=(opt&&opt.mute)||T.mute;
+  const ul=unitLabel(); if(ul) c.fillText(ul+(C.kind==='div'&&effRel()!=='val'?'  (departure)':''),X0,y0+bh+2*fs+6);
+  c.restore();
+}
+
+/* ------------------------------------------------------------- drawing */
+function stageSize(){
+  const st=document.getElementById('stage'), W=st.clientWidth||900;
+  const asp=regionAspect(S.map);
+  const maxH=Math.max(260,window.innerHeight*0.74);
+  let H=Math.round(W*asp); if(H>maxH) H=Math.round(maxH);
+  return [W,H];
+}
+function fieldRes(W,fast){ return fast?0.4:Math.min(1,1500/W); }
+function setupView(fast){
+  const st=document.getElementById('stage'), [W,H]=stageSize();
+  st.style.height=H+'px';
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  if(!VIEW) VIEW=new MapView(document.getElementById('cvMap'));
+  VIEW.setup(W,H,dpr,{map:S.map,rot:S.rot,zoom:S.zoom,pan:S.pan});
+  VIEW.buildLonLat(fieldRes(W,fast));
+  for(const id of ['cvFlow','cvTop']){ const c=document.getElementById(id); c.width=Math.round(W*dpr); c.height=Math.round(H*dpr); }
+  if(!FLOW) FLOW=new Flow(VIEW,document.getElementById('cvFlow'));
+  if(D&&D.flow) FLOW.reset(particleCount(VIEW)); else clearFlow();
+  DIRTY=true;
+}
+function contourSpec(){
+  if(!(S.cnt===1||(S.cnt==='auto'&&(F().k==='msl'||F().k==='z500'))) || D.C.cat) return null;
+  let L=D.C.levels; if(L.length>16) L=L.filter((_,i)=>i%2===0);
+  const f=F(); let bold=null;
+  if(D.kind==='div') bold=0; else if(f.kind==='temp'&&D.kind==='abs') bold=U(f).to(0);
+  if(bold!=null&&!L.some(v=>Math.abs(v-bold)<1e-9)) L=[...L,bold].sort((a,b)=>a-b);   // 32 °F is not on a 10 °F step
+  return {levels:L,bold};
+}
+function draw(){
+  if(!D||!VIEW||!VIEW.lut) return;
+  const X=frameX(S.t);
+  VIEW.drawField(X,D.grid,D.C,D.boxes);
+  VIEW.render(X,D.grid,D.C,{theme:S.theme,contours:contourSpec(),grat:S.grat,bord:S.bord});
+  drawTop();
+  document.getElementById('bigMonth').textContent=bigMonthText();
+  syncTime();
+}
+function drawTop(){
+  const c=document.getElementById('cvTop'), x=c.getContext('2d'), dpr=VIEW.dpr;
+  x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,VIEW.W,VIEW.H);
+  if(!S.pt||!VIEW.visible(S.pt[0],S.pt[1])) return;
+  const q=VIEW.proj(S.pt); if(!q) return;
+  x.strokeStyle='#000'; x.lineWidth=3.5; x.beginPath(); x.arc(q[0],q[1],6.5,0,2*Math.PI); x.stroke();
+  x.strokeStyle=THEME[S.theme].sel; x.lineWidth=2; x.beginPath(); x.arc(q[0],q[1],6.5,0,2*Math.PI); x.stroke();
+}
+function loop(ts){
+  const dt=LASTTS?Math.min(0.1,(ts-LASTTS)/1000):0; LASTTS=ts;
+  if(PLAY&&D&&S.view==='month'){
+    S.t=(S.t+dt*S.spd*(S.smooth?1:1))%12;
+    if(!S.smooth){ /* step mode: hold each month */ }
+    DIRTY=true;
+  }
+  if(EXPORTING){ requestAnimationFrame(loop); return; }
+  if(DIRTY&&D){ draw(); DIRTY=false; if(PLAY&&ts-PANELT>120){ panelsNow(false); PANELT=ts; } }
+  if(D&&D.flow&&FLOW&&FLOW.P&&!document.hidden&&!INTERACT){ FLOW.ink=flowInk(VIEW); const uv=flowUV(S.t); FLOW.step(uv.U,uv.V,THEME[S.theme]); }
+  requestAnimationFrame(loop);
+}
+
+/* ------------------------------------------------------------- sampling */
+function sampleGrid(A,off,grid,lon,lat,boxes){
+  const g=grid.g, nl=grid.nlon, nr=grid.nlat;
+  let x=(lon-grid.lon0)/g; const y=(lat-grid.lat0)/g;
+  if(grid.global) x=((x%nl)+nl)%nl; else if(x<0||x>=nl) return NaN;
+  if(y<0||y>=nr) return NaN;
+  if(boxes) return A[off+Math.floor(y)*nl+Math.min(nl-1,Math.floor(x))];
+  const xc=x-0.5, yc=y-0.5; let c0=Math.floor(xc), r0=Math.floor(yc), ax=xc-c0, ay=yc-r0, c1=c0+1, r1=r0+1;
+  if(grid.global){ c0=(c0+nl)%nl; c1%=nl; } else { if(c0<0){c0=0;ax=0;} if(c1>nl-1) c1=nl-1; }
+  if(r0<0){r0=0;ay=0;} if(r1>nr-1) r1=nr-1;
+  const v=[[A[off+r0*nl+c0],(1-ax)*(1-ay)],[A[off+r0*nl+c1],ax*(1-ay)],[A[off+r1*nl+c0],(1-ax)*ay],[A[off+r1*nl+c1],ax*ay]];
+  let s=0,w=0; for(const [a,k] of v) if(a===a){ s+=a*k; w+=k; }
+  return w>=0.35?s/w:NaN;
+}
+function areaMean(A,off,grid,mode){
+  const nl=grid.nlon; let s=0,w=0;
+  for(let r=0;r<grid.nlat;r++){
+    const wr=mode==='sum'?1:Math.cos((grid.lat0+(r+0.5)*grid.g)*Math.PI/180);
+    for(let c=0;c<nl;c++){ const v=A[off+r*nl+c]; if(v===v){ s+=v*wr; w+=wr; } }
+  }
+  return mode==='sum'?s:(w?s/w:NaN);
+}
+
+/* ------------------------------------------------------------- panels (SVG) */
+const FF=`-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
+function txt(x,y,s,o){ o=o||{};
+  return `<text x="${x}" y="${y}" font-family="${FF}" font-size="${o.fs||10.5}" fill="${o.c||THEME[S.theme].mute}"`+
+    `${o.a?` text-anchor="${o.a}"`:''}${o.w?` font-weight="${o.w}"`:''}${o.rot?` transform="rotate(${o.rot} ${x} ${y})"`:''}>${esc(s)}</text>`; }
+function niceAx(lo,hi,n){
+  if(!(hi>lo)){ const d=Math.abs(lo)*0.1||1; lo-=d; hi+=d; }
+  const st=niceStep((hi-lo)/(n||5)); return {lo:Math.floor(lo/st)*st,hi:Math.ceil(hi/st)*st,st};
+}
+let PANEL_TIMER=null;
+function panelsSoon(full){ clearTimeout(PANEL_TIMER); PANEL_TIMER=setTimeout(()=>panelsNow(full),60); }
+let CYC=null;   // cached seasonal-cycle series {key, series:[{p,label,vals[12]}]}
+async function cycleSeries(){
+  const f=F(), u=U(f), pt=S.pt;
+  const key=[f.k,S.thr,pt?pt.join(','):'all',u.k].join('|');
+  if(CYC&&CYC.key===key) return CYC;
+  const out={key,series:[]};
+  for(const P of PERIODS){
+    let m; try{ m=await monthly(f,P.k); }catch(e){ continue; }
+    if(!m.years) continue;
+    const N=m.grid.nlat*m.grid.nlon, vals=[];
+    for(let mo=0;mo<12;mo++){
+      const v=pt?sampleGrid(m.A,mo*N,m.grid,pt[0],pt[1],isCount(f)):areaMean(m.A,mo*N,m.grid,f.src==='tc'?'sum':'mean');
+      vals.push(u.to(v));
+    }
+    out.series.push({p:P.k,label:P.label,vals});
+  }
+  return (CYC=out);
+}
+async function panelsNow(full){
+  if(!D) return;
+  try{ await drawCycle(); }catch(e){ console.error(e); }
+  drawZonal();
+  if(full!==false) drawHov(); else moveHovMarker();
+}
+async function drawCycle(){
+  const f=F(), T=THEME[S.theme], u=U(f), cs=await cycleSeries(), svg=document.getElementById('cycSvg');
+  const W=440,H=230,ml=44,mr=12,mt=10,mb=26, pw=W-ml-mr, ph=H-mt-mb;
+  const where=S.pt?`at ${fmtLL(S.pt[0],S.pt[1])}${PLACE?' ('+PLACE+')':''}`:(f.src==='tc'?'global total':f.src==='scs'?'mean over U.S. boxes':'global area mean');
+  document.getElementById('cycTitle').textContent='Seasonal cycle '+(S.pt?'here':'');
+  document.getElementById('cycSub').textContent=`${f.label}${thrLabel()}, ${where} · ${unitLabel()}${S.pt?'':' · click the map to pick a place'}`;
+  const all=cs.series.flatMap(s=>s.vals).filter(v=>v===v);
+  if(!all.length){ svg.innerHTML=txt(W/2,H/2,'No data here',{a:'middle'}); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); return; }
+  const ax=niceAx(Math.min(...all),Math.max(...all),5);
+  const X=m=>ml+pw*(m+0.5)/12, Y=v=>mt+ph*(1-(v-ax.lo)/(ax.hi-ax.lo));
+  let s='';
+  for(let v=ax.lo;v<=ax.hi+ax.st*1e-6;v+=ax.st){ s+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="${T.grid}"/>`+txt(ml-5,Y(v)+3.5,(+v.toFixed(6)).toFixed(decFor(ax.st)).replace('-','−'),{a:'end'}); }
+  for(let m=0;m<12;m++) s+=txt(X(m),H-8,MONTHS[m][0]+(window.innerWidth>500?MONTHS[m].slice(1):''),{a:'middle',fs:10});
+  /* time marker */
+  if(S.view==='month'){ const tx=ml+pw*((S.t%12)+0.5)/12; s+=`<line x1="${tx}" x2="${tx}" y1="${mt}" y2="${mt+ph}" stroke="${T.mute}" stroke-dasharray="3 3"/>`; }
+  else if(S.view==='season'){ const ms=SEASONS[S.seas].m; for(const m of ms) s+=`<rect x="${ml+pw*m/12}" y="${mt}" width="${pw/12}" height="${ph}" fill="${T.mute}" opacity=".12"/>`; }
+  const col=LINE[S.theme];
+  for(const se of cs.series){
+    /* a broken line across missing months; Dec -> Jan wraps so the cycle reads as a loop */
+    const v=se.vals, pts=[];
+    if(v[11]===v[11]&&v[0]===v[0]) pts.push([ml,(v[11]+v[0])/2]); else pts.push(null);
+    v.forEach((y,m)=>pts.push(y===y?[X(m),y]:null));
+    if(v[11]===v[11]&&v[0]===v[0]) pts.push([ml+pw,(v[11]+v[0])/2]);
+    let d='', pen=false;
+    for(const p of pts){ if(!p){ pen=false; continue; } d+=(pen?'L':'M')+p[0].toFixed(1)+','+Y(p[1]).toFixed(1); pen=true; }
+    s+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>`;
+    v.forEach((y,m)=>{ if(y===y) s+=`<circle cx="${X(m)}" cy="${Y(y)}" r="2.8" fill="${col}" stroke="${T.panel}" stroke-width="1"/>`; });
+    const fin=v.filter(y=>y===y);
+    if(!isCount(f)&&fin.length===12){ const mu=fin.reduce((a,b)=>a+b,0)/12;
+      s+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(mu)}" y2="${Y(mu)}" stroke="${col}" stroke-dasharray="5 4" opacity=".7"/>`+
+         txt(W-mr-2,Y(mu)-4,'annual mean '+mu.toFixed(decFor(ax.st/10)),{a:'end',fs:9.5,c:T.mute}); }
+  }
+  s+=`<rect id="cycHit" x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
+  document.getElementById('cycLeg').innerHTML='';
+  /* hover: the value in that month */
+  const tip=document.getElementById('cycTip'), hit=document.getElementById('cycHit');
+  hit.onmousemove=e=>{
+    const r=svg.getBoundingClientRect(), x=(e.clientX-r.left)*W/r.width, m=clamp(Math.floor((x-ml)/pw*12),0,11);
+    tip.innerHTML=`<b>${MFULL[m]}</b>: `+cs.series.map(se=>`<b>${fmt(se.vals[m],Math.max(1,decFor(ax.st/10)))}</b> ${esc(u.u||f.unitWord||'')}`).join('<br>');
+    tip.style.display='block'; const pr=svg.parentNode.getBoundingClientRect();
+    tip.style.left=Math.min(pr.width-tip.offsetWidth-6,e.clientX-pr.left+12)+'px'; tip.style.top=(e.clientY-pr.top+10)+'px';
+  };
+  hit.onmouseleave=()=>{ tip.style.display='none'; };
+}
+function fmtLL(lon,lat){
+  lon=((lon+540)%360)-180;
+  return `${Math.abs(lat).toFixed(1)}°${lat>=0?'N':'S'} ${Math.abs(lon).toFixed(1)}°${lon>=0?'E':'W'}`;
+}
+function drawZonal(){
+  const T=THEME[S.theme], svg=document.getElementById('zonSvg'), g=D.grid;
+  const W=260,H=230,ml=36,mr=10,mt=8,mb=26,pw=W-ml-mr,ph=H-mt-mb;
+  if(D.C.cat){ svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=txt(W/2,H/2,'Not defined for the peak month',{a:'middle'});
+    document.getElementById('zonSub').textContent=''; return; }
+  let X=frameX(S.t); let note='';
+  if(effRel()==='zonal'){ note=' (of the departure: zero by construction)'; }
+  const z=zonalMean(X,g);
+  let zA=null;
+  if(S.view==='month'&&!D.stat){ /* the annual mean of the displayed quantity, for reference */
+    const a=annualOf(D.E,D.N,false), ad=new Float32Array(D.N); for(let i=0;i<D.N;i++) ad[i]=D.conv(a[i]); zA=zonalMean(ad,g); }
+  const vals=[...z,...(zA||[])].filter(v=>v===v);
+  if(!vals.length){ svg.innerHTML=''; return; }
+  const la0=g.lat0+g.g/2, la1=g.lat0+(g.nlat-0.5)*g.g;
+  const ax=niceAx(Math.min(...vals,D.kind==='div'?0:Infinity),Math.max(...vals,D.kind==='div'?0:-Infinity),4);
+  const Xs=v=>ml+pw*(v-ax.lo)/(ax.hi-ax.lo), Ys=la=>mt+ph*(1-(la-(g.global?-90:g.lat0))/((g.global?90:g.lat0+g.nlat*g.g)-(g.global?-90:g.lat0)));
+  let s='';
+  const latTicks=g.global?[-90,-60,-30,0,30,60,90]:[25,30,35,40,45,50];
+  for(const la of latTicks){ s+=`<line x1="${ml}" x2="${W-mr}" y1="${Ys(la)}" y2="${Ys(la)}" stroke="${T.grid}"/>`+txt(ml-4,Ys(la)+3.5,la===0?'Eq':Math.abs(la)+(la>0?'N':'S'),{a:'end',fs:9.5}); }
+  for(let v=ax.lo;v<=ax.hi+ax.st*1e-6;v+=ax.st*(pw<200?2:1)) s+=txt(Xs(v),H-9,(+v.toFixed(6)).toFixed(decFor(ax.st)).replace('-','−'),{a:'middle',fs:9.5});
+  if(D.kind==='div') s+=`<line x1="${Xs(0)}" x2="${Xs(0)}" y1="${mt}" y2="${mt+ph}" stroke="${T.mute}"/>`;
+  const path=(arr)=>{ let d='', pen=false; arr.forEach((v,r)=>{ if(v===v){ d+=(pen?'L':'M')+Xs(v).toFixed(1)+','+Ys(g.lat0+(r+0.5)*g.g).toFixed(1); pen=true; } else pen=false; }); return d; };
+  if(zA) s+=`<path d="${path(zA)}" fill="none" stroke="${T.mute}" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+  s+=`<path d="${path(z)}" fill="none" stroke="${LINE[S.theme]}" stroke-width="2.2" stroke-linejoin="round"/>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
+  document.getElementById('zonSub').textContent=`Average around each latitude circle${g.global?'':' (U.S. boxes only)'}: ${S.view==='month'?monthName(S.t)+' (solid), annual mean (dashed)':statLabel().toLowerCase()}${note} · ${D.C.unit||''}`;
+}
+let HOVSTATE=null;
+function drawHov(){
+  const T=THEME[S.theme], svg=document.getElementById('hovSvg'), g=D.grid;
+  const W=440,H=230,ml=34,mr=8,mt=8,mb=24,pw=W-ml-mr,ph=H-mt-mb;
+  /* month x latitude of the zonal mean of the (effective) monthly field */
+  const E=D.E, N=D.N, nr=g.nlat;
+  const kindM=effRel()!=='val'?'div':isCount()?'cnt':'abs', uu=U(), cv=kindM==='div'?uu.d:uu.to;
+  const Z=new Float32Array(12*nr);
+  for(let m=0;m<12;m++){ const z=zonalMean(E.subarray(m*N,(m+1)*N),g); for(let r=0;r<nr;r++) Z[m*nr+r]=cv(z[r]); }
+  if(effRel()==='zonal'){ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    svg.innerHTML=txt(W/2,H/2,'Zonal means of an east–west departure are zero',{a:'middle'}); document.getElementById('hovSub').textContent=''; return; }
+  const C=(S.view==='month'&&!D.C.cat)?D.C:buildScale(F(),kindM==='cnt'?'cnt':kindM,Z);
+  const c=document.createElement('canvas'); c.width=24; c.height=nr; const x=c.getContext('2d'), im=x.createImageData(24,nr), u32=new Uint32Array(im.data.buffer);
+  const NL=C.lut.length;
+  for(let col=0;col<24;col++){ const m=Math.floor(col/2);
+    for(let r=0;r<nr;r++){ const v=Z[m*nr+r], k=(nr-1-r)*24+col;
+      if(!(v===v)){ u32[k]=0; continue; } u32[k]=C.lut[clamp(Math.floor((v-C.lo)/(C.hi-C.lo)*(NL-1)),0,NL-1)]; } }
+  x.putImageData(im,0,0);
+  /* smooth in time and latitude for ERA5; blocks for counts */
+  const big=document.createElement('canvas'); big.width=480; big.height=Math.min(360,nr*4); const bx=big.getContext('2d');
+  bx.imageSmoothingEnabled=!isCount(); bx.drawImage(c,0,0,big.width,big.height);
+  const url=big.toDataURL();
+  const Ys=la=>mt+ph*(1-(la-g.lat0)/(nr*g.g));
+  let s=`<image href="${url}" x="${ml}" y="${mt}" width="${pw}" height="${ph}" preserveAspectRatio="none"/>`;
+  const latTicks=g.global?[-60,-30,0,30,60]:[25,30,35,40,45];
+  for(const la of latTicks){ if(la<g.lat0||la>g.lat0+nr*g.g) continue; s+=`<line x1="${ml-3}" x2="${ml}" y1="${Ys(la)}" y2="${Ys(la)}" stroke="${T.mute}"/>`+txt(ml-5,Ys(la)+3.5,la===0?'Eq':Math.abs(la)+(la>0?'N':'S'),{a:'end',fs:9.5}); }
+  for(let m=0;m<12;m++) s+=txt(ml+pw*(m+0.5)/12,H-8,MONTHS[m][0]+(window.innerWidth>500?MONTHS[m].slice(1):''),{a:'middle',fs:10});
+  s+=`<rect x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="none" stroke="${T.line}"/>`;
+  s+=`<line id="hovMark" x1="0" x2="0" y1="${mt}" y2="${mt+ph}" stroke="${T.ink}" stroke-width="1.5" stroke-dasharray="4 3" style="display:none"/>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
+  HOVSTATE={ml,pw};
+  document.getElementById('hovSub').textContent=`Zonal mean by month and latitude${g.global?'':' (U.S. boxes)'}: how the pattern migrates with the seasons · ${C.unit||''}${C!==D.C?' · own color scale':''}`;
+  moveHovMarker();
+}
+function moveHovMarker(){
+  const el=document.getElementById('hovMark'); if(!el||!HOVSTATE) return;
+  if(S.view!=='month'){ el.style.display='none'; return; }
+  const x=HOVSTATE.ml+HOVSTATE.pw*(((S.t%12)+0.5)/12);
+  el.setAttribute('x1',x); el.setAttribute('x2',x); el.style.display='';
+}
+
+/* ------------------------------------------------------------- readout & tooltip */
+let PLACE='', ADMIN=null, ADMINP=null;
+/* Planar point-in-polygon on lon/lat (even–odd rule), with a bounding box per feature.
+   d3.geoContains would need d3's ring winding, which the simplified file does not keep. */
+function inRings(rings,x,y){
+  let ins=false;
+  for(const r of rings) for(let i=0,j=r.length-1;i<r.length;j=i++){
+    const xi=r[i][0],yi=r[i][1],xj=r[j][0],yj=r[j][1];
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) ins=!ins;
+  }
+  return ins;
+}
+async function placeName(lon,lat){
+  try{
+    if(!ADMINP) ADMINP=gzFetch('../enso/geo/admin1-10m.json.gz').then(t=>{
+      const o=t.objects[Object.keys(t.objects)[0]];
+      ADMIN=topojson.feature(t,o).features.map(ft=>{
+        const g=ft.geometry; if(!g) return null;
+        const polys=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+        let x0=180,x1=-180,y0=90,y1=-90;
+        for(const P of polys) for(const pt of P[0]){ if(pt[0]<x0)x0=pt[0]; if(pt[0]>x1)x1=pt[0]; if(pt[1]<y0)y0=pt[1]; if(pt[1]>y1)y1=pt[1]; }
+        return {p:ft.properties||{},polys,bb:[x0,y0,x1,y1]};
+      }).filter(Boolean); });
+    await ADMINP;
+    const x=((lon+540)%360)-180, y=lat;
+    for(const a of ADMIN){
+      if(x<a.bb[0]||x>a.bb[2]||y<a.bb[1]||y>a.bb[3]) continue;
+      if(a.polys.some(P=>inRings(P,x,y))){
+        const pr=a.p, n=pr.name||pr.NAME||'', c=(pr.admin||pr.ADMIN||pr.geonunit||'').replace('United States of America','United States');
+        return n&&c&&n!==c?`${n}, ${c}`:(n||c);
+      }
+    }
+  }catch(e){}
+  return '';
+}
+function valueAt(lon,lat){
+  const X=frameX(S.t); return sampleGrid(X,0,D.grid,lon,lat,D.boxes);
+}
+function fmtVal(v){
+  if(!(v===v)) return '—';
+  if(D.C.cat) return MFULL[Math.round(v)];
+  const d=Math.max(D.C.dec,Math.abs(v)<10?1:0);
+  return (D.kind==='div'&&v>0?'+':'')+v.toFixed(d).replace('-','−')+(D.C.unit?' '+D.C.unit:'');
+}
+async function writeReadout(){
+  const el=document.getElementById('readout');
+  if(!D){ el.innerHTML=''; return; }
+  if(!S.pt){ el.innerHTML=`<div><b>Click the map</b> to pin a place: its value appears here and its seasonal cycle below.</div>`; return; }
+  const [lon,lat]=S.pt, v=valueAt(lon,lat);
+  const cs=await cycleSeries(), f=F(), u=U(f);
+  const main=cs.series.find(s=>s.p===S.p);
+  let ex='';
+  if(main){ const fin=main.vals.filter(x=>x===x); if(fin.length===12){
+      const hi=Math.max(...fin), lo=Math.min(...fin), mi=main.vals.indexOf(hi), mn=main.vals.indexOf(lo), dd=Math.abs(hi)<10?1:0;
+      const mean=fin.reduce((a,b)=>a+b,0)/12;
+      ex=`<div>${isCount(f)?'Yearly total':'Annual mean'}: <b>${(isCount(f)?mean*12:mean).toFixed(dd+(isCount(f)?1:0))} ${esc(isCount(f)?'':u.u)}</b> · `+
+         `highest in <b>${MFULL[mi]}</b> (${hi.toFixed(dd+(isCount(f)?2:0))}), lowest in <b>${MFULL[mn]}</b> (${lo.toFixed(dd+(isCount(f)?2:0))}) · ${esc(main.label)}</div>`; } }
+  el.innerHTML=`<div>${esc(fmtLL(lon,lat))}${PLACE?' · '+esc(PLACE):''}</div><div class="v">${esc(fmtVal(v))}</div>`+
+    `<div>${esc(bigMonthText())} · ${esc(perLabel())}</div>${ex}`;
+}
+
+/* ------------------------------------------------------------- interaction */
+let INTERACT=false, DRAG=null, SETTLE=null;
+function invertXY(x,y){
+  const ll=VIEW.proj.invert([x,y]); if(!ll||!isFinite(ll[0])) return null;
+  if(VIEW.ctr&&!VIEW.visible(ll[0],ll[1])) return null;
+  const q=VIEW.proj(ll); if(!q||Math.abs(q[0]-x)>1||Math.abs(q[1]-y)>1) return null;
+  return ll;
+}
+function beginInteract(){
+  INTERACT=true; clearTimeout(SETTLE);
+}
+function endInteractSoon(){
+  clearTimeout(SETTLE);
+  SETTLE=setTimeout(()=>{ INTERACT=false; setupView(false); writeHash(); draw(); },160);
+}
+function applyView(fast){
+  VIEW.v={map:S.map,rot:S.rot,zoom:S.zoom,pan:S.pan}; VIEW.fit();
+  VIEW.buildLonLat(fieldRes(VIEW.W,fast));
+  if(FLOW&&D&&D.flow) FLOW.reset(particleCount(VIEW));
+  draw();
+}
+function wireStage(){
+  const st=document.getElementById('stage'), tip=document.getElementById('tip');
+  st.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.mapbtns')) return;
+    st.setPointerCapture(e.pointerId);
+    DRAG={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,moved:false,rot:(S.rot||REGIONS[S.map].rot||[REGIONS[S.map].lon0||0,0]).slice(),pan:S.pan.slice()};
+  });
+  st.addEventListener('pointermove',e=>{
+    const r=st.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+    if(DRAG){
+      const dx=e.clientX-DRAG.x0, dy=e.clientY-DRAG.y0;
+      if(!DRAG.moved&&Math.hypot(dx,dy)<4) return;
+      if(!DRAG.moved){ DRAG.moved=true; beginInteract(); st.classList.add('drag'); tip.style.display='none'; clearFlow(); }
+      const R=REGIONS[S.map], sc=VIEW.proj.scale();
+      if(R.kind==='globe'){ const k=180/(Math.PI*sc);
+        S.rot=[DRAG.rot[0]+dx*k, clamp(DRAG.rot[1]-dy*k,-90,90)]; }
+      else if(R.kind==='world'){
+        const k=180/(Math.PI*sc); S.rot=[DRAG.rot[0]-dx*k,0];
+        if(S.zoom>1) S.pan=[DRAG.pan[0],DRAG.pan[1]+dy/VIEW.W];
+      }
+      else S.pan=[DRAG.pan[0]+dx/VIEW.W,DRAG.pan[1]+dy/VIEW.W];
+      applyView(true);
+      return;
+    }
+    if(!D||INTERACT) return;
+    const ll=invertXY(x,y);
+    if(!ll){ tip.style.display='none'; return; }
+    const v=valueAt(ll[0],ll[1]);
+    tip.innerHTML=`${esc(fmtLL(ll[0],ll[1]))}<br><b>${esc(fmtVal(v))}</b>`;
+    tip.style.display='block';
+    const tw=tip.offsetWidth, th=tip.offsetHeight;
+    tip.style.left=(x+14+tw>r.width?x-tw-12:x+14)+'px'; tip.style.top=(y+14+th>r.height?y-th-10:y+14)+'px';
+  });
+  const up=async e=>{
+    if(!DRAG) return;
+    const d=DRAG; DRAG=null; st.classList.remove('drag');
+    if(d.moved){ endInteractSoon(); return; }
+    const r=st.getBoundingClientRect(), ll=invertXY(e.clientX-r.left,e.clientY-r.top);
+    if(!ll) return;
+    S.pt=[+(((ll[0]+540)%360)-180).toFixed(2),+ll[1].toFixed(2)]; PLACE='';
+    drawTop(); writeHash(); CYC=null; panelsNow(false); writeReadout();
+    PLACE=await placeName(S.pt[0],S.pt[1]); writeReadout(); drawCycle();
+  };
+  st.addEventListener('pointerup',up);
+  st.addEventListener('pointercancel',()=>{ if(DRAG&&DRAG.moved) endInteractSoon(); DRAG=null; st.classList.remove('drag'); });
+  st.addEventListener('pointerleave',()=>{ tip.style.display='none'; });
+  st.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const r=st.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+    zoomAt(Math.exp(-e.deltaY*0.0016),x,y);
+  },{passive:false});
+}
+function zoomAt(f,x,y){
+  const k0=S.zoom, k1=clamp(k0*f,1,12); if(Math.abs(k1-k0)<1e-6) return;
+  beginInteract(); clearFlow();
+  /* keep the point under the cursor fixed (flat maps); the globe zooms about its center */
+  if(REGIONS[S.map].kind!=='globe'){
+    const cx=VIEW.W/2, cy=VIEW.H/2, px=x==null?cx:x, py=y==null?cy:y, W=VIEW.W;
+    const tx=cx-(cx-VIEW.t0[0])*k0+S.pan[0]*W, ty=cy-(cy-VIEW.t0[1])*k0+S.pan[1]*W;
+    const nx=px-(px-tx)*k1/k0, ny=py-(py-ty)*k1/k0;
+    S.pan=[(nx-(cx-(cx-VIEW.t0[0])*k1))/W,(ny-(cy-(cy-VIEW.t0[1])*k1))/W];
+  }
+  S.zoom=k1; if(k1===1&&REGIONS[S.map].kind!=='globe') S.pan=[0,0];
+  applyView(true); endInteractSoon();
+}
+
+/* ------------------------------------------------------------- controls */
+function setMsg(m){ const el=document.getElementById('msg'); el.style.display=m?'block':'none'; el.textContent=m||''; }
+function loading(on){ document.getElementById('loadchip').style.display=on?'block':'none'; }
+function fillFieldSelect(){
+  const sel=document.getElementById('fldSel'); let h='', grp=null;
+  for(const f of FIELDS){ if(f.grp!==grp){ if(grp) h+='</optgroup>'; grp=f.grp; h+=`<optgroup label="${esc(grp)}">`; }
+    h+=`<option value="${f.k}">${esc(f.label)}</option>`; }
+  sel.innerHTML=h+'</optgroup>';
+
+}
+function syncControls(){
+  const f=F();
+  document.getElementById('fldSel').value=f.k;
+  const thrBox=document.getElementById('thrBox'), ts=document.getElementById('thrSel');
+  if(f.thresholds){ thrBox.style.display=''; ts.innerHTML=f.thresholds.map((t,i)=>`<option value="${i}">${esc(t.label)}</option>`).join(''); ts.value=Math.min(S.thr,f.thresholds.length-1); }
+  else thrBox.style.display='none';
+  document.querySelectorAll('#viewSeg button').forEach(b=>{ b.classList.toggle('on',b.dataset.v===S.view);
+  });
+  document.getElementById('seasBox').style.display=S.view==='season'?'':'none';
+  document.getElementById('seasSel').value=S.seas;
+  const rb=document.getElementById('relBox'), rs=document.getElementById('relSel');
+  rs.value=S.rel;
+  rs.querySelector('option[value="anom"]').disabled=!relAllowed();
+  rs.querySelector('option[value="zonal"]').disabled=f.src==='scs'||S.view==='range'||S.view==='peak';
+  if(rs.selectedOptions[0]&&rs.selectedOptions[0].disabled) rs.value='val';
+  rb.classList.toggle('off',S.view==='range'||S.view==='peak');
+  document.getElementById('mapSel').value=S.map;
+  const ul=UNITS[f.kind]||UNITS.count, us=document.getElementById('unSel');
+  us.innerHTML=ul.map(u=>`<option value="${u.k}">${esc(u.u||'count')}</option>`).join(''); us.value=U(f).k;
+  document.getElementById('unBox').style.display=ul.length>1?'':'none';
+  document.getElementById('flowSel').value=flowLevel();
+  document.getElementById('cntChk').checked=S.cnt===1||(S.cnt==='auto'&&(f.k==='msl'||f.k==='z500'));
+  document.getElementById('bandChk').checked=!!S.band;
+  document.getElementById('bordChk').checked=!!S.bord;
+  document.getElementById('gratChk').checked=!!S.grat;
+  document.getElementById('smoothChk').checked=!!S.smooth;
+  document.getElementById('spdSel').value=String(S.spd);
+  document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
+  const tb=document.getElementById('timebar'); tb.style.opacity=S.view==='month'?1:0.55;
+  document.getElementById('hint').textContent=REGIONS[S.map].kind==='globe'?'drag to spin · scroll to zoom · click for the seasonal cycle there':
+    'drag to pan · scroll to zoom · click for the seasonal cycle there';
+  writeGuide();
+}
+function syncTime(){
+  const r=document.getElementById('tRange'); if(document.activeElement!==r) r.value=S.t;
+  const mi=((Math.round(S.t)%12)+12)%12;
+  document.querySelectorAll('#tTicks span').forEach((s,i)=>s.classList.toggle('on',S.view==='month'&&i===mi));
+  moveHovMarker();
+  if(PLAY) document.getElementById('playBtn').innerHTML='&#10074;&#10074; Pause'; else document.getElementById('playBtn').innerHTML='&#9654;&#xFE0E; Play';
+}
+function setPlay(on){
+  PLAY=on;
+  if(on&&S.view!=='month'){ S.view='month'; prepare(); }
+  syncTime(); if(!on) panelsSoon(false);
+}
+function stepMonth(d){
+  if(S.view!=='month'){ S.view='month'; S.t=Math.round(S.t); prepare(); return; }
+  setPlay(false); S.t=(((Math.round(S.t)+d)%12)+12)%12; DIRTY=true; panelsSoon(false); writeHash(); writeReadout();
+}
+/* one-click starting points for a class: each sets a complete view */
+const TOURS=[
+  {l:'ITCZ & monsoons',h:'f=pr&v=month&m=ee&fl=850&t=0',play:1},
+  {l:'Jet streams',h:'f=w250&v=month&m=ee&t=0',play:1},
+  {l:'Hadley & Walker cells',h:'f=omega&v=annual&m=ee'},
+  {l:'Continentality',h:'f=t2m&v=range&m=ee'},
+  {l:'Winter stationary waves',h:'f=z500&v=month&r=zonal&m=np&t=0'},
+  {l:'Earth from space (IR)',h:'f=olr&v=month&m=globe&t=6',play:1},
+  {l:'Arctic sea ice',h:'f=ci&v=month&m=np&t=8',play:1},
+  {l:'Severe-storm ingredients',h:'f=cape&v=month&m=na&fl=850&t=4',play:1},
+  {l:'Tornado season',h:'f=tornado&v=month&m=us&t=4',play:1},
+  {l:'Hurricane seasons',h:'f=tcd&v=month&m=ee&t=8',play:1}
+];
+async function goTour(i){
+  const T_=TOURS[i], keep={theme:S.theme,un:S.un};
+  Object.assign(S,{thr:0,p:'p9625',view:'month',seas:'jja',rel:'val',map:'ee',flow:'auto',cnt:'auto',band:1,bord:1,grat:0,smooth:1,
+                   t:6,pt:null,rot:null,zoom:1,pan:[0,0]},keep);
+  location.hash=T_.h; readHash(); S.theme=keep.theme; CYC=null; PLACE='';
+  setPlay(false); setupView(false); await prepare(); writeReadout();
+  if(T_.play) setPlay(true);
+  document.getElementById('mapcard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function writeGuide(){
+  document.getElementById('guide').innerHTML=
+   `<b>How to read this page.</b> Each map is a <b>climatology</b>: the average of many years, not any single year. `+
+   `Every map is the average over <b>1996–2025</b>, the most recent 30 years: present-day climate. `+
+   `<b>Annual</b> averages all twelve months (for storm counts it is the yearly total); <b>Range</b> is the size of the seasonal swing; `+
+   `<b>Peak month</b> colors each place by the month it is highest; <b>Relative to</b> subtracts the annual mean (what each season adds) `+
+   `or the average around the latitude circle (what makes a place unusual for its latitude).`+
+   `<div class="tours"><b>Start here:</b> `+TOURS.map((t,i)=>`<button class="chip" data-tour="${i}">${esc(t.l)}</button>`).join('')+`</div>`;
+  document.querySelectorAll('#guide [data-tour]').forEach(b=>b.addEventListener('click',()=>goTour(+b.dataset.tour)));
+}
+function wireControls(){
+  const on=(id,ev,fn)=>document.getElementById(id).addEventListener(ev,fn);
+  on('fldSel','change',e=>{ const old=F(); S.f=e.target.value; S.thr=0; CYC=null; S.flow='auto'; S.cnt='auto';
+    const f=F();
+    /* jump to a sensible map for the new field: U.S. hazards on the U.S., everything else stays */
+    if(f.src==='scs'&&!['us','na','globe'].includes(S.map)){ S.map='us'; S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); }
+    if(old.src==='scs'&&f.src!=='scs'&&S.map==='us'){ S.map='ee'; S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); }
+    prepare(); });
+  on('thrSel','change',e=>{ S.thr=+e.target.value; CYC=null; prepare(); });
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.addEventListener('click',()=>{ S.view=b.dataset.v; if(S.view!=='month') setPlay(false); prepare(); }));
+  on('seasSel','change',e=>{ S.seas=e.target.value; prepare(); });
+  on('relSel','change',e=>{ S.rel=e.target.value; prepare(); });
+  on('mapSel','change',e=>{ S.map=e.target.value; S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); syncControls(); writeHash(); panelsSoon(false); });
+  on('unSel','change',e=>{ S.un[F().kind]=e.target.value; CYC=null; prepare(); });
+  on('flowSel','change',async e=>{ S.flow=e.target.value; await prepareFlow(); if(D.flow&&FLOW&&VIEW.lut) FLOW.reset(particleCount(VIEW)); else { if(FLOW) FLOW.P=null; clearFlow(); } writeHash(); });
+  on('cntChk','change',e=>{ S.cnt=e.target.checked?1:0; DIRTY=true; writeHash(); });
+  on('bandChk','change',e=>{ S.band=e.target.checked?1:0; prepare(); });
+  on('bordChk','change',e=>{ S.bord=e.target.checked?1:0; DIRTY=true; writeHash(); });
+  on('gratChk','change',e=>{ S.grat=e.target.checked?1:0; DIRTY=true; writeHash(); });
+  on('smoothChk','change',e=>{ S.smooth=e.target.checked?1:0; DIRTY=true; writeHash(); });
+  on('spdSel','change',e=>{ S.spd=+e.target.value; writeHash(); });
+  on('playBtn','click',()=>setPlay(!PLAY));
+  on('prevBtn','click',()=>stepMonth(-1));
+  on('nextBtn','click',()=>stepMonth(1));
+  on('tRange','input',e=>{ const t=(+e.target.value)%12; if(S.view!=='month'){ S.view='month'; S.t=t; prepare(); return; } setPlay(false); S.t=t; DIRTY=true; panelsSoon(false); });
+  on('tRange','change',()=>{ writeHash(); writeReadout(); });
+  /* the track runs mid-January to the next mid-January, so December–January can be scrubbed too */
+  document.getElementById('tTicks').innerHTML=[...MONTHS,'Jan'].map((m,i)=>`<span data-m="${i%12}">${m}</span>`).join('');
+  document.querySelectorAll('#tTicks span').forEach(s=>s.addEventListener('click',()=>{ setPlay(false); if(S.view!=='month'){ S.view='month'; S.t=+s.dataset.m; prepare(); return; } S.t=+s.dataset.m; DIRTY=true; panelsSoon(false); writeHash(); writeReadout(); }));
+  on('zIn','click',()=>zoomAt(1.5)); on('zOut','click',()=>zoomAt(1/1.5));
+  on('zHome','click',()=>{ S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); writeHash(); draw(); });
+  on('themeBtn','click',()=>{ S.theme=S.theme==='dark'?'light':'dark'; applyTheme(); prepare(); });
+  on('resetBtn','click',()=>{ location.hash=''; location.reload(); });
+  on('linkBtn','click',async()=>{ writeHash(); try{ await navigator.clipboard.writeText(location.href); const b=document.getElementById('linkBtn'); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy link',1400); }catch(e){ prompt('Copy this link:',location.href); } });
+  on('expBtn','click',openExport);
+  window.addEventListener('keydown',e=>{
+    if(e.target.closest('select,input,textarea,dialog')) return;
+    if(e.code==='Space'){ e.preventDefault(); setPlay(!PLAY); }
+    else if(e.key==='ArrowRight') stepMonth(1); else if(e.key==='ArrowLeft') stepMonth(-1);
+  });
+  let rz=null; window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ setupView(false); drawColorbar(); panelsSoon(true); },150); });
+}
+function applyTheme(){ document.documentElement.dataset.theme=S.theme; syncControls(); }
+
+/* ------------------------------------------------------------- link state */
+function writeHash(){
+  const h=new URLSearchParams();
+  h.set('f',S.f); if(S.thr) h.set('thr',S.thr); h.set('p',S.p); h.set('v',S.view);
+  if(S.view==='season') h.set('s',S.seas);
+  if(S.rel!=='val') h.set('r',S.rel);
+  h.set('m',S.map);
+  const uk=Object.entries(S.un).map(([k,v])=>k+':'+v).join(','); if(uk) h.set('u',uk);
+  if(S.flow!=='auto') h.set('fl',S.flow);
+  if(S.cnt!=='auto') h.set('c',S.cnt);
+  if(!S.band) h.set('b','0'); if(!S.bord) h.set('bd','0'); if(S.grat) h.set('g','1'); if(!S.smooth) h.set('sm','0');
+  if(S.spd!==0.7) h.set('sp',S.spd);
+  if(S.view==='month') h.set('t',(+S.t).toFixed(2));
+  h.set('th',S.theme);
+  if(S.pt) h.set('pt',S.pt.join(','));
+  if(S.rot) h.set('rot',S.rot.map(x=>x.toFixed(1)).join(','));
+  if(S.zoom!==1) h.set('z',S.zoom.toFixed(3));
+  if(S.pan[0]||S.pan[1]) h.set('pan',S.pan.map(x=>x.toFixed(4)).join(','));
+  history.replaceState(null,'','#'+h.toString());
+}
+function readHash(){
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(h.has('f')&&FBYK[h.get('f')]) S.f=h.get('f');
+  if(h.has('thr')) S.thr=+h.get('thr')||0;
+  if(h.has('p')&&PERIODS.some(p=>p.k===h.get('p'))) S.p=h.get('p');
+  if(['month','season','annual','range','peak'].includes(h.get('v'))) S.view=h.get('v');
+  if(SEASONS[h.get('s')]) S.seas=h.get('s');
+  if(['val','anom','zonal'].includes(h.get('r'))) S.rel=h.get('r');
+  if(REGIONS[h.get('m')]) S.map=h.get('m');
+  if(h.has('u')) for(const kv of h.get('u').split(',')){ const [k,v]=kv.split(':'); if(UNITS[k]&&UNITS[k].some(u=>u.k===v)) S.un[k]=v; }
+  if(['off','10','850','500','250'].includes(h.get('fl'))) S.flow=h.get('fl');
+  if(h.has('c')) S.cnt=+h.get('c')?1:0;
+  if(h.get('b')==='0') S.band=0; if(h.get('bd')==='0') S.bord=0; if(h.get('g')==='1') S.grat=1; if(h.get('sm')==='0') S.smooth=0;
+  if(h.has('sp')) S.spd=+h.get('sp')||0.7;
+  if(h.has('t')) S.t=clamp(+h.get('t')||0,0,11.999);
+  if(h.get('th')==='light') S.theme='light';
+  else if(!h.has('th')&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches) S.theme='light';
+  if(h.has('pt')){ const a=h.get('pt').split(',').map(Number); if(a.length===2&&a.every(isFinite)) S.pt=a; }
+  if(h.has('rot')){ const a=h.get('rot').split(',').map(Number); if(a.length===2&&a.every(isFinite)) S.rot=a; }
+  if(h.has('z')) S.zoom=clamp(+h.get('z')||1,1,12);
+  if(h.has('pan')){ const a=h.get('pan').split(',').map(Number); if(a.length===2&&a.every(isFinite)) S.pan=a; }
+}
+
+function methodsHtml(){
+  return `<ol>
+<li><b>Climatologies.</b> Each map is built from monthly means of the ERA5 reanalysis (ECMWF / Copernicus Climate Change Service), averaged
+for each calendar month over the 30 years 1996–2025 (present-day climate). 0.25° fields were averaged into 1° boxes (area-weighted,
+trapezoid rule), then over the years. 1996–2022 come from NCAR's GDEX copy (ds633.1) and 2023–2025 from the Copernicus Climate Data Store; the
+two are the same ECMWF product and agree exactly where they overlap. Grid boxes less than a quarter ocean are left blank for SST and sea ice.</li>
+<li><b>Derived fields.</b> Wind speeds are those of the monthly-mean wind vector (smaller than the mean instantaneous speed). Planetary albedo is
+1 − absorbed/incoming solar from the monthly means; OLR is minus the TOA net longwave; P − E uses ERA5's mean evaporation rate; the convective share is the
+convective precipitation rate over the total. Deep-layer shear (500 hPa − 10 m) and TC shear (200 − 850 hPa) are the means of 6-hourly shear
+magnitudes, from the WeatherBench2 1.5° copy of ERA5 through 2022 (two days in every four) and from the CDS from 2023, interpolated to the 1° grid.
+CAPE is ERA5's, close to most-unstable CAPE. Omega is shown in hPa/day (negative = rising).</li>
+<li><b>Seasons, years, ranges.</b> A season is the mean of its three monthly means (for counts, their sum); the annual mean weights all months
+equally; the range is the largest monthly mean minus the smallest; the peak month is the month of the largest monthly mean (left blank where
+the seasonal cycle is negligible). "Relative to annual mean" subtracts each place's annual mean; "relative to zonal mean" subtracts the mean
+around each latitude circle (all longitudes with data).</li>
+<li><b>Animation.</b> Monthly means are placed at mid-month. Between them the map glides along a Catmull–Rom curve through the four nearest
+months, clamped so it never goes beyond the two months it lies between; untick "Smooth between months" to step from month to month.</li>
+<li><b>Tropical cyclones.</b> IBTrACS v04r01 binned in 5° boxes, exactly as on the El Niño and La Niña page: USA-agency winds, synoptic 6-hourly
+positions with Vmax ≥ 34 kt, extratropical and disturbance stages excluded. Track density counts storm-days (four positions = one day); ACE sums
+Vmax² in 10⁴ kt²; genesis is the first position at 34 kt. Averages over 1996–2025.</li>
+<li><b>U.S. severe weather.</b> NOAA/NCEI Storm Events: days with at least one report at the chosen threshold in each 2° box, from the
+severe-weather 2° grid page (derechos: events from the Squitieri et al. catalog, 1996 on). The archive is missing June–July 1993; those months
+are averaged over the remaining years. Report counts grew enormously with population, radar and spotter networks, so they reflect reporting as much as climate.</li>
+<li><b>Export.</b> Video and GIF exports render each frame off-screen at the chosen size, from the same data and projection as the map. MP4 uses
+the browser's own H.264 encoder (WebCodecs) and plays in PowerPoint, Keynote and every browser; where that is missing the page records a WebM video instead.</li>
+</ol>
+<p>Data: ERA5 — Hersbach et al. (2020), Q. J. R. Meteorol. Soc., 146, 1999–2049; IBTrACS — Knapp et al. (2010) and Gahtan et al. (2024);
+NOAA/NCEI Storm Events Database. Built with d3, topojson, gifenc and mp4-muxer (MIT licenses).</p>`;
+}
+
+/* ------------------------------------------------------------- start */
+async function init(){
+  if(typeof d3==='undefined'||typeof topojson==='undefined'){ setMsg('Could not load the map libraries from unpkg.com. Check your connection and reload.'); return; }
+  readHash(); applyTheme(); fillFieldSelect(); wireControls(); wireStage(); wireExport();
+  try{
+    const [ix]=await Promise.all([fetch('data/index.json').then(r=>{ if(!r.ok) throw new Error('data/index.json ('+r.status+')'); return r.json(); }),loadGeo()]);
+    IX=ix;
+  }catch(e){ setMsg('Could not load the data: '+e.message); return; }
+  document.getElementById('methodsBody').innerHTML=methodsHtml();
+  document.getElementById('foot').innerHTML=`Data: ERA5 (ECMWF/Copernicus C3S) via NCAR GDEX and the Copernicus Climate Data Store; IBTrACS (NOAA NCEI); NOAA/NCEI Storm Events Database. `+
+    `Maps and animations may be used freely for teaching with credit to <b>extremewx.org</b>.`;
+  setMsg(''); document.getElementById('body').style.display='';
+  setupView(false);
+  await prepare();
+  if(S.pt){ PLACE=await placeName(S.pt[0],S.pt[1]); }
+  writeReadout(); panelsNow(true);
+  requestAnimationFrame(loop);
+}
+
+/* ------------------------------------------------------------- export
+   Frames are rendered off-screen at the export size by a separate MapView, from
+   the same data, projection, zoom and color scale as the screen, so the file
+   shows exactly what the map shows. MP4: WebCodecs H.264 + mp4-muxer; WebM via
+   MediaRecorder where WebCodecs is missing; GIF via gifenc with one palette.    */
+let EXPORTING=false, EXP_CANCEL=false;
+function isAnimated(){ return S.view==='month'||!!(D&&D.flow); }
+function openExport(){
+  const dlg=document.getElementById('expDlg');
+  const anim=isAnimated();
+  const fmtSel=document.getElementById('exFmt');
+  fmtSel.querySelector('option[value="mp4"]').disabled=!anim;
+  fmtSel.querySelector('option[value="gif"]').disabled=!anim;
+  if(!anim) fmtSel.value='png';
+  document.getElementById('expNote').innerHTML=anim?
+    (S.view==='month'?'Animates one full year of the map exactly as shown (field, projection, zoom, wind flow, contours), with a title, color bar, month label and credit line.':
+     'This view is a single map; the video animates the wind flow over it. Choose <b>Months</b> to animate the seasonal cycle.'):
+    'This view is a single map, so only a PNG can be saved. Choose <b>Months</b> (or turn on the wind flow) to export an animation.';
+  document.getElementById('exStat').textContent='';
+  document.getElementById('exProg').style.display='none';
+  syncExportOpts(); dlg.showModal(); previewExport();
+}
+function syncExportOpts(){
+  const fmt=document.getElementById('exFmt').value;
+  const anim=fmt!=='png';
+  for(const id of ['exDur','exFps']) document.getElementById(id).disabled=!anim;
+  const fps=document.getElementById('exFps');
+  fps.querySelector('option[value="1"]').disabled=S.view!=='month';
+  if(fps.selectedOptions[0].disabled) fps.value='15';
+  if(fmt==='gif'&&fps.value==='30') fps.value='15';
+}
+function exportSize(){ const [w,h]=document.getElementById('exSize').value.split('x').map(Number); return [w,h]; }
+
+function makeComposer(W,H){
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const s=Math.min(W/1280,H/720)*1.0, pad=Math.round(18*s);
+  const cbFs=Math.max(10,Math.round(13*s)), cbH=Math.round(cbFs*4.5);
+  const titleH=Math.round(66*s), footH=cbH+Math.round(cbFs*2.4)+Math.round(10*s);
+  const ax=pad, ay=titleH, aw=W-2*pad, ah=H-titleH-footH;
+  let asp=regionAspect(S.map);
+  /* the screen view may be height-capped: keep the same visible shape */
+  if(VIEW) asp=VIEW.H/VIEW.W;
+  let mw=aw, mh=Math.round(aw*asp); if(mh>ah){ mh=ah; mw=Math.round(ah/asp); }
+  const mx=Math.round(ax+(aw-mw)/2), my=Math.round(ay+(ah-mh)/2);
+  const mapCv=document.createElement('canvas');
+  const mv=new MapView(mapCv); mv.setup(mw,mh,1,{map:S.map,rot:S.rot,zoom:S.zoom,pan:S.pan}); mv.buildLonLat(1);
+  let fl=null, flCv=null;
+  if(D.flow){ flCv=document.createElement('canvas'); flCv.width=mw; flCv.height=mh; fl=new Flow(mv,flCv); fl.reset(particleCount(mv),987654); }
+  const T=THEME[S.theme], bg=S.theme==='dark'?'#0f1720':'#ffffff', ink=T.ink, mute=T.mute, acc=S.theme==='dark'?'#ffb14e':'#b3640a';
+  const font=(px,w)=>`${w||400} ${Math.round(px*s)}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
+  const f=F(), title=f.label+thrLabel()+(relLabel()?' — '+relLabel():'');
+  const src=f.src==='tc'?'IBTrACS':f.src==='scs'?'NOAA Storm Events':'ERA5 reanalysis';
+  const sub=`${S.view==='month'?'Average seasonal cycle':statLabel()} · ${perLabel()} · ${src}`;
+  const credit=`extremewx.org · EarthVis · Dan Chavas, Purdue University`;
+  function render(t,steps){
+    const X=frameX(t);
+    mv.drawField(X,D.grid,D.C,D.boxes);
+    mv.render(X,D.grid,D.C,{theme:S.theme,contours:contourSpec(),grat:S.grat,bord:S.bord});
+    if(fl){ fl.ink=flowInk(mv); const uv=flowUV(t); for(let k=0;k<(steps||1);k++) fl.step(uv.U,uv.V,T,0.075); }
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+    ctx.fillStyle=ink; ctx.font=font(25,650);
+    let tt=title; while(ctx.measureText(tt).width>W*0.74&&tt.length>10) tt=tt.slice(0,-2);
+    if(tt!==title) tt=tt.slice(0,-1)+'…';
+    ctx.fillText(tt,pad,Math.round(34*s));
+    ctx.fillStyle=mute; ctx.font=font(15); ctx.fillText(sub,pad,Math.round(56*s));
+    ctx.textAlign='right'; ctx.fillStyle=acc; ctx.font=font(34,700);
+    const ml=S.view==='month'?monthName(t):bigMonthText();
+    ctx.fillText(ml,W-pad,Math.round(44*s));
+    ctx.drawImage(mapCv,mx,my);
+    if(flCv) ctx.drawImage(flCv,mx,my);
+    /* color bar */
+    const cbW=Math.min(W-2*pad,Math.round(900*s));
+    ctx.save(); ctx.translate(Math.round((W-cbW)/2),H-footH+Math.round(8*s));
+    drawColorbar(ctx,cbW,cbH,{theme:S.theme,fs:cbFs,ink,mute});
+    ctx.restore();
+    ctx.textAlign='left'; ctx.fillStyle=mute; ctx.font=`${Math.max(9,Math.round(12*s))}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
+    ctx.fillText(`Data: ${f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI)':f.src==='scs'?'NOAA/NCEI Storm Events Database':'ERA5 (ECMWF / Copernicus C3S)'}`,pad,H-Math.round(10*s));
+    ctx.textAlign='right'; ctx.fillText(credit,W-pad,H-Math.round(10*s));
+    return cv;
+  }
+  return {cv,render,fl,mv};
+}
+function previewExport(){
+  if(!D) return;
+  const [w,h]=exportSize(), pc=document.getElementById('expPrev');
+  const pw=640, ph=Math.round(640*h/w);
+  pc.width=pw; pc.height=ph;
+  const comp=makeComposer(w,h);
+  if(comp.fl) for(let k=0;k<40;k++){ const uv=flowUV(S.t); comp.fl.step(uv.U,uv.V,THEME[S.theme],0.075); }
+  comp.render(S.t);
+  pc.getContext('2d').drawImage(comp.cv,0,0,pw,ph);
+}
+function stem(){
+  const f=F();
+  return ['earthvis',f.k+(f.thresholds?'-'+S.thr:''),PERIODS.find(p=>p.k===S.p).label.replace('–','-'),
+          S.view==='season'?S.seas:S.view,effRel()!=='val'?effRel():'',S.map].filter(Boolean).join('_');
+}
+function dl(blob,name){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000);
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function prog(fr,msg){ const p=document.getElementById('exProg'); p.style.display='block'; p.firstElementChild.style.width=(100*fr).toFixed(1)+'%';
+  if(msg!=null) document.getElementById('exStat').textContent=msg; }
+
+/* the frame schedule: times (months) and how long each frame shows */
+function schedule(){
+  const spm=+document.getElementById('exDur').value, fpsSel=+document.getElementById('exFps').value;
+  const t0=S.view==='month'?0:S.t;
+  if(fpsSel===1&&S.view==='month'){ return {ts:[...Array(12).keys()],hold:spm,fps:1/spm,steps:6}; }
+  const n=Math.round(12*spm*fpsSel), ts=[];
+  for(let i=0;i<n;i++) ts.push(S.view==='month'?(t0+12*i/n)%12:t0);
+  return {ts,hold:1/fpsSel,fps:fpsSel,steps:Math.max(1,Math.round(40/fpsSel))};
+}
+async function doExport(){
+  if(EXPORTING) return;
+  const fmt=document.getElementById('exFmt').value, [W,H]=exportSize();
+  EXPORTING=true; EXP_CANCEL=false; const wasPlay=PLAY; setPlay(false);
+  const go=document.getElementById('exGo'); go.disabled=true; document.getElementById('exCancel').textContent='Cancel';
+  try{
+    if(fmt==='png'){
+      const comp=makeComposer(W,H);
+      if(comp.fl) for(let k=0;k<60;k++){ const uv=flowUV(S.t); comp.fl.step(uv.U,uv.V,THEME[S.theme],0.075); }
+      comp.render(S.t);
+      const blob=await new Promise(r=>comp.cv.toBlob(r,'image/png'));
+      dl(blob,stem()+'.png'); prog(1,'Saved '+stem()+'.png');
+    } else if(fmt==='gif') await exportGIF(W,H);
+    else await exportVideo(W,H);
+  }catch(e){ if(e.message==='canceled') document.getElementById('exStat').textContent='Canceled.';
+    else { console.error(e); document.getElementById('exStat').textContent='Export failed: '+e.message; } }
+  finally{ EXPORTING=false; go.disabled=false; document.getElementById('exCancel').textContent='Close'; if(wasPlay) setPlay(true); DIRTY=true; }
+}
+async function warm(comp,sch){ if(comp.fl) for(let k=0;k<50;k++){ const uv=flowUV(sch.ts[0]); comp.fl.step(uv.U,uv.V,THEME[S.theme],0.075); } }
+async function exportGIF(W,H){
+  const {GIFEncoder,quantize,applyPalette}=await import('./lib/gifenc.esm.js');
+  const sch=schedule(), comp=makeComposer(W,H), ctx=comp.cv.getContext('2d',{willReadFrequently:true});
+  await warm(comp,sch);
+  /* one palette for the whole animation (no flicker), from four frames spread over the year */
+  prog(0,'Building the color palette…');
+  const samp=[]; for(const q of [0,0.25,0.5,0.75]){ comp.render(sch.ts[Math.floor(q*sch.ts.length)]%12,1); samp.push(ctx.getImageData(0,0,W,H).data); }
+  const all=new Uint8ClampedArray(samp.reduce((a,d)=>a+d.length/4,0)*4/4); let o=0;
+  for(const d of samp){ for(let i=0;i<d.length;i+=16){ all[o++]=d[i];all[o++]=d[i+1];all[o++]=d[i+2];all[o++]=255; } }
+  const palette=quantize(all.subarray(0,o),256,{format:'rgb565'});
+  if(comp.fl){ comp.fl.reset(particleCount(comp.mv),987654); await warm(comp,sch); }
+  const gif=GIFEncoder(), delay=Math.round(sch.hold*1000);
+  for(let i=0;i<sch.ts.length;i++){
+    if(EXP_CANCEL) throw new Error('canceled');
+    comp.render(sch.ts[i],sch.steps);
+    const data=ctx.getImageData(0,0,W,H).data;
+    const idx=applyPalette(data,palette,'rgb565');
+    gif.writeFrame(idx,W,H,i===0?{palette,delay,repeat:0}:{delay});
+    prog((i+1)/sch.ts.length,`Frame ${i+1} of ${sch.ts.length}`);
+    if(i%3===0) await sleep(0);
+  }
+  gif.finish();
+  const blob=new Blob([gif.bytes()],{type:'image/gif'});
+  dl(blob,stem()+'.gif'); prog(1,`Saved ${stem()}.gif (${(blob.size/1048576).toFixed(1)} MB)`);
+}
+async function pickCodec(W,H,fps,bitrate){
+  if(typeof VideoEncoder==='undefined'||typeof Mp4Muxer==='undefined') return null;
+  for(const [codec,mux] of [['avc1.640028','avc'],['avc1.4d0028','avc'],['avc1.42e01f','avc'],['avc1.42001f','avc'],['vp09.00.40.08','vp9']]){
+    try{ const s=await VideoEncoder.isConfigSupported({codec,width:W,height:H,bitrate,framerate:fps});
+      if(s.supported) return {codec,mux}; }catch(e){}
+  }
+  return null;
+}
+async function exportVideo(W,H){
+  const sch=schedule();
+  /* hold frames (1 per month) are written as repeated frames at 10 fps: every player handles that */
+  let ts=sch.ts, fps=sch.fps, steps=sch.steps;
+  if(fps<5){ const rep=Math.round(sch.hold*10); ts=sch.ts.flatMap(t=>Array(rep).fill(t)); fps=10; steps=Math.max(1,Math.round(40/fps)); }
+  const bitrate=Math.round(clamp(W*H*fps*0.11,1.5e6,14e6));
+  const pick=await pickCodec(W,H,fps,bitrate);
+  const comp=makeComposer(W,H); await warm(comp,{ts});
+  if(!pick) return exportWebM(W,H,comp,ts,fps,steps);
+  const muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:pick.mux,width:W,height:H,frameRate:fps},fastStart:'in-memory'});
+  let err=null;
+  const enc=new VideoEncoder({output:(ch,meta)=>muxer.addVideoChunk(ch,meta),error:e=>{err=e;}});
+  enc.configure({codec:pick.codec,width:W,height:H,bitrate,framerate:fps,...(pick.mux==='avc'?{avc:{format:'avc'}}:{})});
+  const dur=Math.round(1e6/fps);
+  try{
+  for(let i=0;i<ts.length;i++){
+    if(EXP_CANCEL) throw new Error('canceled');
+    if(err) throw err;
+    comp.render(ts[i],steps);
+    const fr=new VideoFrame(comp.cv,{timestamp:i*dur,duration:dur});
+    enc.encode(fr,{keyFrame:i%Math.round(fps*2)===0}); fr.close();
+    while(enc.encodeQueueSize>4) await sleep(4);
+    prog((i+1)/ts.length,`Frame ${i+1} of ${ts.length}`);
+    if(i%4===0) await sleep(0);
+  }
+  await enc.flush(); if(err) throw err;
+  } catch(e){ try{ enc.close(); }catch(_){} throw e; }
+  muxer.finalize();
+  const blob=new Blob([muxer.target.buffer],{type:'video/mp4'});
+  dl(blob,stem()+'.mp4'); prog(1,`Saved ${stem()}.mp4 (${(blob.size/1048576).toFixed(1)} MB, ${(ts.length/fps).toFixed(0)} s)`+
+    (pick.mux==='vp9'?' — this browser has no H.264 encoder, so the video is VP9: it plays in web browsers but may not in PowerPoint. Chrome, Edge or Safari save H.264.':''));
+}
+async function exportWebM(W,H,comp,ts,fps,steps){
+  if(typeof MediaRecorder==='undefined'||!comp.cv.captureStream) throw new Error('this browser cannot record video; try the GIF');
+  const types=['video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  const type=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
+  const stream=comp.cv.captureStream(0), track=stream.getVideoTracks()[0];
+  const rec=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:Math.round(clamp(W*H*fps*0.11,1.5e6,14e6))});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  const done=new Promise(r=>rec.onstop=r);
+  rec.start();
+  prog(0,'Recording in real time (this browser has no video encoder API)…');
+  const t0=performance.now();
+  for(let i=0;i<ts.length;i++){
+    if(EXP_CANCEL){ rec.stop(); throw new Error('canceled'); }
+    comp.render(ts[i],steps); if(track.requestFrame) track.requestFrame();
+    const wait=t0+(i+1)*1000/fps-performance.now(); if(wait>0) await sleep(wait);
+    prog((i+1)/ts.length);
+  }
+  rec.stop(); await done;
+  const mime=(type||'video/webm').split(';')[0], ext=mime==='video/mp4'?'mp4':'webm';
+  const blob=new Blob(chunks,{type:mime});
+  dl(blob,stem()+'.'+ext); prog(1,`Saved ${stem()}.${ext} (${(blob.size/1048576).toFixed(1)} MB)`);
+}
+function wireExport(){
+  const dlg=document.getElementById('expDlg');
+  document.getElementById('exGo').addEventListener('click',doExport);
+  document.getElementById('exCancel').addEventListener('click',()=>{ if(EXPORTING) EXP_CANCEL=true; else dlg.close(); });
+  for(const id of ['exFmt','exSize','exDur','exFps']) document.getElementById(id).addEventListener('change',()=>{ syncExportOpts(); if(id==='exSize'||id==='exFmt') previewExport(); });
+  dlg.addEventListener('close',()=>{ EXP_CANCEL=true; });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -14,10 +14,10 @@ the lower map answers a different question: not "how has this changed" but "how 
 3. **Averaging strip** — ENSO year / four seasons / Month; in Month mode a slider June (year 0) →
    May (year +1) with step + Play.
 4. **RONI panel** — every season since 1950, period shaded, one marker per ENSO year on its DJF
-   season; the years actually used are filled and labelled with the ENSO year ("1997–1998"). The year lists are also printed in
+   season; the years actually used are filled and labeled with the ENSO year ("1997–1998"). The year lists are also printed in
    the footer as text.
 5. **Box panel** — one bar per year for the clicked box (or the field aggregate: ERA5 global
-   area-weighted mean, TC global total, U.S. mean over boxes), coloured by phase, with both
+   area-weighted mean, TC global total, U.S. mean over boxes), colored by phase, with both
    composite means and their p-values.
 
 Everything statistical is computed **in the browser** from per-year fields, so strength, period,
@@ -45,7 +45,7 @@ check this page too.**
 - **ENSO year** = the twelve months June Y → May Y+1 (extended from Jun–Feb on 2026-10-10 at Dan's request). Classified by the **Dec–Feb RONI**: El Niño if ≥ strength
   (default +0.5 °C), La Niña if ≤ −strength, *and* that DJF lies in a run of ≥ 5 consecutive
   overlapping seasons beyond ±0.5 °C (CPC's episode rule). Strength menu: 0.5 / 1.0 / 1.5.
-  Every value is **rounded to 0.1 first, as CPC does** (half away from zero): CPC colours its RONI
+  Every value is **rounded to 0.1 first, as CPC does** (half away from zero): CPC colors its RONI
   table from one-decimal values, so DJF 0.45 counts as +0.5. This reproduces every warm/cold season
   of CPC's RONI table. 1979–2025 at 0.5 gives **16 El Niño, 19 La Niña**. (Until the review the
   two-decimal values were tested, which made 1979–80, 1987–88 and 2014–15 neutral; an earlier note
@@ -62,10 +62,10 @@ check this page too.**
 - **Tests**: Welch's t, phase years vs **all other years** (EN−LN: EN vs LN). The first version
   used a one-sample t-test of the phase anomalies vs 0, which breaks for rare events: an all-zero
   El Niño group has residuals equal to the trend line, ~0 variance and p ≈ 0 — 25 of 25 dots on
-  July derechos were that artefact. No dot where both groups have zero spread.
+  July derechos were that artifact. No dot where both groups have zero spread.
 - **Dots (Oct 2026)**: cluster-based permutation test (Maris & Oostenveld 2007), `clusterTest` in
   the page. Boxes at p < 0.05 (Welch t vs the two-sided 5% point of its Welch df) join same-sign
-  8-neighbours (longitude-wrapping on global grids) into patches; patch mass = Σ|t|·cos(lat). The
+  8-neighbors (longitude-wrapping on global grids) into patches; patch mass = Σ|t|·cos(lat). The
   phase labels are shuffled 500× (EN−LN: within EN∪LN years; EN or LN: across all years), seeded
   from the state string; residuals are detrended once, before shuffling. A patch is dotted if
   < 5% of shuffles produced a heavier patch anywhere on the map (family-wise 5% for any spurious
@@ -81,12 +81,12 @@ check this page too.**
   storm-day "significant"). `% of climatology` is blanked below 5% (counts) / 0.1 mm/day (precip)
   / 0.05 mm/day (snowfall), and the same flux floors suppress dots in Amount mode (no Sahara dots).
   Snowfall boxes below 0.01 mm/day climatology are blank on both maps.
-- **Colour scales**: fixed for ERA5 per averaging length, so the slider never re-scales
+- **Color scales**: fixed for ERA5 per averaging length, so the slider never re-scales
   (T clim −30…30 °C; T diff month ±3 / season ±2 / year ±1.5 °C, EN−LN ±5 / ±3 / ±2.5;
   precip 0–12 mm/day, diff ±3 / ±2.5 / ±1.5, EN−LN ±5 / ±4 / ±2.5; snowfall 0–4 mm/day,
   diff ±1 / ±0.8 / ±0.4; % ±80 / ±100). Count fields follow the map on screen.
 - **Smoothing** (count fields only): Gaussian, sigma one box, applied to each *year's* map before
-  compositing so dots and colours describe the same field; panels are never smoothed.
+  compositing so dots and colors describe the same field; panels are never smoothed.
 - **Period (Oct 2026)**: a three-way toggle — **1979–2025**, **2000–2025**, or **Custom…**, which
   reveals From/To boxes. Presets are clipped to each record (TC 1980–, derechos 1996–). Default:
   1979 for every field (the larger sample matters most for a public page). Storm Events reporting
@@ -98,7 +98,7 @@ check this page too.**
   provinces, `mapshaper -simplify 6% keep-shapes`, ~360 KB) is drawn as thin lines over both maps
   (canvas renderer, three copies; faded below zoom 1.75) and used to name the place under the cursor
   ("Indiana, United States") in the hover readout and the box panel title. Loaded after first render.
-- **Projection**: EPSG:4326 (equirectangular), Pacific-centred, with Natural Earth 110m coastlines
+- **Projection**: EPSG:4326 (equirectangular), Pacific-centered, with Natural Earth 110m coastlines
   (`geo/countries-110m.json`, from `world-atlas@2.0.2`) drawn in three copies at ±360°. The
   field is painted per pixel into canvas tiles (`FieldLayer`), no basemap tiles. Russia/Fiji arcs
   that jump ±180° are split (`splitJumps`) or they draw lines across the globe.
@@ -109,7 +109,7 @@ check this page too.**
   and nearly every provisional (latest-season) track. Fixed 2026-10-10.
 - **Phones**: `FieldLayer` sets `minZoom:-2`. GridLayer's default of 0 drew nothing at the zoom a
   390-px screen needs to show the globe (−0.75), so both maps were blank on phones.
-- **Loading**: only the neighbouring months are prefetched in Month mode (prefetching all twelve,
+- **Loading**: only the neighboring months are prefetched in Month mode (prefetching all twelve,
   ~12 MB, starved slow connections); a "Loading…" chip shows on both maps while data load.
 
 ## Rebuilding the data

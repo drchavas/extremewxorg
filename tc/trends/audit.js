@@ -79,7 +79,7 @@ function drawnValues(svg, whichPanel) {
   const slice = whichPanel === 0 ? titles.slice(0, half) : titles.slice(half);
   for (const m of slice) {
     const lat = +m[1], lon = +m[2], body = m[3];
-    if (/grey/.test(body)) continue;
+    if (/gray/.test(body)) continue;
     const raw = /this box (-?[\d.]+)/.exec(body);
     const txt = raw ? raw[1] : (/^\s*(-?[\d.]+)/.exec(body) || [])[1];
     const v = parseFloat(txt);

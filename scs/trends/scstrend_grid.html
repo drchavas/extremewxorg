@@ -79,7 +79,7 @@
      tiny. Stacked they get the full width, and the phone layout falls out for
      free instead of needing a breakpoint to undo the columns. */
   /* At zoom 4 the lower 48 is only about 660px across, so past roughly 1100px
-     of frame every extra pixel is ocean. Cap the content column and centre it;
+     of frame every extra pixel is ocean. Cap the content column and center it;
      a wider window just gets margin. The panels and footer share the cap so the
      three stay aligned. */
   #maps,#panels,.foot{max-width:1100px;margin-left:auto;margin-right:auto}
@@ -157,12 +157,12 @@
      The same paired climatology and trend maps as the county version, binned into
      2&deg;&nbsp;&times;&nbsp;2&deg; boxes. <b>Drag or zoom either map and both follow.</b>
      <b>Click a box</b> to read its series below. State and county lines are geographic reference
-     only; the Place menu just re-centres the maps.
+     only; the Place menu just re-centers the maps.
      Coarser cells trade detail for far more reports each, which makes trends steadier.
      <a href="scstrend.html">Prefer county resolution?</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
-     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
+     <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-14 21:02 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -172,7 +172,7 @@
     <div class="fld"><label for="ctySel">Box</label><select id="ctySel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" title="A Gaussian blur over the two maps, sigma selectable in degrees to match the county page. Boxes with no value are excluded and stay grey; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+    <div class="fld" title="A Gaussian blur over the two maps, sigma selectable in degrees to match the county page. Boxes with no value are excluded and stay gray; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="2">2&deg;</option><option value="off">Raw</option></select></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole country">&#8592; Full U.S.</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
@@ -210,7 +210,7 @@
               thunderstorm-wind report. Only county-type records (<code>CZ_TYPE = C</code>)
               are used. Puerto Rico lies outside this grid.</li>
           <li><b>Position each report.</b> Its own <code>BEGIN_LAT</code>/<code>BEGIN_LON</code>
-              where present; otherwise the centre of the county that reported it (the average of
+              where present; otherwise the center of the county that reported it (the average of
               its simplified boundary points, which can differ slightly from the true centroid for
               oddly shaped counties). The fallback matters almost entirely in 1993–1995, when hail
               and wind reports carry no coordinates at all.</li>
@@ -228,7 +228,7 @@
               with no days is a real zero and is counted in the denominator — every box exists
               every year.</li>
           <li><b>Trend map.</b> Ordinary least squares on the annual counts, reported per decade.
-              A box is left grey unless it clears three coverage gates: enough years carrying a
+              A box is left gray unless it clears three coverage gates: enough years carrying a
               day (at least 8, or 30% of the period), those years spanning at least 70% of the
               period, and at least 2 of them in each half.</li>
           <li><b>Annual and monthly panels.</b> The series for the single selected box, fitted
@@ -242,18 +242,18 @@
               counties are roughly 0.3&deg; while this field is already 2&deg;-averaged by
               construction. A single 2&deg; box
               holds few enough reports that its year-to-year value is noisy, and the blur pulls a
-              stray box towards its neighbours without moving a coherent pattern. Three things it
+              stray box towards its neighbors without moving a coherent pattern. Three things it
               deliberately does not do: it does not fill gaps &mdash; only boxes that have a value
-              contribute and the weights are renormalised by what was found, so edge boxes are not
+              contribute and the weights are renormalized by what was found, so edge boxes are not
               dragged towards zero by the empty ocean; it does not change which boxes are drawn,
-              since a box the trend gates declined to fit stays grey either way; and it never
+              since a box the trend gates declined to fit stays gray either way; and it never
               touches the annual or monthly panels, which always show the unsmoothed series.
-              Because it is a neighbourhood average, <b>the drawn value is not the box's own</b>
+              Because it is a neighborhood average, <b>the drawn value is not the box's own</b>
               &mdash; hover reports both when they differ. Totals are not conserved. It also
               interacts with the white &ldquo;exactly 0&rdquo; shading: with smoothing on, a box is
-              white only when its whole neighbourhood is zero, so the zero boundary is drawn more
+              white only when its whole neighborhood is zero, so the zero boundary is drawn more
               conservatively than it really is. Switch smoothing off to see the true edge.</li>
-          <li><b>Colour scales.</b> Set from the data on screen: the 98th percentile for
+          <li><b>Color scales.</b> Set from the data on screen: the 98th percentile for
               climatology, the 95th of absolute values for trend, symmetric about zero.</li>
         </ol>
       </div>
@@ -265,11 +265,11 @@
 /* ==========================================================================
    Extreme weather climatology + trend on a 2 deg grid, on one shared map.
 
-   Identical in behaviour to scstrend.html — two linked Leaflet maps, magenta
-   state outline, click to re-centre without hiding anything — but the unit is a
+   Identical in behavior to scstrend.html — two linked Leaflet maps, magenta
+   state outline, click to re-center without hiding anything — but the unit is a
    2 deg box rather than a county.  Boxes carry many more reports each, so their
    trends are steadier; the cost is that a box straddles state lines, which is
-   why a box belongs to whichever state contains its centre.
+   why a box belongs to whichever state contains its center.
    ========================================================================== */
 
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -592,9 +592,9 @@ function countWord(){ const h=hazSpec(); return (h&&h.countword)||'day'; }
 function countUnit(){ return countWord()+'s/yr'; }
 function thrSpec(){ const h=hazSpec(); return h.thresholds[Math.min(S.thresh,h.thresholds.length-1)]; }
 
-/* Which state a box belongs to is decided by its centre, by ray casting against
+/* Which state a box belongs to is decided by its center, by ray casting against
    the state outlines.  A 2° box straddles borders — Indiana is only about five
-   of them — so "cells in Indiana" has to mean something definite, and the centre
+   of them — so "cells in Indiana" has to mean something definite, and the center
    is the one rule that assigns every box to exactly one state. */
 function pointInRing(x,y,ring){
   let inside=false;
@@ -655,7 +655,7 @@ const SPAN_MIN=0.70, HALF_MIN=2, YR_MIN=8, YR_FRAC=0.30;
 function yearsNeeded(n){ return Math.max(YR_MIN,Math.ceil(YR_FRAC*n)); }
 /* Coverage diagnostics for one series, so the panels can apply exactly the gates
    the trend map applies. Without this the panels fitted unconditionally and a box
-   the map had greyed out still printed a bold "significant" slope — 9 hazard days
+   the map had grayed out still printed a bold "significant" slope — 9 hazard days
    in 25 years reading as p < 0.001 beside a map that refused to draw it. */
 function gateOf(ys,nwin){
   let ne=0,e0=-1,e1=-1,nfh=0,nsh=0;
@@ -717,7 +717,7 @@ function cellMetrics(){
     /* A quiet window is a real zero, not missing data: every box exists every
        year, so sum/xs.length is the honest climatology even when `ne` is 0.
        Bailing out here left mean=NaN, which the map painted as no-data — at
-       tornado EF3+ that greyed 140 of 257 boxes whose true value is 0.00. */
+       tornado EF3+ that grayed 140 of 257 boxes whose true value is 0.00. */
     mean[c]=sum/xs.length;
     if(!ne) continue;                 // no active year: nothing to fit a trend to
     if(ne>=yearsNeeded(nwin) && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN){
@@ -730,7 +730,7 @@ function cellMetrics(){
    camera; it does not pool boxes, because a box is the finest thing this data
    supports and averaging a handful of them just hides which one is which. */
 function selCell(){ return S.cell===''?-1:(cidx[+S.cell]===undefined?-1:cidx[+S.cell]); }
-/* The box whose centre is nearest a point — used to seed a selection. */
+/* The box whose center is nearest a point — used to seed a selection. */
 function nearestCell(lat,lon){
   let best=-1,bd=1e9;
   CELLS.forEach((c,i)=>{ const d=(c.lat-lat)**2+((c.lon-lon)*0.77)**2;
@@ -907,7 +907,7 @@ function bindCell(f,l){
   });
   l.bindTooltip(()=>{
     const v=CUR?CUR.val[c]:NaN, t=CURT?CURT.val[c]:NaN, cc=CELLS[c];
-    /* With smoothing on the drawn value is a neighbourhood average, which can
+    /* With smoothing on the drawn value is a neighborhood average, which can
        sit some way from the box's own number. Say both rather than let the
        reader take the blur for the datum. */
     const sm=smoothOn();
@@ -932,19 +932,19 @@ function drawColorbar(el,C,title){
 
 /* Gaussian smoother for the two maps.
    Sigma is one grid box, so on this 2° grid the kernel is a 2° blur: enough to
-   pull a noisy single box towards its neighbours without moving a coherent
+   pull a noisy single box towards its neighbors without moving a coherent
    pattern. Matches the smoother on the TC card, which uses the same sigma on a
    5° grid.
 
    Three properties that matter:
-     - It is a NORMALISED convolution: only boxes that actually have a value
-       contribute, and the weights are renormalised by what was found. A plain
+     - It is a NORMALIZED convolution: only boxes that actually have a value
+       contribute, and the weights are renormalized by what was found. A plain
        convolution treating absent boxes as zero would drag every edge box —
        the whole coastline and the Canadian and Mexican borders — towards
        nothing.
      - It never invents data. Output stays NaN wherever the input was NaN, so a
-       box the trend gates declined to fit stays grey; smoothing changes
-       colours, not which boxes are drawn.
+       box the trend gates declined to fit stays gray; smoothing changes
+       colors, not which boxes are drawn.
      - Nothing wraps. Unlike the global TC grid, this one is the lower 48, so
        the eastern and western edges are real edges.
 
@@ -1032,7 +1032,7 @@ function refresh(){
   document.getElementById('guide').innerHTML=guideHtml();
   const cm=cellMetrics();
   const [a,b]=yearsSel();
-  /* Smooth before the colour domains are chosen, so the scale matches what is
+  /* Smooth before the color domains are chosen, so the scale matches what is
      actually drawn. RAWM/RAWT are kept so a box can still report its own
      number on hover. */
   RAWM=cm.mean; RAWT=cm.trend;
@@ -1054,14 +1054,14 @@ function refresh(){
 
   const lab=hazSpec().label.toLowerCase();
   /* The smoothing state is the one thing about these maps a reader can most
-     easily forget, so it is called out rather than tucked into grey prose. */
+     easily forget, so it is called out rather than tucked into gray prose. */
   document.getElementById('climSub').innerHTML =
     esc(`Mean annual ${lab} ${countWord()}s per ${GRID}° box, ${a}–${b}`)+smTag();
   const nwin=b-a+1, need=yearsNeeded(nwin);
   document.getElementById('trendSub').innerHTML = nwin<need
     ? esc(`No trends shown: ${a}–${b} is ${nwin} year${nwin===1?'':'s'} and a fit needs at `+
           `least ${need} years carrying a hazard ${countWord()}`)
-    : esc(`Change per decade · grey boxes are too sparse to fit a trend`)+smTag();
+    : esc(`Change per decade · gray boxes are too sparse to fit a trend`)+smTag();
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -1113,8 +1113,8 @@ function drawPanels(){
       : `Annual and monthly panels are for the single ${GRID}° box at <b>${esc(placeLabel())}</b>. `+
         `Choose <i>All boxes</i> in the Box menu to go back to the national mean.`)+
     gapNote()+
-    ` State and county outlines are geographic reference only; the state menu re-centres the maps `+
-    `and does not change what is analysed. Counties appear once you zoom in past the national view. `+
+    ` State and county outlines are geographic reference only; the state menu re-centers the maps `+
+    `and does not change what is analyzed. Counties appear once you zoom in past the national view. `+
     `Storm Events is a <i>report</i> database: counts rose steeply into the 1990s as population, spotter `+
     `networks and radar changed, so long-period trends partly measure reporting practice. Reports without `+
     `usable coordinates are placed at their county centroid — which is essentially every hail and `+
@@ -1365,5 +1365,6 @@ function zoomUS(){
   }
 })();
 </script>
+<script src="../../assets/feedback.js" defer></script>
 </body>
 </html>

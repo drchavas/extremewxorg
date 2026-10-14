@@ -49,7 +49,7 @@ const svg=()=>$('card').innerHTML;
   say('and the true zeros are present',s1.zero>100,`${s1.zero} boxes at exactly 0.00`);
 
   console.log('\n--- B3: panels obey the same gate as the map');
-  // wind >=65kt at 37N 117W was the audit's example: map grey, panel "p < 0.001"
+  // wind >=65kt at 37N 117W was the audit's example: map gray, panel "p < 0.001"
   $('hazSel').value='wind'; await $('hazSel').onchange({target:{value:'wind'}});
   await new Promise(r=>setTimeout(r,800));
   $('thrSel').value=2; $('thrSel').onchange({target:{value:2}});

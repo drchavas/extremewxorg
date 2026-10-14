@@ -18,7 +18,7 @@ Two properties of the stored files, worth recording:
 - **They are in knots, not m/s.** `ibtracs-meanint-…_64.nc` has min exactly 64.00 and max
   155.00. The gridding cell's comment says "already in m/s", but `WMO_WIND` is knots and no
   conversion happens there; it is applied at *plot* time (`*0.514444`), so the figures are
-  correctly labelled. Note there is a second variant of the gridding cell that converts
+  correctly labeled. Note there is a second variant of the gridding cell that converts
   inline — take care not to double-convert.
 - **Track density is a genuine count of track positions.** Values run 0, 1, 2 … 40 and match
   an independent position count in **99.89%** of cells (totals 22,671 vs 23,147).
@@ -81,12 +81,12 @@ between cell, latitude band and basin, so each level is counted separately.
 
 The notebook counts every row. About half of IBTrACS rows are 3-hourly interpolated positions;
 this site keeps only 00/06/12/18 UTC. The fraction is stable over time so it is not a trend
-artefact, but it changes the weighting inside a cell-year and roughly doubles track density.
+artifact, but it changes the weighting inside a cell-year and roughly doubles track density.
 
 ### 4. Grid definition
 
 The notebook uses `round(lon/n)` and `round((lat+90)/n)`, snapping to the **nearest node**, so
-cells are centred on multiples of *n* and the first and last are half-width. This site uses
+cells are centered on multiples of *n* and the first and last are half-width. This site uses
 `floor`, giving proper *n*-degree bins. Changing only this moved the trend-map correlation from
 0.76 to 0.36 on a 20° grid — per-cell trends are sensitive to which cell a point lands in. The
 presentation uses 4°, these pages 5°.

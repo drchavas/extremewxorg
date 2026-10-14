@@ -6,9 +6,9 @@ The public site of interactive extreme-weather visualizations by
 **Live:** https://extremewx.org/
 
 This repository is the *self-contained* source for the extremewx.org site. It holds only
-the mature, public-facing tools (historical event viewers and climatology/trends). The
-idealized-storm **research** tools and the **climate** animations are **not** here — they
-live on the Purdue personal site (see "Relationship to other sites" below).
+the mature, public-facing tools (historical event viewers, climatology/trends and the EarthVis
+climate atlas). The idealized-storm **research** tools are **not** here — they live on the Purdue
+personal site (see "Relationship to other sites" below).
 
 ---
 
@@ -56,6 +56,12 @@ scs/                  Severe convective storms (+ other U.S. hazards)
     scstrend_grid.html  "Climatology & Trends — 2° grid"
     data/, geo/         pre-generated data + basemaps (served)
     build_*.py, *.js    build/audit scripts (not served)
+climate/              EarthVis: present-day (1996-2025) climate through the year (new 2026-10-14, BETA)
+  earthvis.html         animated ERA5 climatologies + TC / U.S. severe-weather counts, MP4/GIF export (linked from landing)
+  data/                 ERA5 monthly climatologies, 1 deg, one gz file per variable (~16 MB)
+  lib/                  vendored gifenc + mp4-muxer (MIT)
+  build/                fetch/build scripts (served, unlinked); see climate/README.md
+                        NB: reads ../enso/data/tc_month.json.gz, ../scs/trends/data/grid_*.json.gz and the geo/ basemaps in place
 enso/                 El Nino / La Nina composites (new 2026-10-10, BETA)
   ensogrid.html         "El Nino and La Nina: Climatology and Impacts — global grid" (linked from landing)
   data/, geo/           ERA5 2 deg monthly fields, TC monthly 5 deg grid, RONI, Natural Earth coast
@@ -80,6 +86,11 @@ enso/                 El Nino / La Nina composites (new 2026-10-10, BETA)
 **Severe Weather (wind, hail, tornado, derecho, freezing rain)**
 - *Historical Event Viewer* → `scs/trends/scsevents.html`
 - *Historical Trends* → `scs/trends/scstrend.html` (county) and `scs/trends/scstrend_grid.html` (2° grid)
+
+**Climate (present-day climate through the year)**
+- *EarthVis: Climate and Extremes Through the Year* → `climate/earthvis.html` (BETA chip) — animated
+  1996–2025 monthly climatologies of 30 ERA5 fields plus TC and U.S. severe-weather counts, on world,
+  globe or regional maps, with seasonal-cycle panels and MP4/GIF/PNG export. Details: `climate/README.md`.
 
 **Climate Variability (El Niño and La Niña)**
 - *El Niño & La Niña Impacts — global grid* → `enso/ensogrid.html` (BETA chip on the landing page)
@@ -108,7 +119,7 @@ These stay on the Purdue site only (linked from `web.ics.purdue.edu/~dchavas/ext
   TC Ventilation Explorer, TC Potential Size, TC Potential Intensity Explorer (external, MIT-hosted,
   co-developed with Jonathan Lin, Cornell), Atlantic TC Landfall Risk Explorer, SCS Environmental
   Sounding Explorer, Sounding Plotter.
-- **Climate:** Weather & Climate Data Visualization (earthvis — ERA5 seasonal-cycle animations).
+- (The old Purdue `earthvis.html` GIF page stays there, now pointing to `climate/earthvis.html` here.)
 
 If any of these should later move here, copy the page + its data into this repo and add a
 link to `index.html`.
@@ -120,7 +131,7 @@ link to `index.html`.
 - **tcviewer.org** (`drchavas/tcviewer`) — the standalone TC track & wind-field viewer; this
   site links to it rather than hosting a copy.
 - **web.ics.purdue.edu/~dchavas/extremewx.html** — the Purdue personal-site landing page. It
-  points visitors here for maps & trends and keeps the research tools + climate animations.
+  points visitors here for maps & trends and keeps the research tools (and the old earthvis GIF page).
 
 ---
 
@@ -150,7 +161,7 @@ step and no SFTP**; this is unlike the Purdue site.
 default** with the old dark palette restored under `@media (prefers-color-scheme: dark)`.
 Everything is driven by CSS variables defined twice, once per scheme
 (`--bg/--panel/--line/--line-soft/--text/--muted/--accent/--accent-soft/--accent2/--accent2-soft/`
-`--shadow/--shadow-lift/--wash1/--wash2/--h1a/--h1b/--thumb-bg`) — **change colour in those
+`--shadow/--shadow-lift/--wash1/--wash2/--h1a/--h1b/--thumb-bg`) — **change color in those
 blocks, never inline**, or the page will break in one scheme while looking right in the other.
 No top bar: the page opens straight into a `.hero` with a gradient `h1` (`--h1a` → `--h1b`),
 a `.byline` (name + Purdue EAPS affiliation, text only, no logo) and the `.subtitle`.
@@ -180,7 +191,7 @@ added in transit; harmless, and strippable by re-encoding if you would rather th
 - Deleting files in this folder from an assistant sandbox may require enabling delete
   permission first.
 
-**Scope reminder:** this site is non-research only. Research/experimental tools and the
-climate animations deliberately stay on the Purdue site — don't add them here without a
-reason. See the companion doc `Personal Website/README_extremewx_landing.md` for the Purdue
+**Scope reminder:** this site is non-research only. Research/experimental tools deliberately
+stay on the Purdue site — don't add them here without a reason. (The climate animations moved
+here as EarthVis on 2026-10-14, at Dan's request.) See the companion doc `Personal Website/README_extremewx_landing.md` for the Purdue
 landing page.

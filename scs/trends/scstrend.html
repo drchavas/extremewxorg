@@ -79,7 +79,7 @@
      tiny. Stacked they get the full width, and the phone layout falls out for
      free instead of needing a breakpoint to undo the columns. */
   /* At zoom 4 the lower 48 is only about 660px across, so past roughly 1100px
-     of frame every extra pixel is ocean. Cap the content column and centre it;
+     of frame every extra pixel is ocean. Cap the content column and center it;
      a wider window just gets margin. The panels and footer share the cap so the
      three stay aligned. */
   #maps,#panels,.foot{max-width:1100px;margin-left:auto;margin-right:auto}
@@ -165,14 +165,14 @@
   <h1>Severe thunderstorm(+) Climatology and Trends</h1>
   <p><a class="home" href="../../" style="font-weight:650;text-decoration:none">&larr; extremewx.org</a> &middot;
      Climatology and trend side by side on one shared map. <b>Drag or zoom either map and both
-     follow</b>, so the two are always showing the same ground. <b>Click a new state</b> to centre on it; clicking inside the state you are already on leaves
+     follow</b>, so the two are always showing the same ground. <b>Click a new state</b> to center on it; clicking inside the state you are already on leaves
      the view exactly where you put it. Pick a county from the County menu to pin it. Nothing is
      ever hidden, you are just moving around the country.
      For individual storms &mdash; the SPC derecho archive and the biggest days on record
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
-     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
+     <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-14 21:02 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -182,7 +182,7 @@
     <div class="fld"><label for="ctySel">County</label><select id="ctySel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" id="smWrap" title="A light Gaussian blur (the 2&deg; option, as described under Methods) over the two maps, area-weighted and normalised. Counties with no value are excluded and stay grey; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+    <div class="fld" id="smWrap" title="A light Gaussian blur (the 2&deg; option, as described under Methods) over the two maps, area-weighted and normalized. Counties with no value are excluded and stay gray; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="2">2&deg;</option><option value="off">Raw</option></select></div>
     <div class="fld" id="tierWrap" style="display:none"><label for="tierSel">Confidence</label>
       <select id="tierSel"></select></div>
@@ -205,7 +205,7 @@
       <div class="mapcol">
         <div class="maphead"><h2>Climatology</h2><p id="climSub">&nbsp;</p></div>
         <div class="lmap" id="mapClim"><div class="cbar" id="cbClim"></div>
-          <div class="hint">drag &middot; scroll to zoom &middot; click a state to centre</div></div>
+          <div class="hint">drag &middot; scroll to zoom &middot; click a state to center</div></div>
       </div>
       <div class="mapcol" id="trendCol">
         <div class="maphead"><h2>Trend</h2><p id="trendSub">&nbsp;</p>
@@ -255,7 +255,7 @@
               counties a year with no days is a real zero and is counted in the denominator; for
               stations, unobserved years are excluded rather than counted as zero.</li>
           <li><b>Trend map.</b> Ordinary least squares on the annual counts, reported per decade.
-              A county (or station) is left grey unless it clears the same three coverage gates as
+              A county (or station) is left gray unless it clears the same three coverage gates as
               the 2&deg; grid page: enough years carrying a day (at least 8, or 30% of the period),
               those years spanning at least 70% of the period, and at least 2 of them in each half.
               The annual and monthly panels apply the same gates. Significance is a two-sided
@@ -276,13 +276,13 @@
               6&nbsp;days/yr. Switch to <b>Raw</b> to see the underlying county numbers. The
               2&deg; grid page uses the same sigma. It is <i>area-weighted</i> &mdash; without that, Georgia's 159 small counties
               would outvote a single large western one covering the same ground &mdash; and
-              <i>normalised</i>, so only counties that have a value contribute and coastal counties
+              <i>normalized</i>, so only counties that have a value contribute and coastal counties
               are not dragged towards zero by the empty space beyond them. It never fills gaps or
               changes which counties are drawn, and it never touches the annual or monthly panels.
-              Because it is a neighbourhood average, <b>the drawn value is not the county's own</b>
+              Because it is a neighborhood average, <b>the drawn value is not the county's own</b>
               &mdash; hover reports both when they differ. Station hazards and derecho events are
               not smoothed: those are points and single storms, not fields.</li>
-          <li><b>Colour scales.</b> Set from the data on screen: robust upper percentiles for
+          <li><b>Color scales.</b> Set from the data on screen: robust upper percentiles for
               climatology, symmetric about zero for trend.</li>
           <li><b>Derecho</b> is the same county climatology and trend as thunderstorm wind,
               but counting only wind reports that belong to a derecho. A county scores a derecho
@@ -318,7 +318,7 @@
               reports are then linked into a coherent swath by growing disks of 25&nbsp;km or more
               around each until one connected group holds 90% of them, and the dashed outline is
               the boundary of that union — the paper's wind-swath polygon, not a convex hull.
-              Reports that fail a screen stay on the map in grey; about 7% of reports in-window do.
+              Reports that fail a screen stay on the map in gray; about 7% of reports in-window do.
               A swath can legitimately draw as more than one piece. The <b>Confidence</b> menu exposes the
               archive's tiers: 96 <i>definitive</i> cases confirmed against NEXRAD (1996–2025),
               48 <i>likely</i> and 16 <i>possible</i> pre-NEXRAD cases reconstructed from radar
@@ -342,7 +342,7 @@
    old/scstrend_state.html draws its maps as static SVG fitted to the selected
    state.  Here both maps are Leaflet and locked to a single view: drag or zoom
    either one and the other follows, so the pair is always over the same ground
-   and the eye can move straight between them.  Selecting a state re-centres
+   and the eye can move straight between them.  Selecting a state re-centers
    rather than filtering — every county stays drawn, because the point is to
    move around the country, not to cut a hole in it.
    ========================================================================== */
@@ -390,7 +390,7 @@ let INDEX=null, GEO=null, STGEO=null;
 const HZ={}, STATES=[];
 let GEOID=[],NAME=[],STUSPS=[],AREA=[],gidxOf={};
 let COCEN=null;            // county centroids, for the smoother
-let SMNB={};               // cached neighbour + weight lists, keyed by sigma
+let SMNB={};               // cached neighbor + weight lists, keyed by sigma
 let CUR=null, CURT=null;
 
 /* --- shared with old/scstrend_state.html, taken verbatim --- */
@@ -700,7 +700,7 @@ function countyMetrics(gated=true){
     const base=c*nY; let s=0;
     for(let j=0;j<keep.length;j++){ const v=M[base+keep[j]]; s+=v; yk[j]=v; }
     mean[c]=nk?s/nk:NaN;
-    if(gated && !gateOf(yk,nk).ok) continue;       // too sparse: no trend, drawn grey
+    if(gated && !gateOf(yk,nk).ok) continue;       // too sparse: no trend, drawn gray
     const r=ols(xk,yk); if(r){ trend[c]=r.slope*10; pv[c]=r.p; }
   }
   return {mean,trend,pv,y0:a,y1:b,nyr:nk,ndrop:(i1-i0+1)-keep.length};
@@ -1092,8 +1092,8 @@ function linkMaps(a,b){
 
 /* Gaussian smoother for the two county maps.
    Properties that matter:
-     - NORMALISED convolution. Only counties that actually have a value
-       contribute, and the weights are renormalised by what was found, so
+     - NORMALIZED convolution. Only counties that actually have a value
+       contribute, and the weights are renormalized by what was found, so
        coastal and border counties are not dragged towards zero by the empty
        space beyond them.
      - AREA-WEIGHTED. Counties are wildly uneven in size — Georgia has 159 of
@@ -1104,7 +1104,7 @@ function linkMaps(a,b){
        by the cosine of the mean latitude), not degrees of index, so the kernel is
        the same physical size everywhere; against true great-circle distance this
        moves values by well under 1%.
-   The neighbour lists are built once (centroids do not move) and reused for
+   The neighbor lists are built once (centroids do not move) and reused for
    every redraw. */
 /* Sigma is 2°, about 222 km at these latitudes. Measured over the real county
    centroids that means half the weight comes from within 230 km, 90% from
@@ -1145,7 +1145,7 @@ function smoothNeighbours(){
 }
 /* Smoothing applies to the county choropleths only: station hazards are drawn
    as discrete points, and derecho events are a single storm. */
-/* centroids and neighbour lists exposed for offline verification; page-level
+/* centroids and neighbor lists exposed for offline verification; page-level
    `let` bindings are not reachable from outside the page's own scope */
 function smoothGeom(){ return {cen:COCEN, area:AREA, nnb:smoothNeighbours().idx.map(a=>a.length)}; }
 /* The badge appended to both map subtitles. Only where smoothing is an option:
@@ -1244,7 +1244,7 @@ function guideHtml(){
       'reporting-volume growth that affects Storm Events. The trade is that the instruments '+
       'themselves changed: ASOS replaced human observers through the mid-1990s, and '+
       'present-weather and peak-gust reporting still varies by site, sensor and era &mdash; so '+
-      '<b>compare a station with itself over time far more readily than with its neighbours</b>. '+
+      '<b>compare a station with itself over time far more readily than with its neighbors</b>. '+
       'A station-year less than 90% complete is treated as <b>no observation and dropped</b>, '+
       'never as zero, so a gap in the record leaves a gap in the plot rather than a false quiet '+
       'year. For freezing rain the <b>QC stations</b> button restricts to the sites '+
@@ -1361,7 +1361,7 @@ function countyAt(lat,lon,ab){
 /* One definition of the county readout, so both layers say the same thing. */
 function countyTip(c){
   const v=CUR?CUR.val[c]:NaN, t=CURT?CURT.val[c]:NaN;
-  /* With smoothing on the drawn value is a neighbourhood average, which can sit
+  /* With smoothing on the drawn value is a neighborhood average, which can sit
      some way from the county's own number. Say both rather than let the reader
      take the blur for the datum. */
   const sm=smoothOn();
@@ -1378,15 +1378,15 @@ function stStyle(f){
   const on=f.properties.STUSPS===S.region;
   /* Event mode has no choropleth under the lines — just the basemap and a
      scatter of gust reports — so black hairlines vanish into the dark tiles.
-     White reads against both the basemap and the warm report colours, and it
+     White reads against both the basemap and the warm report colors, and it
      cannot be confused with the magenta envelope. */
-  /* fill:false matters as much as the colour: an invisible fill still hit-tests,
+  /* fill:false matters as much as the color: an invisible fill still hit-tests,
      and a country-sized transparent polygon on top would swallow the hover on
      every gust report underneath it. */
   if(isEvent()) return {stroke:true,color:'#fff',weight:1.4,opacity:.85,fill:false};
   /* Unselected borders are thin and black. The choropleth runs pale yellow
      through dark red, so a light line disappears over the pale end and a heavy
-     one competes with the data; a hairline in the one colour absent from both
+     one competes with the data; a hairline in the one color absent from both
      ramps reads everywhere without drawing attention to itself. */
   return {stroke:true,color:on?T().sel:'#000',weight:on?3.9:0.9,
           opacity:on?1:.9,fill:true,fillOpacity:0};
@@ -1395,7 +1395,7 @@ function stateLayer(map){
   return L.geoJSON(STGEO,{
     style:stStyle,
     onEachFeature:(f,l)=>{
-      /* Re-centre only when the click actually changes the state. Clicking a
+      /* Re-center only when the click actually changes the state. Clicking a
          NEW state is a "take me there" gesture and should frame it. Clicking
          inside the state you are already on is not — it used to re-fit anyway,
          which was invisible from the default state view but threw away any zoom
@@ -1488,7 +1488,7 @@ function drawDerecho(map,prev){
   });
 
   e.reports.forEach(r=>{
-    /* Reports that fell outside the coherent swath stay on the map in grey:
+    /* Reports that fell outside the coherent swath stay on the map in gray:
        showing what was excluded is more honest than quietly dropping it. */
     if(!r.d){
       L.circleMarker([r.la,r.lo],{radius:2.4,fillColor:t.mute,fillOpacity:.4,
@@ -1533,13 +1533,13 @@ function drawColorbar(el,C,title){
     (C.div?'':`<div class="zchip"><i></i>exactly 0</div>`);
 }
 
-/* Recompute both maps and both colour bars from the current controls. */
+/* Recompute both maps and both color bars from the current controls. */
 function refresh(){
   document.getElementById('guide').innerHTML=guideHtml();
   syncHazWarn();
   /* Outline styling depends on the mode, not just on which state is selected,
      so it has to be reapplied here — focusState alone never fires on a hazard
-     switch and the borders would keep the previous mode's colour. */
+     switch and the borders would keep the previous mode's color. */
   [stA,stB].forEach(l=>{ if(l) l.setStyle(stStyle); });
   if(isEvent()){ refreshEvent(); return; }
   /* Leaving event mode has to take the derecho off the map. drawDerecho removes
@@ -1551,7 +1551,7 @@ function refresh(){
   const stn=isStation();
   const cm = stn ? stationMetrics() : countyMetrics();
   const [a,b]=yearsSel();
-  /* Smooth before the colour domains are chosen, so the scale matches what is
+  /* Smooth before the color domains are chosen, so the scale matches what is
      drawn. The raw fields are kept so a county can still report its own number
      on hover. */
   RAWM=cm.mean; RAWT=cm.trend;
@@ -1594,11 +1594,11 @@ function refresh(){
 
   const lab=hazSpec().label.toLowerCase();
   /* The smoothing state is the one thing about these maps a reader can most
-     easily forget, so it is called out rather than tucked into grey prose. */
+     easily forget, so it is called out rather than tucked into gray prose. */
   document.getElementById('climSub').innerHTML =
     esc(`Mean annual ${lab} ${countWord()}s per ${stn?'station':'county'}, ${a}–${b}`)+smTag();
   document.getElementById('trendSub').innerHTML =
-    esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade · grey counties are too sparse to fit a trend')+smTag();
+    esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade · gray counties are too sparse to fit a trend')+smTag();
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -1660,7 +1660,7 @@ function eventFoot(e){
     gap+
     `<br>The solid magenta line is the archive's own swath track, start to end, and the dashed `+
     `outline is the wind swath itself — the union of ${e.radius_km} km disks around its reports, `+
-    `which is how the paper delineates a swath. Grey dots are reports inside the time window that `+
+    `which is how the paper delineates a swath. Gray dots are reports inside the time window that `+
     `failed one of its screens: too far from the track relative to how far the storm had got `+
     `(spatial progress against temporal progress), or not connected to the main body of reports. `+
     (e.nall>e.n.k50?`<b>${e.nall-e.n.k50}</b> of ${e.nall} were excluded that way. `:'')+
@@ -1704,9 +1704,9 @@ function bindCounty(f,l){
 
 /* ------------------------------------------------- static map for export */
 /* The on-screen map is Leaflet: raster tiles plus a canvas overlay. Rather than
-   try to screenshot that — cross-origin tiles taint a canvas, and the colour bar
+   try to screenshot that — cross-origin tiles taint a canvas, and the color bar
    and highlight are HTML — the export REDRAWS the map as vectors from the same
-   GeoJSON and the same colour scale. Deterministic, resolution-independent, and
+   GeoJSON and the same color scale. Deterministic, resolution-independent, and
    it produces a figure rather than a screen grab. The cost is the basemap: no
    lakes, no terrain, which for a talk or a paper is usually an improvement.
 
@@ -1721,7 +1721,7 @@ function mapSVG(x,y,w,h,C,title,sub){
   const HEAD=42, my=y+HEAD, mh=h-HEAD;
   const W0=b.getWest(), E0=b.getEast();
   const S0=mercY(b.getSouth()), N0=mercY(b.getNorth());
-  /* ONE scale for both axes. Normalising lon over the box width and Mercator-y
+  /* ONE scale for both axes. Normalizing lon over the box width and Mercator-y
      over the box height independently made the map fill whatever box it was
      given, stretching it — which is what looked wrong in the export. Mercator y
      is in natural-log units, so convert to degree-equivalents before comparing
@@ -1788,7 +1788,7 @@ function mapSVG(x,y,w,h,C,title,sub){
   return out+'</g>';
 }
 
-/* The colour bar, redrawn as SVG — the on-screen one is an HTML div. */
+/* The color bar, redrawn as SVG — the on-screen one is an HTML div. */
 function legendSVG(x,y,C){
   const stops=(C.div?CMAP.div:CMAP.seq), n=stops.length, hgt=110, wid=13;
   const gid='g'+Math.random().toString(36).slice(2,8);
@@ -1850,7 +1850,7 @@ function drawPanels(){
         : `Lower panels count <b>${esc(placeLabel())}-wide</b> ${countWord()}s — dates on which anywhere `+
           `in the state qualified, which is deliberately not the sum of per-county counts.`)+
     gapNote()+
-    ` The maps always show the whole country; choosing a state re-centres them and scopes these `+
+    ` The maps always show the whole country; choosing a state re-centers them and scopes these `+
     `panels, it does not hide anything. `+
     (stn
       ? `A station-year below 90% complete is dropped as <b>no observation</b>, not counted as zero.`
@@ -2149,5 +2149,6 @@ function zoomUS(){
   }
 })();
 </script>
+<script src="../../assets/feedback.js" defer></script>
 </body>
 </html>

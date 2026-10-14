@@ -106,7 +106,7 @@ async function load(hash) {
      (g.match(new RegExp('>' + dy1 + '<', 'g')) || []).length >= 12,
      `${(g.match(new RegExp('>' + dy0 + '<', 'g')) || []).length} start labels`,
      '>= 12 of each');
-  // each of the twelve shares one vertical scale; labelling only its ends made
+  // each of the twelve shares one vertical scale; labeling only its ends made
   // the points unplaceable by eye
   ok('monthly panels label every y gridline, not just the ends',
      (() => { const n = (g.match(/>150</g) || []).length,
@@ -144,7 +144,7 @@ async function load(hash) {
   }
   ok('data cells drawn', (g.match(/class="cellhit"/g) || []).length > 100,
      (g.match(/class="cellhit"/g) || []).length, '> 100');
-  ok('colour bars drawn', (g.match(/linearGradient/g) || []).length >= 2,
+  ok('color bars drawn', (g.match(/linearGradient/g) || []).length >= 2,
      (g.match(/linearGradient/g) || []).length, '>= 2');
 
   // ---- numbers, against the independent Python reference -------------------
@@ -376,9 +376,9 @@ async function load(hash) {
     ok('  outside 60S-60N belongs to no basin',
        at(300, 75) === null && at(300, -75) === null,
        `${at(300, 75)} / ${at(300, -75)}`, 'null / null');
-    // negative and >360 longitudes must normalise, since they come from the
+    // negative and >360 longitudes must normalize, since they come from the
     // inverse transform of a wrapped frame (the NA map runs 260..400)
-    ok('  longitudes normalise', at(-60, 25) === 'NA' && at(370, 25) === 'NA',
+    ok('  longitudes normalize', at(-60, 25) === 'NA' && at(370, 25) === 'NA',
        `${at(-60, 25)} / ${at(370, 25)}`, 'NA / NA');
 
     // no outlines once you are inside a basin -- they would retrace the frame
@@ -388,7 +388,7 @@ async function load(hash) {
        bw.document.getElementById('card').querySelectorAll('.basinhit').length, 0);
     ok('  and the zoom-out button is enabled there',
        bw.document.getElementById('zoomOutBtn').disabled === false, 'disabled', 'enabled');
-    // it is the way back out of a basin, so it carries the one accent colour
+    // it is the way back out of a basin, so it carries the one accent color
     // in the control bar rather than looking like every other button
     // "Restore defaults" reloads with a clean URL.  A bare reload would read the
     // hash straight back in and restore the very settings being cleared, so the
@@ -457,13 +457,13 @@ async function load(hash) {
     }
   }
 
-  // ---- pressure runs the colour ramp backwards ----------------------------
-  console.log('\npressure colour ramp');
+  // ---- pressure runs the color ramp backwards ----------------------------
+  console.log('\npressure color ramp');
   {
     // Central pressure is the one field where LOW is the intense end, so the
     // default mapping would paint the deepest cyclones white and the weakest
     // red.  The climatology ramp is reversed for it, and the reversal lives in
-    // cpos() so the cells and the colour bar cannot disagree.
+    // cpos() so the cells and the color bar cannot disagree.
     const bar = async h => {
       const g = (await load(h)).document.getElementById('card').innerHTML;
       const grad = /<linearGradient[^>]*>([\s\S]*?)<\/linearGradient>/.exec(g)[1];
@@ -522,7 +522,7 @@ async function load(hash) {
   {
     const trendBar = async h => {
       const g = (await load(h)).document.getElementById('card').innerHTML;
-      // second gradient is the trend colour bar
+      // second gradient is the trend color bar
       const gs = [...g.matchAll(/<linearGradient[^>]*>([\s\S]*?)<\/linearGradient>/g)];
       const st = [...gs[1][1].matchAll(/stop-color="([^"]+)"/g)].map(m => m[1]);
       const rgb = c => (c.match(/\d+/g) || []).map(Number);
@@ -561,7 +561,7 @@ async function load(hash) {
     ok('smoothing is on by default', on.st.S.smooth === 'on', on.st.S.smooth, 'on');
     // the control names the blur rather than just saying "On", and the label is
     // derived from sigma so it cannot drift from what is applied
-    ok('  the control is labelled with the sigma, not "On"',
+    ok('  the control is labeled with the sigma, not "On"',
        [...on.document.getElementById('smSel').options]
          .map(o => o.textContent).join('|') === '5°|Off',
        [...on.document.getElementById('smSel').options].map(o => o.textContent).join('|'),
@@ -574,7 +574,7 @@ async function load(hash) {
 
     const sm = on.smoothField(on.cellMetrics().mean, cells);
     const finite = v => cells.filter(c => isFinite(v[c]));
-    // smoothing must not invent data in gated cells, or grey boxes would fill in
+    // smoothing must not invent data in gated cells, or gray boxes would fill in
     ok('  the set of drawn cells is unchanged',
        finite(raw).length === finite(sm).length
        && finite(raw).every(c => isFinite(sm[c])),
@@ -619,7 +619,7 @@ async function load(hash) {
        /<tspan fill="#ffd54a" font-weight="700">/.test(g), 'plain', 'bold #ffd54a');
     ok('    and no control character leaks into the SVG',
        !/[\u0001\u0002]/.test(g), 'marker leaked', 'clean');
-    // the drawn value is a neighbourhood average; hovering must not hide that
+    // the drawn value is a neighborhood average; hovering must not hide that
     ok('  hover discloses the box value alongside the smoothed one',
        /\(smoothed; this box [\d.]+\)/.test(g), 'hidden', 'both shown');
     {
@@ -793,12 +793,12 @@ async function load(hash) {
      ['two-stage fit', 'Then the trend is fitted to that annual series'],
      ['estimator', 'ordinary least squares'],
      ['why not Theil-Sen', 'median of pairwise slopes will come out simply as zero'],
-     ['grey cells', 'drawn grey rather than deleted'],
+     ['gray cells', 'drawn gray rather than deleted'],
      ['zonal caveat', 'not the row-average of the visible boxes'],
      ['limitations', 'Landfall and near-coast attribution is not implemented'],
      ['annual maximum', 'trend in the extreme, not in the distribution'],
      ['threshold invariance of the max', 'decides which cells appear, not what they show'],
-     ['off-synoptic peak artefact', 'lowers the recorded peak for 1.3% of storms'],
+     ['off-synoptic peak artifact', 'lowers the recorded peak for 1.3% of storms'],
      ['zonal binning', 'binned straight into their 5° latitude band'],
      ['smoothing', 'Gaussian blur'],
      ['smoothing does not invent data', 'It never invents data'],
@@ -878,28 +878,28 @@ async function load(hash) {
        'rejected', 'admitted');
   }
 
-  // ---- coverage gates grey cells out, they do not delete them -------------
+  // ---- coverage gates gray cells out, they do not delete them -------------
   console.log('\ncoverage gates');
   {
-    const grey = t => (t.match(/fill="#(bcc6d0|42505d)"/g) || []).length;
+    const gray = t => (t.match(/fill="#(bcc6d0|42505d)"/g) || []).length;
     const cells = t => (t.match(/class="cellhit"/g) || []).length;
     const loose = (await load('v=density&s=days&b=GL&p=1990-2025&q=1')).document
                     .getElementById('card').innerHTML;
     const tight = (await load('v=density&s=days&b=GL&p=1990-2025&q=20')).document
                     .getElementById('card').innerHTML;
     // The set of drawn boxes is the set of cells that ever saw a storm, which
-    // does not depend on the gate; only how many are grey does.
+    // does not depend on the gate; only how many are gray does.
     ok('raising Min plot does not remove map cells', cells(loose) === cells(tight),
        `${cells(loose)} -> ${cells(tight)}`, 'unchanged');
-    ok('  it greys them instead', grey(tight) > grey(loose) && grey(tight) > 50,
-       `${grey(loose)} -> ${grey(tight)}`, 'more grey');
-    ok('  and the legend names the grey category',
+    ok('  it greys them instead', gray(tight) > gray(loose) && gray(tight) > 50,
+       `${gray(loose)} -> ${gray(tight)}`, 'more gray');
+    ok('  and the legend names the gray category',
        tight.includes('&lt; 20 yrs') && tight.includes('too sparse'),
        'no swatch label', 'both swatches');
-    ok('  greyed cells say why on hover', /grey [-–] fewer than 20 years/.test(tight),
+    ok('  grayed cells say why on hover', /gray [-–] fewer than 20 years/.test(tight),
        'no explanation', 'tooltip explains');
-    // grey must not be a colour the ramps can produce, or it reads as a value
-    ok('  grey is outside both colour ramps',
+    // gray must not be a color the ramps can produce, or it reads as a value
+    ok('  gray is outside both color ramps',
        !w.st.THEME.dark.gate.match(/^#(ffffff|f7f7f7)$/i)
        && ![...w.st.CMAP.seq, ...w.st.CMAP.div].includes(w.st.THEME.light.gate),
        w.st.THEME.light.gate, 'not a ramp stop');
@@ -928,9 +928,9 @@ async function load(hash) {
     ok('  including the marginal bands it used to drop',
        a34.z.filter(v => isFinite(v)).length === a1.z.filter(v => isFinite(v)).length,
        `${a1.z.filter(isFinite).length} -> ${a34.z.filter(isFinite).length}`, 'unchanged');
-    ok('  and the panel says the profile keeps the grey cells',
+    ok('  and the panel says the profile keeps the gray cells',
        (await load('v=density&b=GL&p=1990-2024&q=20')).document.getElementById('card')
-         .innerHTML.includes('the profile includes the grey cells'),
+         .innerHTML.includes('the profile includes the gray cells'),
        'not stated', 'stated');
   }
 
@@ -948,7 +948,7 @@ async function load(hash) {
      && Math.abs(F.Y(w.basinSpec().lat[1]) - F.oy) < 1e-6,
      `${F.Y(w.basinSpec().lat[0])} / ${F.Y(w.basinSpec().lat[1])}`,
      `${F.oy + F.h} / ${F.oy}`);
-  ok('the map frame no longer self-centres horizontally', F.ox === 0, F.ox, 0);
+  ok('the map frame no longer self-centers horizontally', F.ox === 0, F.ox, 0);
 
   // export path
   console.log('\nexport');
@@ -977,9 +977,9 @@ async function load(hash) {
     ok('ACE map is the same under every Stages choice', norm(a) === norm(b) && a.includes('ACE definition'),
        fills(b) + ' fills', fills(a) + ' fills');
     const d = await card('v=density&b=NA&p=1990-2024');
-    ok('band totals are labelled as totals', d.includes('Zonal total [') && !d.includes('Zonal mean ['), 'label', 'Zonal total');
+    ok('band totals are labeled as totals', d.includes('Zonal total [') && !d.includes('Zonal mean ['), 'label', 'Zonal total');
     const v = await card('v=vmax&b=NA&p=1990-2024');
-    ok('band means are labelled as means', v.includes('Zonal mean ['), 'label', 'Zonal mean');
+    ok('band means are labeled as means', v.includes('Zonal mean ['), 'label', 'Zonal mean');
     const w2 = await load('k=nope&b=XX&t=zz');
     const c2 = w2.document.getElementById('card').innerHTML;
     ok('a malformed link still draws the page', c2.length > 50000 && c2.includes('Climatology'), c2.length, '> 50000');

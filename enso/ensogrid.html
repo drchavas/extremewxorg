@@ -202,7 +202,7 @@
      every El Ni&ntilde;o and La Ni&ntilde;a year marked.
      Related: <a href="../tc/trends/tctrend.html">TC climatology &amp; trends</a> &middot;
      <a href="../scs/trends/scstrend_grid.html">U.S. severe weather, 2&deg; grid</a> &middot;
-     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
+     <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
   <div class="hmeta dataupd" id="dataupd">Data last updated 2026-10-11 02:06 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
@@ -452,7 +452,7 @@ async function gzFetch(url,binary){
 /* NOAA CPC's Relative Oceanic Nino Index: the Nino-3.4 SST anomaly minus the
    tropical-mean (20S-20N) anomaly, rescaled. It is CPC's operational index since
    2025 because the plain ONI drifts warm with the whole tropical ocean. v[i] is
-   the 3-month season centred on calendar month i%12 of year year0+i/12, so the
+   the 3-month season centered on calendar month i%12 of year year0+i/12, so the
    DJF that closes ENSO year Y is index (Y+1-year0)*12. */
 let RONI=null;
 function roniIdx(y,m0){ return (y-RONI.year0)*12+m0; }
@@ -462,7 +462,7 @@ function roniAt(y,m0){ const i=roniIdx(y,m0); return (i>=0&&i<RONI.v.length)?RON
    of at least five consecutive overlapping seasons beyond +/-0.5 — CPC's own
    episode rule, so a single warm DJF poking over the line is not an El Nino —
    all on the values rounded to 0.1, as CPC does. */
-/* CPC colours its RONI episode table from the value rounded to 0.1, so a DJF of 0.45
+/* CPC colors its RONI episode table from the value rounded to 0.1, so a DJF of 0.45
    counts as +0.5. Testing the two-decimal values instead made 1979–80, 1987–88 and
    2014–15 neutral where CPC calls them El Niño. Round half away from zero first. */
 function r1(x){ return x==null ? null : Math.sign(x)*Math.floor(Math.abs(x)*10+0.5+1e-9)/10; }
@@ -641,12 +641,12 @@ async function loadDS(){
 
 /* ---------------------------------------------------------- smoothing */
 /* Same smoother as the parent pages: a Gaussian of sigma one grid box (5° on
-   the TC grid, 2° on the U.S. grid), cut off at two boxes, normalised over the
+   the TC grid, 2° on the U.S. grid), cut off at two boxes, normalized over the
    boxes that exist so a coastline is not dragged towards the empty ocean, and
    wrapping in longitude only where the grid is global. It is applied to each
-   year's map before compositing, so the dots and the colours describe the same
+   year's map before compositing, so the dots and the colors describe the same
    field. Only the count fields are offered it: ERA5 fields are smooth already. */
-function neighbours(ds){
+function neighbors(ds){
   if(ds.nbr) return ds.nbr;
   const g=ds.grid, R=2, sig=1, idx=[], wts=[], off=[0];
   for(let c=0;c<ds.NC;c++){
@@ -663,7 +663,7 @@ function neighbours(ds){
   return (ds.nbr={idx:Int32Array.from(idx),w:Float32Array.from(wts),off:Int32Array.from(off)});
 }
 function smoothX(ds,X){
-  const nb=neighbours(ds), NC=ds.NC, out=new Float32Array(X.length).fill(NaN);
+  const nb=neighbors(ds), NC=ds.NC, out=new Float32Array(X.length).fill(NaN);
   for(let y=0;y<ds.NY;y++){
     const b=y*NC;
     for(let c=0;c<NC;c++){
@@ -752,7 +752,7 @@ function mapStats(X,win){
     for(const w of win){ const v=X[w.y*NC+c]; if(!isFinite(v)) continue;
       xs[k]=w.Y; ys[k]=v; cs[k]=w.c; k++; if(v!==0) any=true; }
     /* a count box that never saw a storm in this month has nothing to composite:
-       leave it uncoloured rather than paint a confident zero difference */
+       leave it uncolored rather than paint a confident zero difference */
     if(k<3 || (cnt && !any)) continue;
     const st=seriesStats(xs.subarray(0,k),ys.subarray(0,k),cs.slice(0,k),det,S.ph);
     if(!st) continue;
@@ -768,7 +768,7 @@ function mapStats(X,win){
    Oostenveld 2007) sidesteps both: it asks whether a whole *patch* is stronger
    than chance, and it learns what chance looks like from the data themselves.
      1. Each box gets a Welch t for the composite (as in seriesStats); boxes at
-        |t| beyond the two-sided 5% point join same-sign neighbours (8-connected,
+        |t| beyond the two-sided 5% point join same-sign neighbors (8-connected,
         wrapping in longitude on a global grid) into patches.
      2. A patch's strength is its mass: the sum of |t| times box area (cos lat),
         so a patch means the same thing whatever the box size.
@@ -839,7 +839,7 @@ async function clusterTest(X,win,ok,alive,seedKey){
   });
   const NE=E.length, t=new Float64Array(NE), sg=new Int8Array(NE), lab=new Int32Array(NE), stack=new Int32Array(NE);
   const NB=nb8(ds);
-  /* t and the threshold sign for one labelling (A = list of tested-year indices) */
+  /* t and the threshold sign for one labeling (A = list of tested-year indices) */
   const tmap=A=>{
     for(let e=0;e<NE;e++){
       let sA=0,qA=0,nA=0; const o=e*n;
@@ -915,7 +915,7 @@ function cellAt(lat,lon){
   return DS.cidx[r*g.nlon+k];
 }
 
-/* ------------------------------------------------------- colour + units */
+/* ------------------------------------------------------- color + units */
 /* Units are applied at the last step; the statistics stay in source units. */
 function cvC(v){ return isTemp()&&S.un==='F' ? v*1.8+32 : v; }   // a temperature
 function cvD(v){ return isTemp()&&S.un==='F' ? v*1.8 : v; }      // a difference
@@ -939,7 +939,7 @@ function perWord(){ return S.av==='mon'?'mo':S.av==='yr'?'yr':'season'; }
 function phaseName(ph){ return {en:'El Niño',ln:'La Niña',enln:'El Niño − La Niña'}[ph||S.ph]; }
 
 /* ERA5 scales are fixed, so that sliding through the months or switching phase
-   never silently re-scales the colours. Count fields follow the data on screen,
+   never silently re-scales the colors. Count fields follow the data on screen,
    as on the parent pages: their seasonal cycle is so strong (hail in February
    against hail in May) that one scale for all twelve months leaves the quiet
    months a uniform pale wash. */
@@ -981,7 +981,7 @@ function domains(statsAll){
    difference is tiny too) reads as a modest percentage instead of a hole or a wild
    number; snowfall maps already stop at 0.01 mm/day. A count field is left blank
    below 2% of its typical (98th-percentile) value, which is where its maps stop
-   anyway. Any remaining large percentage saturates the colour scale (domains). */
+   anyway. Any remaining large percentage saturates the color scale (domains). */
 function pctFloor(climRef){ return isSnow()?0.01 : isPrecip()?0.1 : (climRef||0)*0.02; }
 function dispDiff(st,climRef){
   const out=new Float32Array(st.diff.length).fill(NaN);
@@ -1088,7 +1088,7 @@ function linkMaps(a,b){
   a.on('move zoom',relay(a,b)); b.on('move zoom',relay(b,a));
 }
 /* Coastlines and borders sit on top of the field. Three copies, so the
-   Pacific-centred default and any amount of panning keep their outlines. */
+   Pacific-centered default and any amount of panning keep their outlines. */
 let WORLD=null, ADMIN1=null, A1LINES=null, A1FEAT=null;
 /* First-level divisions worldwide (U.S. states, Canadian provinces, Indian states, ...)
    from Natural Earth 1:10m admin-1, simplified to 6% of its vertices (geo/admin1-10m.json.gz,
@@ -1413,7 +1413,7 @@ function loading(on){
   document.body.style.cursor=on?'progress':'';
 }
 /* ERA5 snowfall: boxes that essentially never see snow (< 0.01 mm/day water
-   equivalent in this month or average) are left uncoloured on both maps. */
+   equivalent in this month or average) are left uncolored on both maps. */
 function snowMask(s){
   for(let c=0;c<s.clim.length;c++) if(!(s.clim[c]>=0.01)){ s.clim[c]=NaN; s.diff[c]=NaN; s.p[c]=NaN; }
 }
@@ -1606,7 +1606,7 @@ function roniPanel(x,y,w,h){
   });
   o+=`<line x1="${L}" y1="${BOT}" x2="${R}" y2="${BOT}" stroke="${t.axis}"/><line x1="${L}" y1="${TOP}" x2="${L}" y2="${BOT}" stroke="${t.axis}"/>`;
   o+=`<text x="${x+18}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+18} ${(TOP+BOT)/2})" font-family="${FF}" font-size="12" fill="${t.mute}" text-anchor="middle">RONI (°C)</text>`;
-  o+=txt((L+R)/2,BOT+35,'Markers sit on the Dec–Feb season that classifies each ENSO year, labelled with the ENSO year (1997–1998 = June 1997 – May 1998)',{size:11,fill:t.mute,anchor:'middle'});
+  o+=txt((L+R)/2,BOT+35,'Markers sit on the Dec–Feb season that classifies each ENSO year, labeled with the ENSO year (1997–1998 = June 1997 – May 1998)',{size:11,fill:t.mute,anchor:'middle'});
   return o+'</g>';
 }
 function boxPanel(x,y,w,h,bs){
@@ -1713,7 +1713,7 @@ function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
   const common=' The difference map is a <b>composite</b> — the average over a dozen or so years — so it '+
     'describes what El Niño or La Niña <i>tends</i> to do; any single event can look quite different. '+
-    'Dots mark <b>significant patches</b>: neighbouring boxes that each pass a t-test (p&nbsp;&lt;&nbsp;0.05) and that '+
+    'Dots mark <b>significant patches</b>: neighboring boxes that each pass a t-test (p&nbsp;&lt;&nbsp;0.05) and that '+
     'together are stronger than the strongest patch chance produces anywhere on the map in 95% of 500 reshufflings '+
     'of the El Niño and La Niña labels across the years. A broad region of boxes that each only just pass can be '+
     'dotted, while an isolated box rarely is. The test is strict — it allows a 5% chance of <i>any</i> '+
@@ -1751,7 +1751,7 @@ function guideHtml(){
     'handful of years can overturn a modest signal. '+
     (()=>{ const w=windowYears(), [a,b]=yearsSel(); return `${a}–${b} holds only ${w.filter(x=>x.c==='EN').length} El Niño and `+
       `${w.filter(x=>x.c==='LN').length} La Niña years at this strength, and its 2° boxes are noisy, so `+
-      `patches here rarely pass the significance test; a pattern that recurs in neighbouring months or seasons, `+
+      `patches here rarely pass the significance test; a pattern that recurs in neighboring months or seasons, `+
       `and in both periods, deserves more trust than any single map. `; })()+
     'Storm Events reporting also changed <i>within</i> the period: hail reports under 1″ largely stopped after the NWS '+
     'made 1″ its severe criterion in 2010, and many wind reports carried no speed until 2003, so <b>any-hail and '+
@@ -1791,12 +1791,12 @@ function methodsHtml(){
     (<a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener">Maris &amp; Oostenveld 2007</a>),
     which judges patches rather than single boxes. (1) Each box gets Welch's two-sample t on the anomalies: El Niño (or
     La Niña) years against all the other years of the period, and for <i>El Niño − La Niña</i> the two phases against
-    each other. (2) Boxes with p &lt; 0.05 join neighbouring boxes of the same sign (including diagonals) into patches,
+    each other. (2) Boxes with p &lt; 0.05 join neighboring boxes of the same sign (including diagonals) into patches,
     and each patch is scored by its <i>mass</i>, the sum of |t| × box area, so a patch means the same thing whatever the
     box size. (3) The phase labels are then shuffled at random across the years 500 times, and steps 1–2 are repeated on
     the same maps (smoothed, where the map is), recording the heaviest patch anywhere on the map each time. (4) A patch is
     dotted if fewer than 5% of the shuffles produced a patch as heavy. Because the shuffles reuse the real maps, they
-    carry the real spatial correlation, so neighbouring boxes are not mistaken for independent evidence; and because each
+    carry the real spatial correlation, so neighboring boxes are not mistaken for independent evidence; and because each
     patch is compared with the heaviest chance patch on the whole map, the chance of dotting any spurious patch is held to
     5%. The shuffles are seeded from the settings, so the same settings always give the same dots. Detrending is done once,
     before shuffling. Shuffling treats years as exchangeable, so back-to-back events (the La Niña of 2020–23, say) make
@@ -1807,7 +1807,7 @@ function methodsHtml(){
     divides the difference by the box's climatology. For precipitation the climatology is taken as at least 0.1 mm/day,
     so a desert box, where the difference is tiny too, shows a modest percentage rather than a wild one (snowfall maps
     already stop at 0.01 mm/day); count fields are left blank below 2% of their typical (98th-percentile) climatology,
-    which is where those maps stop anyway. A small climatology can still give a very large percentage; the colour scale
+    which is where those maps stop anyway. A small climatology can still give a very large percentage; the color scale
     saturates instead (ERA5: ±50%, or ±100% for El Niño − La Niña; count
     fields: the 95th percentile of the map, at most ±200%), so check the hover value or switch to <i>Absolute change</i>
     before reading a saturated box. The dots do not depend on this choice.`);
@@ -1836,8 +1836,8 @@ function methodsHtml(){
       those positions in 10⁴ kt²; <i>genesis</i> counts each storm once, in the box and month of its first such position. Conventions follow the <a href="../tc/trends/tctrend.html">TC climatology page</a>, except that page's
       default also keeps extratropical positions. Recent seasons are provisional.`);
     li.push(`<b>Smoothing.</b> The maps (not the panels) use a Gaussian of sigma one box (5°), cut off at two boxes,
-      normalised over the boxes present and wrapping in longitude — the same smoother as the TC page — applied to each
-      year's map before the composite is formed, so the colours and the dots describe the same field. The smoother
+      normalized over the boxes present and wrapping in longitude — the same smoother as the TC page — applied to each
+      year's map before the composite is formed, so the colors and the dots describe the same field. The smoother
       does not know about land: across Central America it blurs the Atlantic and eastern Pacific into each other, so a
       strong Atlantic signal can spill a box or two into the Pacific off Mexico (and back). Turn smoothing off to check
       a coastal box.`);
@@ -1849,19 +1849,19 @@ function methodsHtml(){
       events from the Squitieri, Wade &amp; Jirak 2026 archive). June and July 1993, missing from the database itself,
       are dropped from those months rather than counted as quiet.`);
     li.push(`<b>Smoothing.</b> The maps (not the panels) use a Gaussian of sigma one box (2°), cut off at two boxes and
-      normalised over the boxes present, as on the 2° page — applied to each year's map before compositing.`);
+      normalized over the boxes present, as on the 2° page — applied to each year's map before compositing.`);
   }
   li.push(`<b>Panels.</b> The RONI panel shows every season since ${RONI?RONI.year0:1950}, with the chosen period shaded and
-    one marker per ENSO year; the years actually used are filled and labelled. The lower panel shows the selected box
-    (or, with none selected, the ${aggLabel()}) as one bar per year, coloured by phase, with the two composite means.`);
+    one marker per ENSO year; the years actually used are filled and labeled. The lower panel shows the selected box
+    (or, with none selected, the ${aggLabel()}) as one bar per year, colored by phase, with the two composite means.`);
   li.push(`<b>Map outlines.</b> Coastlines and country borders from Natural Earth 1:110m; first-level divisions
     (U.S. states, Canadian provinces, Indian states, …) from Natural Earth 1:10m admin-1, simplified, and used to name
     the place under the cursor. Boundaries are reference only and do not change what is computed.`);
-  li.push(`<b>Colour scales.</b> Fixed for ERA5 for a given averaging length (month, season or year), so the colours mean
+  li.push(`<b>Color scales.</b> Fixed for ERA5 for a given averaging length (month, season or year), so the colors mean
     the same thing in every month and phase.
     For the count fields they follow the map on screen (the seasonal cycle is far too strong for one scale):
     the 98th percentile of climatology and the 95th of the size of the difference (percent or absolute), over the boxes drawn — so check the
-    colour bar when you change month.`);
+    color bar when you change month.`);
   return '<ol>'+li.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
 }
 
@@ -1879,7 +1879,7 @@ function syncControls(){
   tog('unBox',isTemp()); tog('smBox',isCount());
   document.getElementById('unSel').value=S.un;
   /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
-  /* temperature: Absolute shown as chosen, % change greyed out (the stored choice
+  /* temperature: Absolute shown as chosen, % change grayed out (the stored choice
      is left alone, so precipitation etc. come back in whatever was picked there) */
   const pg=document.getElementById('pcSeg'), tmp=isTemp();
   pg.parentElement.title=tmp?'Temperature is always shown as a change in degrees.':'';
@@ -1890,7 +1890,7 @@ function syncControls(){
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
   document.querySelectorAll('#phSeg button').forEach(b=>b.classList.toggle('on',b.dataset.ph===S.ph));
-  /* period buttons, labelled with the years they give for this field */
+  /* period buttons, labeled with the years they give for this field */
   document.querySelectorAll('#perSeg button').forEach(b=>{ const on=b.dataset.per===S.per;
     const a=Math.max(PERIOD_START[b.dataset.per],DS.ey0);
     if(b.dataset.per!=='custom') b.textContent=`${a}–${DS.ey1}`;
@@ -2077,5 +2077,6 @@ window.__enso={S,get DS(){return DS;},get CUR(){return CUR;},classify,seriesStat
 init();
 
 </script>
+<script src="../assets/feedback.js" defer></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ w.L={
   map:id=>{const h={};const m={id,_c:{lat:39,lng:-96},_z:4,_layers:[],_fit:0,_nsize:0,
     _bodyShown:(w.document.getElementById('body')||{style:{}}).style.display,
     setView(c,z){this._c=Array.isArray(c)?{lat:c[0],lng:c[1]}:c;if(z!=null)this._z=z;return this},
-    /* real fitBounds moves the centre as well as the zoom; a stub that only
+    /* real fitBounds moves the center as well as the zoom; a stub that only
        changed zoom hid a genuine difference between framing and zooming out */
     fitBounds(b){this._fit++;this._b=b;this._z=6;
       if(Array.isArray(b)&&Array.isArray(b[0]))
@@ -125,7 +125,7 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
       ($('foot').innerHTML.match(/<b>\d+<\/b> counties and <b>\d+<\/b> [a-z ]+/)||[''])[0]);
   /* Storm Events splits a tornado at every county line, so the row count is not
      a tornado count. The column must say what it counts. */
-  say('tornado column is labelled Segments, not Reports',
+  say('tornado column is labeled Segments, not Reports',
       $('cntTh').textContent==='Segments',$('cntTh').textContent);
   say('footer says county segments',/counties and <b>\d+<\/b> county segments/.test($('foot').innerHTML));
   say('and the caveat names the 1974 numbers',
@@ -319,9 +319,9 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
         both.slice(0,1).map(r=>r.d+': IN '+r.rep+' vs US '+us[r.d]).join(''));
     $('regSel').value=''; $('regSel').onchange({target:{value:''}});
     await new Promise(r=>setTimeout(r,300));
-    // whole-number colour bar without repeated ticks
+    // whole-number color bar without repeated ticks
     const ticks=[...$('cbEv').querySelectorAll('.ticks span')].map(e=>e.textContent);
-    say('colour bar ticks are distinct',ticks.length>=2&&new Set(ticks).size===ticks.length,ticks.join(','));
+    say('color bar ticks are distinct',ticks.length>=2&&new Set(ticks).size===ticks.length,ticks.join(','));
     say('and no "exactly 0" chip on the day map',!/exactly 0/.test($('cbEv').innerHTML));
     // a date NOAA has not yet published
     const typeDay2=v=>{ const i=$('dayIn'); i.value=v; i.onchange(); };

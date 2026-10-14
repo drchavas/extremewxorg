@@ -663,7 +663,7 @@ def main():
     empty = [e for e in out if not e["reports"]]
     print(f"wrote {p}  ({os.path.getsize(p)/1e3:.0f} kB gz, {len(out)} events, "
           f"{tot:,} reports ≥50 kt)")
-    print(f"  {ndrop_coh:,} reports fell outside the coherent swath and are drawn grey")
+    print(f"  {ndrop_coh:,} reports fell outside the coherent swath and are drawn gray")
     print(f"  events with no report in window: {len(empty)}"
           + (f"  ({', '.join(e['start'][:10] for e in empty[:8])}"
              + (" …" if len(empty) > 8 else "") + ")" if empty else ""))

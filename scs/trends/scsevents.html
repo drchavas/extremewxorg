@@ -77,7 +77,7 @@
      tiny. Stacked they get the full width, and the phone layout falls out for
      free instead of needing a breakpoint to undo the columns. */
   /* At zoom 4 the lower 48 is only about 660px across, so past roughly 1100px
-     of frame every extra pixel is ocean. Cap the content column and centre it;
+     of frame every extra pixel is ocean. Cap the content column and center it;
      a wider window just gets margin. The panels and footer share the cap so the
      three stay aligned. */
   #maps,#panels,.foot{max-width:1100px;margin-left:auto;margin-right:auto}
@@ -182,8 +182,8 @@
      &mdash; or type any date as <b>YYYYMMDD</b> to map that day directly.
      <a href="scstrend.html">Climatology and trends</a> &middot;
      <a href="scstrend_grid.html">the same on a 2&deg; grid</a> &middot;
-     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
+     <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-14 21:02 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -243,7 +243,7 @@
               &ge;&nbsp;2&Prime; hail days are a very different list from the biggest &ldquo;any
               hail&rdquo; days. States with fewer qualifying days show all they have.</li>
           <li><b>The day view.</b> <i>Counties</i> shades each county by how many qualifying
-              reports it logged. <i>Reports</i> draws every individual report as a point, coloured
+              reports it logged. <i>Reports</i> draws every individual report as a point, colored
               by magnitude; that detail is a separate download and is fetched the first time you
               ask for it.</li>
           <li><b>Any date.</b> The ranked lists are a way in, not a limit: the <b>Date</b> box
@@ -548,7 +548,7 @@ function drawDerecho(map,prev){
   });
 
   e.reports.forEach(r=>{
-    /* Reports that fell outside the coherent swath stay on the map in grey:
+    /* Reports that fell outside the coherent swath stay on the map in gray:
        showing what was excluded is more honest than quietly dropping it. */
     if(!r.d){
       L.circleMarker([r.la,r.lo],{radius:2.4,fillColor:t.mute,fillOpacity:.4,
@@ -617,7 +617,7 @@ function eventFoot(e){
     gap+
     `<br>The solid magenta line is the archive's own swath track, start to end, and the dashed `+
     `outline is the wind swath itself — the union of ${e.radius_km} km disks around its reports, `+
-    `which is how the paper delineates a swath. Grey dots are reports inside the time window that `+
+    `which is how the paper delineates a swath. Gray dots are reports inside the time window that `+
     `failed one of its screens: too far from the track relative to how far the storm had got `+
     `(spatial progress against temporal progress), or not connected to the main body of reports. `+
     (e.nall>e.n.k50?`<b>${e.nall-e.n.k50}</b> of ${e.nall} were excluded that way. `:'')+
@@ -878,7 +878,7 @@ function dayFoot(di){
     `${esc(thrSpec().short)}, across ${st.size} state${st.size===1?'':'s'}`+
     (rank>=0?`. Ranked <b>#${rank+1}</b> in ${esc(where)} at this threshold.`:'.')+
     `<br>${S.view==='pts'
-      ? `Each dot is one ${esc(countNote()).replace(/s$/,'')}, sized and coloured by magnitude. `+
+      ? `Each dot is one ${esc(countNote()).replace(/s$/,'')}, sized and colored by magnitude. `+
         `Points are a separate download, fetched once on demand.`
       : `Counties are shaded by how many qualifying ${esc(countNote())} each logged; counties with `+
         `none are left unshaded so the footprint of the day is what you see.`}`+
@@ -1153,5 +1153,6 @@ function addTiles(){
   }
 })();
 </script>
+<script src="../../assets/feedback.js" defer></script>
 </body>
 </html>

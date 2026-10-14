@@ -97,7 +97,7 @@ const ptInRing=(x,y,ring)=>{let c=false;
       !/days\/yr/.test($('cbClim').innerHTML),
       ($('cbClim').innerHTML.match(/\w+\/yr/)||[''])[0]);
   /* White marks a true zero so the edge of the affected area is visible. It has
-     to stay distinct from no-data, which is the land colour, and must not leak
+     to stay distinct from no-data, which is the land color, and must not leak
      onto the diverging trend ramp where zero is mid-scale. */
   say('exact zero is pure white',w.eval("colorFor(0,{div:false,lo:0,hi:1})")==='#ffffff',
       w.eval("colorFor(0,{div:false,lo:0,hi:1})"));

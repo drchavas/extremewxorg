@@ -107,7 +107,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('opens on Indiana',$('regSel').value==='IN',$('regSel').value);
   say('fitBounds fired for the default state',A._fit>0,'fits='+A._fit);
   say('panels drawn',$('card').innerHTML.length>4000,$('card').innerHTML.length+' chars');
-  say('two colour bars',$('cbClim').innerHTML.includes('linear-gradient')&&
+  say('two color bars',$('cbClim').innerHTML.includes('linear-gradient')&&
                         $('cbTrend').innerHTML.includes('linear-gradient'));
   say('trend bar is diverging',$('cbTrend').innerHTML.includes('#2166ac'));
 
@@ -120,7 +120,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       `A at ${A.getCenter().lat},${A.getCenter().lng} z${A.getZoom()}`);
   say('no feedback oscillation',A.getCenter().lat===Bm.getCenter().lat);
 
-  console.log('\n--- a state click re-centres only when the state changes');
+  console.log('\n--- a state click re-centers only when the state changes');
   const stLayer=gjLayers.filter(isState)[0];
   const tx=stLayer._layers.find(l=>l.feature.properties.STUSPS==='TX');
   const ok=stLayer._layers.find(l=>l.feature.properties.STUSPS==='OK');
@@ -130,8 +130,8 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   let fitBefore=A._fit;
   tx._h.click({});
   say('state click sets the region',$('regSel').value==='TX',$('regSel').value);
-  say('a NEW state re-centres',A._fit>fitBefore,(A._fit-fitBefore)+' refit');
-  say('both maps still centred together',A.getCenter().lat===Bm.getCenter().lat);
+  say('a NEW state re-centers',A._fit>fitBefore,(A._fit-fitBefore)+' refit');
+  say('both maps still centered together',A.getCenter().lat===Bm.getCenter().lat);
 
   /* The regression: zoom in, then click inside the state you are already on. It
      used to re-fit anyway, throwing away the reader's own zoom. */
@@ -147,13 +147,13 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   // but moving to another state from that zoom does frame the new one
   fitBefore=A._fit;
   ok._h.click({});
-  say('moving to another state re-centres again',
+  say('moving to another state re-centers again',
       $('regSel').value==='OK'&&A._fit>fitBefore,
       $('regSel').value+', '+(A._fit-fitBefore)+' refit');
   tx._h.click({});
   const fitBeforeSel=A._fit;
   $('regSel').value='TX'; fire('regSel','change');
-  say('the Place menu re-centres too',A._fit>fitBeforeSel,(A._fit-fitBeforeSel)+' refit');
+  say('the Place menu re-centers too',A._fit>fitBeforeSel,(A._fit-fitBeforeSel)+' refit');
   const nAfter=countyLayers()[0].getLayers().length;
   say('every county still drawn',nAfter>3000&&nAfter===nBefore,nAfter+' counties');
   say('panels rescoped to Texas',$('foot').innerHTML.includes('Texas'));
@@ -191,11 +191,11 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       Math.max(...fin(sm))<Math.max(...fin(raw)),
       'peak '+Math.max(...fin(raw)).toFixed(2)+' -> '+Math.max(...fin(sm)).toFixed(2));
   const mean=a=>{const f=fin(a);return f.reduce((x,y)=>x+y,0)/f.length;};
-  say('and keeps the field roughly centred',Math.abs(mean(sm)-mean(raw))/mean(raw)<0.2,
+  say('and keeps the field roughly centered',Math.abs(mean(sm)-mean(raw))/mean(raw)<0.2,
       mean(raw).toFixed(3)+' -> '+mean(sm).toFixed(3));
   /* Area weighting is the difference between a spatial mean and a per-county
-     vote; without it a cluster of small counties dominates its neighbourhood. */
-  say('neighbour weights are area-weighted',
+     vote; without it a cluster of small counties dominates its neighborhood. */
+  say('neighbor weights are area-weighted',
       w.eval("(function(){const nb=smoothNeighbours();"+
              "for(let k=0;k<nb.idx[0].length;k++) if(nb.idx[0][k]!==0)"+
              "  return Math.abs(nb.wt[0][k]-Math.exp(0))>1e-9; return false;})()"));
@@ -304,7 +304,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('the maps are real county paths, not a screenshot',
       (fig.match(/<path /g)||[]).length>3000,
       (fig.match(/<path /g)||[]).length+' paths');
-  say('both map colour bars are redrawn as SVG',
+  say('both map color bars are redrawn as SVG',
       (fig.match(/linearGradient/g)||[]).length>=2,
       (fig.match(/linearGradient/g)||[]).length+' gradients');
   /* SVG in the page is parsed as HTML, which forgives a raw "<"; a standalone
@@ -317,7 +317,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
      (Page-level CUR and gidxOf are not reachable from out here, so count what
      the output actually contains rather than reaching into page state.) */
   const fills=new Set((fig.match(/fill="rgb\([^)]*\)"/g)||[]));
-  say('the maps are painted across the colour ramp',fills.size>40,
+  say('the maps are painted across the color ramp',fills.size>40,
       fills.size+' distinct fills');
   /* One scale for both axes, or the map stretches to fill whatever box it is
      given. The box is sized from the view's own Mercator aspect, so box shape
@@ -439,7 +439,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       back.length===1&&back[0]._opts&&typeof back[0]._opts.style==='function'&&
       back[0]._opts.style({properties:{GEOID:'18097'}}).fillColor===
       back[0]._opts.style({properties:{GEOID:'48201'}}).fillColor,
-      'every county the same colour');
+      'every county the same color');
   say('and non-interactive, so it cannot be clicked as data',
       back.length===1&&back[0]._opts.interactive===false);
   say('station markers drawn',A._layers.some(l=>l._marks&&l._marks.length>0),
@@ -480,7 +480,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     } else console.log('  (no partial year in the data; skipped)');
   }
 
-  console.log('\n--- links the page cannot honour fall back to the default');
+  console.log('\n--- links the page cannot honor fall back to the default');
   {
     const st=()=>Object.fromEntries(new URLSearchParams(w.location.hash.slice(1)));
     const keep=w.location.hash;

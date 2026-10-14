@@ -83,7 +83,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       cells.length+' live cells');
   say('each cell is split: climatology above, trend below',
       cells.every(c=>c.querySelector('.top')&&c.querySelector('.bot')));
-  say('the class colour is on the upper half only',
+  say('the class color is on the upper half only',
       cells.every(c=>/background:(#[0-9a-f]{6}|rgb\()/i.test(c.querySelector('.top').getAttribute('style')||''))&&
       cells.every(c=>!/background/.test(c.querySelector('.bot').getAttribute('style')||''))&&
       !/class="swatch"/.test($('dashBody').innerHTML),
@@ -160,7 +160,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       (css.match(/max-width:\s*var\(--span\)/g)||[]).length>=3&&
       !/max-width:\s*1100px/.test(css),
       (css.match(/max-width:\s*var\(--span\)/g)||[]).length+' rules share it');
-  say('but the header runs full width, not centred on it',
+  say('but the header runs full width, not centered on it',
       !/header>\*/.test(css)&&!/header p\{[^}]*margin:4px auto/.test(css));
   say('the beta notice leads the banner',
       /^⚠\s*Beta version — still in testing\. Work in progress/.test(
@@ -281,7 +281,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
 
   console.log('\n--- the map is a locator with switchable backdrops');
   say('the guidance box is gone',$('guide')==null);
-  say('so is the colour bar',$('cbar')==null);
+  say('so is the color bar',$('cbar')==null);
   const opts=[...$('stSel').options].map(o=>o.value);
   say('the Zoom-to menu lists the states',opts.length>48&&opts[0]===''&&opts.includes('IN'),
       (opts.length-1)+' states');
@@ -340,7 +340,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       /World_Street_Map/.test(tileUrlOf('road')));
   say('all three use Esri/GIBS row-before-column tiles',
       ['topo','pop','road'].every(k=>/\{z\}\/\{y\}\/\{x\}/.test(tileUrlOf(k))));
-  say('the night-lights layer is labelled for what it measures, not population',
+  say('the night-lights layer is labeled for what it measures, not population',
       /Night lights/.test(w.eval("baseInfo('pop').label"))&&
       !/[Pp]opulation/.test(w.eval("baseInfo('pop').label+' '+baseInfo('pop').attr")),
       w.eval("baseInfo('pop').label"));
@@ -441,7 +441,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       +$('dashBody').querySelector('.cell[data-h] svg.arw').getAttribute('height')>=34,
       $('dashBody').querySelector('.cell[data-h] svg.arw').getAttribute('height')+'px');
 
-  console.log('\n--- one absolute colour scale');
+  console.log('\n--- one absolute color scale');
   const col=v=>w.eval(`rateColor(${v})`);
   const bins=JSON.parse(w.eval("JSON.stringify(rateBins())"));
   const rank=c=>bins.findIndex(b=>b.col===c);
@@ -458,19 +458,19 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('a rate off either end lands in the end class, not outside the scale',
       col(1e-6)===bins[bins.length-1].col&&col(1e6)===bins[0].col,
       col(1e-6)+' / '+col(1e6));
-  say('the same rate is the same colour in every hazard and severity',
+  say('the same rate is the same color in every hazard and severity',
       w.eval("rateColor(0.07)")===w.eval("rateColor(0.07)"));
   const key1=$('dashFoot').querySelectorAll('.skey')[0];
   say('the key is drawn with the table, one swatch per class plus zero',
       key1.querySelectorAll('.sw').length===bins.length+1,
       key1.querySelectorAll('.sw').length+' swatches');
-  say('and every swatch shows a colour the cells actually use',
+  say('and every swatch shows a color the cells actually use',
       [...key1.querySelectorAll('.sw i')]
         .map(i=>i.getAttribute('style')).every((st,k)=>
           st.includes(k<bins.length?bins[k].col:'214,218,222')));
   say('the old per-cell scaling is gone',w.eval("typeof cellMax")==='undefined');
 
-  say('a climatology of exactly zero is grey, not the pale end of the ramp',
+  say('a climatology of exactly zero is gray, not the pale end of the ramp',
       col(0)==='rgb(214,218,222)'&&col(0.0001)!=='rgb(214,218,222)',col(0));
   say('the header links say what each page is, and the whole phrase is the link',
       [...w.document.querySelectorAll('header p a:not(.home)')].map(a=>a.textContent.trim())
@@ -485,15 +485,15 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('and the palette stops before it would need white text',
       cr('#bd0026','#10161d')<4.5,
       'the old top class was '+cr('#bd0026','#10161d').toFixed(2)+':1');
-  say('every populated cell is coloured off that one scale',
+  say('every populated cell is colored off that one scale',
       [...$('dashBody').querySelectorAll('.cell[data-h] .top')].every(t=>{
         const bg=/background:([^;]+)/.exec(t.getAttribute('style'))[1].trim();
         return bins.some(b=>b.col===bg)||bg==='rgb(214,218,222)'; }));
-  console.log('\n--- the trend has its own colour, relative to the climatology');
+  console.log('\n--- the trend has its own color, relative to the climatology');
   const tcol=(tr,mean)=>w.eval(`trendColor(${tr},${mean})`);
   const P=JSON.parse(w.eval("JSON.stringify(trendPalOf('dark'))"));
   const steps=JSON.parse(w.eval("JSON.stringify(trendSteps())"));
-  say('inside the 10% band it is grey, whichever way it points',
+  say('inside the 10% band it is gray, whichever way it points',
       tcol(0.05,1)===P.flat&&tcol(-0.05,1)===P.flat&&tcol(0,1)===P.flat);
   say('rising is red, falling is blue',
       P.up.includes(tcol(0.5,1))&&P.dn.includes(tcol(-0.5,1)),
@@ -506,23 +506,23 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       '0.5 on a climo of 1 → '+tcol(0.5,1)+', on 10 → '+tcol(0.5,10));
   say('the steps are the ones the key states',steps.join(',')==='0.1,0.2,0.35,0.6',
       steps.join(', '));
-  say('every trend colour clears 4.5:1 on its own panel',
+  say('every trend color clears 4.5:1 on its own panel',
       [...P.up,...P.dn,P.flat].every(c=>cr(c,'#16212e')>=4.5)&&
       (()=>{const L=JSON.parse(w.eval("JSON.stringify(trendPalOf('light'))"));
             return [...L.up,...L.dn,L.flat].every(c=>cr(c,'#ffffff')>=4.4);})(),
       'worst dark '+Math.min(...[...P.up,...P.dn,P.flat].map(c=>cr(c,'#16212e'))).toFixed(2)+':1');
-  say('the arrow takes the trend colour, not the cell ink',
+  say('the arrow takes the trend color, not the cell ink',
       [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
         const col=/color:([^;]+)/.exec(c.querySelector('.bot').getAttribute('style'))[1].trim();
         return c.querySelector('.bot svg').outerHTML.includes(col); }));
-  say('bold marks the same cells the colour does',
+  say('bold marks the same cells the color does',
       [...$('dashBody').querySelectorAll('.cell[data-h] .bot')].every(b=>{
         const col=/color:([^;]+)/.exec(b.getAttribute('style'))[1].trim();
         return b.classList.contains('moves')===(col!==P.flat); }));
   /* Compare against the underlying values, not the rounded ones on screen: a
      cell showing "-0.000 /decade" over "0.002 days/yr" is a real -20%, and
      parsing the display would call it zero. */
-  say('the ratio behind the colour is printed as well',
+  say('the ratio behind the color is printed as well',
       [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
         const p=c.querySelector('.pct'); if(!p) return false;
         const want=JSON.parse(w.eval(
@@ -537,7 +537,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('a zero climatology has no percentage rather than an infinite one',
       w.eval("JSON.stringify(trendPct(0.5,0))")==='null'&&
       w.eval("JSON.stringify(trendPct(NaN,1))")==='null');
-  say('the printed ratio agrees with the band the colour came from',
+  say('the printed ratio agrees with the band the color came from',
       [...$('dashBody').querySelectorAll('.cell[data-h]')].every(c=>{
         const pct=Math.abs(parseFloat(c.querySelector('.pct').textContent.replace(/[()]/g,'')));
         const col=/color:([^;]+)/.exec(c.querySelector('.bot').getAttribute('style'))[1].trim();
@@ -577,7 +577,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('a percentage never rounds across a class break',
         lw.eval("trendPct(0.0996,1)")==='+9.9%'&&lw.eval("trendPct(0.196,1)")==='+19%'&&lw.eval("trendPct(-0.0999,1)")==='-9.9%',
         [lw.eval("trendPct(0.0996,1)"),lw.eval("trendPct(0.196,1)")].join(' '));
-    say('the colour key covers days and events',/Days or events per year/.test(lw.document.body.innerHTML));
+    say('the color key covers days and events',/Days or events per year/.test(lw.document.body.innerHTML));
     const before=errors.length;
     const X=boot('scsdash.html','#k=nope&t=-2&h=bogus');
     await new Promise(r=>setTimeout(r,6000));

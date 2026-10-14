@@ -12,7 +12,7 @@
 
   :root{
     /* One content width for the body: the map-and-table row, the footer and
-       Methods all centre on it so nothing steps in or out as you scroll. The
+       Methods all center on it so nothing steps in or out as you scroll. The
        header is full-bleed and does not use it. */
     --span:1400px;
     --bg:#0f1720; --panel:#16212e; --panel2:#1d2a3a; --line:#2a3a4d;
@@ -84,7 +84,7 @@
      tiny. Stacked they get the full width, and the phone layout falls out for
      free instead of needing a breakpoint to undo the columns. */
   /* At zoom 4 the lower 48 is only about 660px across, so past roughly 1100px
-     of frame every extra pixel is ocean. Cap the content column and centre it;
+     of frame every extra pixel is ocean. Cap the content column and center it;
      a wider window just gets margin. The panels and footer share the cap so the
      three stay aligned. */
   #maps,#panels,.foot{max-width:var(--span);margin-left:auto;margin-right:auto}
@@ -185,10 +185,10 @@
                     margin-top:4px;white-space:normal;max-width:190px;line-height:1.35}
   #dash td.haz .src a{display:inline;font-size:9.5px;margin:0}
   #dash .cell{padding:0;cursor:pointer;border-left:1px solid var(--line);min-width:112px}
-  /* Split: climatology above on its class colour, trend below on the panel, so
+  /* Split: climatology above on its class color, trend below on the panel, so
      the two encodings do not compete for one swatch. */
   #dash .cell .top{padding:7px 9px 8px}
-  /* Arrow on the left, the two numbers beside it, the whole row centred on the
+  /* Arrow on the left, the two numbers beside it, the whole row centered on the
      arrow so it reads as one object rather than a glyph stuck to a line. */
   #dash .cell .bot{padding:5px 9px 6px;border-top:1px solid var(--line);
                    display:flex;align-items:center;gap:7px}
@@ -196,8 +196,8 @@
      bold, not just the first line, so the eye catches the cell not the digit. */
   #dash .cell .bot.moves{font-weight:700}
   #dash .cell:hover{outline:2px solid var(--accent);outline-offset:-2px}
-  /* The whole cell carries the climatology colour, so the table reads as a
-     small map. Text colour flips with the background's luminance or the dark
+  /* The whole cell carries the climatology color, so the table reads as a
+     small map. Text color flips with the background's luminance or the dark
      end of the ramp swallows it. */
   /* The severity threshold is what tells you which number you are looking at, so
      it should not be the smallest thing in the cell. */
@@ -221,8 +221,8 @@
   #dash .cell.none:hover{outline:none}
   #dash .foot2{padding:10px 16px;border-top:1px solid var(--line);font-size:11px;
                color:var(--muted);line-height:1.6}
-  /* Colour key. The scale is absolute now, so it has to be legible somewhere.
-     Banded, matching the cells: one swatch per class, labelled with the rate at
+  /* Color key. The scale is absolute now, so it has to be legible somewhere.
+     Banded, matching the cells: one swatch per class, labeled with the rate at
      which that class begins. */
   .skey{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
   .skey .cap{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
@@ -244,8 +244,8 @@
      <a href="scstrend.html">County-level maps by hazard</a> &middot;
      <a href="scstrend_grid.html">2&deg; grid maps by hazard</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
-     <a href="mailto:dchavas@purdue.edu">Email me</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-09 19:56 UTC</div>
+     <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
+  <div class="hmeta dataupd">Data last updated 2026-10-14 21:02 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 Dan Chavas &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -324,20 +324,20 @@
               <i>p</i>-values are deliberately absent &mdash; &ldquo;could this slope have come
               from noise?&rdquo; is a different question from &ldquo;is it changing enough to
               matter?&rdquo;, and only the second one is this page's business.</li>
-          <li><b>The trend's colour is that same percentage.</b> Red for rising, blue for
+          <li><b>The trend's color is that same percentage.</b> Red for rising, blue for
               falling, deepening in four steps at 10%, 20%, 35% and 60% of the climatology per
-              decade, and grey below 10%. It is relative rather than absolute because no
+              decade, and gray below 10%. It is relative rather than absolute because no
               single absolute scale can serve a hail cell at 4.8&nbsp;days/yr and a derecho
               cell at 0.02&nbsp;events/yr at once.</li>
-          <li><b>Colour is an absolute scale.</b> Nine classes in days (for derecho, events) per year, the same in
+          <li><b>Color is an absolute scale.</b> Nine classes in days (for derecho, events) per year, the same in
               every cell, every hazard and every county, so two cells can be compared by eye. The
               breaks step by roughly half an order of magnitude because the rates span four;
               even spacing would put nearly every cell in one class. A climatology of exactly
-              zero is grey rather than the pale end of the scale. The palette stops at a strong
-              red-orange rather than running to near-black, so one text colour stays legible on
+              zero is gray rather than the pale end of the scale. The palette stops at a strong
+              red-orange rather than running to near-black, so one text color stays legible on
               every class.</li>
-          <li><b>Always smoothed</b>, sigma 2&deg;, area-weighted and normalised &mdash; the same
-              setting the individual pages open on. That means <b>a cell is a neighbourhood
+          <li><b>Always smoothed</b>, sigma 2&deg;, area-weighted and normalized &mdash; the same
+              setting the individual pages open on. That means <b>a cell is a neighborhood
               average, not the county's own count</b>: half the weight comes from within
               230&nbsp;km and nothing beyond 444&nbsp;km contributes. A single county's reports
               are far too sparse to carry a trend on their own, which is why there is no raw
@@ -767,10 +767,10 @@ function makeMap(id){
 }
 function colorFor(v,C){
   if(!isFinite(v)) return null;
-  /* Exact zero steps off the ramp entirely, into a light grey. The ramp's own
+  /* Exact zero steps off the ramp entirely, into a light gray. The ramp's own
      low end is a pale yellow, so "never happened" and "happened rarely" looked
      alike and the edge of the affected area was invisible — which matters most
-     for the rare hazards, where most of the map is a true zero. Grey rather
+     for the rare hazards, where most of the map is a true zero. Gray rather
      than white because white reads as "no data" next to a blank cell, and
      because it is plainly not part of a yellow-to-red scale. Only the
      sequential ramp: on the diverging trend ramp zero is mid-scale and already
@@ -878,7 +878,7 @@ function stateLayer(){
    are a hairline mesh so the backdrop shows through, with the chosen one
    filled. */
 function ctyStyle(){
-  /* Yellow, and the same yellow on every backdrop. Grey hairlines vanished
+  /* Yellow, and the same yellow on every backdrop. Gray hairlines vanished
      against the physical map's pale greens and against night lights alike;
      yellow is the one hue none of the three backdrops contains at any
      strength. */
@@ -903,7 +903,7 @@ function stateOf(ab){ return STATES.find(s=>s.ab===ab); }
    capital's county is a defensible "start here": it is somewhere the reader has
    heard of, it is usually well populated, and it needs no data the page does
    not already have. Coordinates are the capitol buildings, to a few hundred
-   metres — precision beyond that buys nothing, since the answer is a county. */
+   meters — precision beyond that buys nothing, since the answer is a county. */
 const CAPITAL={
   AL:[32.377,-86.300], AK:[58.302,-134.420], AZ:[33.448,-112.074], AR:[34.746,-92.289],
   CA:[38.577,-121.494],CO:[39.739,-104.984], CT:[41.764,-72.682],  DE:[39.157,-75.520],
@@ -980,9 +980,9 @@ function drawDash(){
   document.getElementById('dashTitle').textContent =
     countyLabel(c);
   document.getElementById('dashSub').innerHTML =
-    'Climatology and trend per decade · 2° neighbourhood average';
+    'Climatology and trend per decade · 2° neighborhood average';
 
-  // header: severity 1..n, labelled per row since hazards differ
+  // header: severity 1..n, labeled per row since hazards differ
   let th='<th>Hazard</th>';
   for(let i=0;i<maxLev;i++) th+=`<th>Severity ${i+1}</th>`;
   document.getElementById('dashHead').innerHTML=th;
@@ -1035,7 +1035,7 @@ function drawDash(){
 
   const gaps=gapYears(HZ[S.hazard]||HZ.hail).filter(y=>y>=a&&y<=b);
   document.getElementById('dashFoot').innerHTML = scaleLegend()+
-    'Cell colour is how often it happens, on one scale shared by every cell and every '+
+    'Cell color is how often it happens, on one scale shared by every cell and every '+
     'county &mdash; redder is more frequent. The '+
     'arrow is the trend: <b>up</b> rising, <b>down</b> falling, length &prop; magnitude, '+
     'and <b>&harr;</b> for a change smaller than 10% of the climatological value &mdash; too '+
@@ -1044,7 +1044,7 @@ function drawDash(){
     'Blank cells mean the hazard has no record.'+
     (gaps.includes(1993)?` <b>1993 is excluded</b>: June and July 1993 are missing from `+
                  `Storm Events entirely.`:'')+
-    ' Each value is a 2° neighbourhood average rather than this county alone, over the '+
+    ' Each value is a 2° neighborhood average rather than this county alone, over the '+
     'years listed beside the hazard.';
 }
 /* Where each row's numbers come from, named on the row rather than buried in a
@@ -1062,20 +1062,20 @@ function sourceHtml(h){
    is asking "same ballpark or not?", and a banded scale answers that at a glance
    where a smooth gradient makes them squint. The breaks are round numbers in
    events per year, so the legend can state them exactly.
-   The classes are absolute — the same rate is the same colour in every hazard,
+   The classes are absolute — the same rate is the same color in every hazard,
    every severity and every county. They used to be scaled per hazard and
-   severity, which gave each cell good internal contrast but made the colours
+   severity, which gave each cell good internal contrast but made the colors
    mutually incomparable: an EF4 tornado once in 236 years came out the same
-   orange as hail three times a year, which is the opposite of what a colour
+   orange as hail three times a year, which is the opposite of what a color
    should say.
    The breaks step by roughly half an order of magnitude because the rates span
    four; even spacing in rate would put fourteen of sixteen cells in the bottom
    class. */
-/* The palette stops where the text would have to change colour. It used to run
+/* The palette stops where the text would have to change color. It used to run
    the full yellow-to-near-black ramp, which meant flipping the ink between dark
    and white partway down a column — a visible seam that made the table look
    like two tables. Every class below clears 4.5:1 against one dark ink, so the
-   text colour is constant and the hue still carries the order. The cost is the
+   text color is constant and the hue still carries the order. The cost is the
    deep crimson end: the top class is a strong red-orange instead. */
 const CELL_INK='#10161d';
 const RATE_BINS=[
@@ -1099,7 +1099,7 @@ function rateColor(v){
    eval, which can only reach function declarations. */
 function rateBins(){ return RATE_BINS.map(b=>({lo:b.lo,col:b.col,lab:b.lab})); }
 /* The scale is only worth having if it can be read, and this page no longer has
-   a map colour bar. Drawn high to low, so it reads the way the table does. */
+   a map color bar. Drawn high to low, so it reads the way the table does. */
 function scaleLegend(){
   const sw=RATE_BINS.map(b=>
     `<span class="sw"><i style="background:${b.col}"></i><b>${esc(b.lab)}</b></span>`).join('');
@@ -1107,7 +1107,7 @@ function scaleLegend(){
          `<span class="sw"><i style="background:${ZERO_GREY}"></i><b>0</b></span></div>`+
          trendLegend();
 }
-/* The lower half's colours need their own key: they are a different quantity —
+/* The lower half's colors need their own key: they are a different quantity —
    change relative to that cell's own climatology — on a diverging scale. */
 function trendLegend(){
   const P=trendPal(), st=TREND_STEPS;
@@ -1150,7 +1150,7 @@ function contrastRatio(a,b){
    than up or down.
    Both sides of the ratio are the smoothed fields, as they must be: cellOf
    reads mean and trend from smoothField() output, so a county whose own counts
-   are noisy is judged on the same 2° neighbourhood its displayed climatology
+   are noisy is judged on the same 2° neighborhood its displayed climatology
    comes from. Comparing a smoothed trend against a raw mean would make the
    band mean different things in different counties. */
 const NEARZERO=0.10;
@@ -1160,12 +1160,12 @@ function nearZero(tr,mean){
   return Math.abs(tr) < NEARZERO*mean;
 }
 /* The trend gets its own encoding, in the lower half of the cell: the climatology
-   colour above answers "how often?", and a second colour below answers "which way,
+   color above answers "how often?", and a second color below answers "which way,
    and how fast?" without the two fighting over the same swatch.
    Strength is the trend as a fraction of that cell's own climatology, per decade —
    the only way a hail cell at 4.8 days/yr and a derecho cell at 0.02 events/yr can
-   be put on one scale. Inside the 10% band it is grey: the direction is not worth
-   colouring. Red rising, blue falling, in four steps each way.
+   be put on one scale. Inside the 10% band it is gray: the direction is not worth
+   coloring. Red rising, blue falling, in four steps each way.
    Two palettes, because the lower half has no fill of its own and therefore sits on
    whichever panel the theme provides. On the dark theme stronger means brighter; on
    the light theme stronger means darker. Every entry clears 4.5:1 on its own
@@ -1227,14 +1227,14 @@ function dp(v){ return (isFinite(v)&&Math.abs(v)<0.05)?3:2; }
 function fmtVal(v){ return fmt(v, dp(v)); }
 function fmtTrend(v){ return sgn(v, dp(v)); }
 /* The trend again as a share of the climatology directly above it — the same
-   ratio the colour and the flat-arrow band are built on, so the reader can see
+   ratio the color and the flat-arrow band are built on, so the reader can see
    the number behind the encoding rather than taking it on trust. */
 function trendPct(tr,mean){
   if(!isFinite(tr)||!isFinite(mean)||mean<=0) return null;
   const r=tr/mean*100, a=Math.abs(r);
-  /* Truncate rather than round: the arrow and colour classes break at 10%, 20%,
+  /* Truncate rather than round: the arrow and color classes break at 10%, 20%,
      35% and 60%, and 9.96% printed as "10.0%" beside a flat arrow (or 19.6% as
-     "20%" in the 10-20% colour) contradicted the encoding next to it. */
+     "20%" in the 10-20% color) contradicted the encoding next to it. */
   return (r>=0?'+':'-') + (a<10?(Math.floor(a*10)/10).toFixed(1):Math.floor(a)) + '%';
 }
 /* The same number the other way round. "0.02 days/yr" is hard to feel; "one
@@ -1425,5 +1425,6 @@ function wire(){
   }
 })();
 </script>
+<script src="../../assets/feedback.js" defer></script>
 </body>
 </html>
