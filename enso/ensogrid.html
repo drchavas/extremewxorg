@@ -120,6 +120,7 @@
   .maphead.hastog{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
   .maphead .mhtext{flex:1 1 420px;min-width:0}
   .pcwrap{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  #pcSeg button:disabled{opacity:.35;cursor:not-allowed} #pcSeg button.locked{pointer-events:none}
   .pclab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
   .maphead h2{margin:0;font-size:14.5px;font-weight:650}
   .maphead h2 .ph-en,.mapbubble .ph-en{color:var(--en)} .maphead h2 .ph-ln,.mapbubble .ph-ln{color:var(--ln)}
@@ -1878,8 +1879,12 @@ function syncControls(){
   tog('unBox',isTemp()); tog('smBox',isCount());
   document.getElementById('unSel').value=S.un;
   /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
-  const pg=document.getElementById('pcSeg'); pg.style.display=isTemp()?'none':'';
-  pg.querySelectorAll('button').forEach(b=>{ const on=b.dataset.pc===S.pc;
+  /* temperature: Absolute shown as chosen, % change greyed out (the stored choice
+     is left alone, so precipitation etc. come back in whatever was picked there) */
+  const pg=document.getElementById('pcSeg'), tmp=isTemp();
+  pg.parentElement.title=tmp?'Temperature is always shown as a change in degrees.':'';
+  pg.querySelectorAll('button').forEach(b=>{ const on=b.dataset.pc===(tmp?'abs':S.pc);
+    b.disabled=tmp&&b.dataset.pc==='pct'; b.classList.toggle('locked',tmp&&on);
     b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
   document.getElementById('smSel').value=S.sm; document.getElementById('dtSel').value=S.dt;
   document.getElementById('strSel').value=String(S.str);
