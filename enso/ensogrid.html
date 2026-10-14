@@ -212,8 +212,8 @@
     <div class="fld percustom"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
     <div class="fld" title="Remove each box's linear trend over the period before compositing, so a run of recent El Niño (or La Niña) years does not pick up the warming trend, or a reporting trend, as an ENSO signal."><label for="dtSel">Trend</label>
       <select id="dtSel"><option value="on">Removed</option><option value="off">Kept</option></select></div>
-    <div class="fld" id="pcBox"><label for="pcSel">Difference as</label>
-      <select id="pcSel"><option value="abs">Amount</option><option value="pct">% of climatology</option></select></div>
+    <div class="fld" id="pcBox" title="Show the difference as a percentage of the climatology (saturating where the climatology is very small), or as the change itself. Temperature is always shown as a change in degrees."><label for="pcSel">Difference as</label>
+      <select id="pcSel"><option value="pct">Percent change</option><option value="abs">Absolute change</option></select></div>
     <div class="fld" id="unBox"><label for="unSel">Units</label>
       <select id="unSel"><option value="C">&deg;C</option><option value="F">&deg;F</option></select></div>
     <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
@@ -481,7 +481,7 @@ function classify(thr){
    need: for a slider month, a dense (ENSO year x box) matrix of values, NaN
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
-const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'abs',un:'C',
+const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
          sm:'on',sig:1,pt:null,theme:'dark'};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
@@ -946,30 +946,37 @@ function domains(statsAll){
     if(isSnow()){
       const dd=[[1,1.5],[0.8,1.2],[0.4,0.6]][ix][two?1:0];
       return {clim:{lo:0,hi:4,st:CMAP.snow},
-              diff:pctOn()?{lo:two?-100:-80,hi:two?100:80,st:CMAP.brbg}:{lo:-dd,hi:dd,st:CMAP.brbg}};
+              diff:pctOn()?{lo:two?-100:-50,hi:two?100:50,st:CMAP.brbg}:{lo:-dd,hi:dd,st:CMAP.brbg}};
     }
     const dd=[[3,5],[2.5,4],[1.5,2.5]][ix][two?1:0];
     return {clim:{lo:0,hi:12,st:CMAP.wet},
-            diff:pctOn()?{lo:two?-100:-80,hi:two?100:80,st:CMAP.brbg}:{lo:-dd,hi:dd,st:CMAP.brbg}};
+            diff:pctOn()?{lo:two?-100:-50,hi:two?100:50,st:CMAP.brbg}:{lo:-dd,hi:dd,st:CMAP.brbg}};
   }
   const cv=[], dv=[];
   statsAll.forEach(s=>{ if(!s) return;
     for(let c=0;c<s.clim.length;c++){ if(isFinite(s.clim[c])&&s.clim[c]>0) cv.push(s.clim[c]);
       const d=s.disp[c]; if(isFinite(d)) dv.push(Math.abs(d)); } });
   cv.sort((a,b)=>a-b); dv.sort((a,b)=>a-b);
-  const hc=niceUp(quantile(cv,0.98)), hd=niceUp(quantile(dv.filter(x=>x>0),0.95));
+  /* percent change on a count field: at most ±200%, so the few boxes with a tiny
+     climatology saturate rather than stretch the scale */
+  const hc=niceUp(quantile(cv,0.98)), hd=Math.min(niceUp(quantile(dv.filter(x=>x>0),0.95)),pctOn()?200:Infinity);
   return {clim:{lo:0,hi:hc,st:CMAP.seq},diff:{lo:-hd,hi:hd,st:CMAP.div}};
 }
-/* % of climatology is masked where the climatology is too small to divide by:
-   below 0.1 mm/day of precipitation, or below 5% of the field's typical
-   (98th-percentile) value for the counts — a box with one storm-day in
-   46 Septembers would otherwise read as +400%. */
+/* Percent change (the default for everything but temperature). For precipitation
+   the percentage is taken of at least 0.1 mm/day, so a desert box (where the
+   difference is tiny too) reads as a modest percentage instead of a hole or a wild
+   number; snowfall maps already stop at 0.01 mm/day. A count field is left blank
+   below 2% of its typical (98th-percentile) value, which is where its maps stop
+   anyway. Any remaining large percentage saturates the colour scale (domains). */
+function pctFloor(climRef){ return isSnow()?0.01 : isPrecip()?0.1 : (climRef||0)*0.02; }
 function dispDiff(st,climRef){
   const out=new Float32Array(st.diff.length).fill(NaN);
-  const minC = isPrecip()?minFlux():(climRef||0)*0.05;
+  const minC = pctFloor(climRef);
   for(let c=0;c<out.length;c++){
     const d=st.diff[c]; if(!isFinite(d)) continue;
-    if(pctOn()){ const cl=st.clim[c]; if(!(cl>minC)) continue; out[c]=100*d/cl; }
+    if(pctOn()){ const cl=st.clim[c];
+      if(isPrecip()){ if(!isFinite(cl)) continue; out[c]=100*d/Math.max(cl,minC); }
+      else { if(!(cl>minC)) continue; out[c]=100*d/cl; } }
     else out[c]=cvD(d);
   }
   return out;
@@ -1416,12 +1423,12 @@ function writeTitles(domD){
             :`${nE} El Niño and ${nL} La Niña years`;
   document.getElementById('diffSub').innerHTML=esc(
     `${per} · ${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)} · `+
-    (pctOn()?'% of climatology':unitAbs())+` · `+
+    (pctOn()?'% change from climatology':unitAbs())+` · `+
     (S.dt==='on'?'linear trend removed':'trend kept')+
     (S.sig?' · dots: significant patches':''))+srcTag()+smTag();
   const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
   drawColorbar(document.getElementById('cbClim'),CURDOM.clim,climCap,false);
-  drawColorbar(document.getElementById('cbDiff'),domD,pctOn()?'% of clim.':unitAbs(),true);
+  drawColorbar(document.getElementById('cbDiff'),domD,pctOn()?'% change':unitAbs(),true);
   /* name the empty case instead of drawing a blank map */
   const warn=document.getElementById('diffWarn');
   const need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
@@ -1565,10 +1572,10 @@ function boxPanel(x,y,w,h,bs){
   if(isCount() && bs.ys.every(v=>v===0)){
     o+=txt(x+14,y+44,`None on record here in ${mon?MFULL[m-1]:AV().long} in any year of ${a}–${b}: nothing to composite.`,{size:12,fill:t.mute});
     return o+'</g>'; }
-  const pct=pctOn(), minC=isPrecip()?minFlux():(STATS?STATS.climRef*0.05:0);
-  const okPct=pct && st.mean>minC;
-  const cv=u=> okPct?100*u/st.mean : cvD(u);
-  const unit=okPct?'% of climatology':unitAbs();
+  const pct=pctOn(), minC=pctFloor(STATS?STATS.climRef:0);
+  const okPct=pct && (isPrecip()?isFinite(st.mean):st.mean>minC);
+  const cv=u=> okPct?100*u/Math.max(st.mean,isPrecip()?minC:0) : cvD(u);
+  const unit=okPct?'% change from climatology':unitAbs();
   const clim=cvC(st.mean), dd=decs();
   o+=txt(x+14,y+38,(w<1000?`Departure from the ${S.dt==='on'?'trend':'mean'}, ${a}–${b}`:`Each bar is one ENSO year's departure from the ${S.dt==='on'?'least-squares trend through':'mean of'} ${a}–${b}`)+
      ` (${unit}) · climatology ${fmt(clim,dd.c)} ${unitAbs()}`+
@@ -1748,9 +1755,14 @@ function methodsHtml(){
     the test somewhat generous. Where both groups have no spread there is nothing to test and no dot; water fluxes are not
     dotted where the climatology is below ${isSnow()?'0.05':'0.1'} mm/day, and count fields not where it is below 5% of
     the field's typical value. The p shown on hover is the box's own t-test.`);
-  li.push(`<b>% of climatology</b> divides the difference by the box's climatology, and is left blank where that is too
-    small to divide by — below 0.1 mm/day of precipitation (0.05 for snowfall), or below 5% of the field's typical
-    (98th percentile) climatology for the count fields.`);
+  li.push(`<b>Percent change</b> (the default, for every field except temperature, which is always shown in degrees)
+    divides the difference by the box's climatology. For precipitation the climatology is taken as at least 0.1 mm/day,
+    so a desert box, where the difference is tiny too, shows a modest percentage rather than a wild one (snowfall maps
+    already stop at 0.01 mm/day); count fields are left blank below 2% of their typical (98th-percentile) climatology,
+    which is where those maps stop anyway. A small climatology can still give a very large percentage; the colour scale
+    saturates instead (ERA5: ±50%, or ±100% for El Niño − La Niña; count
+    fields: the 95th percentile of the map, at most ±200%), so check the hover value or switch to <i>Absolute change</i>
+    before reading a saturated box. The dots do not depend on this choice.`);
   if(f.src==='era5'){
     li.push(`<b>ERA5 data.</b> ECMWF's ERA5 reanalysis (Copernicus Climate Change Service): 2 m air temperature,
       mean total precipitation rate and mean snowfall rate (water equivalent), monthly means. 1979–2022 from NCAR's copy of the ECMWF monthly-mean product
@@ -1800,7 +1812,7 @@ function methodsHtml(){
   li.push(`<b>Colour scales.</b> Fixed for ERA5 for a given averaging length (month, season or year), so the colours mean
     the same thing in every month and phase.
     For the count fields they follow the map on screen (the seasonal cycle is far too strong for one scale):
-    the 98th percentile of climatology and the 95th of the absolute difference, over the boxes drawn — so check the
+    the 98th percentile of climatology and the 95th of the size of the difference (percent or absolute), over the boxes drawn — so check the
     colour bar when you change month.`);
   return '<ol>'+li.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
 }
@@ -1817,7 +1829,7 @@ function syncControls(){
   const tog=(id,on)=>{ const b=document.getElementById(id); b.classList.toggle('off',!on);
     b.querySelectorAll('select,input').forEach(e=>e.disabled=!on); };
   tog('pcBox',!isTemp()); tog('unBox',isTemp()); tog('smBox',isCount());
-  document.getElementById('pcSel').value=S.pc; document.getElementById('unSel').value=S.un;
+  document.getElementById('pcSel').value=isTemp()?'abs':S.pc;   // temperature: always the change in degrees document.getElementById('unSel').value=S.un;
   document.getElementById('smSel').value=S.sm; document.getElementById('dtSel').value=S.dt;
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
@@ -1841,7 +1853,7 @@ function writeHash(){
   if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
   else if(S.per!==defaultPer()) p.set('p',S.per);
   if(S.dt!=='on') p.set('dt',S.dt);
-  if(S.pc!=='abs') p.set('pc',S.pc);
+  if(S.pc!=='pct') p.set('pc',S.pc);
   if(S.un!=='C') p.set('u',S.un);
   if(S.sm!=='on') p.set('sm',S.sm);
   if(!S.sig) p.set('sg','0');
@@ -1869,7 +1881,7 @@ function readHash(){
     if(a&&b){ if(b>=2025&&a<=1980) S.per='all'; else if(b>=2025&&a===2000) S.per='recent';
       else { S.per='custom'; S.y0=a; S.y1=b; } } }
   if(p.get('dt')==='off') S.dt='off';
-  if(p.get('pc')==='pct') S.pc='pct';
+  if(p.get('pc')==='abs') S.pc='abs'; else if(p.get('pc')==='pct') S.pc='pct';
   if(p.get('u')==='F') S.un='F';
   if(p.get('sm')==='off') S.sm='off';
   if(p.get('sg')==='0') S.sig=0;
