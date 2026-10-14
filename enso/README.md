@@ -87,11 +87,12 @@ check this page too.**
   diff ±1 / ±0.8 / ±0.4; % ±80 / ±100). Count fields follow the map on screen.
 - **Smoothing** (count fields only): Gaussian, sigma one box, applied to each *year's* map before
   compositing so dots and colours describe the same field; panels are never smoothed.
-- **Period (Oct 2026)**: a three-way toggle — **1979–2025** (default, every field), **2000–2025**, or
-  **Custom…**, which reveals From/To boxes. Presets are clipped to each record (TC 1980–, derechos
-  1996–). Storm Events now also defaults to 1979: U.S.-total EN−LN differences change by only a few
-  percent between linear, quadratic and cubic detrending over 1979–2025, so the per-box linear
-  trend handles the reporting growth well enough. Hash: none (1979–), `p=recent`, or `p=YYYY-YYYY`
+- **Period (Oct 2026)**: a three-way toggle — **1979–2025**, **2000–2025**, or **Custom…**, which
+  reveals From/To boxes. Presets are clipped to each record (TC 1980–, derechos 1996–). Default:
+  1979 for every field (the larger sample matters most for a public page). Storm Events reporting
+  grew steeply into the late 1990s, but over 1979–2025 quadratic instead of linear per-box
+  detrending changes the U.S. EN−LN maps by 3–13% RMS and flips ≤4% of boxes (hail, tornado,
+  wind; every season). Hash: `p` omitted for the field's default, else `p=all|recent` or `p=YYYY-YYYY`
   (custom); old range links that equal a preset open as that preset.
 - **Place names / state lines**: `geo/admin1-10m.json.gz` (Natural Earth 1:10m admin-1 states and
   provinces, `mapshaper -simplify 6% keep-shapes`, ~360 KB) is drawn as thin lines over both maps

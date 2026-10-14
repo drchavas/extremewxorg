@@ -350,14 +350,16 @@ function isCount(){ return F().src!=='era5'; }
 function isTemp(){ return F().k==='t2m'; }
 function isPrecip(){ return F().k==='pr'||F().k==='sf'; }   // the two water fluxes
 function isSnow(){ return F().k==='sf'; }
-/* Two periods, the same for every field: the satellite era from 1979 (the
-   default), or 2000 on. Each is clipped to the field's own record: IBTrACS
-   starts in 1980 here, the derecho archive in 1996. Storm Events reports grew
-   steeply into the late 1990s; the per-box trend removal handles that well
-   enough for these composites (U.S.-total El Nino - La Nina differences move by
-   a few percent at most between linear, quadratic and cubic detrending over
-   1979-2025), and 2000 on is there for the more uniform part of the record. */
+/* Two preset periods: the satellite era from 1979, or 2000 on, each clipped to
+   the field's own record (IBTrACS starts in 1980 here, the derecho archive in
+   1996). Every field opens on 1979: for a public page the larger sample matters
+   most. Storm Events report counts rose steeply into the late 1990s, but the
+   per-box trend removal copes: over 1979-2025, removing a quadratic instead of a
+   linear trend changes the U.S. El Nino - La Nina maps by 3-13% (RMS) and flips
+   the sign of at most 4% of boxes, for hail, tornado and wind in every season.
+   2000 on remains a click away, for the more uniform part of that record. */
 const PERIOD_START={all:1979,recent:2000};
+function defaultPer(){ return 'all'; }
 function defaultPeriod(){
   const a=PERIOD_START[S.per]||1979;
   return DS?[Math.max(a,DS.ey0),DS.ey1]:[a,2025];
@@ -479,7 +481,7 @@ function classify(thr){
    need: for a slider month, a dense (ENSO year x box) matrix of values, NaN
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
-const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,per:'all',y0:null,y1:null,dt:'on',pc:'abs',un:'C',
+const S={f:'t2m',thr:0,ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'abs',un:'C',
          sm:'on',sig:1,pt:null,theme:'dark'};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
@@ -1682,8 +1684,8 @@ function guideHtml(){
       `and August</b>. It holds no cool-season derechos, so the Dec–Feb, Sep–Nov and cool-month maps are empty and the `+
       `ENSO-year map is a warm-season map. With so few events in any box, treat these composites as exploratory. ` : '';
   return lead+dere+'Storm Events records <i>reports</i>, not observations from a fixed network, and report counts rose '+
-    'steeply into the late 1990s, so the per-box trend is removed before compositing (the 2000–2025 period uses only '+
-    'the more uniform recent record), and the maps open on <b>Dec–Feb</b>. The best-documented ENSO links to U.S. hail and tornadoes are in '+
+    'steeply into the late 1990s, so the per-box trend is removed before compositing (2000–2025 uses only the more '+
+    'uniform recent record), and the maps open on <b>Dec–Feb</b>. The best-documented ENSO links to U.S. hail and tornadoes are in '+
     '<b>winter</b>: in Dec–Feb, El Niño brings fewer tornado and hail days to the Mid-South and Ohio Valley and more '+
     'to Florida and the Gulf Coast. <b>Spring</b> is less settled. '+
     '<a href="https://doi.org/10.1038/ngeo2385" target="_blank" rel="noopener">Allen, Tippett &amp; Sobel (2015)</a> '+
@@ -1836,8 +1838,8 @@ function writeHash(){
   const p=new URLSearchParams();
   p.set('f',S.f); if(F().thresholds) p.set('t',S.thr);
   p.set('ph',S.ph); p.set('s',S.str); p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
-  if(S.per==='recent') p.set('p','recent');
-  else if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
+  if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
+  else if(S.per!==defaultPer()) p.set('p',S.per);
   if(S.dt!=='on') p.set('dt',S.dt);
   if(S.pc!=='abs') p.set('pc',S.pc);
   if(S.un!=='C') p.set('u',S.un);
@@ -1862,7 +1864,7 @@ function readHash(){
   /* p=recent, or p=YYYY-YYYY for a custom range. Older links always carried a range:
      one that is just a preset (1979/1980-2025, 2000-2025) opens as that preset */
   const pq=p.get('p');
-  if(pq==='recent') S.per='recent';
+  if(pq==='recent'||pq==='all') S.per=pq;
   else if(pq){ const [a,b]=pq.split('-').map(Number);
     if(a&&b){ if(b>=2025&&a<=1980) S.per='all'; else if(b>=2025&&a===2000) S.per='recent';
       else { S.per='custom'; S.y0=a; S.y1=b; } } }
@@ -1908,6 +1910,8 @@ function wire(){
   fs.value=S.f;
   fs.onchange=e=>{ const prev=F().src; S.f=e.target.value;
     if(F().src!==prev){ S.thr=0;
+      /* each source opens on its own default period, unless one was chosen */
+      if(S.per===defaultPer(FIELDS.find(x=>x.src===prev))) S.per=defaultPer();
       /* U.S. fields open on Dec-Feb, where the ENSO links are best established; the
          ENSO-year total is dominated by summer, where they are weakest. Only the
          default is switched, and switched back on leaving: a chosen average stays. */
@@ -1968,6 +1972,7 @@ async function init(){
     return;
   }
   const v=readHash();
+  if(!S.per) S.per=defaultPer();
   applyTheme();
   wire();
   try{
