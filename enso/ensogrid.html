@@ -189,7 +189,7 @@
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
   .alertbar b{color:#fff}
   @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} .lmap{min-height:380px}
-    .mainbar .fld:last-child{width:100%}
+    .mainbar .fld:nth-child(2){width:100%}
                             #monthbar .mnow{min-width:0} }
   /* overlap the canvas tiles by a pixel: at fractional zoom the browser
      otherwise leaves a hairline seam between them */
@@ -223,6 +223,7 @@
         <button data-ph="en" title="El Niño years compared with all years">El Ni&ntilde;o</button><button data-ph="ln" title="La Niña years compared with all years">La Ni&ntilde;a</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button><button data-ph="enln" id="enlnBtn" title="El Niño years compared directly with La Niña years (Advanced settings)">El Ni&ntilde;o &minus; La Ni&ntilde;a</button>
       </div></div>
     <div class="fld"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
   </div>
 </header>
 
@@ -276,7 +277,6 @@
       <select id="smSel"><option value="on">1 box</option><option value="off">Raw</option></select></div>
     <div class="fld"><label>&nbsp;</label><label class="chk" title="Dot the patches of boxes where the composite difference is significant: each box at p < 0.05 (two-sided t-test), and the patch as a whole stronger than chance (permutation test; see Methods)"><input type="checkbox" id="sigChk" checked> Dots: significant patches</label></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole field">&#8592; Full view</button></div>
-    <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn" title="Export the lower panels">PNG</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
