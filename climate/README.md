@@ -21,7 +21,7 @@ mean. A side card says what to look for in each field.
   (North America, CONUS, Europe, Asia, Africa, South America, Australia, Arctic, Antarctic).
   Drag pans the map or spins the globe; the wheel and the +/− buttons zoom.
 - **Layout (2026-10-14, after the ENSO grid page):** a top bar with Variable, Show (Months/Season/Annual), Map, Export and
-  Reload default, plus a "Start here" tour row. Below it are the time bar and one map. Everything else is collapsed in
+  Reload default, plus a "Try these" tour row. Below it are the time bar and one map. Everything else is collapsed in
   **Advanced settings**: Range/Peak month, Relative to, units, wind, overlays, speed, theme and copy link. Under the map are
   "What to look for" and the clicked place's seasonal cycle. The zonal-mean and month × latitude panels, the reading guide
   and Methods are collapsed.
