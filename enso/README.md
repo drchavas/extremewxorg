@@ -9,8 +9,14 @@ with every field at every intensity ("Hail — ≥ 1 inch", "Tornadoes — EF2+"
 The averaging strip sits under them. Everything else (strength, period, trend, units, smoothing,
 dots, compare, view/theme/PNG/link buttons) is in a collapsed **Advanced settings** box below the
 map. Below that come the panels, the year lists, Methods and the guidance box. A title bubble in
-the map's top-left corner names the variable. The top bar also holds "Show difference as" (% change / Absolute;
+the map's top-left corner names the variable. The top bar also holds "Show difference as" (Percentage / Absolute;
 grayed for Climatology, % disabled for temperature) and "Reload default". Hash: `ph=en|ln|enln|clim`.
+**Climatology contours** (Advanced, off by default; hash `ct=1`): marching squares on the box
+centers of the displayed climatology (smoothed/masked like the map), drawn over whichever view is
+showing. Levels: temperature every 10 °C (nice steps in °F), precipitation 0.5–16 mm/day doubling,
+snowfall 0.1–4, count fields ~5 nice steps between the 2nd and 98th percentiles. Labels: one per
+level per 45°×60° block (8°×12° on the U.S. grid), on the segment nearest the block center and only
+where the contour has ≥ 4 segments there.
 
 1. **Climatology** — the chosen average over every ENSO year of the period: the **whole ENSO
    year (default)**, a season (Jun–Aug, Sep–Nov, Dec–Feb, Mar–May) or a single month.

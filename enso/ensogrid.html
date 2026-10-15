@@ -97,6 +97,8 @@
   .mapbubble .bs{font-size:12px;color:var(--muted);margin-top:2px}
   html[data-theme="light"] .mapbubble{background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.15)}
   @media (max-width:640px){ .mapbubble{padding:5px 9px 6px;margin:6px 0 0 6px!important} .mapbubble .bv{font-size:14px} .mapbubble .bs{font-size:10.5px} }
+  .clab{font-size:10.5px;font-weight:650;color:#0d1117;white-space:nowrap;transform:translate(-50%,-50%);
+        text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;pointer-events:none}
   .percustom{display:none} body.custom-period .percustom{display:flex}
   .emptychip{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);z-index:640;display:none;max-width:80%;
              text-align:center;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;
@@ -291,6 +293,7 @@
     <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="on">1 box</option><option value="off">Raw</option></select></div>
     <div class="fld"><label>&nbsp;</label><label class="chk" title="Dot the patches of boxes where the composite difference is significant: each box at p < 0.05 (two-sided t-test), and the patch as a whole stronger than chance (permutation test; see Methods)"><input type="checkbox" id="sigChk" checked> Dots: significant patches</label></div>
+    <div class="fld"><label>&nbsp;</label><label class="chk" title="Draw contour lines of the climatology (the normal for this month, season or year) over the map, with their values"><input type="checkbox" id="ctChk"> Climatology contours</label></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole field">&#8592; Full view</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn" title="Export the lower panels">PNG</button></div>
@@ -553,7 +556,7 @@ function classify(thr){
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
 const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
-         sm:'on',sig:1,pt:null,theme:'dark'};
+         sm:'on',sig:1,ct:0,pt:null,theme:'dark'};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
 let ERA5IX=null, TCRAW=null; const SCSRAW={};
@@ -1244,6 +1247,83 @@ function fullView(){
   else mapA.fitBounds([[-75,20],[82,380]],{padding:[0,0],animate:false});
   syncing=false;
 }
+/* ------------------------------------------- climatology contour lines */
+/* Optional (Advanced settings): contours of the climatology drawn over whichever
+   map is showing, so an El Nino or La Nina change can be read against the normal
+   (e.g. a +30% precipitation change in a 1 mm/day desert vs a 10 mm/day monsoon).
+   Marching squares on the box centres, with linear interpolation along the edges
+   and the saddle cases resolved by the cell mean; longitude wraps on a global grid.
+   A few labels per level, at most one per ~30 x 40 degree block (6 x 8 on the U.S. grid). */
+let CONT=null;
+function contourLevels(v0){
+  const v=[]; for(const x of v0) if(isFinite(x)) v.push(x);
+  if(v.length<4) return [];
+  v.sort((a,b)=>a-b);
+  const lo=quantile(v,0.02), hi=quantile(v,0.98);
+  if(isPrecip()){
+    const L=isSnow()?[0.1,0.25,0.5,1,2,4]:[0.5,1,2,4,8,16];
+    return L.filter(x=>x>=lo&&x<=hi);
+  }
+  const ax=niceAxis(lo,hi,isTemp()?12:5), out=[];
+  for(let u=ax.lo;u<=ax.hi+1e-9;u+=ax.step){ const r=+u.toFixed(6); if(r>=lo&&r<=hi&&(isTemp()||r>0)) out.push(r); }
+  return out;
+}
+function contourSegs(vals,lev){
+  const g=DS.grid, NL=g.nlat, NK=g.nlon, A=new Float64Array(NL*NK).fill(NaN);
+  for(let c=0;c<DS.NC;c++) A[DS.cells[c]]=vals[c];
+  const segs=[], kmax=g.global?NK:NK-1;
+  for(let r=0;r<NL-1;r++){
+    const y0=g.lat0+(r+0.5)*g.g, y1=y0+g.g;
+    for(let k=0;k<kmax;k++){
+      const k2=(k+1)%NK;
+      const a=A[r*NK+k], b=A[r*NK+k2], c=A[(r+1)*NK+k2], d=A[(r+1)*NK+k];
+      if(!(a===a&&b===b&&c===c&&d===d)) continue;
+      const idx=(a>lev?1:0)|(b>lev?2:0)|(c>lev?4:0)|(d>lev?8:0);
+      if(idx===0||idx===15) continue;
+      const x0=g.lon0+(k+0.5)*g.g, x1=x0+g.g, t=(p,q)=>(lev-p)/(q-p);
+      const B=[y0,x0+t(a,b)*g.g], R=[y0+t(b,c)*g.g,x1], T=[y1,x0+t(d,c)*g.g], W=[y0+t(a,d)*g.g,x0];
+      switch(idx){
+        case 1: case 14: segs.push([W,B]); break;
+        case 2: case 13: segs.push([B,R]); break;
+        case 3: case 12: segs.push([W,R]); break;
+        case 4: case 11: segs.push([R,T]); break;
+        case 6: case 9:  segs.push([B,T]); break;
+        case 7: case 8:  segs.push([W,T]); break;
+        case 5: case 10: { const hiMid=(a+b+c+d)/4>lev;
+          if((idx===5)===hiMid){ segs.push([W,T]); segs.push([B,R]); } else { segs.push([W,B]); segs.push([R,T]); } }
+      }
+    }
+  }
+  return segs;
+}
+function drawContours(vals){
+  if(CONT){ mapA.removeLayer(CONT); CONT=null; }
+  if(!S.ct||!vals) return;
+  const levs=contourLevels(vals); if(!levs.length) return;
+  const g=DS.grid, shifts=g.global?[-360,0,360]:[0], grp=L.layerGroup();
+  const rend=mapA._ctr||(mapA._ctr=L.canvas({padding:0.5}));
+  /* labels: in each block, the segment nearest the block's centre, and only where the
+     contour has some length there (no labels on specks) */
+  const bl=g.global?[45,60]:[8,12];
+  for(const lev of levs){
+    const segs=contourSegs(vals,lev); if(!segs.length) continue;
+    const lab=String(+lev.toFixed(4)).replace('-','−'), best=new Map();
+    for(const dx of shifts){
+      grp.addLayer(L.polyline(dx?segs.map(s=>s.map(p=>[p[0],p[1]+dx])):segs,
+        {renderer:rend,interactive:false,color:'#0d1117',weight:1.1,opacity:.75}));
+    }
+    for(const s of segs){
+      const la=(s[0][0]+s[1][0])/2, lo=(s[0][1]+s[1][1])/2, bi=Math.floor(la/bl[0]), bj=Math.floor(lo/bl[1]), key=bi+':'+bj;
+      const dc=Math.hypot(la-(bi+0.5)*bl[0],lo-(bj+0.5)*bl[1]), cur=best.get(key);
+      if(!cur) best.set(key,{la,lo,dc,n:1});
+      else { cur.n++; if(dc<cur.dc){ cur.la=la; cur.lo=lo; cur.dc=dc; } }
+    }
+    for(const b of best.values()){ if(b.n<4) continue;
+      for(const dx of shifts) grp.addLayer(L.marker([b.la,b.lo+dx],{interactive:false,keyboard:false,
+        icon:L.divIcon({className:'clab',html:lab,iconSize:null})})); }
+  }
+  CONT=grp.addTo(mapA);
+}
 function drawSelection(){
   const t=T();
   selA.forEach(l=>mapA.removeLayer(l)); selA.length=0;
@@ -1428,6 +1508,7 @@ async function refresh(){
   if(!layA){
     layA=new FieldLayer({which:'A',className:'fieldlayer',tileSize:256,updateWhenZooming:false,keepBuffer:4}).addTo(mapA);
   } else layA.redraw();
+  drawContours(climDisp);
   if(VIEWSCOPE!==(DS.f.src==='scs')){ VIEWSCOPE=(DS.f.src==='scs'); fullView(); }
   drawSelection();
   writeTitles(domD);
@@ -1499,7 +1580,7 @@ function writeTitles(domD){
         warn=document.getElementById('mapWarn');
   if(S.mode==='clim'){
     title.textContent=`Climatology · ${tkLong()}`;
-    sub.innerHTML=esc(`${per}, ${when} all ${win.length} years, ${range} (${unitP})`)+srcTag()+smTag();
+    sub.innerHTML=esc(`${per}, ${when} all ${win.length} years, ${range} (${unitP})`+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
     warn.textContent='';
     const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
     drawColorbar(document.getElementById('cbMain'),CURDOM.clim,climCap,false);
@@ -1508,7 +1589,7 @@ function writeTitles(domD){
     sub.innerHTML=esc(`${per} · ${nTxt} (RONI ≥ ${S.str.toFixed(1)}°C in Dec–Feb), ${range} · `+
       (pctOn()?'% change from climatology':unitAbs())+` · `+
       (S.dt==='on'?'linear trend removed':'trend kept')+
-      (S.sig?' · dots: significant patches':''))+srcTag()+smTag();
+      (S.sig?' · dots: significant patches':'')+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
     /* name the empty case instead of drawing a blank map */
     warn.textContent = need<2
       ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
@@ -1946,6 +2027,7 @@ function syncControls(){
   document.getElementById('smSel').value=S.sm; document.getElementById('dtSel').value=S.dt;
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
+  document.getElementById('ctChk').checked=!!S.ct;
   /* Show: El Nino / La Nina / Climatology; El Nino - La Nina appears only when the
      Advanced "compare" box is ticked */
   const shown=S.mode==='clim'?'clim':S.ph;
@@ -1976,6 +2058,7 @@ function writeHash(){
   if(S.un!=='C') p.set('u',S.un);
   if(S.sm!=='on') p.set('sm',S.sm);
   if(!S.sig) p.set('sg','0');
+  if(S.ct) p.set('ct','1');
   if(S.pt) p.set('c',S.pt[0].toFixed(2)+','+S.pt[1].toFixed(2));
   if(S.theme!=='dark') p.set('k',S.theme);
   if(mapA){ const c=mapA.getCenter(); p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
@@ -2006,6 +2089,7 @@ function readHash(){
   if(p.get('u')==='F') S.un='F';
   if(p.get('sm')==='off') S.sm='off';
   if(p.get('sg')==='0') S.sig=0;
+  if(p.get('ct')==='1') S.ct=1;
   if(p.get('c')){ const [la,lo]=p.get('c').split(',').map(Number); if(isFinite(la)&&isFinite(lo)) S.pt=[la,lo]; }
   if(p.get('k')==='light') S.theme='light';
   return p.get('v');
@@ -2068,6 +2152,7 @@ function wire(){
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; refresh(); };
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
+  document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };
   document.getElementById('usBtn').onclick=()=>fullView();
   document.getElementById('resetBtn').onclick=()=>{ if(location.hash) history.replaceState(null,'',location.pathname); location.reload(); };
   document.getElementById('themeBtn').onclick=function(){
