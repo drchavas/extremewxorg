@@ -73,7 +73,19 @@
 
   #wrap{padding:14px 18px 28px;max-width:1500px;margin:0 auto}
   #msg{padding:60px 18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
-  .main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+  #controls{margin:0 0 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px 10px}
+  .mainbar{gap:12px 20px;padding:0 0 8px}
+  .mainbar .fld>label,.mainbar .fld .lab{font-size:11px}
+  .seg.big button{font-size:14px;padding:7px 15px}
+  select.big{font-size:14px;padding:7px 9px}
+  #fldSel.big{width:340px;max-width:100%}
+  .btn.big{font-size:13.5px;padding:7px 14px}
+  .mainbar .btns{margin-left:auto}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap}
+  .advanced .advbar{padding:2px 0 4px}
+  .advbrk{flex-basis:100%;height:0}
+  .below{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;margin-top:16px;align-items:start}
+  .belowR{display:flex;flex-direction:column;gap:14px;min-width:0}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .maphead{padding:10px 14px 6px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
   .maphead h2{margin:0;font-size:15px;font-weight:650}
@@ -123,7 +135,7 @@
   .readout{padding:10px 15px;font-size:12px;color:var(--muted);line-height:1.55}
   .readout .v{font-size:20px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 
-  #panels{display:grid;grid-template-columns:1.25fr .8fr 1.25fr;gap:16px;margin-top:16px}
+  #panels{display:grid;grid-template-columns:.8fr 1.4fr;gap:16px;margin-top:4px}
   .pcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px 8px;min-width:0;position:relative}
   .pcard h4{margin:0;font-size:12.5px;font-weight:650}
   .pcard .ps{margin:1px 0 4px;font-size:11px;color:var(--muted);line-height:1.35;min-height:15px}
@@ -142,7 +154,8 @@
   .guide{margin:0 0 14px;border:1px solid var(--line);border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
          padding:10px 15px;font-size:12px;color:var(--muted);line-height:1.6}
   .guide b{color:var(--text)}
-  .tours{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .tours{padding-top:8px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+  .tours b{color:var(--text)}
   .chip{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:14px;font:inherit;font-size:12px;
         padding:3px 10px;cursor:pointer}
   .chip:hover{border-color:var(--accent2);color:var(--accent2)}
@@ -163,11 +176,12 @@
   .dbtns{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
   #expPrev{width:100%;border:1px solid var(--line);border-radius:8px;margin-top:10px;display:block;background:var(--sea)}
 
-  @media (max-width:1100px){ .main{grid-template-columns:1fr} #panels{grid-template-columns:1fr 1fr} #pHov{grid-column:1 / -1} }
+  @media (max-width:1000px){ .below{grid-template-columns:1fr} }
   @media (max-width:640px){
     .alertbar{font-size:12px;padding:7px 12px}
     #wrap{padding:10px 10px 24px} header{padding:10px 12px 0}
     #panels{grid-template-columns:1fr} .bigmonth{font-size:17px}
+    .mainbar .btns{margin-left:0} #fldSel.big{width:100%}
     .bar{gap:8px 10px} #fldSel{max-width:100%} .fld.wide{flex:1 1 100%}
     .hint{display:none}
     .mapbtns button{width:26px;height:26px;font-size:14px}
@@ -183,34 +197,26 @@
 <header>
   <h1>EarthVis: Climate and Extremes Through the Year</h1>
   <p><a class="home" href="../">&larr; extremewx.org</a> &middot;
-     Watch the climate move through the year. Pick a field and press <b>Play</b> to animate the average seasonal cycle month by month,
-     or switch to the <b>annual mean</b>, a <b>season</b>, the <b>size of the seasonal cycle</b> or the <b>month of the peak</b>.
-     Every map is the average over <b>1996&ndash;2025</b>: our present-day climate.
-     Drag to pan or spin the globe, scroll to zoom, <b>click anywhere</b> for its seasonal cycle, and <b>Export</b> any animation as a video or GIF for teaching.
-     Related: <a href="../enso/ensogrid.html">El Ni&ntilde;o &amp; La Ni&ntilde;a impacts</a> &middot;
-     <a href="../tc/trends/tctrend.html">TC climatology &amp; trends</a> &middot;
-     <a href="../scs/trends/scstrend_grid.html">U.S. severe weather, 2&deg; grid</a>.
+     The average year of today&rsquo;s climate (1996&ndash;2025). Pick a <b>variable</b> and press <b>Play</b> to watch it change
+     month by month, or show a <b>season</b> or the <b>annual</b> mean. <b>Click anywhere</b> on the map for that place&rsquo;s
+     seasonal cycle, and <b>Export</b> any map or animation for teaching. More options are under <b>Advanced settings</b>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd" id="dataupd">Data last updated 2026-10-14 23:36 UTC</div>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-14 23:36 UTC</span></div>
+</header>
 
-  <div class="bar" id="bar">
-    <div class="fld wide"><label for="fldSel">Field</label><select id="fldSel"></select></div>
-    <div class="fld" id="thrBox"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
-    <div class="fld"><span class="lab">Show</span>
-      <div class="seg" id="viewSeg" role="group" aria-label="Show">
-        <button data-v="month" title="Each month of the average year, animated">Months</button><button data-v="season" title="A three-month season (pick it on the right)">Season</button><button data-v="annual" title="The average over the whole year (for counts: the yearly total)">Annual</button><button data-v="range" title="Size of the seasonal cycle: the largest monthly value minus the smallest">Range</button><button data-v="peak" title="The calendar month with the largest value">Peak month</button>
-      </div></div>
-    <div class="fld" id="seasBox"><label for="seasSel">Season</label>
-      <select id="seasSel"><option value="djf">Dec&ndash;Feb</option><option value="mam">Mar&ndash;May</option><option value="jja">Jun&ndash;Aug</option><option value="son">Sep&ndash;Nov</option></select></div>
-    <div class="fld" id="relBox"><label for="relSel">Relative to</label>
-      <select id="relSel">
-        <option value="val">Nothing (actual value)</option>
-        <option value="anom">Annual mean (seasonal anomaly)</option>
-        <option value="zonal">Zonal mean (east&ndash;west departure)</option>
-      </select></div>
-    <div class="fld"><label for="mapSel">Map</label>
-      <select id="mapSel">
+<div id="wrap">
+  <div id="controls">
+    <div class="bar mainbar">
+      <div class="fld wide"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
+      <div class="fld" id="thrBox"><label for="thrSel">Threshold</label><select id="thrSel" class="big"></select></div>
+      <div class="fld"><span class="lab">Show</span>
+        <div class="seg big" id="viewSeg" role="group" aria-label="Show">
+          <button data-v="month" title="Each month of the average year, animated">Months</button><button data-v="season" title="A three-month season">Season</button><button data-v="annual" title="The average over the whole year (for counts: the yearly total)">Annual</button>
+        </div></div>
+      <div class="fld" id="seasBox"><label for="seasSel">Season</label>
+        <select id="seasSel" class="big"><option value="djf">Dec&ndash;Feb</option><option value="mam">Mar&ndash;May</option><option value="jja">Jun&ndash;Aug</option><option value="son">Sep&ndash;Nov</option></select></div>
+      <div class="fld"><label for="mapSel">Map</label>
+        <select id="mapSel" class="big">
         <option value="ee">World (Equal Earth)</option>
         <option value="eq">World (latitude&ndash;longitude)</option>
         <option value="globe">Globe</option>
@@ -224,68 +230,98 @@
         <option value="np">Arctic</option>
         <option value="sp">Antarctic</option>
       </select></div>
-    <div class="fld" id="unBox"><label for="unSel">Units</label><select id="unSel"></select></div>
-    <div class="fld"><label for="flowSel">Wind flow</label>
-      <select id="flowSel"><option value="off">Off</option><option value="10">10 m</option><option value="850">850 hPa</option>
-        <option value="500">500 hPa</option><option value="250">250 hPa</option></select></div>
-    <div class="fld"><span class="lab">Overlays</span>
-      <div class="chks">
-        <label class="chk"><input type="checkbox" id="cntChk"> Contours</label>
-        <label class="chk"><input type="checkbox" id="bandChk" checked> Banded colors</label>
-        <label class="chk"><input type="checkbox" id="bordChk" checked> Borders</label>
-        <label class="chk"><input type="checkbox" id="gratChk"> Lat/lon grid</label>
-      </div></div>
-    <div class="fld"><label>&nbsp;</label><button class="btn hot" id="expBtn" title="Save the animation as a video or GIF, or the current frame as a PNG">&#11015;&#xFE0E; Export</button></div>
-    <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn" title="Copy a link to exactly this view">Copy link</button></div>
-    <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn" aria-label="Switch color theme">Light</button></div>
-    <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the default view">Reset</button></div>
+      <div class="fld btns"><label>&nbsp;</label><div class="btnrow">
+        <button class="btn hot big" id="expBtn" title="Save the animation as a video or GIF, or the current frame as a PNG">&#11015;&#xFE0E; Export</button>
+        <button class="btn big" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div></div>
+    </div>
+    <div class="tours" id="tours"></div>
   </div>
-</header>
-
-<div id="wrap">
-  <div class="guide" id="guide"></div>
   <div id="msg">Loading&hellip;</div>
   <div id="body" style="display:none">
-    <div class="main">
-      <div class="card" id="mapcard">
-        <div class="maphead">
-          <div><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p></div>
-          <div class="bigmonth" id="bigMonth">&nbsp;</div>
+    <div class="card" id="mapcard">
+      <div class="maphead">
+        <div><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p></div>
+        <div class="bigmonth" id="bigMonth">&nbsp;</div>
+      </div>
+      <div id="timebar">
+        <button class="btn" id="playBtn" title="Play / pause (space bar)">&#9654;&#xFE0E; Play</button>
+        <button class="btn" id="prevBtn" title="Previous month (&larr;)" aria-label="Previous month">&#9664;</button>
+        <div class="ttrack">
+          <input type="range" id="tRange" min="0" max="12" step="0.001" value="0" aria-label="Time of year">
+          <div class="tticks" id="tTicks"></div>
         </div>
-        <div id="timebar">
-          <button class="btn" id="playBtn" title="Play / pause (space bar)">&#9654;&#xFE0E; Play</button>
-          <button class="btn" id="prevBtn" title="Previous month (&larr;)" aria-label="Previous month">&#9664;</button>
-          <div class="ttrack">
-            <input type="range" id="tRange" min="0" max="12" step="0.001" value="0" aria-label="Time of year">
-            <div class="tticks" id="tTicks"></div>
-          </div>
-          <button class="btn" id="nextBtn" title="Next month (&rarr;)" aria-label="Next month">&#9654;</button>
+        <button class="btn" id="nextBtn" title="Next month (&rarr;)" aria-label="Next month">&#9654;</button>
+      </div>
+      <div id="stage" role="img" aria-label="Map of the selected field; click a place to see its seasonal cycle">
+        <canvas id="cvMap"></canvas><canvas id="cvFlow"></canvas><canvas id="cvTop"></canvas>
+        <div class="mapbtns"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zHome" title="Reset the map view" aria-label="Reset the map view">&#8962;</button></div>
+        <div class="loadchip" id="loadchip">Loading&hellip;</div>
+        <div class="loadchip errchip" id="errchip" role="alert"></div>
+        <div class="tip" id="tip"></div>
+        <div class="hint" id="hint">drag &middot; Ctrl+scroll to zoom &middot; click a place</div>
+      </div>
+      <div class="cbwrap"><canvas id="cbar"></canvas></div>
+    </div>
+
+    <details class="methods advanced" id="advanced">
+      <summary>Advanced settings</summary>
+      <div class="body">
+        <div class="bar advbar">
+          <div class="fld"><span class="lab">Other views</span>
+            <div class="seg" id="viewSeg2" role="group" aria-label="Other views">
+              <button data-v="range" title="Size of the seasonal cycle: the largest monthly value minus the smallest">Range</button><button data-v="peak" title="The calendar month with the largest value">Peak month</button>
+            </div></div>
+          <div class="fld" id="relBox"><label for="relSel">Relative to</label>
+            <select id="relSel">
+              <option value="val">Nothing (actual value)</option>
+              <option value="anom">Annual mean (seasonal anomaly)</option>
+              <option value="zonal">Zonal mean (east&ndash;west departure)</option>
+            </select></div>
+          <div class="fld" id="unBox"><label for="unSel">Units</label><select id="unSel"></select></div>
+          <div class="fld"><label for="flowSel">Wind</label>
+            <select id="flowSel"><option value="off">Off</option><option value="10">10 m</option><option value="850">850 hPa</option>
+              <option value="500">500 hPa</option><option value="250">250 hPa</option></select></div>
+          <div class="fld"><span class="lab">Wind as</span>
+            <div class="seg" id="wsSeg" role="group" aria-label="Draw the wind as">
+              <button data-ws="arrows" title="Static arrows: direction and speed, clear in exported images and videos">Arrows</button><button data-ws="streaks" title="Moving streaks that follow the flow (screen only)">Moving streaks</button>
+            </div></div>
           <div class="fld"><label for="spdSel">Speed</label>
             <select id="spdSel"><option value="0.35">Slow</option><option value="0.7" selected>Normal</option><option value="1.4">Fast</option></select></div>
-          <label class="chk" title="Glide smoothly between monthly means rather than jumping from one month to the next"><input type="checkbox" id="smoothChk" checked> Smooth between months</label>
+          <div class="advbrk"></div>
+          <div class="fld"><div class="chks">
+            <label class="chk" title="Glide smoothly between monthly means rather than jumping from one month to the next"><input type="checkbox" id="smoothChk" checked> Smooth between months</label>
+            <label class="chk"><input type="checkbox" id="cntChk"> Contours</label>
+            <label class="chk"><input type="checkbox" id="bandChk" checked> Banded colors</label>
+            <label class="chk"><input type="checkbox" id="bordChk" checked> Borders</label>
+            <label class="chk"><input type="checkbox" id="gratChk"> Lat/lon grid</label>
+          </div></div>
+          <div class="fld"><div class="btnrow"><button class="btn" id="themeBtn" aria-label="Switch color theme">Light</button>
+            <button class="btn" id="linkBtn" title="Copy a link to exactly this view">Copy link</button></div></div>
         </div>
-        <div id="stage" role="img" aria-label="Map of the selected field; click a place to see its seasonal cycle">
-          <canvas id="cvMap"></canvas><canvas id="cvFlow"></canvas><canvas id="cvTop"></canvas>
-          <div class="mapbtns"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zHome" title="Reset the map view" aria-label="Reset the map view">&#8962;</button></div>
-          <div class="loadchip" id="loadchip">Loading&hellip;</div>
-          <div class="loadchip errchip" id="errchip" role="alert"></div>
-          <div class="tip" id="tip"></div>
-          <div class="hint" id="hint">drag to pan &middot; Ctrl+scroll to zoom &middot; click for the seasonal cycle there</div>
-        </div>
-        <div class="cbwrap"><canvas id="cbar"></canvas></div>
       </div>
-      <div class="side">
-        <div class="card about" id="about"></div>
+    </details>
+
+    <div class="below">
+      <div class="card about" id="about"></div>
+      <div class="belowR">
         <div class="card readout" id="readout"></div>
+        <div class="pcard" id="pCyc"><h4 id="cycTitle">Seasonal cycle</h4><div class="ps" id="cycSub"></div><svg id="cycSvg"></svg><div class="legend" id="cycLeg"></div><div class="tip" id="cycTip"></div></div>
       </div>
     </div>
-    <div id="panels">
-      <div class="pcard" id="pCyc"><h4 id="cycTitle">Seasonal cycle</h4><div class="ps" id="cycSub"></div><svg id="cycSvg"></svg><div class="legend" id="cycLeg"></div><div class="tip" id="cycTip"></div></div>
-      <div class="pcard" id="pZon"><h4>Zonal mean</h4><div class="ps" id="zonSub"></div><svg id="zonSvg"></svg></div>
-      <div class="pcard" id="pHov"><h4>Zonal mean through the year</h4><div class="ps" id="hovSub"></div><svg id="hovSvg"></svg></div>
-    </div>
-    <div class="foot" id="foot"></div>
+
+    <details class="methods" id="morePanels">
+      <summary>More panels: zonal mean and month &times; latitude</summary>
+      <div class="body"><div id="panels">
+        <div class="pcard" id="pZon"><h4>Zonal mean</h4><div class="ps" id="zonSub"></div><svg id="zonSvg"></svg></div>
+        <div class="pcard" id="pHov"><h4>Zonal mean through the year</h4><div class="ps" id="hovSub"></div><svg id="hovSvg"></svg></div>
+      </div></div>
+    </details>
+    <details class="methods" id="guideBox">
+      <summary>How to read these maps</summary>
+      <div class="body"><div id="guide"></div></div>
+    </details>
     <details class="methods" id="methods"><summary>Methods, data and caveats</summary><div class="body" id="methodsBody"></div></details>
+    <div class="foot" id="foot"></div>
   </div>
 </div>
 
@@ -662,7 +698,7 @@ async function gzFetch(url,binary){
 
 /* ------------------------------------------------------------------ state */
 const S={f:'t2m',thr:0,p:'p9625',view:'month',seas:'jja',rel:'val',map:'ee',un:{},flow:'auto',
-         cnt:'auto',band:1,bord:1,grat:0,smooth:1,spd:0.7,t:0,theme:'dark',pt:null,
+         cnt:'auto',band:1,bord:1,grat:0,smooth:1,spd:0.7,t:0,theme:'dark',ws:'arrows',pt:null,
          rot:null,zoom:1,pan:[0,0]};
 let IX=null;                       // data/index.json
 const VCACHE=new Map();            // 'var|period' -> Promise<Float32Array(12*64800)>
@@ -1016,8 +1052,49 @@ class MapView{
     if(opt.bord&&P.borders){ c.strokeStyle=T.halo; c.lineWidth=1.4; c.stroke(P.borders); c.strokeStyle=T.border; c.lineWidth=0.55; c.stroke(P.borders); }
     if(opt.bord&&P.states){ c.strokeStyle=T.halo; c.lineWidth=1.3; c.stroke(P.states); c.strokeStyle=T.border; c.lineWidth=0.5; c.stroke(P.states); }
     if(P.coast){ c.strokeStyle=T.halo; c.lineWidth=reg?2.1:1.7; c.stroke(P.coast); c.strokeStyle=T.coast; c.lineWidth=reg?1:0.8; c.stroke(P.coast); }
+    if(opt.arrows) this.drawArrows(c,opt.arrows,T);
     c.restore();
     c.strokeStyle=T.rim; c.lineWidth=1; c.stroke(P.sphere);
+    if(opt.arrows) this.arrowKey(c,opt.arrows,T);
+  }
+  /* Static wind arrows on a regular screen grid: direction from the local projected wind direction,
+     length proportional to speed (full length at the level's reference speed, capped at 1.3x). */
+  arrowGeom(){ const sp=clamp(Math.round(Math.min(this.W,this.H*2)/34),16,40); return {sp,maxL:sp*0.95}; }
+  drawArrows(c,a,T){
+    const {sp,maxL}=this.arrowGeom(), p=this.proj, L=this.lut, ref=a.ref, r=Math.PI/180;
+    if(!L) return;
+    const ink=a.ink, dark=ink.indexOf('255,255,255')<0, path=new Path2D();
+    const off=((this.W%sp)/2)+sp/2, offy=((this.H%sp)/2)+sp/2;
+    for(let y=offy;y<this.H;y+=sp) for(let x=off;x<this.W;x+=sp){
+      const i=Math.min(L.w-1,Math.floor(x*L.fs)), j=Math.min(L.h-1,Math.floor(y*L.fs)), k=j*L.w+i;
+      const lon=L.lon[k], lat=L.lat[k]; if(!(lon===lon)||Math.abs(lat)>88) continue;
+      const u=sampleGrid(a.U,0,GRID1,lon,lat,false), v=sampleGrid(a.V,0,GRID1,lon,lat,false);
+      if(!(u===u&&v===v)) continue;
+      const spd=Math.hypot(u,v); if(spd<0.25) continue;
+      const d=0.4, q0=p([lon,lat]), q1=p([lon+d*u/spd/Math.max(0.2,Math.cos(lat*r)),lat+d*v/spd]);
+      if(!q0||!q1) continue;
+      let dx=q1[0]-q0[0], dy=q1[1]-q0[1]; const n=Math.hypot(dx,dy); if(!(n>1e-6)||n>sp) continue;
+      dx/=n; dy/=n;
+      const len=Math.max(3,maxL*Math.min(1.3,spd/ref)), hx=x+dx*len/2, hy=y+dy*len/2, tx=x-dx*len/2, ty=y-dy*len/2;
+      const hs=Math.min(6,Math.max(2.6,len*0.32)), ca=0.906, sa=0.423;   // head half-angle 25 deg
+      path.moveTo(tx,ty); path.lineTo(hx,hy);
+      path.moveTo(hx-hs*(dx*ca-dy*sa),hy-hs*(dy*ca+dx*sa)); path.lineTo(hx,hy); path.lineTo(hx-hs*(dx*ca+dy*sa),hy-hs*(dy*ca-dx*sa));
+    }
+    c.lineCap='round'; c.lineJoin='round';
+    c.strokeStyle=dark?'rgba(255,255,255,.5)':'rgba(6,10,16,.55)'; c.lineWidth=2.8; c.stroke(path);
+    c.strokeStyle=ink.replace('A','.92'); c.lineWidth=1.2; c.stroke(path);
+  }
+  arrowKey(c,a,T){
+    const {maxL}=this.arrowGeom(), fs=Math.max(10,Math.round(this.W/95));
+    const lab=a.label, pad=6; c.save();
+    c.font=`${fs}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
+    const tw=c.measureText(lab).width, bw=maxL+tw+pad*3, bh=fs+pad*2, x0=this.W-bw-8, y0=this.H-bh-8;
+    c.fillStyle=T.keybg; c.strokeStyle=T.rim; c.lineWidth=1; c.beginPath(); c.rect(x0,y0,bw,bh); c.fill(); c.stroke();
+    const ym=y0+bh/2, xs=x0+pad, xe=xs+maxL;
+    c.strokeStyle=T.ink; c.lineWidth=1.4; c.lineCap='round'; c.beginPath(); c.moveTo(xs,ym); c.lineTo(xe,ym);
+    c.moveTo(xe-5,ym-2.6); c.lineTo(xe,ym); c.lineTo(xe-5,ym+2.6); c.stroke();
+    c.fillStyle=T.ink; c.textBaseline='middle'; c.fillText(lab,xe+pad,ym+0.5);
+    c.restore();
   }
   /* marching squares on the grid, drawn as projected segments (fast enough to redo each frame) */
   drawContours(c,X,grid,cs,T){
@@ -1151,10 +1228,10 @@ async function loadGeo(){
 }
 
 const THEME={
-  dark:{sea:'#0b1119',land:'#1a2430',coast:'rgba(8,12,18,.92)',border:'rgba(8,12,18,.6)',halo:'rgba(235,240,245,.42)',grat:'rgba(200,210,220,.18)',
+  dark:{keybg:'rgba(15,23,32,.82)',sea:'#0b1119',land:'#1a2430',coast:'rgba(8,12,18,.92)',border:'rgba(8,12,18,.6)',halo:'rgba(235,240,245,.42)',grat:'rgba(200,210,220,.18)',
         rim:'rgba(160,175,190,.5)',cnt:'rgba(10,14,20,.55)',cntBold:'rgba(10,14,20,.9)',flow:'rgba(255,255,255,A)',flowA:['.35','.6','.85'],
         ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',grid:'#22303f',panel:'#16212e',sel:'#ff3ecb',zero:'rgba(255,255,204,.18)'},
-  light:{sea:'#e8eef4',land:'#d5dbe1',coast:'rgba(15,22,30,.88)',border:'rgba(15,22,30,.5)',halo:'rgba(255,255,255,.45)',grat:'rgba(30,40,55,.16)',
+  light:{keybg:'rgba(255,255,255,.88)',sea:'#e8eef4',land:'#d5dbe1',coast:'rgba(15,22,30,.88)',border:'rgba(15,22,30,.5)',halo:'rgba(255,255,255,.45)',grat:'rgba(30,40,55,.16)',
         rim:'rgba(60,75,90,.5)',cnt:'rgba(10,14,20,.5)',cntBold:'rgba(10,14,20,.85)',flow:'rgba(12,18,30,A)',flowA:['.3','.55','.8'],
         ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',grid:'#e6ecf2',panel:'#ffffff',sel:'#c2007a',zero:'rgba(140,140,90,.14)'}
 };
@@ -1285,7 +1362,7 @@ async function prepare(){
     await prepareFlow(nd);
     if(gen!==PREP_GEN) return;
     D=nd; BUF.X=new Float32Array(N); BUF.Xd=new Float32Array(N);
-    if(FLOW&&VIEW&&VIEW.lut){ if(D.flow) FLOW.reset(particleCount(VIEW)); else { FLOW.P=null; clearFlow(); } }
+    if(FLOW&&VIEW&&VIEW.lut){ if(streaksOn()) FLOW.reset(particleCount(VIEW)); else { FLOW.P=null; clearFlow(); } }
     writeTitles(); drawColorbar(); writeAbout(); syncControls(); writeHash();
     DIRTY=true; PANELT=0;
     panelsSoon(true);
@@ -1312,6 +1389,14 @@ async function prepareFlow(d){
   else if(S.view==='season'){ const ms=SEASONS[S.seas].m; fl.U=meanOver(u,64800,ms,false); fl.V=meanOver(v,64800,ms,false); fl.static=true; }
   d.flow=fl;
 }
+const AREF={'10':10,'850':15,'500':25,'250':40};      // m/s drawn at full arrow length
+function arrowSpec(view,t){
+  if(!D||!D.flow||S.ws!=='arrows') return null;
+  const uv=flowUV(t), ref=AREF[D.flow.lv]||15, uw=UNITS.wind.find(u=>u.k===S.un.wind)||UNITS.wind[0];
+  const lv=D.flow.lv==='10'?'10 m':D.flow.lv+' hPa';
+  return {U:uv.U,V:uv.V,ref,ink:flowInk(view),label:`${lv} wind: ${+uw.to(ref).toFixed(0)} ${uw.u}`};
+}
+function streaksOn(){ return !!(D&&D.flow&&S.ws==='streaks'); }
 function flowInk(v){ return v.lum>0.52?'rgba(10,16,28,A)':'rgba(255,255,255,A)'; }
 function particleCount(v){ return Math.round(clamp(v.W*v.H/170,500,4500)); }
 function clearFlow(){ const c=document.getElementById('cvFlow'); c.getContext('2d').clearRect(0,0,c.width,c.height); }
@@ -1452,7 +1537,7 @@ function drawColorbar(target,W,H,opt){
 function stageSize(){
   const st=document.getElementById('stage'), W=st.clientWidth||900;
   const asp=regionAspect(S.map);
-  const maxH=Math.max(260,window.innerHeight*0.74);
+  const maxH=Math.max(260,window.innerHeight*0.64);   // leaves the time bar and color bar on screen
   let H=Math.round(W*asp); if(H>maxH) H=Math.round(maxH);
   return [W,H];
 }
@@ -1466,7 +1551,7 @@ function setupView(fast){
   VIEW.buildLonLat(fieldRes(W,fast));
   for(const id of ['cvFlow','cvTop']){ const c=document.getElementById(id); c.width=Math.round(W*dpr); c.height=Math.round(H*dpr); }
   if(!FLOW) FLOW=new Flow(VIEW,document.getElementById('cvFlow'));
-  if(D&&D.flow) FLOW.reset(particleCount(VIEW)); else clearFlow();
+  if(streaksOn()) FLOW.reset(particleCount(VIEW)); else clearFlow();
   DIRTY=true;
 }
 function contourSpec(){
@@ -1481,7 +1566,7 @@ function draw(){
   if(!D||!VIEW||!VIEW.lut) return;
   const X=frameX(S.t);
   VIEW.drawField(X,D.grid,D.C,D.boxes);
-  VIEW.render(X,D.grid,D.C,{theme:S.theme,contours:contourSpec(),grat:S.grat,bord:S.bord});
+  VIEW.render(X,D.grid,D.C,{theme:S.theme,contours:contourSpec(),grat:S.grat,bord:S.bord,arrows:arrowSpec(VIEW,S.t)});
   drawTop();
   document.getElementById('bigMonth').textContent=bigMonthText();
   syncTime();
@@ -1503,7 +1588,7 @@ function loop(ts){
   }
   if(EXPORTING){ requestAnimationFrame(loop); return; }
   if(DIRTY&&D){ draw(); DIRTY=false; if(PLAY&&ts-PANELT>120){ panelsNow(false); PANELT=ts; } }
-  if(D&&D.flow&&FLOW&&FLOW.P&&!document.hidden&&!INTERACT){ FLOW.ink=flowInk(VIEW); const uv=flowUV(S.t); FLOW.step(uv.U,uv.V,THEME[S.theme]); }
+  if(streaksOn()&&FLOW&&FLOW.P&&!document.hidden&&!INTERACT){ FLOW.ink=flowInk(VIEW); const uv=flowUV(S.t); FLOW.step(uv.U,uv.V,THEME[S.theme]); }
   requestAnimationFrame(loop);
 }
 
@@ -1596,7 +1681,7 @@ async function drawCycle(){
     const fin=v.filter(y=>y===y);
     if(!isCount(f)&&fin.length===12){ const mu=fin.reduce((a,b)=>a+b,0)/12;
       s+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(mu)}" y2="${Y(mu)}" stroke="${col}" stroke-dasharray="5 4" opacity=".7"/>`+
-         txt(W-mr-2,Y(mu)-4,'annual mean '+mu.toFixed(decFor(ax.st/10)),{a:'end',fs:9.5,c:T.mute}); }
+         txt(ml+4,Y(mu)-4,'annual mean '+mu.toFixed(decFor(ax.st/10)),{fs:9.5,c:T.mute}); }
   }
   s+=`<rect id="cycHit" x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="transparent"/>`;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
@@ -1762,7 +1847,7 @@ function endInteractSoon(){
 function applyView(fast){
   VIEW.v={map:S.map,rot:S.rot,zoom:S.zoom,pan:S.pan}; VIEW.fit();
   VIEW.buildLonLat(fieldRes(VIEW.W,fast));
-  if(FLOW&&D&&D.flow) FLOW.reset(particleCount(VIEW));
+  if(FLOW&&streaksOn()) FLOW.reset(particleCount(VIEW));
   draw();
 }
 function wireStage(){
@@ -1862,7 +1947,9 @@ function syncControls(){
   if(f.thresholds&&S.thr>f.thresholds.length-1) S.thr=f.thresholds.length-1;
   if(f.thresholds){ thrBox.style.display=''; ts.innerHTML=f.thresholds.map((t,i)=>`<option value="${i}">${esc(t.label)}</option>`).join(''); ts.value=Math.min(S.thr,f.thresholds.length-1); }
   else thrBox.style.display='none';
-  document.querySelectorAll('#viewSeg button').forEach(b=>{ b.classList.toggle('on',b.dataset.v===S.view); b.setAttribute('aria-pressed',b.dataset.v===S.view); });
+  document.querySelectorAll('#viewSeg button,#viewSeg2 button').forEach(b=>{ b.classList.toggle('on',b.dataset.v===S.view); b.setAttribute('aria-pressed',b.dataset.v===S.view); });
+  document.querySelectorAll('#wsSeg button').forEach(b=>{ b.classList.toggle('on',b.dataset.ws===S.ws); b.setAttribute('aria-pressed',b.dataset.ws===S.ws); });
+  if(S.view==='range'||S.view==='peak') document.getElementById('advanced').open=true;
   document.getElementById('seasBox').style.display=S.view==='season'?'':'none';
   document.getElementById('seasSel').value=S.seas;
   const rb=document.getElementById('relBox'), rs=document.getElementById('relSel');
@@ -1885,9 +1972,9 @@ function syncControls(){
   document.getElementById('spdSel').value=String(S.spd);
   document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
   const tb=document.getElementById('timebar'); tb.style.opacity=S.view==='month'?1:0.55;
-  document.getElementById('hint').textContent=REGIONS[S.map].kind==='globe'?'drag to spin · Ctrl+scroll to zoom · click for the seasonal cycle there':
-    'drag to pan · Ctrl+scroll to zoom · click for the seasonal cycle there';
-  if(!document.querySelector('#guide .tours')) writeGuide();
+  document.getElementById('hint').textContent=REGIONS[S.map].kind==='globe'?'drag to spin · Ctrl+scroll to zoom · click a place':
+    'drag · Ctrl+scroll to zoom · click a place';
+  if(!document.querySelector('#tours [data-tour]')) writeGuide();
 }
 function syncTime(){
   const r=document.getElementById('tRange'); if(document.activeElement!==r) r.value=S.t;
@@ -1929,13 +2016,13 @@ async function goTour(i){
 }
 function writeGuide(){
   document.getElementById('guide').innerHTML=
-   `<b>How to read this page.</b> Each map is a <b>climatology</b>: the average of many years, not any single year. `+
-   `Every map is the average over <b>1996–2025</b>, the most recent 30 years: present-day climate. `+
-   `<b>Annual</b> averages all twelve months (for storm counts it is the yearly total); <b>Range</b> is the size of the seasonal swing; `+
-   `<b>Peak month</b> colors each place by the month it is highest; <b>Relative to</b> subtracts the annual mean (what each season adds) `+
-   `or the average around the latitude circle (what makes a place unusual for its latitude).`+
-   `<div class="tours"><b>Start here:</b> `+TOURS.map((t,i)=>`<button class="chip" data-tour="${i}">${esc(t.l)}</button>`).join('')+`</div>`;
-  document.querySelectorAll('#guide [data-tour]').forEach(b=>b.addEventListener('click',()=>goTour(+b.dataset.tour)));
+   `Each map is a <b>climatology</b>: the average of many years, not any single year, here <b>1996–2025</b>, the most recent 30 years. `+
+   `<b>Months</b> steps through the average year; <b>Season</b> and <b>Annual</b> average its months (for storm counts they are totals). `+
+   `Under <b>Advanced settings</b>: <b>Range</b> is the size of the seasonal swing; <b>Peak month</b> colors each place by the month it is highest; `+
+   `<b>Relative to</b> subtracts the annual mean (what each season adds) or the average around the latitude circle (what makes a place unusual for its latitude); `+
+   `and the wind can be drawn as arrows (length = speed, with a key in the corner) or as moving streaks.`;
+  document.getElementById('tours').innerHTML=`<b>Start here:</b> `+TOURS.map((t,i)=>`<button class="chip" data-tour="${i}">${esc(t.l)}</button>`).join('');
+  document.querySelectorAll('#tours [data-tour]').forEach(b=>b.addEventListener('click',()=>goTour(+b.dataset.tour)));
 }
 function wireControls(){
   const on=(id,ev,fn)=>document.getElementById(id).addEventListener(ev,fn);
@@ -1946,20 +2033,26 @@ function wireControls(){
     if(old.src==='scs'&&f.src!=='scs'&&S.map==='us'){ S.map='ee'; S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); }
     prepare(); });
   on('thrSel','change',e=>{ S.thr=+e.target.value; CYC=null; prepare(); });
-  document.querySelectorAll('#viewSeg button').forEach(b=>b.addEventListener('click',()=>{ S.view=b.dataset.v; if(S.view!=='month') setPlay(false);
+  document.querySelectorAll('#viewSeg button,#viewSeg2 button').forEach(b=>b.addEventListener('click',()=>{ S.view=b.dataset.v; if(S.view!=='month') setPlay(false);
     if(!relAllowed()&&!(S.rel==='zonal'&&S.view==='annual')) S.rel='val';   // a disabled choice is dropped, not kept hidden
     prepare(); }));
   on('seasSel','change',e=>{ S.seas=e.target.value; prepare(); });
   on('relSel','change',e=>{ S.rel=e.target.value; prepare(); });
   on('mapSel','change',e=>{ S.map=e.target.value; S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); syncControls(); writeHash(); panelsSoon(false); });
   on('unSel','change',e=>{ S.un[F().kind]=e.target.value; CYC=null; prepare(); });
-  on('flowSel','change',async e=>{ S.flow=e.target.value;
+  on('flowSel','change',async e=>{ S.flow=e.target.value; DIRTY=true;
     try{ await prepareFlow(); }catch(err){ console.error(err); showErr('Could not load the wind flow: '+err.message); D.flow=null; S.flow='off'; syncControls(); } if(D.flow&&FLOW&&VIEW.lut) FLOW.reset(particleCount(VIEW)); else { if(FLOW) FLOW.P=null; clearFlow(); } writeHash(); });
   on('cntChk','change',e=>{ S.cnt=e.target.checked?1:0; DIRTY=true; writeHash(); });
   on('bandChk','change',e=>{ S.band=e.target.checked?1:0; prepare(); });
   on('bordChk','change',e=>{ S.bord=e.target.checked?1:0; DIRTY=true; writeHash(); });
   on('gratChk','change',e=>{ S.grat=e.target.checked?1:0; DIRTY=true; writeHash(); });
   on('smoothChk','change',e=>{ S.smooth=e.target.checked?1:0; DIRTY=true; writeHash(); });
+  document.querySelectorAll('#wsSeg button').forEach(b=>b.addEventListener('click',()=>{
+    S.ws=b.dataset.ws; if(S.flow==='off'&&flowLevel()==='off') S.flow='850';
+    (async()=>{ if(!D.flow) try{ await prepareFlow(); }catch(e){ showErr('Could not load the wind: '+e.message); }
+      if(streaksOn()) FLOW.reset(particleCount(VIEW)); else { FLOW.P=null; clearFlow(); }
+      syncControls(); writeHash(); DIRTY=true; })();
+  }));
   on('spdSel','change',e=>{ S.spd=+e.target.value; writeHash(); });
   on('playBtn','click',()=>setPlay(!PLAY));
   on('prevBtn','click',()=>stepMonth(-1));
@@ -1999,6 +2092,7 @@ function writeHash(){
   h.set('m',S.map);
   const uk=Object.entries(S.un).map(([k,v])=>k+':'+v).join(','); if(uk) h.set('u',uk);
   if(S.flow!=='auto') h.set('fl',S.flow);
+  if(S.ws!=='arrows') h.set('ws',S.ws);
   if(S.cnt!=='auto') h.set('c',S.cnt);
   if(!S.band) h.set('b','0'); if(!S.bord) h.set('bd','0'); if(S.grat) h.set('g','1'); if(!S.smooth) h.set('sm','0');
   if(S.spd!==0.7) h.set('sp',S.spd);
@@ -2021,6 +2115,7 @@ function readHash(){
   if(REGIONS[h.get('m')]) S.map=h.get('m');
   if(h.has('u')) for(const kv of h.get('u').split(',')){ const [k,v]=kv.split(':'); if(UNITS[k]&&UNITS[k].some(u=>u.k===v)) S.un[k]=v; }
   if(['off','10','850','500','250'].includes(h.get('fl'))) S.flow=h.get('fl');
+  if(h.get('ws')==='streaks') S.ws='streaks';
   if(h.has('c')) S.cnt=+h.get('c')?1:0;
   if(h.get('b')==='0') S.band=0; if(h.get('bd')==='0') S.bord=0; if(h.get('g')==='1') S.grat=1; if(h.get('sm')==='0') S.smooth=0;
   if(h.has('sp')) S.spd=+h.get('sp')||0.7;
@@ -2088,7 +2183,7 @@ async function init(){
    shows exactly what the map shows. MP4: WebCodecs H.264 + mp4-muxer; WebM via
    MediaRecorder where WebCodecs is missing; GIF via gifenc with one palette.    */
 let EXPORTING=false, EXP_CANCEL=false;
-function isAnimated(){ return S.view==='month'||!!(D&&D.flow); }
+function isAnimated(){ return S.view==='month'||streaksOn(); }
 function openExport(){
   const dlg=document.getElementById('expDlg');
   const anim=isAnimated();
@@ -2133,7 +2228,7 @@ function makeComposer(W,H){
   const mapCv=document.createElement('canvas');
   const mv=new MapView(mapCv); mv.setup(mw,mh,1,{map:S.map,rot:S.rot,zoom:S.zoom,pan:S.pan}); mv.buildLonLat(1);
   let fl=null, flCv=null;
-  if(D.flow){ flCv=document.createElement('canvas'); flCv.width=mw; flCv.height=mh; fl=new Flow(mv,flCv); fl.reset(particleCount(mv),987654); }
+  if(streaksOn()){ flCv=document.createElement('canvas'); flCv.width=mw; flCv.height=mh; fl=new Flow(mv,flCv); fl.reset(particleCount(mv),987654); }
   const T=THEME[S.theme], bg=S.theme==='dark'?'#0f1720':'#ffffff', ink=T.ink, mute=T.mute, acc=S.theme==='dark'?'#ffb14e':'#a35a08';
   const font=(px,w)=>`${w||400} ${Math.round(px*s)}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
   const f=F(), title=f.label+thrLabel()+(relLabel()?' — '+relLabel():'');
@@ -2143,7 +2238,7 @@ function makeComposer(W,H){
   function render(t,steps){
     const X=frameX(t);
     mv.drawField(X,D.grid,D.C,D.boxes);
-    mv.render(X,D.grid,D.C,{theme:S.theme,contours:contourSpec(),grat:S.grat,bord:S.bord});
+    mv.render(X,D.grid,D.C,{theme:S.theme,contours:contourSpec(),grat:S.grat,bord:S.bord,arrows:arrowSpec(mv,t)});
     if(fl){ fl.ink=flowInk(mv); const uv=flowUV(t); for(let k=0;k<(steps||1);k++) fl.step(uv.U,uv.V,T,0.075); }
     ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
     ctx.textBaseline='alphabetic'; ctx.textAlign='left';

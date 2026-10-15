@@ -20,8 +20,14 @@ mean. A side card says what to look for in each field.
 - **Map:** Equal Earth, latitude–longitude, a draggable globe, and regional conic/azimuthal views
   (North America, CONUS, Europe, Asia, Africa, South America, Australia, Arctic, Antarctic).
   Drag pans the map or spins the globe; the wheel and the +/− buttons zoom.
-- **Wind flow:** particles advected by the monthly-mean wind at 10 m, 850, 500 or 250 hPa,
-  over any field. Each wind field defaults to its own level.
+- **Layout (2026-10-14, after the ENSO grid page):** a top bar with Variable, Show (Months/Season/Annual), Map, Export and
+  Reload default, plus a "Start here" tour row. Below it are the time bar and one map. Everything else is collapsed in
+  **Advanced settings**: Range/Peak month, Relative to, units, wind, overlays, speed, theme and copy link. Under the map are
+  "What to look for" and the clicked place's seasonal cycle. The zonal-mean and month × latitude panels, the reading guide
+  and Methods are collapsed.
+- **Wind:** drawn by default as **static arrows** (length = speed, full length at 10/15/25/40 m/s for 10 m/850/500/250 hPa,
+  with a key in the map's corner) at each field's default level. The arrows are part of the map, so PNG/GIF/MP4 exports
+  include them. "Moving streaks" (particles, screen only) is an option under Advanced. The URL hash `ws=streaks` sets it.
 - **Export:** MP4 (WebCodecs H.264 + `lib/mp4-muxer.js`; VP9 if the browser has no H.264
   encoder; WebM through MediaRecorder if it has no WebCodecs), animated GIF (`lib/gifenc.esm.js`,
   one palette for the whole loop) or PNG. Frames are drawn off-screen at 720p, 1080p or square
