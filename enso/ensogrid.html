@@ -78,6 +78,7 @@
   /* The month strip: June of the developing year through May of the next. */
   #monthbar{max-width:1100px;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);
             border-radius:10px;padding:10px 16px 8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  #monthbar .mnote{font-size:11.5px;color:var(--muted);margin-top:5px}
   #monthbar .mlab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
   #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
   #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext{opacity:.35}
@@ -228,7 +229,7 @@
         <button data-ph="en" title="El Niño years compared with all years">El Ni&ntilde;o</button><button data-ph="ln" title="La Niña years compared with all years">La Ni&ntilde;a</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button><button data-ph="enln" id="enlnBtn" title="El Niño years compared directly with La Niña years (Advanced settings)">El Ni&ntilde;o &minus; La Ni&ntilde;a</button>
       </div></div>
     <div class="fld"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
-    <div class="fld" id="pcWrap"><label>Show as</label>
+    <div class="fld" id="pcWrap"><label>Show difference as</label>
       <div class="seg big" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
             <button data-pc="pct">Percentage</button><button data-pc="abs">Absolute</button></div>
     </div>
@@ -240,9 +241,9 @@
   <div id="monthbar">
     <div><div class="mlab">Average over</div>
       <div class="seg" id="avSeg" role="group" aria-label="Average over">
-        <button data-av="yr" title="The whole ENSO year, June (year 0) to May (year +1)">ENSO year</button><button data-av="jja" title="June–August of year 0">Jun–Aug</button><button data-av="son" title="September–November of year 0">Sep–Nov</button><button data-av="djf" title="December (year 0) – February (year +1)">Dec–Feb</button><button data-av="mam" title="March–May of year +1">Mar–May</button><button data-av="mon" title="One month at a time, with the slider">Month</button>
-      </div></div>
-    <div><div class="mlab">Showing</div><div class="mnow" id="mNow">&nbsp;</div></div>
+        <button data-av="yr" title="The whole ENSO year, June (year 0) to May (year +1)">ENSO year (Jun&ndash;May)</button><button data-av="jja" title="June–August of year 0">Jun–Aug</button><button data-av="son" title="September–November of year 0">Sep–Nov</button><button data-av="djf" title="December (year 0) – February (year +1)">Dec–Feb</button><button data-av="mam" title="March–May of year +1">Mar–May</button><button data-av="mon" title="One month at a time, with the slider">Month</button>
+      </div>
+      <div class="mnote">ENSO year is Jun&ndash;May (ex: 1997&ndash;1998 = June 1997 &ndash; May 1998)</div></div>
     <button class="btn" id="mPrev" title="Previous month" aria-label="Previous month">&#9664;</button>
     <div class="mtrack">
       <input type="range" id="mRange" min="0" max="11" step="1" value="6" aria-label="Month">
@@ -1515,9 +1516,6 @@ function writeTitles(domD){
     e.textContent=empty?`No derechos in ${S.av==='mon'?MFULL[MSEQ[S.mi]-1]:AV().label}: the archive holds only April–August events.`:''; });
   if(empty) warn.textContent='The derecho archive holds only April–August events, so this season or month is empty by construction.';
   const m=MSEQ[S.mi];
-  document.getElementById('mNow').innerHTML = S.av==='mon'
-    ? `${MFULL[m-1]} <small>${m>=6?'of the developing year (0)':'of the following year (+1)'}</small>`
-    : `${esc(AV().long)} <small>${S.av==='yr'?'e.g. 1997–1998 = June 1997 – May 1998':(isCount()?'total over its three months':'mean of its three months')}</small>`;
   document.querySelectorAll('#mTicks > span').forEach((s,i)=>s.classList.toggle('on',S.av==='mon'&&i===S.mi));
   document.querySelectorAll('#avSeg button').forEach(bt=>{ const on=bt.dataset.av===S.av;
     bt.classList.toggle('on',on); bt.setAttribute('aria-pressed',on); });
