@@ -479,7 +479,7 @@ const FIELDS=[
  {k:'derechoday',grp:G.U,label:'Derecho',src:'scs',file:'grid_derechoday.json.gz',kind:'count',unitWord:'events',cmap:'seq'},
 
  /* own period: the public Tornado Archive file ends in 2021 */
- {k:'tatorn',grp:G.A,label:'Tornado (worldwide)',src:'ta',file:'data/ta_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq',
+ {k:'tatorn',grp:G.A,label:'Tornado (worldwide, incomplete)',src:'ta',file:'data/ta_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq',
   per:{label:'1992–2021',y0:1992,y1:2021}}
 ];
 const FBYK=Object.fromEntries(FIELDS.map(f=>[f.k,f]));
@@ -671,7 +671,7 @@ const ABOUT={
   look:['Damaging thunderstorm wind peaks in <b>June–July</b>, broadly across the East and Midwest.',
         'Reports of gusts of 65 kt and more (measured or estimated) are concentrated in the Plains.'],
   xp:'Most wind reports are estimated from damage, not measured, so they follow trees and people.'},
- tatorn:{d:'Days per month with at least one tornado (at the chosen rating) touching each 2° box, from <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
+ tatorn:{d:'<b>This is an incomplete map.</b> Days per month with at least one tornado (at the chosen rating) touching each 2° box, from <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
   look:['The United States dwarfs everywhere else, partly because it has more tornadoes and partly because it looks for them harder and has for longer.',
         'Elsewhere the seasons differ: southern Canada and eastern China in <b>summer</b> (China peaks in July), Japan in <b>September–October</b>, Argentina\'s Pampas from <b>October to January</b>, southwestern Australia in the <b>cool season</b>.'],
   xp:'Coverage differs by country and by year, so compare places with care. <b>Europe is missing</b> (its <a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a> data are not in the public file). Canada lacks 2010–2016; Japan ends in 2015; Argentina and Brazil end in 2017; Australia is sparse after 2017; Mexico is sparse before 2013; China starts in 2003. The mean divides by every year of the period, so gaps lower those regions. Days are UTC calendar days of the start time; a tornado counts in every box its path touches.'},
@@ -1467,14 +1467,15 @@ function writeTitles(){
   let sub=`${statLabel()} · ${perLabel()} · ${src}`;
   const yu=yearsUsed(); if(yu) sub+=` · ${yu}`;
   const el=document.getElementById('mapSub'); el.innerHTML=esc(sub);
-  if(f.src==='ta') el.innerHTML=el.innerHTML.replace('The Tornado Archive','<a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a>');
   const w=warnings(); if(w) el.innerHTML+=`<br><span class="warn">${esc(w)}</span>`;
+  if(f.src==='ta') el.innerHTML=el.innerHTML.replace('The Tornado Archive','<a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a>')
+    .replace('(ESWD)','(<a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a>)');
   document.title='EarthVis — '+f.label;
 }
 function warnings(){
   const f=F(), w=[];
   if(f.src==='scs') w.push('Counts of storm reports depend on where people live and report; read them as where storms are reported.');
-  if(f.src==='ta') w.push('Records differ greatly between countries and Europe is not included; read this as where tornadoes are recorded.');
+  if(f.src==='ta') w.push('Incomplete map: Europe is not included (ESWD), and records outside the U.S. are partial and uneven. Read this as where tornadoes are recorded, not where they occur.');
   return w.join(' ');
 }
 function monthName(t){ return MFULL[((Math.round(t)%12)+12)%12]; }
