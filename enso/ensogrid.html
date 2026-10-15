@@ -1512,7 +1512,7 @@ function writeTitles(domD){
     /* name the empty case instead of drawing a blank map */
     warn.textContent = need<2
       ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
-      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years: read coherent, dotted patterns, not the value in any single box.`;
+      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years: read coherent patterns (dotted = stronger signal), not the value in any single box.`;
     drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':unitAbs(),true);
   }
   writeBubbles();
