@@ -9,7 +9,7 @@ winds, which would be much smaller). Two layers:
   s200 = |V(200 hPa) - V(850 hPa)|   tropical-cyclone vertical wind shear
 Each zarr chunk holds 8 consecutive 6-hourly times (2 days). To keep the download
 manageable (~10 MB per chunk per wind component) only every STRIDE-th chunk is read
-(default 4: 2 days in every 8, ~30 samples per month-year, every hour of day equally).
+(default 4: 2 days in every 8; the served climatology used STRIDE=2: 2 days in every 4, ~60 samples per month-year).
 Writes OUT_DIR/<s06|s200>_<year>.npy  float32 (12, 121, 240): lat -90..90 (1.5 deg), lon 0..358.5."""
 import os, sys, time, datetime as dt, numpy as np, requests
 from numcodecs import Blosc

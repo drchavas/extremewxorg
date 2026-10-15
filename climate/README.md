@@ -49,7 +49,7 @@ names) and `../scs/trends/geo/states.topo.json.gz`.
 
 ## Data files
 
-`data/era5_<var>_p9625.bin.gz` (one period, 1996–2025; about 16 MB for all 30 variables). Each is a gzip of
+`data/era5_<var>_p9625.bin.gz` (one period, 1996–2025; 32 variable files, about 16.5 MB). Each is a gzip of
 Int16 LE `[12 months][180 rows S→N][360 cols from 0°E]` on 1° boxes (row 0 = 90–89°S).
 
 - Each row is **delta-coded along longitude mod 2^16**: decode it with a running sum mod 65536.
@@ -107,9 +107,11 @@ python3 build_climo.py ../data /tmp/c /tmp/cpl /tmp/cw           # -> data/*.bin
   - ERA5 values use preset levels per field (`lv` in `FIELDS`).
   - Counts use sqrt-spaced levels up to the 99.5th percentile.
   - Anomalies and changes are symmetric about zero, at the 98th percentile of |value|.
+- Albedo and convective share are ratios: their seasons and annual values are the ratio of the summed parts
+  (1 − ΣASR/ΣISR, Σmcpr/Σmtpr), not the mean of monthly ratios.
 - Wind speed is the speed of the monthly-mean vector. Shear is the mean of 6-hourly magnitudes.
-- Peak month is blank where the seasonal cycle is under 1% of the field's color range (ERA5), or
-  where the yearly total is under 3% of the 98th percentile (counts).
+- Peak month is blank where the seasonal cycle (max − min month) is under 1% of the field's color
+  range (ERA5), or under 3% of the 98th-percentile yearly total (counts).
 - The Storm Events maps carry a note that reports follow population. The extremes need at least
   20 of the period's years; 1996–2025 has all of them (derechos start in 1996).
 - Peak month and storm counts are drawn as nearest boxes, never blended between neighbors.
