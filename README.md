@@ -57,7 +57,7 @@ scs/                  Severe convective storms (+ other U.S. hazards)
     data/, geo/         pre-generated data + basemaps (served)
     build_*.py, *.js    build/audit scripts (not served)
 climate/              EarthVis: present-day (1996-2025) climate through the year (new 2026-10-14, BETA)
-  earthvis.html         animated ERA5 climatologies + TC / U.S. severe-weather counts, MP4/GIF export (UNLISTED: no links to it anywhere yet)
+  earthvis.html         animated ERA5 climatologies + TC / U.S. severe-weather counts, MP4/GIF export (listed on the landing page since 2026-10-14)
   data/                 ERA5 monthly climatologies, 1 deg, one gz file per variable (~16 MB)
   lib/                  vendored gifenc + mp4-muxer (MIT)
   build/                fetch/build scripts (served, unlinked); see climate/README.md
@@ -114,7 +114,7 @@ These stay on the Purdue site only (linked from `web.ics.purdue.edu/~dchavas/ext
   TC Ventilation Explorer, TC Potential Size, TC Potential Intensity Explorer (external, MIT-hosted,
   co-developed with Jonathan Lin, Cornell), Atlantic TC Landfall Risk Explorer, SCS Environmental
   Sounding Explorer, Sounding Plotter.
-- (The old Purdue `earthvis.html` GIF page stays there. `climate/earthvis.html` here is its unlisted successor, not linked from anywhere until Dan is ready.)
+- (The old Purdue `earthvis.html` GIF page stays there. `climate/earthvis.html` here is its successor, listed on the landing page; the Purdue page does not link to it yet.)
 
 If any of these should later move here, copy the page + its data into this repo and add a
 link to `index.html`.

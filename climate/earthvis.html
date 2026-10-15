@@ -120,6 +120,7 @@
   /* season, annual, range, peak: no month slider, so a screenshot can't be mistaken for one month */
   #timebar.static #playBtn,#timebar.static #prevBtn,#timebar.static .ttrack,#timebar.static #nextBtn{display:none}
   #timebar.static #expBtn{margin-left:auto}
+  #seasSeg{display:none} #timebar.seas #seasSeg{display:inline-flex}
   .ttrack{flex:1 1 360px;min-width:220px}
   .ttrack input[type=range]{width:100%;margin:0;accent-color:var(--accent2)}
   .tticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);padding:0 1px;user-select:none}
@@ -217,8 +218,6 @@
         <div class="seg big" id="viewSeg" role="group" aria-label="Show">
           <button data-v="month" title="Each month of the average year, animated">Months</button><button data-v="season" title="A three-month season">Season</button><button data-v="annual" title="The average over the whole year (for counts: the yearly total)">Annual</button>
         </div></div>
-      <div class="fld" id="seasBox"><label for="seasSel">Season</label>
-        <select id="seasSel" class="big"><option value="djf">Dec&ndash;Feb</option><option value="mam">Mar&ndash;May</option><option value="jja">Jun&ndash;Aug</option><option value="son">Sep&ndash;Nov</option></select></div>
       <div class="fld"><label for="mapSel">Map</label>
         <select id="mapSel" class="big">
         <option value="ee">World (Equal Earth)</option>
@@ -254,6 +253,7 @@
           <div class="tticks" id="tTicks"></div>
         </div>
         <button class="btn" id="nextBtn" title="Next month (&rarr;)" aria-label="Next month">&#9654;</button>
+        <div class="seg" id="seasSeg" role="group" aria-label="Season"><button data-s="djf">Dec&ndash;Feb</button><button data-s="mam">Mar&ndash;May</button><button data-s="jja">Jun&ndash;Aug</button><button data-s="son">Sep&ndash;Nov</button></div>
         <button class="btn hot" id="expBtn" title="Save this map as a PNG, or the animation as an MP4 video or GIF">&#11015;&#xFE0E; Export</button>
       </div>
       <div id="stage" role="img" aria-label="Map of the selected field; click a place to see its seasonal cycle">
@@ -1965,8 +1965,8 @@ function syncControls(){
   document.querySelectorAll('#viewSeg button,#viewSeg2 button').forEach(b=>{ b.classList.toggle('on',b.dataset.v===S.view); b.setAttribute('aria-pressed',b.dataset.v===S.view); });
   document.querySelectorAll('#wsSeg button').forEach(b=>{ b.classList.toggle('on',b.dataset.ws===S.ws); b.setAttribute('aria-pressed',b.dataset.ws===S.ws); });
   if(S.view==='range'||S.view==='peak') document.getElementById('advanced').open=true;
-  document.getElementById('seasBox').style.display=S.view==='season'?'':'none';
-  document.getElementById('seasSel').value=S.seas;
+  document.getElementById('timebar').classList.toggle('seas',S.view==='season');
+  document.querySelectorAll('#seasSeg button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.seas));
   const rb=document.getElementById('relBox'), rs=document.getElementById('relSel');
   rs.value=S.rel;
   rs.querySelector('option[value="anom"]').disabled=!relAllowed();
@@ -2050,7 +2050,7 @@ function wireControls(){
   document.querySelectorAll('#viewSeg button,#viewSeg2 button').forEach(b=>b.addEventListener('click',()=>{ S.view=b.dataset.v; if(S.view!=='month') setPlay(false);
     if(!relAllowed()&&!(S.rel==='zonal'&&S.view==='annual')) S.rel='val';   // a disabled choice is dropped, not kept hidden
     prepare(); }));
-  on('seasSel','change',e=>{ S.seas=e.target.value; prepare(); });
+  document.querySelectorAll('#seasSeg button').forEach(b=>b.addEventListener('click',()=>{ S.seas=b.dataset.s; prepare(); }));
   on('relSel','change',e=>{ S.rel=e.target.value; prepare(); });
   on('mapSel','change',e=>{ S.map=e.target.value; S.rot=null; S.zoom=1; S.pan=[0,0]; setupView(false); syncControls(); writeHash(); panelsSoon(false); });
   on('unSel','change',e=>{ S.un[F().kind]=e.target.value; CYC=null; prepare(); });
