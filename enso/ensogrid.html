@@ -147,6 +147,7 @@
   select.big{font-size:14px;padding:7px 9px;width:340px;max-width:100%}
   .mainbar .fld{max-width:100%}
   .advanced .advbar{padding:2px 0 4px}
+  .advbrk{flex-basis:100%;height:0}   /* checkboxes and buttons on their own line */
   #maps .mapcol .maphead.hastog .mhtext h2{font-size:15.5px}
   .lmap .leaflet-container{background:var(--sea)}
   .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
@@ -272,7 +273,6 @@
       <summary>Advanced settings</summary>
       <div class="body">
   <div class="bar advbar">
-    <div class="fld"><label>&nbsp;</label><label class="chk" title="Show El Niño years minus La Niña years, instead of either one minus all years"><input type="checkbox" id="cmpChk"> Compare El Ni&ntilde;o with La Ni&ntilde;a directly</label></div>
     <div class="fld" title="An ENSO year is El Niño (La Niña) when its Dec–Feb RONI is at or beyond this value, within an episode of at least five consecutive overlapping seasons beyond ±0.5 °C.">
       <label for="strSel">Strength (RONI)</label>
       <select id="strSel"><option value="0.5">&ge; 0.5&deg;C (all events)</option>
@@ -289,6 +289,8 @@
       <select id="unSel"><option value="C">&deg;C</option><option value="F">&deg;F</option></select></div>
     <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="on">1 box</option><option value="off">Raw</option></select></div>
+    <div class="advbrk"></div>
+    <div class="fld"><label>&nbsp;</label><label class="chk" title="Show El Niño years minus La Niña years, instead of either one minus all years"><input type="checkbox" id="cmpChk"> Compare El Ni&ntilde;o with La Ni&ntilde;a directly</label></div>
     <div class="fld"><label>&nbsp;</label><label class="chk" title="Dot the patches of boxes where the composite difference is significant: each box at p < 0.05 (two-sided t-test), and the patch as a whole stronger than chance (permutation test; see Methods)"><input type="checkbox" id="sigChk" checked> Dots: significant patches</label></div>
     <div class="fld"><label>&nbsp;</label><label class="chk" title="Draw contour lines of the climatology (the normal for this month, season or year) over the map, with their values"><input type="checkbox" id="ctChk"> Climatology contours</label></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole field">&#8592; Full view</button></div>
