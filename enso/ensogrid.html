@@ -274,7 +274,7 @@
       <summary>Advanced settings</summary>
       <div class="body">
   <div class="bar advbar">
-    <div class="fld" title="An ENSO year is El Niño (La Niña) when its Dec–Feb RONI is at or beyond this value, within an episode of at least five consecutive overlapping seasons beyond ±0.5 °C.">
+    <div class="fld" title="An ENSO year is El Niño (La Niña) when its Dec–Feb RONI is at or beyond this value and part of an event lasting at least 5 overlapping 3-month seasons (about half a year) beyond ±0.5 °C.">
       <label for="strSel">Strength (RONI)</label>
       <select id="strSel"><option value="0.5">&ge; 0.5&deg;C (all events)</option>
         <option value="1">&ge; 1.0&deg;C (moderate+)</option><option value="1.5">&ge; 1.5&deg;C (strong)</option></select></div>
@@ -313,8 +313,7 @@
     </section>
     <details class="methods" id="otherAdv">
       <summary>Other advanced</summary>
-      <div class="body"><p class="advnote">Every year's value at the selected place (or, with none selected, for the whole
-        map), colored by El Ni&ntilde;o or La Ni&ntilde;a. Click a box on the map to choose the place; click it again to go back.</p>
+      <div class="body">
         <div class="panels2"><svg id="cardBox" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
     </details>
     <details class="methods" id="methods">
@@ -1705,10 +1704,10 @@ function roniPanel(x,y,w,h){
   let o=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   o+=txt(x+14,y+22,'Relative Oceanic Niño Index (RONI) — the years in each composite',{size:14.5,weight:650});
   o+=txt(x+14,y+38, w<1000
-     ? `NOAA CPC ${RONI.year0}–${RONI.last} · ENSO years by Dec–Feb value · ±${S.str.toFixed(1)}°C, ≥ 5-season episodes`
+     ? `NOAA CPC ${RONI.year0}–${RONI.last} · by Dec–Feb value, ±${S.str.toFixed(1)}°C, in events lasting about half a year or more`
      : w<1400
-     ? `NOAA CPC, ${RONI.year0} – ${RONI.last} · each ENSO year (June – May) is classified by its Dec–Feb value: `+
-       `El Niño ≥ +${S.str.toFixed(1)}°C, La Niña ≤ −${S.str.toFixed(1)}°C, within an episode of ≥ 5 seasons beyond ±0.5°C`
+     ? `NOAA CPC, ${RONI.year0} – ${RONI.last} · an ENSO year is El Niño if its Dec–Feb value is ≥ +${S.str.toFixed(1)}°C (La Niña: ≤ −${S.str.toFixed(1)}°C) `+
+       `and part of an event lasting at least 5 overlapping 3-month seasons (about half a year)`
      : `NOAA CPC, 3-month running seasons ${RONI.year0} – ${RONI.last} · each ENSO year (June – May) is classified by its Dec–Feb value · `+
        `El Niño ≥ +${S.str.toFixed(1)}°C, La Niña ≤ −${S.str.toFixed(1)}°C, inside an episode of ≥ 5 consecutive seasons beyond ±0.5°C (values rounded to 0.1, as CPC does)`,{size:11,fill:t.mute});
   /* legend */
