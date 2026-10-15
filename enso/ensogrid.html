@@ -223,6 +223,10 @@
         <button data-ph="en" title="El Niño years compared with all years">El Ni&ntilde;o</button><button data-ph="ln" title="La Niña years compared with all years">La Ni&ntilde;a</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button><button data-ph="enln" id="enlnBtn" title="El Niño years compared directly with La Niña years (Advanced settings)">El Ni&ntilde;o &minus; La Ni&ntilde;a</button>
       </div></div>
     <div class="fld"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
+    <div class="fld" id="pcWrap"><label>Show as</label>
+      <div class="seg big" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
+            <button data-pc="pct">% change</button><button data-pc="abs">Absolute</button></div>
+    </div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
   </div>
 </header>
@@ -247,9 +251,7 @@
       <div class="mapcol">
         <div class="maphead hastog"><div class="mhtext"><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p>
           <p class="warn" id="mapWarn"></p></div>
-          <div class="pcwrap" id="pcWrap"><span class="pclab">Show as</span>
-          <div class="seg" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
-            <button data-pc="pct">% change</button><button data-pc="abs">Absolute</button></div></div></div>
+</div>
         <div class="lmap" id="mapMain"><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
           <div class="hint">drag &middot; scroll to zoom &middot; click a box to select it</div></div>
       </div>
@@ -1904,10 +1906,12 @@ function syncControls(){
   /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
   /* temperature: Absolute shown as chosen, % change grayed out (the stored choice
      is left alone, so precipitation etc. come back in whatever was picked there) */
-  const pg=document.getElementById('pcSeg'), tmp=isTemp();
-  pg.parentElement.title=tmp?'Temperature is always shown as a change in degrees.':'';
+  /* Climatology has no difference to show as anything: the whole control grays out */
+  const pg=document.getElementById('pcSeg'), tmp=isTemp(), clim=S.mode==='clim';
+  pg.parentElement.classList.toggle('off',clim);
+  pg.parentElement.title=clim?'Applies to the El Niño and La Niña maps.':tmp?'Temperature is always shown as a change in degrees.':'';
   pg.querySelectorAll('button').forEach(b=>{ const on=b.dataset.pc===(tmp?'abs':S.pc);
-    b.disabled=tmp&&b.dataset.pc==='pct'; b.classList.toggle('locked',tmp&&on);
+    b.disabled=clim||(tmp&&b.dataset.pc==='pct'); b.classList.toggle('locked',!clim&&tmp&&on);
     b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
   document.getElementById('smSel').value=S.sm; document.getElementById('dtSel').value=S.dt;
   document.getElementById('strSel').value=String(S.str);
@@ -1919,7 +1923,7 @@ function syncControls(){
     b.setAttribute('aria-pressed',b.dataset.ph===shown); });
   document.body.classList.toggle('cmp',S.ph==='enln');
   document.getElementById('cmpChk').checked=S.ph==='enln';
-  document.getElementById('pcWrap').style.visibility=S.mode==='clim'?'hidden':'';
+
   /* period buttons, labeled with the years they give for this field */
   document.querySelectorAll('#perSeg button').forEach(b=>{ const on=b.dataset.per===S.per;
     const a=Math.max(PERIOD_START[b.dataset.per],DS.ey0);

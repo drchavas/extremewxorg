@@ -9,8 +9,8 @@ with every field at every intensity ("Hail — ≥ 1 inch", "Tornadoes — EF2+"
 The averaging strip sits under them. Everything else (strength, period, trend, units, smoothing,
 dots, compare, view/theme/PNG/link buttons) is in a collapsed **Advanced settings** box below the
 map. Below that come the panels, the year lists, Methods and the guidance box. A title bubble in
-the map's top-left corner names the variable. The "Show as" (% change / Absolute) toggle is in the
-map header and hidden for Climatology. Hash: `ph=en|ln|enln|clim`.
+the map's top-left corner names the variable. The top bar also holds "Show as" (% change / Absolute;
+grayed for Climatology, % disabled for temperature) and "Reload default". Hash: `ph=en|ln|enln|clim`.
 
 1. **Climatology** — the chosen average over every ENSO year of the period: the **whole ENSO
    year (default)**, a season (Jun–Aug, Sep–Nov, Dec–Feb, Mar–May) or a single month.
