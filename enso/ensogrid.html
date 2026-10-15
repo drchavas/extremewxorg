@@ -1882,8 +1882,8 @@ function guideHtml(){
       `ENSO-year map is a warm-season map. With so few events in any box, treat these composites as exploratory. ` : '';
   return lead+dere+'Storm Events records <i>reports</i>, not observations from a fixed network, and report counts rose '+
     'steeply into the late 1990s, so the per-box trend is removed before compositing (2000–2025 uses only the more '+
-    'uniform recent record), and the maps open on <b>Dec–Feb</b>. The best-documented ENSO links to U.S. hail and tornadoes are in '+
-    '<b>winter</b>: in Dec–Feb, El Niño brings fewer tornado and hail days to the Mid-South and Ohio Valley and more '+
+    'uniform recent record). The best-documented ENSO links to U.S. hail and tornadoes are in '+
+    '<b>winter</b> (choose Dec–Feb above): in Dec–Feb, El Niño brings fewer tornado and hail days to the Mid-South and Ohio Valley and more '+
     'to Florida and the Gulf Coast. <b>Spring</b> is less settled. '+
     '<a href="https://doi.org/10.1038/ngeo2385" target="_blank" rel="noopener">Allen, Tippett &amp; Sobel (2015)</a> '+
     'found fewer spring tornadoes and hailstorms in the southern Plains after El Niño over 1979–2013, and these data '+
@@ -2076,7 +2076,6 @@ function readHash(){
   const mq=p.get('m');
   if(mq && AVGS.some(a=>a.k===mq&&a.k!=='mon')) S.av=mq;
   else if(mq && MSEQ.includes(+mq)){ S.av='mon'; S.mi=MSEQ.indexOf(+mq); }
-  else if(F().src==='scs'){ S.av='djf'; AUTOAV=true; }   // a bare U.S. link opens on Dec-Feb
   /* p=recent, or p=YYYY-YYYY for a custom range. Older links always carried a range:
      one that is just a preset (1979/1980-2025, 2000-2025) opens as that preset */
   const pq=p.get('p');
@@ -2119,8 +2118,7 @@ function exportPNG(){
   img.src=url;
 }
 
-let AUTOAV=false;
-async function setMonth(mi){ S.av='mon'; AUTOAV=false; S.mi=(mi+NM)%NM; document.getElementById('mRange').value=S.mi; await refresh(); }
+async function setMonth(mi){ S.av='mon'; S.mi=(mi+NM)%NM; document.getElementById('mRange').value=S.mi; await refresh(); }
 function wire(){
   const fs=document.getElementById('fldSel');
   MENU.forEach(g=>{ const og=document.createElement('optgroup'); og.label=g.g; fs.appendChild(og);
@@ -2130,11 +2128,8 @@ function wire(){
     if(F().src!==prev){
       /* each source opens on its own default period, unless one was chosen */
       if(S.per===defaultPer(FIELDS.find(x=>x.src===prev))) S.per=defaultPer();
-      /* U.S. fields open on Dec-Feb, where the ENSO links are best established; the
-         ENSO-year total is dominated by summer, where they are weakest. Only the
-         default is switched, and switched back on leaving: a chosen average stays. */
-      if(F().src==='scs'&&S.av==='yr'){ S.av='djf'; AUTOAV=true; }
-      else if(prev==='scs'&&AUTOAV&&S.av==='djf'){ S.av='yr'; AUTOAV=false; } }
+    }
+    /* the average (year, season or month) is never changed by switching variable */
     refresh(); };
   document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{
     if(b.dataset.ph==='clim') S.mode='clim'; else { S.mode='diff'; S.ph=b.dataset.ph; }
@@ -2163,7 +2158,7 @@ function wire(){
     navigator.clipboard.writeText(location.href).then(()=>{ const s=this.textContent; this.textContent='Copied';
       setTimeout(()=>this.textContent=s,1200); }).catch(()=>{}); };
   /* averaging: ENSO year, a season, or a single month */
-  document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ S.av=b.dataset.av; AUTOAV=false; refresh(); });
+  document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ S.av=b.dataset.av; refresh(); });
   /* month strip */
   const tk=document.getElementById('mTicks');
   MSEQ.forEach((m,i)=>{ const s=document.createElement('span');

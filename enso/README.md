@@ -85,8 +85,8 @@ check this page too.**
   dots follow. It is strict: U.S. 2° maps rarely pass (e.g. Dec–Feb tornado EN−LN: 15 boxes at
   p < 0.05, no significant patch), while ERA5/TC keep the main teleconnections. The hover p is
   still the box's own test.
-- **U.S. default average**: Dec–Feb (switching to a U.S. field from the ENSO-year default, or a
-  bare `#f=hail` link); a chosen average is kept, and the switch is undone on leaving.
+- **Average**: switching variable never changes the average (ENSO year / season / month); every
+  field opens on the ENSO year. (An automatic Dec–Feb default for U.S. fields was removed, Oct 2026.)
 - **Count fields**: a box below 2% of the field's 98th-percentile monthly climatology is blank; below
   5% it is drawn but not dotted (a t-test on an almost-all-zero series calls a fraction of a
   storm-day "significant"). The same flux floors (0.1 mm/day precip, 0.05 snowfall) suppress dots
