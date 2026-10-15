@@ -256,7 +256,7 @@
           <button class="btn" id="playBtn" title="Play / pause (space bar)">&#9654;&#xFE0E; Play</button>
           <button class="btn" id="prevBtn" title="Previous month (&larr;)" aria-label="Previous month">&#9664;</button>
           <div class="ttrack">
-            <input type="range" id="tRange" min="0" max="12" step="0.001" value="6" aria-label="Time of year">
+            <input type="range" id="tRange" min="0" max="12" step="0.001" value="0" aria-label="Time of year">
             <div class="tticks" id="tTicks"></div>
           </div>
           <button class="btn" id="nextBtn" title="Next month (&rarr;)" aria-label="Next month">&#9654;</button>
@@ -662,7 +662,7 @@ async function gzFetch(url,binary){
 
 /* ------------------------------------------------------------------ state */
 const S={f:'t2m',thr:0,p:'p9625',view:'month',seas:'jja',rel:'val',map:'ee',un:{},flow:'auto',
-         cnt:'auto',band:1,bord:1,grat:0,smooth:1,spd:0.7,t:6,theme:'dark',pt:null,
+         cnt:'auto',band:1,bord:1,grat:0,smooth:1,spd:0.7,t:0,theme:'dark',pt:null,
          rot:null,zoom:1,pan:[0,0]};
 let IX=null;                       // data/index.json
 const VCACHE=new Map();            // 'var|period' -> Promise<Float32Array(12*64800)>
@@ -1912,16 +1912,16 @@ const TOURS=[
   {l:'Hadley & Walker cells',h:'f=omega&v=annual&m=ee'},
   {l:'Continentality',h:'f=t2m&v=range&m=ee'},
   {l:'Winter stationary waves',h:'f=z500&v=month&r=zonal&m=np&t=0'},
-  {l:'Earth from space (IR)',h:'f=olr&v=month&m=globe&t=6',play:1},
-  {l:'Arctic sea ice',h:'f=ci&v=month&m=np&t=8',play:1},
-  {l:'Severe-storm ingredients',h:'f=cape&v=month&m=na&fl=850&t=4',play:1},
-  {l:'Tornado season',h:'f=tornado&v=month&m=us&t=4',play:1},
-  {l:'Hurricane seasons',h:'f=tcd&v=month&m=ee&t=8',play:1}
+  {l:'Earth from space (IR)',h:'f=olr&v=month&m=globe&t=0',play:1},
+  {l:'Arctic sea ice',h:'f=ci&v=month&m=np&t=0',play:1},
+  {l:'Severe-storm ingredients',h:'f=cape&v=month&m=na&fl=850&t=0',play:1},
+  {l:'Tornado season',h:'f=tornado&v=month&m=us&t=0',play:1},
+  {l:'Hurricane seasons',h:'f=tcd&v=month&m=ee&t=0',play:1}
 ];
 async function goTour(i){
   const T_=TOURS[i], keep={theme:S.theme,un:S.un};
   Object.assign(S,{thr:0,p:'p9625',view:'month',seas:'jja',rel:'val',map:'ee',flow:'auto',cnt:'auto',band:1,bord:1,grat:0,smooth:1,
-                   t:6,pt:null,rot:null,zoom:1,pan:[0,0]},keep);
+                   t:0,pt:null,rot:null,zoom:1,pan:[0,0]},keep);
   history.replaceState(null,'','#'+T_.h); readHash(); S.theme=keep.theme; CYC=null; PLACE='';
   setPlay(false); setupView(false); await prepare(); writeReadout();
   if(T_.play) setPlay(true);
