@@ -46,6 +46,7 @@ mean. A side card says what to look for in each field.
 | Severe ingredients | CAPE, 500 hPa − 10 m bulk shear, 2 m dewpoint | ERA5 (shear from 6-hourly winds) |
 | Tropical cyclones | 200 − 850 hPa shear; track density (TS+/Cat1+/Cat3+), ACE, genesis | ERA5; IBTrACS 5° (`../enso/data/tc_month.json.gz`) |
 | U.S. severe | hail, tornado, thunderstorm wind (with thresholds), derecho | Storm Events 2° (`../scs/trends/data/grid_*.json.gz`) |
+| Tornadoes worldwide | tornado days, any / (E)F1+ / 2+ / 3+, **own period 1992–2021** (the data end in 2021) | The Tornado Archive (Maas et al. 2024, BAMS), `data/ta_tornado.json.gz` |
 
 The extremes are **read in place** from the ENSO and SCS pages' data files, which are already
 binned by year and month, and averaged here over the period's years. **If the wire format of
@@ -67,6 +68,12 @@ Int16 LE `[12 months][180 rows S→N][360 cols from 0°E]` on 1° boxes (row 0 =
 
 Derived fields (wind speed, albedo, OLR, P − E, convective share, ω in hPa/day, Z in dam) are
 computed in the page from those variables.
+
+`data/ta_tornado.json.gz` (about 60 KB) has the same sparse layout as the SCS grids, on a global
+2° grid from 90°S, 180°W. It is built by `build/build_tornado_archive.py` from `tornadoes-noESWD.json`
+in github.com/malcolmmaas/tornadoarchive-pub: a one-time snapshot with no license stated, no Europe
+(ESWD), uneven national coverage and nothing after 2021 (2022 holds only 10 tornadoes, so the field
+uses 1992–2021). The field carries its own `per`, so it ignores the page's period.
 
 ## Rebuilding
 

@@ -202,7 +202,7 @@
      month by month, or show a <b>season</b> or the <b>annual</b> mean. <b>Click anywhere</b> on the map for that place&rsquo;s
      seasonal cycle, and <b>Export</b> any map or animation for teaching. More options are under <b>Advanced settings</b>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-14 23:36 UTC</span></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-15 01:56 UTC</span></div>
 </header>
 
 <div id="wrap">
@@ -424,7 +424,7 @@ const CMAP={
    `clear`: values below this are left transparent (no ice, no snow, no storms).
    `flow`: the wind level drawn by default. `kind` picks the unit choices.        */
 const G={T:'Temperature',W:'Water, clouds & snow',E:'Energy & radiation',C:'Circulation & pressure',
-         S:'Severe-storm ingredients',X:'Tropical cyclones (IBTrACS, global)',U:'U.S. severe weather (Storm Events, 2° grid)'};
+         S:'Severe-storm ingredients',X:'Tropical cyclones (IBTrACS, global)',U:'U.S. severe weather (Storm Events, 2° grid)',A:'Tornadoes worldwide (Tornado Archive, 2° grid)'};
 const FIELDS=[
  {k:'t2m',grp:G.T,label:'Surface air temperature (2 m)',era:['t2m'],kind:'temp',cmap:'temp',lv:{lo:-40,hi:40,step:5},cnt:10},
  {k:'sst',grp:G.T,label:'Sea surface temperature',era:['sst'],kind:'temp',cmap:'temp',lv:{lo:-2,hi:32,step:2},cnt:2},
@@ -476,7 +476,11 @@ const FIELDS=[
  {k:'hail',grp:G.U,label:'Hail',src:'scs',file:'grid_hail.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
  {k:'tornado',grp:G.U,label:'Tornado',src:'scs',file:'grid_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
  {k:'wind',grp:G.U,label:'Thunderstorm wind',src:'scs',file:'grid_wind.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
- {k:'derechoday',grp:G.U,label:'Derecho',src:'scs',file:'grid_derechoday.json.gz',kind:'count',unitWord:'events',cmap:'seq'}
+ {k:'derechoday',grp:G.U,label:'Derecho',src:'scs',file:'grid_derechoday.json.gz',kind:'count',unitWord:'events',cmap:'seq'},
+
+ /* own period: the public Tornado Archive file ends in 2021 */
+ {k:'tatorn',grp:G.A,label:'Tornado (worldwide)',src:'ta',file:'data/ta_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq',
+  per:{label:'1992–2021',y0:1992,y1:2021}}
 ];
 const FBYK=Object.fromEntries(FIELDS.map(f=>[f.k,f]));
 const FLOWV={'10':['u10','v10'],'850':['u850','v850'],'500':['u500','v500'],'250':['u250','v250']};
@@ -667,6 +671,10 @@ const ABOUT={
   look:['Damaging thunderstorm wind peaks in <b>June–July</b>, broadly across the East and Midwest.',
         'Reports of gusts of 65 kt and more (measured or estimated) are concentrated in the Plains.'],
   xp:'Most wind reports are estimated from damage, not measured, so they follow trees and people.'},
+ tatorn:{d:'Days per month with at least one tornado (at the chosen rating) touching each 2° box, from The Tornado Archive (Maas et al. 2024), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
+  look:['The United States dwarfs everywhere else, partly because it has more tornadoes and partly because it looks for them harder and has for longer.',
+        'Elsewhere the seasons differ: southern Canada and eastern China in <b>summer</b> (China peaks in July), Japan in <b>September–October</b>, Argentina\'s Pampas from <b>October to January</b>, southwestern Australia in the <b>cool season</b>.'],
+  xp:'Coverage differs by country and by year, so compare places with care. <b>Europe is missing</b> (its ESWD data are not in the public file). Canada lacks 2010–2016; Japan ends in 2015; Argentina and Brazil end in 2017; Australia is sparse after 2017; Mexico is sparse before 2013; China starts in 2003. The mean divides by every year of the period, so gaps lower those regions. Days are UTC calendar days of the start time; a tornado counts in every box its path touches.'},
  derechoday:{d:'Derecho events per month touching each 2° box (Squitieri, Wade & Jirak 2026 archive, 1996 on).',
   look:['Derechos are a <b>warm-season</b> phenomenon, peaking in June–July along the northern edge of the summer heat ("ring of fire").'],
   xp:'Squitieri, Wade & Jirak (2026) derecho archive (BAMS), 1996 on.'}
@@ -733,7 +741,7 @@ function loadVar(v,p){
 /* Monthly climatology of a field for one period: {grid, A:Float32Array(12*N), info} */
 const MCACHE=new Map();
 async function monthly(f,p){
-  const key=f.k+'|'+p+'|'+(f.thresholds||f.src==='scs'?S.thr:'');
+  const key=f.k+'|'+p+'|'+(f.thresholds||f.src==='scs'||f.src==='ta'?S.thr:'');
   if(MCACHE.has(key)) return MCACHE.get(key);
   let out;
   if(f.era){
@@ -787,11 +795,11 @@ async function monthlyTC(f,p){
 /* U.S. Storm Events 2° grids, read in place from the severe-weather pages. A box that never
    had a report of this hazard is outside the domain (NaN), so the map shows the U.S. outline. */
 async function monthlySCS(f,p){
-  if(!RAW.scs[f.k]) RAW.scs[f.k]=await gzFetch('../scs/trends/data/'+f.file);
-  const d=RAW.scs[f.k], m=d.meta, per=PERIODS.find(x=>x.k===p);
+  if(!RAW.scs[f.k]) RAW.scs[f.k]=await gzFetch(f.src==='ta'?f.file:'../scs/trends/data/'+f.file);
+  const d=RAW.scs[f.k], m=d.meta, per=f.per||PERIODS.find(x=>x.k===p);
   if(!f.thresholds) f.thresholds=m.thresholds.map(t=>({label:t.label}));
   const ti=Math.min(S.thr,d.v.length-1), v=d.v[ti];
-  const grid={lat0:m.lat0,lon0:m.lon0,g:m.grid,nlat:m.nlat,nlon:m.nlon,global:false,key:'us2'};
+  const grid={lat0:m.lat0,lon0:m.lon0,g:m.grid,nlat:m.nlat,nlon:m.nlon,global:f.src==='ta',key:f.src==='ta'?'ta2':'us2'};
   const N=m.nlat*m.nlon;
   const thr=m.through?m.through.split('-').map(Number):[m.year1,12];
   const lastFull=thr[1]===12?thr[0]:thr[0]-1;
@@ -1238,7 +1246,7 @@ const THEME={
 };
 
 /* ------------------------------------------------------------- color scales */
-const WATERY=new Set(['pr','sf','pme','tcwv','q850','cpf','d2m','tcc','tcd','tcace','tcgen','hail','tornado','wind','derechoday']);
+const WATERY=new Set(['pr','sf','pme','tcwv','q850','cpf','d2m','tcc','tcd','tcace','tcgen','hail','tornado','wind','derechoday','tatorn']);
 const _ramp=new Map();
 function ramp(name,t,rev){
   let st=_ramp.get(name); if(!st){ st=CMAP[name].map(hex2rgb); _ramp.set(name,st); }
@@ -1271,7 +1279,7 @@ function buildScale(f,kind,sample){
   } else if(kind==='cnt'){
     const hi=niceUp(quant(sample,0.995,false,true)||1), n=10;
     levels=[0]; for(let i=1;i<=n;i++){ const v=sig2(hi*Math.pow(i/n,2)); if(v>levels[levels.length-1]) levels.push(v); }
-    clear=1e-6; if(f.src==='scs') zero=S.theme==='dark'?pack(255,255,204,46):pack(150,150,100,40);   // inside the U.S. domain, no events
+    clear=1e-6; if(f.src==='scs'||f.src==='ta') zero=S.theme==='dark'?pack(255,255,204,46):pack(150,150,100,40);   // inside the U.S. domain, no events
   } else if(kind==='pos'){
     const hi=niceUp(quant(sample,0.98,true)||1), st=niceStep(hi/10); levels=uniformLevels(0,Math.ceil(hi/st)*st,st);
     cmap=f.kind==='temp'?'seq':f.cmap==='div'||f.cmap==='brbg'?'seq':f.cmap; rev=false;
@@ -1418,7 +1426,7 @@ function flowUV(t){
 }
 
 /* ------------------------------------------------------------- titles & text */
-function perLabel(){ return PERIODS.find(p=>p.k===S.p).label; }
+function perLabel(){ const f=F(); return f.per?f.per.label:PERIODS.find(p=>p.k===S.p).label; }
 function statLabel(){
   const f=F(), cnt=isCount(f);
   switch(S.view){
@@ -1446,7 +1454,7 @@ function unitLabel(){
 }
 function yearsUsed(){
   if(!D) return '';
-  const out=D.pers.map((p,i)=>{ const m=D.ms[i], P=PERIODS.find(x=>x.k===p);
+  const out=D.pers.map((p,i)=>{ const m=D.ms[i], P=F().per||PERIODS.find(x=>x.k===p);
     if(!m.years) return `${P.label}: no data`;
     return (m.years[0]!==P.y0||m.years[1]!==P.y1)?`${P.label} uses ${m.years[0]}–${m.years[1]}`:''; }).filter(Boolean);
   return out.join('; ');
@@ -1455,7 +1463,7 @@ function writeTitles(){
   const f=F();
   const rl=relLabel();
   document.getElementById('mapTitle').textContent=f.label+thrLabel()+(rl?' — '+rl:'');
-  const src=f.src==='tc'?'IBTrACS':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':'ERA5';
+  const src=f.src==='tc'?'IBTrACS':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':f.src==='ta'?'The Tornado Archive':'ERA5';
   let sub=`${statLabel()} · ${perLabel()} · ${src}`;
   const yu=yearsUsed(); if(yu) sub+=` · ${yu}`;
   const el=document.getElementById('mapSub'); el.innerHTML=esc(sub);
@@ -1465,6 +1473,7 @@ function writeTitles(){
 function warnings(){
   const f=F(), w=[];
   if(f.src==='scs') w.push('Counts of storm reports depend on where people live and report; read them as where storms are reported.');
+  if(f.src==='ta') w.push('Records differ greatly between countries and Europe is not included; read this as where tornadoes are recorded.');
   return w.join(' ');
 }
 function monthName(t){ return MFULL[((Math.round(t)%12)+12)%12]; }
@@ -1477,7 +1486,7 @@ function bigMonthText(){
 }
 function writeAbout(){
   const f=F(), a=ABOUT[f.k]||{};
-  const src=f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI), 5° boxes, 1996–2025':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026) derecho archive, 2° boxes, 1996–2025':f.src==='scs'?'NOAA/NCEI Storm Events Database, 2° boxes, 1996–2025':
+  const src=f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI), 5° boxes, 1996–2025':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026) derecho archive, 2° boxes, 1996–2025':f.src==='scs'?'NOAA/NCEI Storm Events Database, 2° boxes, 1996–2025':f.src==='ta'?'The Tornado Archive (Maas et al. 2024, BAMS), 2° boxes, 1992–2021':
             'ERA5 reanalysis (ECMWF / Copernicus), 1° boxes';
   let h=`<h3>${esc(f.label)}</h3><div class="src">${esc(src)} · ${esc(unitLabel()||'')}</div>`;
   if(a.d) h+=`<div>${a.d}</div>`;
@@ -1655,7 +1664,7 @@ async function panelsNow(full){
 async function drawCycle(){
   const f=F(), T=THEME[S.theme], u=U(f), cs=await cycleSeries(), svg=document.getElementById('cycSvg');
   const W=440,H=230,ml=44,mr=12,mt=10,mb=26, pw=W-ml-mr, ph=H-mt-mb;
-  const where=S.pt?`at ${fmtLL(S.pt[0],S.pt[1])}${PLACE?' ('+PLACE+')':''}`:(f.src==='tc'?'global total':f.src==='scs'?'mean over U.S. boxes':'global area mean');
+  const where=S.pt?`at ${fmtLL(S.pt[0],S.pt[1])}${PLACE?' ('+PLACE+')':''}`:(f.src==='tc'?'global total':f.src==='scs'?'mean over U.S. boxes':f.src==='ta'?'mean over boxes with any record':'global area mean');
   document.getElementById('cycTitle').textContent='Seasonal cycle '+(S.pt?'here':'');
   document.getElementById('cycSub').textContent=`${f.label}${thrLabel()}, ${where} · ${unitLabel()}${S.pt?'':' · click the map to pick a place'}`;
   const all=cs.series.flatMap(s=>s.vals).filter(v=>v===v);
@@ -1956,7 +1965,7 @@ function syncControls(){
   const rb=document.getElementById('relBox'), rs=document.getElementById('relSel');
   rs.value=S.rel;
   rs.querySelector('option[value="anom"]').disabled=!relAllowed();
-  rs.querySelector('option[value="zonal"]').disabled=f.src==='scs'||S.view==='range'||S.view==='peak';
+  rs.querySelector('option[value="zonal"]').disabled=f.src==='scs'||f.src==='ta'||S.view==='range'||S.view==='peak';
   if(rs.selectedOptions[0]&&rs.selectedOptions[0].disabled) rs.value='val';
   rb.classList.toggle('off',S.view==='range'||S.view==='peak');
   document.getElementById('mapSel').value=S.map;
@@ -2002,7 +2011,7 @@ const TOURS=[
   {l:'Winter stationary waves',h:'f=z500&v=month&r=zonal&m=np&t=0'},
   {l:'Earth from space (IR)',h:'f=olr&v=month&m=globe&t=0',play:1},
   {l:'Arctic sea ice',h:'f=ci&v=month&m=np&t=0',play:1},
-  {l:'Tornado season',h:'f=tornado&thr=1&v=month&m=us&t=0',play:1},
+  {l:'Tornado season (US)',h:'f=tornado&thr=1&v=month&m=us&t=0',play:1},
   {l:'Hurricane seasons',h:'f=tcd&v=month&m=ee&t=0',play:1}
 ];
 async function goTour(i){
@@ -2235,7 +2244,7 @@ function makeComposer(W,H){
   const T=THEME[S.theme], bg=S.theme==='dark'?'#0f1720':'#ffffff', ink=T.ink, mute=T.mute, acc=S.theme==='dark'?'#ffb14e':'#a35a08';
   const font=(px,w)=>`${w||400} ${Math.round(px*s)}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
   const f=F(), title=f.label+thrLabel()+(relLabel()?' — '+relLabel():'');
-  const src=f.src==='tc'?'IBTrACS':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':'ERA5 reanalysis';
+  const src=f.src==='tc'?'IBTrACS':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':f.src==='ta'?'The Tornado Archive':'ERA5 reanalysis';
   const sub=`${S.view==='month'?'Average seasonal cycle':statLabel()} · ${perLabel()} · ${src}`;
   const credit=`extremewx.org · EarthVis · Dan Chavas, Purdue University`;
   function render(t,steps){
@@ -2261,7 +2270,7 @@ function makeComposer(W,H){
     drawColorbar(ctx,cbW,cbH,{theme:S.theme,fs:cbFs,ink,mute});
     ctx.restore();
     ctx.textAlign='left'; ctx.fillStyle=mute; ctx.font=`${Math.max(9,Math.round(12*s))}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
-    ctx.fillText(`Data: ${f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI)':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026), BAMS':f.src==='scs'?'NOAA/NCEI Storm Events Database':'ERA5 (ECMWF / Copernicus C3S)'}`,pad,crY);
+    ctx.fillText(`Data: ${f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI)':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026), BAMS':f.src==='scs'?'NOAA/NCEI Storm Events Database':f.src==='ta'?'The Tornado Archive (Maas et al. 2024), no Europe':'ERA5 (ECMWF / Copernicus C3S)'}`,pad,crY);
     ctx.textAlign='right'; ctx.fillText(credit,W-pad,crY);
     return cv;
   }
@@ -2280,7 +2289,7 @@ function previewExport(){
 }
 function stem(){
   const f=F();
-  return ['earthvis',f.k+(f.thresholds?'-'+S.thr:''),PERIODS.find(p=>p.k===S.p).label.replace('–','-'),
+  return ['earthvis',f.k+(f.thresholds?'-'+S.thr:''),perLabel().replace('–','-'),
           S.view==='season'?S.seas:S.view,effRel()!=='val'?effRel():'',S.map,document.getElementById('exSize').value].filter(Boolean).join('_');
 }
 function dl(blob,name){
