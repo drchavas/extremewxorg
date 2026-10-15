@@ -117,6 +117,9 @@
   #timebar{display:flex;align-items:center;gap:10px;padding:4px 14px 10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
   #playBtn{min-width:78px}
   #expBtn{margin-left:6px}
+  /* season, annual, range, peak: no month slider, so a screenshot can't be mistaken for one month */
+  #timebar.static #playBtn,#timebar.static #prevBtn,#timebar.static .ttrack,#timebar.static #nextBtn{display:none}
+  #timebar.static #expBtn{margin-left:auto}
   .ttrack{flex:1 1 360px;min-width:220px}
   .ttrack input[type=range]{width:100%;margin:0;accent-color:var(--accent2)}
   .tticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);padding:0 1px;user-select:none}
@@ -1983,7 +1986,7 @@ function syncControls(){
   document.getElementById('smoothChk').checked=!!S.smooth;
   document.getElementById('spdSel').value=String(S.spd);
   document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
-  const tb=document.getElementById('timebar'); tb.style.opacity=S.view==='month'?1:0.55;
+  document.getElementById('timebar').classList.toggle('static',S.view!=='month');
   document.getElementById('hint').textContent=REGIONS[S.map].kind==='globe'?'drag to spin · Ctrl+scroll to zoom · click a place':
     'drag · Ctrl+scroll to zoom · click a place';
   if(!document.querySelector('#tours [data-tour]')) writeGuide();
