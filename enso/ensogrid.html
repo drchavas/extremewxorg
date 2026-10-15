@@ -88,7 +88,7 @@
   #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
   #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext{opacity:.35}
   #monthbar .btn:disabled{cursor:not-allowed}
-  .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc]{background:var(--accent2);color:#111;font-weight:650}
+  .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc],.seg button.on[data-base]{background:var(--accent2);color:#111;font-weight:650}
   .srctag{color:var(--text);opacity:.85}
   .mapbubble{background:rgba(22,33,46,.94);color:var(--text);border:1px solid var(--line);border-radius:8px;
              padding:7px 12px 8px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;max-width:min(460px,62vw);
@@ -283,6 +283,9 @@
       </div></div>
     <div class="fld percustom"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld percustom"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
+    <div class="fld" title="What the El Niño and La Niña maps are measured against. All years: the climatology, which includes the El Niño and La Niña years themselves, so the two maps are close mirror images by construction. Neutral years: only the years that are neither, so El Niño and La Niña are measured independently and asymmetries can show, but the baseline is small (12 years since 1979, 5 since 2000) and noisier."><label>Compare with</label>
+      <div class="seg" id="baseSeg" role="group" aria-label="Compare with">
+        <button data-base="all">All years</button><button data-base="neu">Neutral years</button></div></div>
     <div class="fld" title="Remove each box's linear trend over the period before compositing, so a run of recent El Niño (or La Niña) years does not pick up the warming trend, or a reporting trend, as an ENSO signal."><label for="dtSel">Trend</label>
       <select id="dtSel"><option value="on">Removed</option><option value="off">Kept</option></select></div>
     <div class="fld" id="unBox"><label for="unSel">Units</label>
@@ -555,7 +558,7 @@ function classify(thr){
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
 const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
-         sm:'on',sig:1,ct:0,pt:null,theme:'dark'};
+         sm:'on',sig:1,ct:0,base:'all',pt:null,theme:'dark'};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
 let ERA5IX=null, TCRAW=null; const SCSRAW={};
@@ -794,9 +797,16 @@ function seriesStats(xs,ys,cs,detrend,ph){
   const rest=lab=>{ let s1=0,k=0; for(let i=0;i<n;i++) if(cs[i]!==lab){ s1+=r[i]; k++; }
     const m=k?s1/k:NaN; let v=0; for(let i=0;i<n;i++) if(cs[i]!==lab) v+=(r[i]-m)**2;
     return [m,k>1?v/(k-1):NaN,k]; };
+  /* the neutral years alone, for S.base==='neu' (El Nino or La Nina minus neutral years) */
+  const neu=()=>{ let s1=0,k=0; for(let i=0;i<n;i++) if(cs[i]==='N'){ s1+=r[i]; k++; }
+    const m=k?s1/k:NaN; let v=0; for(let i=0;i<n;i++) if(cs[i]==='N') v+=(r[i]-m)**2;
+    return [m,k>1?v/(k-1):NaN,k]; };
   let d,p;
-  if(ph==='en'){ d=mE; const [mo,vo,no]=rest('EN'); p=welch(mE,vE,nE,mo,vo,no); }
-  else if(ph==='ln'){ d=mL; const [mo,vo,no]=rest('LN'); p=welch(mL,vL,nL,mo,vo,no); }
+  if(ph==='en'||ph==='ln'){
+    const [m1,v1,n1]=ph==='en'?[mE,vE,nE]:[mL,vL,nL];
+    if(S.base==='neu'){ const [mo,vo,no]=neu(); d=m1-mo; p=welch(m1,v1,n1,mo,vo,no); }
+    else { d=m1; const [mo,vo,no]=rest(ph==='en'?'EN':'LN'); p=welch(m1,v1,n1,mo,vo,no); }
+  }
   else { d=mE-mL; p=welch(mE,vE,nE,mL,vL,nL); }
   return {mean:my,slope:b,mx,r,mE,mL,nE,nL,d,p,n};
 }
@@ -876,7 +886,12 @@ function nb8(ds){
 async function clusterTest(X,win,ok,alive,seedKey){
   const ds=DS, NC=ds.NC, ph=S.ph, det=S.dt==='on';
   const labA=ph==='ln'?'LN':'EN';
-  const J=[]; win.forEach((w,j)=>{ if(ph!=='enln'||w.c==='EN'||w.c==='LN') J.push(j); });
+  /* the years in the test: El Nino and La Nina for El Nino - La Nina; the phase and the
+     neutral years against a neutral baseline; otherwise every year */
+  const J=[]; win.forEach((w,j)=>{
+    if(ph==='enln'){ if(w.c==='EN'||w.c==='LN') J.push(j); }
+    else if(S.base==='neu'){ if(w.c===labA||w.c==='N') J.push(j); }
+    else J.push(j); });
   const n=J.length, aObs=[]; J.forEach((j,jj)=>{ if(win[j].c===labA) aObs.push(jj); });
   const kA=aObs.length;
   if(kA<2||n-kA<2) return null;
@@ -1415,7 +1430,7 @@ let CUR=null, CURRAW=null, CURDOM=null, TOKEN=0, STATS=null;
    on the world view. */
 let VIEWSCOPE=null;
 function statKey(){
-  return [S.f,S.thr,S.ph,S.str,yearsSel().join('-'),S.dt,S.pc,S.un,S.sm].join('|');
+  return [S.f,S.thr,S.ph,S.str,yearsSel().join('-'),S.dt,S.pc,S.un,S.sm,S.base].join('|');
 }
 async function computeKey(key,smooth){
   const X0=await DS.XK(key);
@@ -1478,8 +1493,9 @@ async function refresh(){
     }
     /* one El Nino (or La Nina) year is not a composite: say so and draw nothing,
        rather than a full map of a single year's anomaly titled "minus climatology" */
-    const w=windowYears(), nE=w.filter(x=>x.c==='EN').length, nL=w.filter(x=>x.c==='LN').length;
+    const w=windowYears(), nE=w.filter(x=>x.c==='EN').length, nL=w.filter(x=>x.c==='LN').length, nN=w.length-nE-nL;
     need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
+    if(S.base==='neu'&&S.ph!=='enln') need=Math.min(need,nN);
     if(need<2){ st={...st,disp:new Float32Array(st.disp.length).fill(NaN),p:new Float32Array(st.p.length).fill(NaN)}; }
     loading(false);
   } catch(err){
@@ -1568,13 +1584,14 @@ function writeTitles(domD){
             : `${qtyWord()[0].toUpperCase()+qtyWord().slice(1)} per ${grid}`;
   const when = S.av==='mon' ? `${MFULL[MSEQ[S.mi]-1]} of` : S.av==='yr' ? 'averaged over' : `${AV().label} of`;
   const range=`${a}–${String(a+1).slice(2)} to ${b}–${String(b+1).slice(2)}`;
-  const phs=S.ph==='en'?`<span class="ph-en">El Niño</span> minus climatology`
-          :S.ph==='ln'?`<span class="ph-ln">La Niña</span> minus climatology`
-          :`<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>`;
-  const nTxt=S.ph==='en'?`${nE} El Niño years`:S.ph==='ln'?`${nL} La Niña years`
-            :`${nE} El Niño and ${nL} La Niña years`;
-  const need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
-  const short=S.ph==='en'?'El Niño':S.ph==='ln'?'La Niña':(nE<=nL?'El Niño':'La Niña');
+  const nN=win.length-nE-nL, neu=S.base==='neu'&&S.ph!=='enln';
+  const phs=S.ph==='enln'?`<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>`
+          :(S.ph==='en'?`<span class="ph-en">El Niño</span>`:`<span class="ph-ln">La Niña</span>`)+(neu?' minus neutral years':' minus climatology');
+  const nTxt=(S.ph==='en'?`${nE} El Niño years`:S.ph==='ln'?`${nL} La Niña years`
+            :`${nE} El Niño and ${nL} La Niña years`)+(neu?` vs ${nN} neutral years`:'');
+  let need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
+  let short=S.ph==='en'?'El Niño':S.ph==='ln'?'La Niña':(nE<=nL?'El Niño':'La Niña');
+  if(neu&&nN<need){ need=nN; short='neutral'; }
   const title=document.getElementById('mapTitle'), sub=document.getElementById('mapSub'),
         warn=document.getElementById('mapWarn');
   if(S.mode==='clim'){
@@ -1592,7 +1609,7 @@ function writeTitles(domD){
     /* name the empty case instead of drawing a blank map */
     warn.textContent = need<2
       ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
-      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years: read coherent patterns (dotted = stronger signal), not the value in any single box.`;
+      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years${neu?` against ${nN} neutral years`:''}: read coherent patterns (dotted = stronger signal), not the value in any single box.`;
     drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':unitAbs(),true);
   }
   writeBubbles();
@@ -1637,8 +1654,9 @@ function varName(){
 }
 function writeBubbles(){
   const when = S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO year (Jun–May)' : AV().label;
-  const ph = S.ph==='en'?'<span class="ph-en">El Niño</span> minus climatology'
-           : S.ph==='ln'?'<span class="ph-ln">La Niña</span> minus climatology'
+  const base = S.base==='neu' ? ' minus neutral years' : ' minus climatology';
+  const ph = S.ph==='en'?'<span class="ph-en">El Niño</span>'+base
+           : S.ph==='ln'?'<span class="ph-ln">La Niña</span>'+base
            : '<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>';
   const v=`<div class="bv">${esc(menuItem()[2])}</div>`, a=document.getElementById('mapMainBubble');
   if(a) a.innerHTML=v+(S.mode==='clim' ? `<div class="bs">Climatology · ${esc(when)}</div>`
@@ -1927,12 +1945,21 @@ function methodsHtml(){
     (<i>Trend: kept</i>). The El Niño (La Niña) map is the mean anomaly over the El Niño (La Niña) years, i.e. how those
     years differ from a typical year; <i>El Niño − La Niña</i> is the difference of the two. Removing the trend matters:
     the recent run of La Niña years would otherwise inherit some of the warming of the 2020s as a "La Niña" signal, and
-    the reporting growth in Storm Events would leak into whichever phase dominated the later years.`);
+    the reporting growth in Storm Events would leak into whichever phase dominated the later years.
+    <i>Compare with</i> (Advanced) sets the baseline. With <i>All years</i> (the default) the baseline is the
+    climatology, which includes the El Niño and La Niña years themselves; because departures from an average sum to
+    zero (n<sub>EN</sub>·EN + n<sub>LN</sub>·LN + n<sub>N</sub>·neutral = 0), the La Niña map is largely forced to mirror
+    the El Niño map (about −n<sub>EN</sub>/n<sub>LN</sub> times it), and <i>El Niño − La Niña</i> comes out close to
+    (1 + n<sub>EN</sub>/n<sub>LN</sub>) times the El Niño map. Asymmetries between the phases then show only through the
+    neutral years. With <i>Neutral years</i> the El Niño and La Niña maps are each measured against the neutral years
+    alone, so they are independent and asymmetries show directly, at the cost of a small, noisier baseline (12 neutral
+    years in 1979–2025, 5 in 2000–2025) whose noise both maps share. <i>El Niño − La Niña</i> is the same either way.`);
   li.push(`<b>Significance.</b> A cluster-based permutation test
     (<a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener">Maris &amp; Oostenveld 2007</a>),
     which judges patches rather than single boxes. (1) Each box gets Welch's two-sample t on the anomalies: El Niño (or
-    La Niña) years against all the other years of the period, and for <i>El Niño − La Niña</i> the two phases against
-    each other. (2) Boxes with p &lt; 0.05 join neighboring boxes of the same sign (including diagonals) into patches,
+    La Niña) years against all the other years of the period (against the neutral years only, with <i>Compare with:
+    Neutral years</i>), and for <i>El Niño − La Niña</i> the two phases against each other; the shuffles in step 3 mix
+    only the years in that comparison. (2) Boxes with p &lt; 0.05 join neighboring boxes of the same sign (including diagonals) into patches,
     and each patch is scored by its <i>mass</i>, the sum of |t| × box area, so a patch means the same thing whatever the
     box size. (3) The phase labels are then shuffled at random across the years 500 times, and steps 1–2 are repeated on
     the same maps (smoothed, where the map is), recording the heaviest patch anywhere on the map each time. (4) A patch is
@@ -2027,6 +2054,11 @@ function syncControls(){
   document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
   document.getElementById('ctChk').checked=!!S.ct;
+  /* Compare with: all years (climatology) or neutral years; moot for El Nino - La Nina and Climatology */
+  const bs=document.getElementById('baseSeg'), bmoot=S.ph==='enln'||S.mode==='clim';
+  bs.parentElement.classList.toggle('off',bmoot);
+  bs.querySelectorAll('button').forEach(b=>{ const on=b.dataset.base===S.base;
+    b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); b.disabled=bmoot; });
   /* Show: El Nino / La Nina / Climatology; El Nino - La Nina appears only when the
      Advanced "compare" box is ticked */
   const shown=S.mode==='clim'?'clim':S.ph;
@@ -2058,6 +2090,7 @@ function writeHash(){
   if(S.sm!=='on') p.set('sm',S.sm);
   if(!S.sig) p.set('sg','0');
   if(S.ct) p.set('ct','1');
+  if(S.base==='neu') p.set('b','neu');
   if(S.pt) p.set('c',S.pt[0].toFixed(2)+','+S.pt[1].toFixed(2));
   if(S.theme!=='dark') p.set('k',S.theme);
   if(mapA){ const c=mapA.getCenter(); p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
@@ -2088,6 +2121,7 @@ function readHash(){
   if(p.get('sm')==='off') S.sm='off';
   if(p.get('sg')==='0') S.sig=0;
   if(p.get('ct')==='1') S.ct=1;
+  if(p.get('b')==='neu') S.base='neu';
   if(p.get('c')){ const [la,lo]=p.get('c').split(',').map(Number); if(isFinite(la)&&isFinite(lo)) S.pt=[la,lo]; }
   if(p.get('k')==='light') S.theme='light';
   return p.get('v');
@@ -2147,6 +2181,7 @@ function wire(){
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
   document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };
+  document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{ S.base=b.dataset.base; refresh(); });
   document.getElementById('usBtn').onclick=()=>fullView();
   document.getElementById('resetBtn').onclick=()=>{ if(location.hash) history.replaceState(null,'',location.pathname); location.reload(); };
   document.getElementById('themeBtn').onclick=function(){

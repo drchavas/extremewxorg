@@ -11,6 +11,13 @@ dots, compare, view/theme/PNG/link buttons) is in a collapsed **Advanced setting
 map. Below that come the panels, the year lists, Methods and the guidance box. A title bubble in
 the map's top-left corner names the variable. The top bar also holds "Show difference as" (Percentage / Absolute;
 grayed for Climatology, % disabled for temperature) and "Reload default". Hash: `ph=en|ln|enln|clim`.
+**Compare with** (Advanced, hash `b=neu`): the baseline for the El Niño / La Niña maps. *All years*
+(default) = minus climatology. Because departures from the all-year mean sum to zero
+(nEN·EN + nLN·LN + nN·N = 0), the La Niña map is largely forced to ≈ −(nEN/nLN)·El Niño and EN−LN ≈
+(1+nEN/nLN)·EN (checked: ratio 1.62 predicted and observed for 2000–2025; pattern correlation
+EN vs −LN 0.77–0.95). *Neutral years* = phase minus the neutral-year mean, Welch test phase vs neutral,
+cluster shuffles within phase ∪ neutral; EN and LN maps then independent (corr EN vs −LN −0.3…+0.4)
+but share the noise of a small baseline (12 neutral years 1979–2025, 5 for 2000–2025). EN−LN unchanged.
 **Climatology contours** (Advanced, off by default; hash `ct=1`): marching squares on the box
 centers of the displayed climatology (smoothed/masked like the map), drawn over whichever view is
 showing. Levels: temperature every 10 °C (nice steps in °F), precipitation 0.5–16 mm/day doubling,
