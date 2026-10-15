@@ -202,7 +202,7 @@
      month by month, or show a <b>season</b> or the <b>annual</b> mean. <b>Click anywhere</b> on the map for that place&rsquo;s
      seasonal cycle, and <b>Export</b> any map or animation for teaching. More options are under <b>Advanced settings</b>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-15 01:56 UTC</span></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-15 02:01 UTC</span></div>
 </header>
 
 <div id="wrap">
@@ -671,10 +671,10 @@ const ABOUT={
   look:['Damaging thunderstorm wind peaks in <b>June–July</b>, broadly across the East and Midwest.',
         'Reports of gusts of 65 kt and more (measured or estimated) are concentrated in the Plains.'],
   xp:'Most wind reports are estimated from damage, not measured, so they follow trees and people.'},
- tatorn:{d:'Days per month with at least one tornado (at the chosen rating) touching each 2° box, from The Tornado Archive (Maas et al. 2024), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
+ tatorn:{d:'Days per month with at least one tornado (at the chosen rating) touching each 2° box, from <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
   look:['The United States dwarfs everywhere else, partly because it has more tornadoes and partly because it looks for them harder and has for longer.',
         'Elsewhere the seasons differ: southern Canada and eastern China in <b>summer</b> (China peaks in July), Japan in <b>September–October</b>, Argentina\'s Pampas from <b>October to January</b>, southwestern Australia in the <b>cool season</b>.'],
-  xp:'Coverage differs by country and by year, so compare places with care. <b>Europe is missing</b> (its ESWD data are not in the public file). Canada lacks 2010–2016; Japan ends in 2015; Argentina and Brazil end in 2017; Australia is sparse after 2017; Mexico is sparse before 2013; China starts in 2003. The mean divides by every year of the period, so gaps lower those regions. Days are UTC calendar days of the start time; a tornado counts in every box its path touches.'},
+  xp:'Coverage differs by country and by year, so compare places with care. <b>Europe is missing</b> (its <a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a> data are not in the public file). Canada lacks 2010–2016; Japan ends in 2015; Argentina and Brazil end in 2017; Australia is sparse after 2017; Mexico is sparse before 2013; China starts in 2003. The mean divides by every year of the period, so gaps lower those regions. Days are UTC calendar days of the start time; a tornado counts in every box its path touches.'},
  derechoday:{d:'Derecho events per month touching each 2° box (Squitieri, Wade & Jirak 2026 archive, 1996 on).',
   look:['Derechos are a <b>warm-season</b> phenomenon, peaking in June–July along the northern edge of the summer heat ("ring of fire").'],
   xp:'Squitieri, Wade & Jirak (2026) derecho archive (BAMS), 1996 on.'}
@@ -2161,6 +2161,7 @@ Vmax² in 10⁴ kt²; genesis is the first position at 34 kt. Averages over 1996
 <li><b>U.S. severe weather.</b> NOAA/NCEI Storm Events: days with at least one report at the chosen threshold in each 2° box, from the
 severe-weather 2° grid page (derechos: events from Squitieri, Wade &amp; Jirak 2026, Bull. Amer. Meteor. Soc., 107(7), doi:10.1175/BAMS-D-25-0002.1; 1996 on). The archive is missing June–July 1993; those months
 are averaged over the remaining years. Report counts grew enormously with population, radar and spotter networks, so they reflect reporting as much as climate.</li>
+<li><b>Tornadoes worldwide.</b> From <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>, Bull. Amer. Meteor. Soc., 105(7), doi:10.1175/BAMS-D-23-0123.1), using its public data file, which leaves out Europe (<a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a>). Tornado days per 2° box, averaged over 1992–2021; a tornado counts in every box its path touches.</li>
 <li><b>Export.</b> Video and GIF exports render each frame off-screen at the chosen size, from the same data and projection as the map. MP4 uses
 the browser's own H.264 encoder (WebCodecs) and plays in PowerPoint, Keynote and every browser; without H.264 it saves VP9 in MP4 (plays in browsers), and without WebCodecs it records a WebM video.</li>
 </ol>
