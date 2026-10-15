@@ -2025,8 +2025,7 @@ function readHash(){
   if(h.get('b')==='0') S.band=0; if(h.get('bd')==='0') S.bord=0; if(h.get('g')==='1') S.grat=1; if(h.get('sm')==='0') S.smooth=0;
   if(h.has('sp')) S.spd=+h.get('sp')||0.7;
   if(h.has('t')) S.t=clamp(+h.get('t')||0,0,11.999);
-  if(h.get('th')==='light') S.theme='light';
-  else if(!h.has('th')&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches) S.theme='light';
+  if(h.get('th')==='light') S.theme='light';      // dark by default; only an explicit link or the toggle picks light
   if(h.has('pt')){ const a=h.get('pt').split(',').map(Number); if(a.length===2&&a.every(isFinite)) S.pt=a; }
   if(h.has('rot')){ const a=h.get('rot').split(',').map(Number); if(a.length===2&&a.every(isFinite)) S.rot=a; }
   if(h.has('z')) S.zoom=clamp(+h.get('z')||1,1,12);
