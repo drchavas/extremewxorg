@@ -105,9 +105,11 @@ python3 build_climo.py ../data /tmp/c /tmp/cpl /tmp/cw           # -> data/*.bin
 - Monthly climatology is the plain mean of that calendar month over the period's years.
   - Seasons and annual values are means of monthly means, with months weighted equally.
   - For counts they are sums: storm-days per season or per year.
-- **Animation:** monthly means sit at mid-month. Between months the page uses a Catmull–Rom
-  curve through four months, clamped to the two months that bracket it, so it never overshoots
-  (no negative precipitation). The "Smooth between months" box switches to steps.
+- **Animation:** by default the map **steps through the 12 monthly means**, so every frame is data
+  (Dan, 2026-10-14). An opt-in "Smooth between months (interpolated)" box under Advanced adds
+  in-between frames: monthly means sit at mid-month, joined by a Catmull–Rom curve through four months
+  and clamped to the two months that bracket it, so it never overshoots (no negative precipitation).
+  Hash `sm=1` turns it on. With stepping, the export dialog defaults to one frame per month.
 - **Color scales are fixed for the whole year** (all 12 months of whatever is shown), so the
   animation never rescales.
   - ERA5 values use preset levels per field (`lv` in `FIELDS`).
