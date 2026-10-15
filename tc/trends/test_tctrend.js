@@ -26,7 +26,9 @@ function near(name, got, want, tol) {
 async function load(hash) {
   const html = fs.readFileSync(path.join(DIR, 'tctrend.html'), 'utf8')
     // the CDN topojson script cannot be fetched offline; inject the module instead
-    .replace(/<script src="https:\/\/unpkg\.com\/topojson-client[^>]*><\/script>/, '');
+    .replace(/<script src="https:\/\/unpkg\.com\/topojson-client[^>]*><\/script>/, '')
+    // the feedback pop-up is a separate script after the page's own; not under test here
+    .replace(/<script src="[^"]*feedback\.js"[^>]*><\/script>/, '');
 
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => { console.error('jsdom error:', e.message); });
@@ -828,7 +830,8 @@ async function load(hash) {
                     && /noopener/.test(a2.getAttribute('rel') || ''); })(),
        'same tab or no noopener', '_blank + noopener');
     ok('    with the copyright last on the line',
-       /©\s*\d{4} Dan Chavas$/.test(t.trim()), t.trim().slice(-40), 'ends with the copyright');
+       /©\s*\d{4} Dan Chavas \(Purdue University\)$/.test(t.trim()) &&
+       !!hm.querySelector('a[href="https://web.ics.purdue.edu/~dchavas/"]'), t.trim().slice(-50), 'ends with the linked copyright');
   }
   ok('  links out to the README and both comparisons',
        ['README.md', 'COMPARISON_vs_notebook.md', 'COMPARISON_vs_gtc.md']
