@@ -18,6 +18,10 @@ grayed for Climatology, % disabled for temperature) and "Reload default". Hash: 
 EN vs −LN 0.77–0.95). *Neutral years* = phase minus the neutral-year mean, Welch test phase vs neutral,
 cluster shuffles within phase ∪ neutral; EN and LN maps then independent (corr EN vs −LN −0.3…+0.4)
 but share the noise of a small baseline (12 neutral years 1979–2025, 5 for 2000–2025). EN−LN unchanged.
+Neutral is always *truly* neutral (no event even at the 0.5 level, `classify(0.5)`), whatever the
+strength: at strength > 0.5 the weaker events get class `W` in `windowYears()` and sit in neither
+composite nor the neutral baseline (they stay in the all-years climatology). Counts in the tooltip
+and Methods are computed (`nNeutral`), not hard-coded.
 **Climatology contours** (Advanced, off by default; hash `ct=1`): marching squares on the box
 centers of the displayed climatology (smoothed/masked like the map), drawn over whichever view is
 showing. Levels: temperature every 10 °C (nice steps in °F), precipitation 0.5–16 mm/day doubling,
@@ -84,24 +88,39 @@ check this page too.**
 - **Dots (Oct 2026)**: cluster-based permutation test (Maris & Oostenveld 2007), `clusterTest` in
   the page. Boxes at p < 0.05 (Welch t vs the two-sided 5% point of its Welch df) join same-sign
   8-neighbors (longitude-wrapping on global grids) into patches; patch mass = Σ|t|·cos(lat). The
-  phase labels are shuffled 500× (EN−LN: within EN∪LN years; EN or LN: across all years), seeded
-  from the state string; residuals are detrended once, before shuffling. A patch is dotted if
+  phase labels are shuffled 1000× on the ERA5 grid and 2000× on the TC/U.S. grids (EN−LN: within
+  EN∪LN years; EN or LN: across all years, or within phase ∪ neutral with Compare with: Neutral),
+  seeded from the data-relevant settings only (field, threshold, phase, strength, period, trend,
+  smoothing for counts, baseline, average — not %/absolute or °C/°F, so those never change the
+  dots; before Oct 15 they did, flipping borderline patches); residuals are detrended once, before shuffling. A patch is dotted if
   < 5% of shuffles produced a heavier patch anywhere on the map (family-wise 5% for any spurious
   patch). It runs on the displayed field, smoothed when smoothing is on, so the shuffles share the
-  smoothing. Cost: ~1.5 s for an ERA5 map, ~0.1–0.4 s for TC/U.S.; the map draws at once and the
-  dots follow. It is strict: U.S. 2° maps rarely pass (e.g. Dec–Feb tornado EN−LN: 15 boxes at
+  smoothing. Cost: ~3–8 s for an ERA5 map on a slow 2-CPU machine (faster on a desktop),
+  well under 1 s for TC/U.S.; the map draws at once and the dots follow. It is strict: U.S. 2° maps rarely pass (e.g. Dec–Feb tornado EN−LN: 16 boxes at
   p < 0.05, no significant patch), while ERA5/TC keep the main teleconnections. The hover p is
   still the box's own test.
+- **Fixes after the Oct 15 independent review**: tiles are repainted in place (`repaintTiles`)
+  instead of `GridLayer.redraw()`, which at fractional zoom rebuilt tiles with the wrong longitude
+  wrap (Pacific drawn over the Americas, e.g. on load at 1024 px); `.lmap{width:100%}` so the
+  aspect-ratio + min-height no longer forced an 874 px-wide map on phones; La Niña subtitle reads
+  RONI ≤ −X; footer neutral wording; box panel reports phase − neutral (and draws the neutral mean)
+  with Compare with: Neutral; no hover readout while a new state loads (`BUSY`); a pasted link
+  (hashchange) reloads the page. Then (item 8): neutral = truly neutral (above); the note under the
+  map adds "Note: no dotted areas = signal is weak in this domain" when dots are on and none are
+  drawn (re-written when the patch test finishes); percent-mode floors raised (below); dots are drawn
+  only on boxes the map colors.
 - **Average**: switching variable never changes the average (ENSO year / season / month); every
   field opens on the ENSO year. (An automatic Dec–Feb default for U.S. fields was removed, Oct 2026.)
-- **Count fields**: a box below 2% of the field's 98th-percentile monthly climatology is blank; below
+- **Count fields**: a box below 2% of the field's 98th-percentile monthly climatology is blank (5% in percent mode); below
   5% it is drawn but not dotted (a t-test on an almost-all-zero series calls a fraction of a
   storm-day "significant"). The same flux floors (0.1 mm/day precip, 0.05 snowfall) suppress dots
   (no Sahara dots).
 - **Percent change (Oct 2026) is the default** for every field except temperature (always °C/°F;
   the control is disabled). Precip divides by max(clim, 0.1 mm/day), so deserts read as modest
-  percentages rather than holes; counts are blank below 2% of the 98th-percentile climatology (where
-  the maps stop anyway). Scales saturate: ERA5 ±50% (EN−LN ±100%); counts 95th percentile of the
+  percentages rather than holes; in percent mode counts are blank below 5% of the 98th-percentile
+  climatology and snowfall below 0.05 mm/day (`pctDenom`), i.e. exactly where those boxes cannot
+  carry a dot, so the visible dots are the same in % and absolute. (10% was tried: it hid about a
+  quarter of the dotted boxes on the TC maps, e.g. the El Niño typhoon increase near 160°E.) Scales saturate: ERA5 ±50% (EN−LN ±100%); counts 95th percentile of the
   map, capped at ±200%. Hash: `pc=abs` for absolute change; no `pc` = percent.
   Snowfall boxes below 0.01 mm/day climatology are blank on both maps.
 - **Color scales**: fixed for ERA5 per averaging length, so the slider never re-scales

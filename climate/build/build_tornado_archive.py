@@ -12,6 +12,11 @@ A tornado counts in every 2-degree box its path touches (paths sampled every 0.0
 fall in one box). The rating is the highest (E)F value given (DAT tracks list one per segment);
 unrated tornadoes (-9) count only in "Any tornado".
 
+Waterspouts are dropped (independent review, 2026-10-14): unrated records that come only from
+NCEI Storm Events (source == ['NCEI']; matched against NCEI's EVENT_TYPE these are Waterspout
+events) and unrated records whose countries are all ocean codes (NOA, EAA, OCA, SOA, SOF). Kept,
+they made the Florida Keys the world's top "tornado" box. Rated offshore records are kept.
+
     python3 -I build_tornado_archive.py tornadoes-noESWD.json ../data/ta_tornado.json.gz
 """
 import sys, json, gzip, math, collections
@@ -32,6 +37,16 @@ def rating(x):
         except (TypeError, ValueError):
             pass
     return best
+
+
+OCEAN = {'NOA', 'EAA', 'OCA', 'SOA', 'SOF'}
+
+
+def waterspout(p, r):
+    if r >= 0:
+        return False
+    cs = set(p.get('countries') or [])
+    return p.get('source') == ['NCEI'] or (bool(cs) and cs <= OCEAN)
 
 
 def lines(geom):
@@ -78,7 +93,7 @@ def cells(geom):
 def main(src, dst):
     feats = json.load(open(src))['features']
     days = collections.defaultdict(lambda: [set() for _ in THR])   # (cell, y, m) -> per threshold set of days
-    y0, y1, last = 9999, 0, ''
+    y0, y1, last, dropped = 9999, 0, '', 0
     cc = collections.Counter()
     for f in feats:
         p = f['properties']
@@ -89,6 +104,9 @@ def main(src, dst):
         if Y < 1950:
             continue
         r = rating(p.get('f-scale'))
+        if waterspout(p, r):
+            dropped += 1
+            continue
         cs = cells(f.get('geometry'))
         if not cs:
             continue
@@ -104,7 +122,7 @@ def main(src, dst):
     out = dict(
         meta=dict(hazard='tornado', label='Tornado (Tornado Archive, worldwide)', unit='(E)F',
                   thresholds=THR, year0=y0, year1=y1, through=last[:7], grid=G, lat0=LAT0, lon0=LON0,
-                  nlat=NLAT, nlon=NLON, gaps=[],
+                  nlat=NLAT, nlon=NLON, gaps=[], waterspouts_dropped=dropped,
                   source='The Tornado Archive (Maas et al. 2024, BAMS, doi:10.1175/BAMS-D-23-0123.1), '
                          'public file without ESWD (Europe)',
                   countries=dict(cc.most_common())),
@@ -112,7 +130,7 @@ def main(src, dst):
         v=[[len(days[k][i]) for k in keys] for i in range(len(THR))])
     with gzip.open(dst, 'wt', compresslevel=9) as fh:
         json.dump(out, fh, separators=(',', ':'))
-    print(dst, len(keys), 'box-months', y0, y1, last)
+    print(dst, len(keys), 'box-months', y0, y1, last, 'waterspouts dropped:', dropped)
 
 
 if __name__ == '__main__':

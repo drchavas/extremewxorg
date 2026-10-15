@@ -12,16 +12,17 @@ mean. A side card says what to look for in each field.
 
 ## What it shows
 
-- **Show:** Months (animated; it glides between monthly means), Season (DJF/MAM/JJA/SON),
-  Annual, Range (largest monthly mean minus smallest) and Peak month (cyclic month palette).
+- **Show:** Months (animated; steps month to month, see Method notes), Season (four buttons in the bar
+  above the map), Annual, and under Advanced Range (largest monthly mean minus smallest) and Peak month
+  (cyclic month palette). Outside Months the slider and Play are hidden, so a screenshot can't be read as one month.
 - **Relative to:** nothing, the annual mean (seasonal anomaly) or the zonal mean (east–west
   departure). The zonal option is for global grids only.
-- **Period:** 1996–2025 only (the most recent 30 years).
+- **Period:** 1996–2025 (the most recent 30 years). The incomplete worldwide tornado field uses 1992–2021.
 - **Map:** Equal Earth, latitude–longitude, a draggable globe, and regional conic/azimuthal views
   (North America, CONUS, Europe, Asia, Africa, South America, Australia, Arctic, Antarctic).
   Drag pans the map or spins the globe; the wheel and the +/− buttons zoom.
-- **Layout (2026-10-14, after the ENSO grid page):** a top bar with Variable, Show (Months/Season/Annual), Map, Export and
-  Reload default, plus a "Try these" tour row. Below it are the time bar and one map. Everything else is collapsed in
+- **Layout (2026-10-14, after the ENSO grid page):** a top bar with Variable, Show (Months/Season/Annual), Map and
+  Reload default (Export sits in the bar above the map), plus a "Try these" tour row. Below it are the time bar and one map. Everything else is collapsed in
   **Advanced settings**: Range/Peak month, Relative to, units, wind, overlays, speed, theme and copy link. Under the map are
   "What to look for" and the clicked place's seasonal cycle. The zonal-mean and month × latitude panels, the reading guide
   and Methods are collapsed.
@@ -73,7 +74,9 @@ computed in the page from those variables.
 2° grid from 90°S, 180°W. It is built by `build/build_tornado_archive.py` from `tornadoes-noESWD.json`
 in github.com/malcolmmaas/tornadoarchive-pub: a one-time snapshot with no license stated, no Europe
 (ESWD), uneven national coverage and nothing after 2021 (2022 holds only 10 tornadoes, so the field
-uses 1992–2021). The field carries its own `per`, so it ignores the page's period.
+uses 1992–2021). Waterspouts are dropped: unrated records from NCEI alone (NCEI EVENT_TYPE Waterspout)
+and unrated records lying entirely offshore (ocean codes NOA, EAA, OCA, SOA, SOF), 3,609 in all; kept, they made the
+Florida Keys the world's top box. The field carries its own `per`, so it ignores the page's period.
 
 ## Rebuilding
 
@@ -124,6 +127,12 @@ python3 build_climo.py ../data /tmp/c /tmp/cpl /tmp/cw           # -> data/*.bin
   - Anomalies and changes are symmetric about zero, at the 98th percentile of |value|.
 - Albedo and convective share are ratios: their seasons and annual values are the ratio of the summed parts
   (1 − ΣASR/ΣISR, Σmcpr/Σmtpr), not the mean of monthly ratios.
+  - The "relative to the annual mean" baseline, the readout's annual mean and the panels' annual lines use the
+    same ratio of summed parts (independent review, 2026-10-14). The global seasonal cycle is 1 − ΣASR/ΣISR.
+- **Snow depth:** boxes that keep 20 mm or more in every month are blank (`glac` in `FIELDS`). ERA5 holds snow
+  fixed at 10 m water equivalent on glaciers and ice sheets, and any glacier in a 1° box carries that into the mean.
+- Diverging scales (anomalies, zonal departures) are at least ±2% of the field's preset range, so rounding noise
+  is never stretched across the whole palette.
 - Wind speed is the speed of the monthly-mean vector. Shear is the mean of 6-hourly magnitudes.
 - Peak month is blank where the seasonal cycle (max − min month) is under 1% of the field's color
   range (ERA5), or under 3% of the 98th-percentile yearly total (counts).
@@ -133,7 +142,7 @@ python3 build_climo.py ../data /tmp/c /tmp/cpl /tmp/cw           # -> data/*.bin
 
 ## Rendering
 
-The page is one self-contained file (`earthvis.html`, script inline, about 125 KB). Edit it directly.
+The page is one self-contained file (`earthvis.html`, script inline, about 170 KB). Edit it directly.
 
 - `MapView` inverse-projects every pixel once per view into lon/lat, then into per-grid bilinear
   indices and weights. The globe and polar views use a cheap cos-distance visibility test; the
