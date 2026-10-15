@@ -87,7 +87,9 @@ enso/                 El Nino / La Nina composites (new 2026-10-10, BETA)
 - *Historical Event Viewer* → `scs/trends/scsevents.html`
 - *Historical Trends* → `scs/trends/scstrend.html` (county) and `scs/trends/scstrend_grid.html` (2° grid)
 
-**Climate Variability (El Niño and La Niña)**
+**Climate (the average year, and El Niño and La Niña)** (one section since 2026-10-14)
+- *EarthVis: Climate and Extremes Through the Year* → `climate/earthvis.html` (BETA chip) — present-day
+  (1996–2025) ERA5 climatology through the year plus TC / severe-weather counts. Details: `climate/README.md`.
 - *El Niño & La Niña Impacts — global grid* → `enso/ensogrid.html` (BETA chip on the landing page)
   — monthly ENSO composites (Jun–May) of ERA5 T/precip, IBTrACS TC activity and the U.S. 2° Storm
   Events grids, with the RONI years shown. Details: `enso/README.md`.
