@@ -1467,6 +1467,7 @@ function writeTitles(){
   let sub=`${statLabel()} · ${perLabel()} · ${src}`;
   const yu=yearsUsed(); if(yu) sub+=` · ${yu}`;
   const el=document.getElementById('mapSub'); el.innerHTML=esc(sub);
+  if(f.src==='ta') el.innerHTML=el.innerHTML.replace('The Tornado Archive','<a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a>');
   const w=warnings(); if(w) el.innerHTML+=`<br><span class="warn">${esc(w)}</span>`;
   document.title='EarthVis — '+f.label;
 }
