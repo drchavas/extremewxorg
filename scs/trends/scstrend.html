@@ -172,7 +172,7 @@
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-14 23:36 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-19 15:49 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -227,6 +227,17 @@
               ASOS stations. The remark <code>FZRANO</code> (freezing-rain sensor not operational)
               is not counted as freezing rain, and a peak-wind group with a three-digit speed
               (100&nbsp;kt or more) is treated as a coding error.</li>
+          <li><b>Extreme heat</b> comes from the ECMWF <b>ERA5</b> reanalysis (hourly, 0.25&deg;,
+              NCAR&rsquo;s copy), not from reports. Two hazards: <b>Extreme Heat (temperature)</b>
+              counts days whose maximum 2&nbsp;m air temperature reached 90, 95, 100 or 105&nbsp;&deg;F;
+              <b>Extreme Heat Index</b> counts days whose maximum heat index reached 90, 100, 105, 110
+              or 115&nbsp;&deg;F, with heat index computed every hour from temperature and dewpoint by
+              the NWS formula (the Rothfusz regression and its humidity adjustments). A day is midnight
+              to midnight local standard time. Each ERA5 cell counts its own days, and a county&rsquo;s
+              value is the area-weighted mean of the cells it overlaps; state and national panels are
+              the area-weighted mean over counties, i.e. the days a typical place saw (so values need
+              not be whole numbers). The method reproduces the Indiana heat-index analysis it grew out of
+              to within 2 point-days in 86,000. Lower 48 only; 1950 onward.</li>
           <li><b>Locate each report.</b> Storm Events reports are assigned to a county by
               <code>STATE_FIPS</code> + <code>CZ_FIPS</code> rather than by county name, which
               avoids name collisions and independent cities. Connecticut is drawn with its
@@ -281,7 +292,8 @@
               changes which counties are drawn, and it never touches the annual or monthly panels.
               Because it is a neighborhood average, <b>the drawn value is not the county's own</b>
               &mdash; hover reports both when they differ. Station hazards and derecho events are
-              not smoothed: those are points and single storms, not fields.</li>
+              not smoothed: those are points and single storms, not fields. Extreme heat is never
+              smoothed either: ERA5 is already a continuous gridded field.</li>
           <li><b>Color scales.</b> Set from the data on screen: robust upper percentiles for
               climatology, symmetric about zero for trend.</li>
           <li><b>Derecho</b> is the same county climatology and trend as thunderstorm wind,
@@ -439,7 +451,16 @@ async function loadHazard(k){
     d.ci=Int32Array.from(d.ci); d.yi=Int16Array.from(d.yi); d.mi=Int8Array.from(d.mi);
     d.v=d.v.map(a=>Int16Array.from(a));
     d.rri=Int32Array.from(d.rri); d.ryi=Int16Array.from(d.ryi); d.rmi=Int8Array.from(d.rmi);
-    d.rv=d.rv.map(a=>Int16Array.from(a));
+    /* Gridded fields store tenths of a day per county (vscale 10) and hundredths per region (rscale 100). */
+    const vs=d.meta.vscale||1, rs=d.meta.rscale||1;
+    d.v=d.v.map(a=>vs===1?Int16Array.from(a):Float32Array.from(a,x=>x/vs));
+    d.rri=Int32Array.from(d.rri); d.ryi=Int16Array.from(d.ryi); d.rmi=Int8Array.from(d.rmi);
+    d.rv=d.rv.map(a=>rs===1?Int16Array.from(a):Float32Array.from(a,x=>x/rs));
+    /* A gridded field (extreme heat) covers the lower 48 only: a county outside it
+       has no value, which is not the same as zero days. */
+    d.field = d.meta.kind==='field';
+    if(d.field){ d.cover=new Uint8Array(GEOID.length);
+      d.counties.forEach(g=>{ const gi=gidxOf[g]; if(gi!==undefined) d.cover[gi]=1; }); }
     d.M=new Float32Array(GEOID.length*d.nY);
   }
   HZ[k]=d; return d;
@@ -697,6 +718,7 @@ function countyMetrics(gated=true){
   const xk=keep.map(y=>y+y0), yk=new Array(keep.length);
   const nk=keep.length;
   for(let c=0;c<nC;c++){
+    if(d.cover && !d.cover[c]){ mean[c]=NaN; continue; }   // outside a field's domain
     const base=c*nY; let s=0;
     for(let j=0;j<keep.length;j++){ const v=M[base+keep[j]]; s+=v; yk[j]=v; }
     mean[c]=nk?s/nk:NaN;
@@ -753,11 +775,12 @@ function seriesMonthYear(){
 
   if(S.county){
     const gi=gidxOf[S.county];
+    if(d.cover && !d.cover[gi]){ valid.fill(0); vm.fill(0); return {my:out,valid,vm}; }
     const ci=d.ci,yi=d.yi,mi=d.mi,g=d.g;
     for(let k=0;k<ci.length;k++){ if(g[ci[k]]!==gi) continue; out[yi[k]*12+(mi[k]-1)]+=v[k]; }
   } else {
     const ri=d.regions.indexOf(S.region||'US');
-    if(ri<0) return {my:out,valid,vm};
+    if(ri<0){ if(d.field){ valid.fill(0); vm.fill(0); } return {my:out,valid,vm}; }
     const rv=d.rv[Math.min(S.thresh,d.rv.length-1)];
     for(let k=0;k<d.rri.length;k++){ if(d.rri[k]!==ri) continue; out[d.ryi[k]*12+(d.rmi[k]-1)]+=rv[k]; }
   }
@@ -850,7 +873,7 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid){
   // points
   years.forEach((yr,i)=>{
     out+=`<circle cx="${X(yr).toFixed(1)}" cy="${Y(vals[i]).toFixed(1)}" r="4"`+
-         ` fill="${t.pt}" stroke="${t.panel}" stroke-width="1"><title>${yr}: ${vals[i]}</title></circle>`;
+         ` fill="${t.pt}" stroke="${t.panel}" stroke-width="1"><title>${yr}: ${+(+vals[i]).toFixed(2)}</title></circle>`;
   });
   if(r){
     const per=r.slope*10;
@@ -914,7 +937,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
     // not a gap, and dropping those points is what biases the eye (and the fit)
     years.forEach((yr,i)=>{
       out+=`<circle cx="${X(yr).toFixed(1)}" cy="${Y(vals[i]).toFixed(1)}" r="2.1" fill="${t.pt}"`+
-           `${vals[i]<=0?' opacity=".55"':''}><title>${MONTHS[m]} ${seasonCal(yr,m)}: ${vals[i]}</title></circle>`;
+           `${vals[i]<=0?' opacity=".55"':''}><title>${MONTHS[m]} ${seasonCal(yr,m)}: ${+(+vals[i]).toFixed(2)}</title></circle>`;
     });
     out+=txt(cx+cw/2,cy+12,MONTHS[m],{size:11.5,weight:650,anchor:'middle'});
     if(r) out+=txt(R-2,TOP+9,'R² '+r.r2.toFixed(2),
@@ -960,7 +983,7 @@ function syncTierSel(){
 }
 function syncSmoothSel(){
   const wrap=document.getElementById('smWrap'), sel=document.getElementById('smSel');
-  wrap.style.display = (isStation()||isEvent()) ? 'none' : '';
+  wrap.style.display = (isStation()||isEvent()||isField()) ? 'none' : '';
   sel.value=S.smooth;
 }
 function syncDpToggle(){
@@ -1221,6 +1244,10 @@ function reportingBreakHtml(){
 }
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
+  if(HZ[S.hazard]&&HZ[S.hazard].field)
+    return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer, so counts run somewhat below what a single weather station records &mdash; '+'<b>trust the trends and the geography more than the absolute numbers</b>. Days run '+'midnight to midnight local standard time. Before about 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations. Lower 48 only.'+
+      ' Each ERA5 cell counts its own days; a county&rsquo;s value is the area-weighted mean of the '+
+      'cells it overlaps, so it describes a typical place in the county rather than its hottest spot.';
   /* The derecho hazard is Storm Events wind reports, but WHICH storms count is
      the SPC archive's call — so it carries that attribution as well as the
      usual report caveat, the same way freezing rain carries DelPizzo. */
@@ -1260,7 +1287,8 @@ function guideHtml(){
     'NWS offices\' records for those two months were lost when NCEI migrated the archive &mdash; '+
     'so 1993 is dropped from maps and annual plots rather than counted as a quiet year.';
 }
-function smoothOn(){ return S.smooth!=='off' && !isStation() && !isEvent(); }
+function isField(){ return !!(HZ[S.hazard] && HZ[S.hazard].field); }
+function smoothOn(){ return S.smooth!=='off' && !isStation() && !isEvent() && !isField(); }
 function smoothField(v){
   if(!smoothOn()) return v;
   const {idx,wt}=smoothNeighbours();
@@ -1689,7 +1717,7 @@ function gapNote(){
   const late=yrs.filter(y=>y!==1993);
   if(late.length)
     out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
-         `not yet published the whole year`+(d.meta.through?` (Storm Events currently runs through `+
+         `not yet published the whole year`+(d.meta.through?` (${d.field?'ERA5':'Storm Events'} currently runs through `+
          `${monthName(d.meta.through)})`:'')+`. The months already published appear in the monthly panels.`;
   return out;
 }
@@ -1847,13 +1875,21 @@ function drawPanels(){
           `every year of ${a}–${b}`+
           (S.dpOnly?`, drawn from the QC'd subset of <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" `+
                     `target="_blank" rel="noopener">DelPizzo et al. (2025)</a>.`:`.`)
-        : `Lower panels count <b>${esc(placeLabel())}-wide</b> ${countWord()}s — dates on which anywhere `+
+        : d.field
+          ? (S.region&&!d.regions.includes(S.region)
+              ? `<b>${esc(placeLabel())}</b> is outside this field, which covers the lower 48 only.`
+              : `Lower panels average <b>${esc(placeLabel())}</b>: the ${countWord()}s a typical place there `+
+                `saw, an area-weighted mean over its counties (not the days on which anywhere in it qualified).`)
+          : `Lower panels count <b>${esc(placeLabel())}-wide</b> ${countWord()}s — dates on which anywhere `+
           `in the state qualified, which is deliberately not the sum of per-county counts.`)+
     gapNote()+
     ` The maps always show the whole country; choosing a state re-centers them and scopes these `+
     `panels, it does not hide anything. `+
     (stn
       ? `A station-year below 90% complete is dropped as <b>no observation</b>, not counted as zero.`
+      : d.field
+      ? `ERA5 is a reanalysis on a 0.25° grid: its daily high is the warmest hour over an area, so counts `+
+        `run below single-station records; read the trends and the geography before the absolute numbers.`
       : `Storm Events is a <i>report</i> database: counts rose steeply into the 1990s as population, `+
         `spotter networks and radar changed, so long-period trends partly measure reporting practice.`);
 }

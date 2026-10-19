@@ -162,7 +162,7 @@
      <a href="scstrend.html">Prefer county resolution?</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-14 23:36 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-19 15:49 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -172,7 +172,7 @@
     <div class="fld"><label for="ctySel">Box</label><select id="ctySel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" title="A Gaussian blur over the two maps, sigma selectable in degrees to match the county page. Boxes with no value are excluded and stay gray; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+    <div class="fld" id="smWrap" title="A Gaussian blur over the two maps, sigma selectable in degrees to match the county page. Boxes with no value are excluded and stay gray; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="2">2&deg;</option><option value="off">Raw</option></select></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole country">&#8592; Full U.S.</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
@@ -209,6 +209,11 @@
           <li><b>Source.</b> NOAA/NCEI Storm Events Database — every hail, tornado and
               thunderstorm-wind report. Only county-type records (<code>CZ_TYPE = C</code>)
               are used. Puerto Rico lies outside this grid.</li>
+          <li><b>Extreme heat</b> is not reports but the ECMWF <b>ERA5</b> reanalysis (hourly,
+              0.25&deg;): days whose maximum 2&nbsp;m temperature, or maximum NWS heat index, reached
+              the threshold, midnight to midnight local standard time. Each ERA5 cell counts its own
+              days, and a box&rsquo;s value is the mean over the cells whose centres lie on U.S. land
+              inside it, so sea, Canada and Mexico are left out. 1950 onward.</li>
           <li><b>Position each report.</b> Its own <code>BEGIN_LAT</code>/<code>BEGIN_LON</code>
               where present; otherwise the center of the county that reported it (the average of
               its simplified boundary points, which can differ slightly from the true centroid for
@@ -252,7 +257,8 @@
               &mdash; hover reports both when they differ. Totals are not conserved. It also
               interacts with the white &ldquo;exactly 0&rdquo; shading: with smoothing on, a box is
               white only when its whole neighborhood is zero, so the zero boundary is drawn more
-              conservatively than it really is. Switch smoothing off to see the true edge.</li>
+              conservatively than it really is. Switch smoothing off to see the true edge. Extreme heat
+              is never smoothed: ERA5 is already a continuous gridded field.</li>
           <li><b>Color scales.</b> Set from the data on screen: the 98th percentile for
               climatology, the 95th of absolute values for trend, symmetric about zero.</li>
         </ol>
@@ -462,7 +468,7 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid,gate){
   // points
   years.forEach((yr,i)=>{
     out+=`<circle cx="${X(yr).toFixed(1)}" cy="${Y(vals[i]).toFixed(1)}" r="4"`+
-         ` fill="${t.pt}" stroke="${t.panel}" stroke-width="1"><title>${yr}: ${vals[i]}</title></circle>`;
+         ` fill="${t.pt}" stroke="${t.panel}" stroke-width="1"><title>${yr}: ${+(+vals[i]).toFixed(2)}</title></circle>`;
   });
   if(r){
     const per=r.slope*10;
@@ -528,7 +534,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,gate,vm){
     // not a gap, and dropping those points is what biases the eye (and the fit)
     years.forEach((yr,i)=>{
       out+=`<circle cx="${X(yr).toFixed(1)}" cy="${Y(vals[i]).toFixed(1)}" r="2.1" fill="${t.pt}"`+
-           `${vals[i]<=0?' opacity=".55"':''}><title>${MONTHS[m]} ${yr}: ${vals[i]}</title></circle>`;
+           `${vals[i]<=0?' opacity=".55"':''}><title>${MONTHS[m]} ${yr}: ${+(+vals[i]).toFixed(2)}</title></circle>`;
     });
     out+=txt(cx+cw/2,cy+12,MONTHS[m],{size:11.5,weight:650,anchor:'middle'});
     if(r) out+=txt(R-2,TOP+9,'R² '+r.r2.toFixed(2),
@@ -544,6 +550,7 @@ function syncThresholds(){
     o.value=i; o.textContent=t.label; sel.appendChild(o); });
   S.thresh=Math.min(S.thresh,h.thresholds.length-1);
   sel.value=S.thresh;
+  document.getElementById('smWrap').style.display = isField() ? 'none' : '';
 }
 function syncYears(){
   const d=HZ[S.hazard];
@@ -581,7 +588,8 @@ async function loadHazard(k){
   const spec=INDEX.hazards.find(h=>h.key===k);
   const d=await gzFetch('data/'+spec.file);
   d.ci=Int32Array.from(d.ci); d.yi=Int16Array.from(d.yi); d.mi=Int8Array.from(d.mi);
-  d.v=d.v.map(a=>Int16Array.from(a));
+  const vs=d.meta.vscale||1;                      // gridded fields: tenths of a day (vscale 10)
+  d.v=d.v.map(a=>vs===1?Int16Array.from(a):Float32Array.from(a,x=>x/vs));
   d.nY=d.meta.year1-d.meta.year0+1;
   HZ[k]=d; return d;
 }
@@ -622,7 +630,9 @@ function buildCells(d){
   const m=d.meta;
   NLAT=m.nlat; NLON=m.nlon; GRID=m.grid; LAT0=m.lat0; LON0=m.lon0;
   Y0=m.year0; NY=d.nY;
-  const seen=new Set(d.ci);
+  /* A gridded field (extreme heat) lists every land box it covers, so a box that
+     never reached the threshold is a real zero, not a missing box. */
+  const seen=new Set(m.boxes||d.ci);
   CELLS=[]; cidx={};
   const feats=[];
   seen.forEach(ci=>{
@@ -955,7 +965,9 @@ function drawColorbar(el,C,title){
    setting means the same physical thing as on the county page. On this 2° grid
    that is exactly one box. */
 function sigDeg(){ const v=parseFloat(S.smooth); return isFinite(v)?v:2; }
-function smoothOn(){ return S.smooth!=='off'; }
+/* Extreme heat is a continuous gridded field (ERA5), so it is always drawn raw. */
+function isField(){ return !!(HZ[S.hazard] && HZ[S.hazard].meta.kind==='field'); }
+function smoothOn(){ return S.smooth!=='off' && !isField(); }
 /* The badge appended to both map subtitles. */
 function smTag(){
   return smoothOn()
@@ -1014,6 +1026,9 @@ function reportingBreakHtml(){
 }
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
+  if(HZ[S.hazard]&&HZ[S.hazard].meta.kind==='field')
+    return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer, so counts run somewhat below what a single weather station records &mdash; '+'<b>trust the trends and the geography more than the absolute numbers</b>. Days run '+'midnight to midnight local standard time. Before about 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations. Lower 48 only.'+
+      ' Each ERA5 cell counts its own days; a box&rsquo;s value is the mean over the cells on U.S. land inside it.';
   if(S.hazard==='derechoday'){
     return lead+
       '<b>Derechoes are single storms</b>, taken from the archive of '+
@@ -1115,11 +1130,15 @@ function drawPanels(){
     gapNote()+
     ` State and county outlines are geographic reference only; the state menu re-centers the maps `+
     `and does not change what is analyzed. Counties appear once you zoom in past the national view. `+
-    `Storm Events is a <i>report</i> database: counts rose steeply into the 1990s as population, spotter `+
+    (HZ[S.hazard].meta.kind==='field'
+      ? `ERA5 is a reanalysis on a 0.25° grid: a box's value is the mean of the day counts of the U.S. land `+
+        `cells inside it, and each cell's daily high is the warmest hour over an area, so counts run below `+
+        `single-station records; read the trends and the geography before the absolute numbers.`
+      : `Storm Events is a <i>report</i> database: counts rose steeply into the 1990s as population, spotter `+
     `networks and radar changed, so long-period trends partly measure reporting practice. Reports without `+
     `usable coordinates are placed at their county centroid — which is essentially every hail and `+
     `wind report in <b>1993–1995</b>, three years that carry no coordinates at all, so boxes in `+
-    `those years are located only to county precision.`;
+    `those years are located only to county precision.`);
 }
 /* Say so on screen when the window straddles the missing months. */
 function gapNote(){
@@ -1135,7 +1154,7 @@ function gapNote(){
   const late=yrs.filter(y=>y!==1993), thru=HZ[S.hazard].meta.through;
   if(late.length)
     out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
-         `not yet published the whole year`+(thru?` (Storm Events currently runs through `+
+         `not yet published the whole year`+(thru?` (${HZ[S.hazard].meta.kind==='field'?'ERA5':'Storm Events'} currently runs through `+
          `${MONTHS[+thru.split('-')[1]-1]} ${thru.split('-')[0]})`:'')+
          `. The months already published appear in the monthly panels.`;
   return out;

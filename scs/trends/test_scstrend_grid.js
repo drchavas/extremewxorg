@@ -364,6 +364,25 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
   await new Promise(r=>setTimeout(r,800));
 
+  console.log('\n--- extreme heat (ERA5 gridded field)');
+  {
+    const haz=k=>[...$('hazSel').options].some(o=>o.value===k);
+    say('the hazard menu offers both heat hazards',haz('heatindex')&&haz('heat'));
+    $('hazSel').value='heat'; await $('hazSel').onchange({target:{value:'heat'}});
+    await new Promise(r=>setTimeout(r,1200));
+    const d=await w.eval("loadHazard('heat')");
+    say('every land box is listed, including all-zero ones',d.meta.boxes.length===258,String(d.meta.boxes.length));
+    say('stored tenths are scaled back to days',d.meta.vscale===10&&Array.from(d.v[0]).some(x=>x!==Math.round(x)));
+    say('heat gets the reanalysis caveat',/reanalysis/.test($('guide').innerHTML)&&!/Storm Events records/.test($('guide').innerHTML));
+    say('heat is never smoothed',w.eval('smoothOn()')===false&&$('smWrap').style.display==='none');
+    say('and the map says so',/Raw data/.test($('climSub').innerHTML),$('climSub').textContent);
+    say('the footer names ERA5',/ERA5/.test($('foot').innerHTML));
+    say('heat series is non-zero',seriesTotal()>0,seriesTotal().toFixed(0));
+    $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+    await new Promise(r=>setTimeout(r,900));
+    say('back on hail the smoothing control returns',$('smWrap').style.display===''&&w.eval('smoothOn()')===true);
+  }
+
   console.log('\n--- reload default');
   // jsdom makes location.reload non-configurable, so the reload itself cannot be
   // intercepted here — asserting it would only be testing a stub. What matters and

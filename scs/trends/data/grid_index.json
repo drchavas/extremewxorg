@@ -120,6 +120,73 @@
    "y0": 1996,
    "y1": 2025,
    "file": "grid_derechoday.json.gz"
+  },
+  {
+   "k": "heatindex",
+   "label": "Extreme Heat Index",
+   "unit": "\u00b0F",
+   "thresholds": [
+    {
+     "k": "hi90",
+     "label": "Heat index \u2265 90\u00b0F (extreme caution)",
+     "min": 90
+    },
+    {
+     "k": "hi100",
+     "label": "Heat index \u2265 100\u00b0F",
+     "min": 100
+    },
+    {
+     "k": "hi105",
+     "label": "Heat index \u2265 105\u00b0F (danger)",
+     "min": 105
+    },
+    {
+     "k": "hi110",
+     "label": "Heat index \u2265 110\u00b0F",
+     "min": 110
+    },
+    {
+     "k": "hi115",
+     "label": "Heat index \u2265 115\u00b0F",
+     "min": 115
+    }
+   ],
+   "y0": 1950,
+   "y1": 2026,
+   "kind": "field",
+   "file": "grid_heatindex.json.gz"
+  },
+  {
+   "k": "heat",
+   "label": "Extreme Heat (temperature)",
+   "unit": "\u00b0F",
+   "thresholds": [
+    {
+     "k": "t90",
+     "label": "Max temperature \u2265 90\u00b0F",
+     "min": 90
+    },
+    {
+     "k": "t95",
+     "label": "Max temperature \u2265 95\u00b0F",
+     "min": 95
+    },
+    {
+     "k": "t100",
+     "label": "Max temperature \u2265 100\u00b0F",
+     "min": 100
+    },
+    {
+     "k": "t105",
+     "label": "Max temperature \u2265 105\u00b0F",
+     "min": 105
+    }
+   ],
+   "y0": 1950,
+   "y1": 2026,
+   "kind": "field",
+   "file": "grid_heat.json.gz"
   }
  ]
 }

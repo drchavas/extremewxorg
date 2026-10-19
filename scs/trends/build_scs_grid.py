@@ -269,7 +269,7 @@ def main():
             "file": f"grid_{hz}.json.gz",
         })
     index["hazards"] += others
-    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday"])}
+    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "fzra", "pkwnd", "derecho"])}
     index["hazards"].sort(key=lambda h: order.get(h["k"], 99))
     with open(os.path.join(outdir, "grid_index.json"), "w") as fh:
         json.dump(index, fh, indent=1)

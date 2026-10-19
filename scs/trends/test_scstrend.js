@@ -480,6 +480,39 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     } else console.log('  (no partial year in the data; skipped)');
   }
 
+  console.log('\n--- extreme heat (ERA5 gridded field)');
+  {
+    const haz=k=>[...$('hazSel').options].some(o=>o.value===k);
+    say('the hazard menu offers both heat hazards',haz('heatindex')&&haz('heat'));
+    $('regSel').value='IN'; fire('regSel','change');
+    $('hazSel').value='heatindex'; await $('hazSel').onchange({target:{value:'heatindex'}});
+    await new Promise(r=>setTimeout(r,1500));
+    say('heat gets the reanalysis caveat, not Storm Events',
+        /reanalysis/.test($('guide').innerHTML)&&!/Storm Events records/.test($('guide').innerHTML));
+    say('heat is never smoothed',w.eval('smoothOn()')===false&&$('smWrap').style.display==='none');
+    say('and the map says so',/Raw data/.test($('climSub').innerHTML),$('climSub').textContent);
+    const d=await w.eval("loadHazard('heatindex')");
+    const pr=g=>{const o=w.eval(`probe('heatindex',2,'${g}',2000,2025,'off')`); return o?o.mean:null;};
+    const r={vs:d.meta.vscale, frac:Array.from(d.v[0]).some(x=>x!==Math.round(x)),
+      ak:pr('02020'), hi:pr('15003'), harris:pr('48201'), marion:pr('18097'), through:d.meta.through};
+    say('stored tenths are scaled back to days',r.vs===10&&r.frac);
+    say('Alaska and Hawaii counties are no data, not zero',Number.isNaN(r.ak)&&Number.isNaN(r.hi),r.ak+','+r.hi);
+    say('Harris County sees more days of heat index ≥105°F than Marion County',r.harris>r.marion,r.harris+' vs '+r.marion);
+    say('the partial year runs through July 2026',r.through==='2026-07',r.through);
+    say('the panels average Indiana rather than counting anywhere-days',/typical place/.test($('foot').innerHTML));
+    $('regSel').value='AK'; fire('regSel','change');
+    await new Promise(r=>setTimeout(r,300));
+    say('Alaska is reported as outside the field',/outside this field/.test($('foot').innerHTML));
+    $('regSel').value='IN'; fire('regSel','change');
+    $('hazSel').value='heat'; await $('hazSel').onchange({target:{value:'heat'}});
+    await new Promise(r=>setTimeout(r,1500));
+    say('temperature-only heat loads with its own thresholds',
+        [...$('thrSel').options].map(o=>o.textContent).some(t=>/100/.test(t)));
+    $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+    await new Promise(r=>setTimeout(r,900));
+    say('back on hail the smoothing control returns',$('smWrap').style.display===''&&w.eval('smoothOn()')===true);
+  }
+
   console.log('\n--- links the page cannot honor fall back to the default');
   {
     const st=()=>Object.fromEntries(new URLSearchParams(w.location.hash.slice(1)));

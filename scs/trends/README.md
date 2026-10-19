@@ -215,3 +215,68 @@ units are drawn; that switching hazard, threshold or state cannot strand the rea
 selection that no longer exists; that the heavy per-report file is fetched only on demand;
 and that a map is never built into a hidden container, which silently pins it at maximum
 zoom.
+
+## Extreme heat (ERA5)
+
+Two hazards, both from the ECMWF **ERA5** reanalysis rather than reports:
+
+| Key | What counts as a day | Thresholds |
+|---|---|---|
+| `heat` | daily maximum 2 m air temperature ≥ threshold | 90, 95, 100, 105 °F |
+| `heatindex` | daily maximum NWS heat index ≥ threshold | 90, 100, 105, 110, 115 °F |
+
+Hourly 2 m temperature and dewpoint, 0.25°, lower 48 (24–50 N, 125–66 W), 1950 onward, read
+straight from NCAR's ERA5 copy on AWS (`nsf-ncar-era5`, ds633.0) with byte-range requests,
+so only the chunks over the U.S. are downloaded (~50 MB per month). No account or key needed.
+
+- **Heat index** follows the NWS procedure (simple formula; Rothfusz regression when the
+  average of that and T is ≥ 80 °F; low- and high-humidity adjustments). RH from T and Td by
+  the Magnus formula. `heatcalc.py`.
+- **Days** run midnight to midnight local standard time, by longitude (UTC offset
+  round(lon/15) h). UTC days, which the Indiana card used, end at 7 pm in Indiana and let one
+  hot evening count on two days: about 4% more days at ≥90 °F, 10% more at ≥105 °F.
+- **Counties**: each ERA5 cell gets its own day counts; a county's count is the
+  area-weighted mean over the cells it overlaps (`geo/weights.json`, from the site's own
+  county outlines) — the days a typical place in the county saw. State and national panels
+  are the area-weighted mean over counties. Values are stored as integers: tenths
+  of a day for counties and boxes (`meta.vscale` = 10), hundredths for state and national series
+  (`meta.rscale` = 100); the pages divide them back out. Alaska, Hawaii and Puerto Rico are outside the domain and
+  show as no data.
+- **2° boxes**: the plain mean over the ERA5 cells whose centres lie on U.S. land in the box.
+- **No smoothing.** The heat maps are always drawn raw (the Smoothing control is hidden):
+  ERA5 is already a continuous gridded field, so the 2° blur would only smear real contrasts
+  such as desert against mountains.
+
+**Validation.** Written independently of the Indiana heat-index card
+(`Baseball Cards/Heat Index Baseball Card`), then run with that card's settings (UTC days,
+May–Sep, its 21 × 21 box) for 2000, 2005, 2012 and 2024: day counts at every threshold agree
+at all but 2 of ~86,000 point-days; daily maxima agree to 0.2 °F wherever HI ≥ 80 °F (the
+two codes use different formulas below 80 °F, which no threshold reaches).
+
+**Caveats** (on the pages too): ERA5's daily maximum is the warmest *hourly* value over a
+~25 km cell, so counts run below single-station records, most in deserts and cities; trends
+and geography are more trustworthy than the absolute numbers. Before ~1979 no satellite data
+fed ERA5, so the earliest decades rest on fewer observations.
+
+### Building
+
+```sh
+# 1. daily maxima, one year per call (~10 min/yr; several in parallel is fine)
+python3 era5_daily_max.py 2024            # -> daily/2024.npz (0.25°, tenths of °F)
+# 2. monthly counts per county and 2° box
+python3 build_heat_data.py counts daily heat_counts geo_heat/weights.json
+# 3. the page files, merged into index.json and grid_index.json
+python3 build_heat_data.py site heat_counts geo_heat/weights.json geo/counties.topo.json.gz data
+```
+
+`build_weights.py` makes `weights.json` from the county outlines (rerun if they change).
+
+### Monthly update
+
+Needs `pip install numpy scipy fsspec aiohttp h5py`. The 0.25° daily archive (`daily/`,
+~1.5 GB) is not kept in the repo; `heat_counts/` (one small file per year) is all the
+update needs.
+
+`update_heat.py heat_counts geo_heat/weights.json` processes the next month NCAR has
+published (about a minute; `--max N` for several) straight into the counts, without the
+0.25° daily archive; then rerun step 3. NCAR's AWS copy runs a month or two behind real time.
