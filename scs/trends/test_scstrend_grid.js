@@ -53,7 +53,8 @@ w.L={
       data.features.forEach(f=>{ const l={feature:f,_h:{},_style:
           (typeof opts.style==='function'?opts.style(f):opts.style),
         on(ev,fn){this._h[ev]=fn}, bindTooltip(fn){this._tip=fn; return this},
-        setStyle(){}, getBounds:()=>B};
+        setStyle(){}, getBounds:()=>B,
+        isTooltipOpen(){return false}, setTooltipContent(){}, getTooltip(){return null}};
         layers.push(l); opts.onEachFeature(f,l); });
     }
     const L={_data:data,_opts:opts,_layers:layers,_styled:0,
@@ -313,7 +314,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('counted in events, not days',/events\/yr/.test($('cbClim').innerHTML)&&
       !/days\/yr/.test($('cbClim').innerHTML),
       ($('cbClim').innerHTML.match(/\w+\/yr/)||[''])[0]);
-  say('map subtitle says events',/Mean annual derecho events per 2/i.test($('climSub').textContent),
+  say('map subtitle says events',/Mean annual derecho events (.*)? ?per 2/i.test($('climSub').textContent),
       $('climSub').textContent);
   // page-level `let CELLS` is not reachable from outside the eval; the metrics
   // arrays are one per box, so their length is the same number
@@ -371,7 +372,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     $('hazSel').value='heat'; await $('hazSel').onchange({target:{value:'heat'}});
     await new Promise(r=>setTimeout(r,1200));
     const d=await w.eval("loadHazard('heat')");
-    say('every land box is listed, including all-zero ones',d.meta.boxes.length===258,String(d.meta.boxes.length));
+    say('every land box is listed, including all-zero ones',d.meta.boxes.length===252,String(d.meta.boxes.length));
     say('stored tenths are scaled back to days',d.meta.vscale===10&&Array.from(d.v[0]).some(x=>x!==Math.round(x)));
     say('heat gets the reanalysis caveat',/reanalysis/.test($('guide').innerHTML)&&!/Storm Events records/.test($('guide').innerHTML));
     say('heat is never smoothed',w.eval('smoothOn()')===false&&$('smWrap').style.display==='none');

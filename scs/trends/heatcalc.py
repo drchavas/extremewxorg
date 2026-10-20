@@ -40,7 +40,9 @@ def read_month(var, y, m, i0, i1, j0, j1, h0=None, h1=None, tries=6):
             with fsspec.open(url, "rb", block_size=2 ** 22,
                              client_kwargs={"trust_env": True}) as f:
                 with h5py.File(f, "r") as h:
-                    return h[VARS[var][1]][slice(h0, h1), i0:i1, j0:j1]
+                    a = h[VARS[var][1]][slice(h0, h1), i0:i1, j0:j1]
+                    a[a > 1e3] = np.nan    # _FillValue/missing_value (9.999e20), which h5py does not mask
+                    return a
         except FileNotFoundError:
             raise
         except Exception as e:

@@ -56,7 +56,8 @@ w.L={
       data.features.forEach(f=>{ const l={feature:f,_h:{},_style:
           (typeof opts.style==='function'?opts.style(f):opts.style),
         on(ev,fn){this._h[ev]=fn}, bindTooltip(fn){this._tip=fn; return this},
-        setStyle(){}, getBounds:()=>B};
+        setStyle(){}, getBounds:()=>B,
+        isTooltipOpen(){return false}, setTooltipContent(){}, getTooltip(){return null}};
         layers.push(l); opts.onEachFeature(f,l); });
     }
     const L={_data:data,_opts:opts,_layers:layers,_styled:0,
@@ -504,6 +505,21 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     await new Promise(r=>setTimeout(r,300));
     say('Alaska is reported as outside the field',/outside this field/.test($('foot').innerHTML));
     $('regSel').value='IN'; fire('regSel','change');
+    /* review fixes */
+    say('axis labels keep the decimals the step needs',w.eval("[stepDec(2.5),stepDec(0.25),stepDec(5)].join()")==='1,2,0');
+    $('regSel').value='AK'; fire('regSel','change');
+    $('ctySel').value='02020'; fire('ctySel','change');
+    say('an Alaska county gets a no-data note, not empty zero panels',
+        /No ERA5 data for/.test($('card').innerHTML)&&/outside this field/.test($('foot').innerHTML));
+    $('regSel').value='IN'; fire('regSel','change');
+    $('y0In').value=1950; fire('y0In','change'); $('y1In').value=2026; fire('y1In','change');
+    say('the period label says the partial year was left out',/2026 incomplete, left out/.test(w.eval('periodLabel()')),w.eval('periodLabel()'));
+    $('y0In').value=2000; fire('y0In','change'); $('y1In').value=2025; fire('y1In','change');
+    say('the map subtitle names the threshold',/\(≥\d+°F\)/.test($('climSub').textContent),$('climSub').textContent);
+    $('thrSel').value=4; fire('thrSel','change');
+    $('hazSel').value='heat'; await $('hazSel').onchange({target:{value:'heat'}});
+    await new Promise(r=>setTimeout(r,1500));
+    say('heat index ≥115 carries over to temperature ≥105, by value',$('thrSel').value==='3',$('thrSel').value);
     $('hazSel').value='heat'; await $('hazSel').onchange({target:{value:'heat'}});
     await new Promise(r=>setTimeout(r,1500));
     say('temperature-only heat loads with its own thresholds',

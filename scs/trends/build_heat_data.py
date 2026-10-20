@@ -38,7 +38,7 @@ HAZ = {
                  "temperature feels like given the humidity."),
         "thr": [(90, "hi90", "Heat index ≥ 90°F (extreme caution)", "≥90°F"),
                 (100, "hi100", "Heat index ≥ 100°F", "≥100°F"),
-                (105, "hi105", "Heat index ≥ 105°F (danger)", "≥105°F"),
+                (105, "hi105", "Heat index ≥ 105°F", "≥105°F"),
                 (110, "hi110", "Heat index ≥ 110°F", "≥110°F"),
                 (115, "hi115", "Heat index ≥ 115°F", "≥115°F")],
     },
@@ -87,12 +87,9 @@ def stage_counts(daily, cdir, wpath, years):
         mon = np.array([d.month for d in dates])
         out = {"ndays": nd}
         for hz, spec in HAZ.items():
-            a = z[spec["var"]].reshape(nd, NCELL).astype(np.float32)
-            miss = a == -32768
-            a = a / 10.0
-            a[miss] = np.nan
-            dayok = ~np.isnan(a).any(axis=1)          # a day is all-or-nothing
-            a[~dayok] = 0.0
+            # integer tenths of deg F, truncated: ">= 10*t" is exactly "true value >= t"
+            a = z[spec["var"]].reshape(nd, NCELL).astype(np.int32)
+            dayok = ~(a == -32768).any(axis=1)        # a day is all-or-nothing
             th = [t for t, *_ in spec["thr"]]
             cc = np.zeros((len(geo), 12, len(th)), np.uint16)   # hundredths of a day
             cb = np.zeros((len(bx), 12, len(th)), np.uint16)
@@ -101,7 +98,7 @@ def stage_counts(daily, cdir, wpath, years):
                 if not sel.any():
                     continue
                 for k, t in enumerate(th):
-                    pc = (a[sel] >= t).sum(axis=0).astype(np.float64)   # days per cell
+                    pc = (a[sel] >= 10 * t).sum(axis=0).astype(np.float64)   # days per cell
                     cc[:, m - 1, k] = np.round(Mc @ pc * 100)
                     cb[:, m - 1, k] = np.round(Mb @ pc * 100)
             out[f"{hz}_county"] = cc; out[f"{hz}_box"] = cb
@@ -109,6 +106,14 @@ def stage_counts(daily, cdir, wpath, years):
             out["complete"] = np.array([
                 int(((mon == m) & dayok).sum() == sum(1 for d in dates if d.month == m)
                     and (mon == m).sum() == _mdays(y, m)) for m in range(1, 13)])
+        # the last month of the record is provisional when its final local day
+        # had to do without the next month's hours (see era5_daily_max.py)
+        prov = np.zeros(12, int)
+        if int(z["provisional"]) if "provisional" in z else 0:
+            last = [m for m in range(12) if out["complete"][m]]
+            if last:
+                prov[last[-1]] = 1
+        out["provisional"] = prov
         tmp = os.path.join(cdir, f"{y}.tmp.npz")
         np.savez_compressed(tmp, geo=np.array(geo), boxes=np.array(bx), **out)
         os.replace(tmp, os.path.join(cdir, f"{y}.npz"))
@@ -140,6 +145,10 @@ def stage_site(cdir, wpath, topo, outdir):
     ly, lm = full[-1]
     if (ly, lm) != (y1, 12):
         through = f"{ly}-{lm:02d}"
+    # a provisional last month: its last day lacks a few night hours (redone next update)
+    provisional = None
+    if "provisional" in Z[ly].files and Z[ly]["provisional"][lm - 1]:
+        provisional = f"{ly}-{lm:02d}"
     # county area weights for the state/national means
     area = np.array([props[g].get("AREA", 1) or 1 for g in geo], float)
     st = [props[g]["STUSPS"] for g in geo]
@@ -176,7 +185,7 @@ def stage_site(cdir, wpath, topo, outdir):
         thr_c = [{"key": k, "label": lab, "short": sh, "min": t} for t, k, lab, sh in spec["thr"]]
         meta = {"hazard": hz, "label": spec["label"], "unit": spec["unit"], "note": spec["note"],
                 "thresholds": thr_c, "year0": y0, "year1": y1, "gaps": gaps, "through": through,
-                "kind": "field", "vscale": 10, "rscale": 100, "source": SOURCE,
+                "provisional": provisional, "kind": "field", "vscale": 10, "rscale": 100, "source": SOURCE,
                 "coverage": "lower 48", "ncounty": len(geo),
                 "built": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
         county = {"regions": regions, "rri": rri, "ryi": ryi, "rmi": rmi, "rv": rv,
@@ -188,7 +197,7 @@ def stage_site(cdir, wpath, topo, outdir):
         G, LAT0, LON0, NLAT, NLON = W["grid"]
         gmeta = {"hazard": hz, "label": spec["label"], "unit": spec["unit"],
                  "thresholds": [{"k": k, "label": lab, "min": t} for t, k, lab, sh in spec["thr"]],
-                 "year0": y0, "year1": y1, "gaps": gaps, "through": through, "kind": "field",
+                 "year0": y0, "year1": y1, "gaps": gaps, "through": through, "provisional": provisional, "kind": "field",
                  "vscale": 10, "grid": G, "lat0": LAT0, "lon0": LON0, "nlat": NLAT, "nlon": NLON,
                  "source": SOURCE, "boxes": bx, "ngrid": len(bx), "ncell": len(bci)}
         grid = {"meta": gmeta, "ci": bci, "yi": byi, "mi": bmi, "v": bv}

@@ -1,12 +1,15 @@
 """County <- ERA5 cell overlap weights, and 2 deg box <- ERA5 land cells.
 
 County weight of a 0.25 deg ERA5 cell = area of (county polygon intersect cell)
-on the sphere (degrees^2 x cos(lat)). Every lower-48 county overlaps several
-cells, so even the smallest independent city gets a value.
+on the sphere (degrees^2 x cos(lat)), over LAND cells only (ERA5 land-sea mask
+>= 0.5). Sea and lake cells carry marine temperatures, and letting them in pulled
+coastal counties far down (Galveston 54 -> 31 days/yr >= 90 F). A county that
+overlaps no land cell at all (Nantucket, Dukes, San Juan WA, ...) takes the land
+cell nearest to it.
 
 2 deg boxes follow the grid page (24-50 N, 126-66 W, 2 deg): a box's value is the
-plain mean over the ERA5 cells whose centres fall inside a U.S. county and in
-the box, so coastal boxes are not diluted by sea points and border boxes carry
+plain mean over the ERA5 LAND cells (mask >= 0.5) whose centres fall inside a
+U.S. county and in the box, so coastal boxes are not diluted by sea points and border boxes carry
 no Canadian or Mexican land.
 """
 import json, math, gzip
@@ -20,6 +23,10 @@ LON = 0.25 * np.arange(940, 1177) - 360.0      # -125 .. -66
 NI, NJ = len(LAT), len(LON)
 
 gj = json.load(open("geo/counties.geojson"))
+LSM = xr.open_dataset("geo/lsm.nc")["LSM"].isel(time=0).values[160:265, 940:1177]
+LAND = LSM >= 0.5
+landpts = np.array([(lo, la) for i, la in enumerate(LAT) for j, lo in enumerate(LON) if LAND[i, j]])
+landidx = np.array([i * len(LON) + j for i in range(len(LAT)) for j in range(len(LON)) if LAND[i, j]])
 cells = []
 for i, la in enumerate(LAT):
     for j, lo in enumerate(LON):
@@ -28,6 +35,7 @@ tree = STRtree(cells)
 
 out = {}
 skipped = []
+nearest = []
 for f in gj["features"]:
     g = f["properties"]["GEOID"]
     geom = shape(f["geometry"])
@@ -38,12 +46,17 @@ for f in gj["features"]:
         skipped.append(g); continue                     # AK, HI, PR: outside the domain
     idx, w = [], []
     for k in tree.query(geom):
+        i, j = divmod(int(k), NJ)
+        if not LAND[i, j]:
+            continue
         a = geom.intersection(cells[k]).area
         if a > 0:
-            i, j = divmod(int(k), NJ)
             idx.append(int(k)); w.append(a * math.cos(math.radians(LAT[i])))
-    if not idx:
-        skipped.append(g); continue
+    if not idx:                                         # island or spit: nearest land cell
+        p = geom.representative_point()
+        d = (landpts[:, 0] - p.x) ** 2 * math.cos(math.radians(p.y)) ** 2 + (landpts[:, 1] - p.y) ** 2
+        idx, w = [int(landidx[int(np.argmin(d))])], [1.0]
+        nearest.append(g)
     s = sum(w)
     out[g] = [idx, [x / s for x in w]]
 
@@ -60,6 +73,8 @@ boxes = {}
 nus = 0
 for i, la in enumerate(LAT):
     for j, lo in enumerate(LON):
+        if not LAND[i, j]:
+            continue
         pt = Point(lo, la)
         if not any(polys[k].contains(pt) for k in ptree.query(pt)):
             continue
@@ -70,11 +85,12 @@ for i, la in enumerate(LAT):
 print(f"US land cells: {nus}")
 
 json.dump({"counties": out, "boxes": {str(k): v for k, v in boxes.items()},
-           "grid": [GRID, LAT0, LON0, NLAT, NLON], "skipped": skipped},
+           "grid": [GRID, LAT0, LON0, NLAT, NLON], "skipped": skipped, "nearest": nearest},
           open("geo/weights.json", "w"))
 print(f"counties with weights: {len(out)}  skipped (outside lower 48): {len(skipped)} "
       f"e.g. {sorted(skipped)[:3]}..{sorted(skipped)[-3:]}")
 print(f"2-deg boxes with land: {len(boxes)}  cells per box: "
       f"min {min(map(len, boxes.values()))} median {int(np.median(list(map(len, boxes.values()))))}")
+print(f"counties on no land cell (nearest land cell used): {len(nearest)} {nearest}")
 n = [len(v[0]) for v in out.values()]
 print(f"cells per county: min {min(n)} median {int(np.median(n))} max {max(n)}")

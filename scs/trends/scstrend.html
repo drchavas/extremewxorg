@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Severe thunderstorm(+) Climatology and Trends</title>
-<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho, freezing-rain and peak-wind days, with annual and monthly series.">
+<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho, freezing-rain, peak-wind and extreme-heat days, with annual and monthly series.">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="referrer" content="no-referrer">
@@ -172,7 +172,7 @@
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-19 15:49 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-20 02:00 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -233,12 +233,22 @@
               <b>Extreme Heat Index</b> counts days whose maximum heat index reached 90, 100, 105, 110
               or 115&nbsp;&deg;F, with heat index computed every hour from temperature and dewpoint by
               the NWS formula (the Rothfusz regression and its humidity adjustments). A day is midnight
-              to midnight local standard time. Each ERA5 cell counts its own days, and a county&rsquo;s
-              value is the area-weighted mean of the cells it overlaps; state and national panels are
-              the area-weighted mean over counties, i.e. the days a typical place saw (so values need
-              not be whole numbers). The method reproduces the Indiana heat-index analysis it grew out of
-              to within 2 point-days in 86,000. Lower 48 only; 1950 onward.</li>
-          <li><b>Locate each report.</b> Storm Events reports are assigned to a county by
+              to midnight local standard time. Each ERA5 land cell counts its own days, and a
+              county&rsquo;s value is the area-weighted mean of the <i>land</i> cells it overlaps (ERA5
+              land&ndash;sea mask &ge; 0.5; sea and lake cells carry marine temperatures and would pull
+              coastal counties down; the few island counties with no land cell take the nearest one).
+              State and national panels are the area-weighted mean over counties, i.e. the days a
+              typical place saw (so values need not be whole numbers). The method reproduces the Indiana
+              heat-index analysis it grew out of to within 2 point-days in 86,000, and an independent
+              recomputation from the raw hourly data matched it. Lower 48 only; 1950 onward. The newest
+              month&rsquo;s last day lacks a few overnight hours until the following month is out, and
+              is recomputed then. <b>Before about 1960 the top heat-index thresholds (110 and
+              115&nbsp;&deg;F) are unreliable</b>: early ERA5 has occasional one-hour humidity spikes
+              (an 88&nbsp;&deg;F dewpoint in Nebraska, say) that the heat index turns into
+              extreme values, so those early counts run high and trends there are understated.
+              Contains modified Copernicus Climate Change Service information; ERA5 is produced by
+              ECMWF.</li>
+          <li><b>Locate each report</b> (storm hazards). Storm Events reports are assigned to a county by
               <code>STATE_FIPS</code> + <code>CZ_FIPS</code> rather than by county name, which
               avoids name collisions and independent cities. Connecticut is drawn with its
               eight historical counties, because Storm Events still files reports under them
@@ -246,8 +256,9 @@
               are included from 2009, the first year they carry municipio codes (earlier ones
               use forecast zones). Station hazards stay at their station.</li>
           <li><b>Apply the threshold.</b> Each report is scored against the selected size or
-              intensity cut. Thresholds are cumulative — a 2″ hailstone also counts as a 1″ one.</li>
-          <li><b>Collapse to hazard days.</b> Count <i>distinct calendar dates</i> on which a
+              intensity cut (for extreme heat, each day&rsquo;s maximum against the temperature or heat
+              index cut). Thresholds are cumulative — a 2″ hailstone also counts as a 1″ one.</li>
+          <li><b>Collapse to hazard days</b> (storm hazards). Count <i>distinct calendar dates</i> on which a
               county — or a station — saw at least one qualifying report. One storm producing
               forty reports in a county on one afternoon is one hazard day.</li>
           <li><b>Screen the station records.</b> A station-year below 90% complete is treated as
@@ -274,7 +285,8 @@
           <li><b>Annual and monthly panels.</b> For a selected county, that county alone. For a
               state, calendar dates on which <i>anywhere</i> in the state qualified — deliberately
               not the sum of county-days, since one storm can cross twenty counties in an
-              afternoon. For stations with none selected, the mean over those observed in every
+              afternoon. For extreme heat, a state (or the country) is instead the area-weighted mean
+              over its counties: the days a typical place there saw. For stations with none selected, the mean over those observed in every
               year of the period, so a station entering or leaving the record cannot masquerade as
               a trend.</li>
           <li><b>Smoothing.</b> The two county maps are drawn through a light <b>Gaussian
@@ -295,7 +307,8 @@
               not smoothed: those are points and single storms, not fields. Extreme heat is never
               smoothed either: ERA5 is already a continuous gridded field.</li>
           <li><b>Color scales.</b> Set from the data on screen: robust upper percentiles for
-              climatology, symmetric about zero for trend.</li>
+              climatology, symmetric about zero for trend. When values run past the top of the
+              climatology scale its top label reads &ge;; hover a county for its own number.</li>
           <li><b>Derecho</b> is the same county climatology and trend as thunderstorm wind,
               but counting only wind reports that belong to a derecho. A county scores a derecho
               event when it lay inside the coherent wind swath of a <b>definitive</b> derecho in the
@@ -384,7 +397,7 @@ function tileUrl(){
   return `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${T().tile}`+
          `/MapServer/tile/{z}/{y}/{x}`;
 }
-const TILE_ATTR='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ · data: NOAA/NCEI';
+const TILE_ATTR='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ · data: NOAA/NCEI; ECMWF ERA5 (Copernicus)';
 
 function fmt(v,d){ return (v==null||!isFinite(v))?'—':v.toFixed(d==null?2:d); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -400,6 +413,7 @@ const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:null,theme:'dar
          dpOnly:dpDefault('hail'),tier:'firm',smooth:'2'};
 let INDEX=null, GEO=null, STGEO=null;
 const HZ={}, STATES=[];
+let REQ=null;   // the period the reader asked for (hash or the year boxes), before any clamping
 let GEOID=[],NAME=[],STUSPS=[],AREA=[],gidxOf={};
 let COCEN=null;            // county centroids, for the smoother
 let SMNB={};               // cached neighbor + weight lists, keyed by sigma
@@ -571,6 +585,18 @@ function lastFull(d){
   for(let i=d.nY-1;i>=0;i--) if(g.yr[i]) return i+d.meta.year0;
   return d.meta.year1;
 }
+/* The years in the window that actually enter the maps and fits, and a label
+   that says when an incomplete year was left out of the requested period. */
+function usedYears(){
+  const d=HZ[S.hazard], [a,b]=yearsSel(), g=new Set(gapYears(d)), out=[];
+  for(let y=a;y<=b;y++) if(!g.has(y)) out.push(y);
+  return out;
+}
+function periodLabel(){
+  const d=HZ[S.hazard], [a,b]=yearsSel();
+  const ex=gapYears(d).filter(y=>y>=a&&y<=b);
+  return `${a}–${b}`+(ex.length?` (${ex.join(', ')} incomplete, left out)`:'');
+}
 function gapYears(d){
   const out=[]; const g=gapMask(d);
   for(let i=0;i<d.nY;i++) if(!g.yr[i]) out.push(i+d.meta.year0);
@@ -698,7 +724,9 @@ function gateOf(ys,nwin){
   const ok = ne>=need && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN;
   let why='';
   if(!ok){
-    if(ne<need) why=`only ${ne} of ${nwin} years carry a${countWord()==='event'?'n':''} ${countWord()}, needs ${need}`;
+    /* a window shorter than the minimum fails whatever the data say; say so */
+    if(nwin<need) why=`the period has only ${nwin} usable year${nwin===1?'':'s'}; a trend needs at least ${need}`;
+    else if(ne<need) why=`only ${ne} of ${nwin} years carry a${countWord()==='event'?'n':''} ${countWord()}, needs ${need}`;
     else if((e1-e0+1)<SPAN_MIN*nwin)
       why=`active years span ${e1-e0+1} of ${nwin}, needs ${Math.ceil(SPAN_MIN*nwin)}`;
     else why=`needs ${HALF_MIN} active years in each half, has ${nfh} and ${nsh}`;
@@ -819,6 +847,9 @@ function xesc(s){
     .replace(/&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g,'&amp;')
     .replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+/* Decimals a tick step needs: 2.5 -> 1, 0.25 -> 2, 5 -> 0. Rounding by size alone
+   printed 2.5, 5, 7.5 as "3, 5, 8". */
+function stepDec(st){ for(let d=0;d<3;d++){ const k=st*Math.pow(10,d); if(Math.abs(k-Math.round(k))<1e-6) return d; } return 3; }
 function txt(x,y,s,o){
   o=o||{};
   s=xesc(s);
@@ -838,20 +869,20 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid){
     years.push(yr); vals.push(s);
   }
   const vmax=Math.max(1,...vals), AX=niceAxis(vmax,5), vTop=AX.top;
-  const X=yr=>L+(R-L)*(years.length<2?0.5:(yr-a)/Math.max(1,b-a));
+  const X=yr=>L+(R-L)*((yr-a)/Math.max(1,b-a));
   const Y=v=>BOT-(BOT-TOP)*(v/vTop);
   const gate=gateOf(vals,vals.length);
   const r=gate.ok?ols(years,vals):null;        // same gate as the trend map
 
   let out=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
-  out+=txt(x+14,y+22,'Annual number of '+esc(label)+' '+countWord()+'s',{size:14.5,weight:650});
-  out+=txt(x+14,y+36,`${a}–${b} · with least-squares trend and 95% confidence band`,{size:11,fill:t.mute});
+  out+=txt(x+14,y+22,'Annual number of '+esc(label)+' '+countWord()+'s ('+thrSpec().short+') · '+placeLabel(),{size:14.5,weight:650});
+  out+=txt(x+14,y+36,`${periodLabel()} · with least-squares trend and 95% confidence band`,{size:11,fill:t.mute});
 
   // gridlines + y axis
   for(let i=0;i<=AX.n;i++){
     const v=AX.step*i, yy=Y(v);
     out+=`<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="${t.grid}" stroke-width="1"/>`;
-    out+=txt(L-8,yy+4,fmt(v,AX.step<1?1:0),{size:11,fill:t.mute,anchor:'end'});
+    out+=txt(L-8,yy+4,fmt(v,stepDec(AX.step)),{size:11,fill:t.mute,anchor:'end'});
   }
   // x axis ticks every 5 years
   const step=(b-a)>40?10:5;
@@ -921,7 +952,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
     out+=`<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="4" fill="none" stroke="${t.grid}"/>`;
     for(let i=1;i<=2;i++){ const yy=Y(vTop*i/2);
       out+=`<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="${t.grid}" stroke-width=".8"/>`; }
-    out+=txt(L-4,Y(vTop)+4,fmt(vTop,vTop<10?1:0),{size:9,fill:t.mute,anchor:'end'});
+    out+=txt(L-4,Y(vTop)+4,fmt(vTop,stepDec(vTop)),{size:9,fill:t.mute,anchor:'end'});
     out+=txt(L-4,BOT+3,'0',{size:9,fill:t.mute,anchor:'end'});
     out+=`<line x1="${L}" y1="${BOT}" x2="${R}" y2="${BOT}" stroke="${t.axis}" stroke-width=".8"/>`;
     /* gated per month: one month is far sparser than the year it feeds */
@@ -1060,7 +1091,7 @@ function readHash(){
   if(p.get('t')) S.thresh=+p.get('t');
   if(p.get('r')!=null) S.region=p.get('r');
   if(p.get('c')) S.county=p.get('c');
-  if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b;} }
+  if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b; REQ=[a,b];} }
   if(p.get('k')) S.theme=p.get('k');
   /* Tri-state on purpose: absent means "use the hazard default", so a link that
      deliberately shows all stations survives a reload. */
@@ -1247,7 +1278,9 @@ function guideHtml(){
   if(HZ[S.hazard]&&HZ[S.hazard].field)
     return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer, so counts run somewhat below what a single weather station records &mdash; '+'<b>trust the trends and the geography more than the absolute numbers</b>. Days run '+'midnight to midnight local standard time. Before about 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations. Lower 48 only.'+
       ' Each ERA5 cell counts its own days; a county&rsquo;s value is the area-weighted mean of the '+
-      'cells it overlaps, so it describes a typical place in the county rather than its hottest spot.';
+      'land cells it overlaps, so it describes a typical place in the county rather than its hottest spot.'+
+      (S.hazard==='heatindex'?' <b>Heat index at 110 and 115&nbsp;&deg;F is unreliable before about 1960</b> '+
+        '(one-hour humidity spikes in early ERA5; see Methods).':'');
   /* The derecho hazard is Storm Events wind reports, but WHICH storms count is
      the SPC archive's call — so it carries that attribution as well as the
      usual report caveat, the same way freezing rain carries DelPizzo. */
@@ -1388,6 +1421,9 @@ function countyAt(lat,lon,ab){
 }
 /* One definition of the county readout, so both layers say the same thing. */
 function countyTip(c){
+  const dz=HZ[S.hazard];
+  if(dz&&dz.cover&&!dz.cover[c])
+    return `<b>${esc(NAME[c])}, ${esc(STUSPS[c])}</b><br>no data: ERA5 heat covers the lower 48 only`;
   const v=CUR?CUR.val[c]:NaN, t=CURT?CURT.val[c]:NaN;
   /* With smoothing on the drawn value is a neighborhood average, which can sit
      some way from the county's own number. Say both rather than let the reader
@@ -1435,8 +1471,7 @@ function stateLayer(map){
         syncRegionSel(); syncCounties(); focusState(moved); refresh();
         L.DomEvent.stop(e);
       });
-      l.on('mousemove',e=>{ LASTLL=e.latlng; });
-      l.bindTooltip(()=>{
+      const tip=()=>{
         // countyTip reads the climatology arrays, which mean nothing for a single
         // event — in that mode the outline is just a label
         /* countyTip reads the county arrays. In station mode CUR.val is indexed
@@ -1445,7 +1480,13 @@ function stateLayer(map){
         if(isEvent()||isStation()) return esc(f.properties.STATE_NAME);
         const c=LASTLL?countyAt(LASTLL.lat,LASTLL.lng,f.properties.STUSPS):-1;
         return c<0 ? esc(f.properties.STATE_NAME) : countyTip(c);
-      },{sticky:true,className:'ctytip'});
+      };
+      /* Leaflet evaluates a function tooltip once, on mouseover — before any
+         mousemove has set LASTLL — and only moves it after that. So the text has
+         to be refreshed here, or it shows the state name (or a stale county). */
+      l._tipFn=tip;
+      l.on('mousemove',e=>{ LASTLL=e.latlng; if(l.isTooltipOpen()) l.setTooltipContent(tip()); });
+      l.bindTooltip(tip,{sticky:true,className:'ctytip'});
     }
   });
 }
@@ -1554,6 +1595,8 @@ function drawColorbar(el,C,title){
   const grad='linear-gradient(to top,'+stops.join(',')+')';
   const ticks=[];
   for(let i=4;i>=0;i--) ticks.push(fmt(C.lo+(C.hi-C.lo)*i/4,C.dec));
+  /* the scale is set at a high percentile, so a few values can run past it */
+  if(C.over) ticks[0]='≥'+ticks[0];
   el.innerHTML=`<div class="cap">${esc(title)}</div><div class="row">`+
     `<div class="strip" style="background:${grad}"></div>`+
     `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
@@ -1592,7 +1635,9 @@ function refresh(){
   const hiM=niceUp(quantile(mv,stn?1:0.995))||1;
   const hiT=niceUp(quantile(tv,stn?1:0.95))||1;
 
-  CUR ={val:cm.mean, lo:0,    hi:hiM, div:false, dec:hiM<5?2:1, unit:countUnit()};
+  /* `over`: values run past the top of the scale, which the legend then says */
+  CUR ={val:cm.mean, lo:0,    hi:hiM, div:false, dec:hiM<5?2:1, unit:countUnit(),
+        over:mv.length>0&&mv[mv.length-1]>hiM*1.0001};
   CURT={val:cm.trend,lo:-hiT, hi:hiT, div:true,  dec:hiT>=1?2:Math.max(2,Math.min(4,Math.ceil(-Math.log10(hiT/4)))), unit:countUnit()+' per decade', pval:cm.pv};
 
   if(stn){
@@ -1624,9 +1669,14 @@ function refresh(){
   /* The smoothing state is the one thing about these maps a reader can most
      easily forget, so it is called out rather than tucked into gray prose. */
   document.getElementById('climSub').innerHTML =
-    esc(`Mean annual ${lab} ${countWord()}s per ${stn?'station':'county'}, ${a}–${b}`)+smTag();
-  document.getElementById('trendSub').innerHTML =
-    esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade · gray counties are too sparse to fit a trend')+smTag();
+    esc(`Mean annual ${lab} ${countWord()}s (${thrSpec().short}) per ${stn?'station':'county'}, ${periodLabel()}`)+smTag();
+  /* A window shorter than the gate's minimum leaves every county gray; say that,
+     rather than blaming each county for being sparse. */
+  const nUse=usedYears().length, need=yearsNeeded(nUse);
+  document.getElementById('trendSub').innerHTML = (!stn && nUse<need)
+    ? esc(`No trends shown: ${periodLabel()} gives ${nUse} usable year${nUse===1?'':'s'} and a fit needs at `+
+          `least ${need} years carrying a ${countWord()}`)
+    : esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade · gray counties are too sparse to fit a trend')+smTag();
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -1716,8 +1766,12 @@ function gapNote(){
          `than quiet. The other ten months still appear in the monthly panels.`;
   const late=yrs.filter(y=>y!==1993);
   if(late.length)
-    out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
-         `not yet published the whole year`+(d.meta.through?` (${d.field?'ERA5':'Storm Events'} currently runs through `+
+    out+= d.field
+      ? ` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because the ERA5 data `+
+        `here run only through ${monthName(d.meta.through)} (ERA5 appears a few months behind real time, `+
+        `and this page adds each month as it does). Those months appear in the monthly panels.`
+      : ` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
+         `not yet published the whole year`+(d.meta.through?` (Storm Events currently runs through `+
          `${monthName(d.meta.through)})`:'')+`. The months already published appear in the monthly panels.`;
   return out;
 }
@@ -1829,9 +1883,10 @@ function legendSVG(x,y,C){
        `stroke="${T().line}" stroke-width=".6"/>`;
   for(let i=4;i>=0;i--){
     const v=C.lo+(C.hi-C.lo)*i/4, yy=y+hgt*(1-i/4);
-    out+=txt(x+wid+5,yy+3.5,fmt(v,C.dec),{size:9.5,fill:T().mute});
+    out+=txt(x+wid+5,yy+3.5,(C.over&&i===4?'≥':'')+fmt(v,C.dec),{size:9.5,fill:T().mute});
   }
-  out+=txt(x,y-6,esc(C.unit.split(' per ')[0]),{size:9.5,fill:T().mute});
+  /* the trend legend is per decade; cutting at ' per ' had labelled it days/yr */
+  out+=txt(x,y-6,esc(C.div?'per decade':C.unit),{size:9.5,fill:T().mute});
   if(!C.div) out+=`<rect x="${x}" y="${y+hgt+7}" width="9" height="9" fill="#fff" `+
                   `stroke="${T().line}" stroke-width=".6"/>`+
                   txt(x+13,y+hgt+15,'exactly 0',{size:9,fill:T().mute});
@@ -1858,17 +1913,32 @@ function drawPanels(){
   const [a,b]=yearsSel();
   const label=hazSpec().label.toLowerCase();
   const LO=panelLayout();
+  /* A gridded field (ERA5 heat) covers the lower 48 only. A county or state
+     outside it has no series at all, which must not be drawn as a row of zeros. */
+  const outside = d.field && (S.county ? !d.cover[gidxOf[S.county]]
+                                       : (S.region && !d.regions.includes(S.region)));
   let svg='';
   svg+=`<rect x="0" y="0" width="${LO.W}" height="${LO.H}" fill="${t.bg}"/>`;
-  svg+=annualPanel(...LO.annual,my,d.meta.year0,d.nY,a,b,label,valid);
-  svg+=monthlyPanel(...LO.monthly,my,d.meta.year0,d.nY,a,b,valid,vm);
+  if(outside){
+    [LO.annual,LO.monthly].forEach(([x,y,w,h],k)=>{
+      svg+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
+      svg+=txt(x+14,y+22,k?'Month by month':'Annual number of '+label+' '+countWord()+'s',{size:14.5,weight:650});
+      svg+=txt(x+w/2,y+h/2,`No ERA5 data for ${placeLabel()}: these data cover the lower 48 only`,
+               {size:13,fill:t.mute,anchor:'middle'});
+    });
+  } else {
+    svg+=annualPanel(...LO.annual,my,d.meta.year0,d.nY,a,b,label,valid);
+    svg+=monthlyPanel(...LO.monthly,my,d.meta.year0,d.nY,a,b,valid,vm);
+  }
   const el=document.getElementById('card');
   el.setAttribute('viewBox','0 0 '+LO.W+' '+LO.H);
   el.innerHTML=svg;
 
   const stn=isStation();
   document.getElementById('foot').innerHTML =
-    (S.county
+    (outside
+      ? `<b>${esc(placeLabel())}</b> is outside this field, which covers the lower 48 only.`
+      : S.county
       ? `Lower panels show <b>${esc(placeLabel())}</b> alone.`
       : stn
         ? `Lower panels average the <b>${SERIESINFO.n} of ${SERIESINFO.pool}</b> stations observed in `+
@@ -1876,10 +1946,8 @@ function drawPanels(){
           (S.dpOnly?`, drawn from the QC'd subset of <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" `+
                     `target="_blank" rel="noopener">DelPizzo et al. (2025)</a>.`:`.`)
         : d.field
-          ? (S.region&&!d.regions.includes(S.region)
-              ? `<b>${esc(placeLabel())}</b> is outside this field, which covers the lower 48 only.`
-              : `Lower panels average <b>${esc(placeLabel())}</b>: the ${countWord()}s a typical place there `+
-                `saw, an area-weighted mean over its counties (not the days on which anywhere in it qualified).`)
+          ? `Lower panels average <b>${esc(placeLabel())}</b>: the ${countWord()}s a typical place there `+
+            `saw, an area-weighted mean over its counties (not the days on which anywhere in it qualified).`
           : `Lower panels count <b>${esc(placeLabel())}-wide</b> ${countWord()}s — dates on which anywhere `+
           `in the state qualified, which is deliberately not the sum of per-county counts.`)+
     gapNote()+
@@ -1946,14 +2014,21 @@ function figureSVG(){
             (vb.getEast()-vb.getWest());
   const mh=Math.round(mw*Math.max(0.42,Math.min(1.05,asp))) + 42;
   const top=mh+20;
-  const H=top+LO.H;
+  const FOOT=26, H=top+LO.H+FOOT;
   let g=`<rect x="0" y="0" width="${LO.W}" height="${H}" fill="${t.bg}"/>`;
   g+=mapSVG(0,10,mw,mh,CUR,'Climatology',
-      `Mean annual ${lab} ${countWord()}s per ${stn?'station':'county'}, ${a}\u2013${b}`+
+      `Mean annual ${lab} ${countWord()}s (${thrSpec().short}) per ${stn?'station':'county'}, ${periodLabel()}`+
       (smoothOn()?` \u00b7 ${sigDeg()}\u00b0 Gaussian smoothed`:''));
   g+=mapSVG(mw+30,10,mw,mh,CURT,'Trend',
       stn?'Change per decade \u00b7 ringed where p < 0.05':'Change per decade');
   g+=`<g transform="translate(0,${top})">`+document.getElementById('card').innerHTML+'</g>';
+  /* A saved figure travels without the page around it, so it carries what it
+     shows: hazard, threshold, place, period and where the data came from. */
+  const d=HZ[S.hazard];
+  const src=d.field?'ECMWF ERA5 reanalysis (contains modified Copernicus Climate Change Service information)'
+           :stn?'NOAA/NCEI hourly station observations':'NOAA Storm Events database';
+  g+=txt(8,H-9,`${hazSpec().label} \u00b7 ${thrSpec().label} \u00b7 panels: ${placeLabel()} \u00b7 ${periodLabel()} \u00b7 `+
+                `data: ${src} \u00b7 extremewx.org`,{size:11,fill:t.mute});
   return {svg:g,W:LO.W,H,mapW:mw,mapH:mh-42,aspect:asp};
 }
 
@@ -1999,7 +2074,20 @@ function wire(){
       return;
     }
     if(hz.value!==key) return;
-    S.hazard=key; S.county=''; S.dpOnly=dpDefault(S.hazard);
+    /* Carry the reader's choices across where they still mean something: the
+       county between county hazards, the threshold by value when the units match
+       (heat index 110 °F -> temperature 105 °F, not "the fourth one"). */
+    const pd=HZ[prev], pspec=INDEX.hazards.find(h=>h.key===prev);
+    const pthr=pspec&&pspec.thresholds[Math.min(S.thresh,pspec.thresholds.length-1)];
+    const keepCty = pd && !pd.station && !pd.event && !HZ[key].station && !HZ[key].event;
+    S.hazard=key; S.dpOnly=dpDefault(S.hazard);
+    if(!keepCty) S.county='';
+    if(pthr && pspec.unit===spec.unit && typeof pthr.min==='number'){
+      let k=0; spec.thresholds.forEach((t,i)=>{ if(typeof t.min==='number' && t.min<=pthr.min+1e-9) k=i; });
+      S.thresh=k;
+    }
+    /* the period the reader asked for, not the one the last hazard clamped it to */
+    if(!isEvent() && !wasEvent && REQ) [S.y0,S.y1]=REQ;
     /* For a time series the year window is the analysis period; for events it is
        only a filter over a list, so opening it narrowed would hide the 1990s
        derechos without saying so. Widen on entry, put the analysis period back
@@ -2035,7 +2123,7 @@ function wire(){
     refresh(); };
   /* In event mode the year window filters which derechos are listed, so the
      menu has to be rebuilt — otherwise the dates and the window disagree. */
-  const yrChange=k=>e=>{ S[k]=+e.target.value; syncYears();
+  const yrChange=k=>e=>{ S[k]=+e.target.value; syncYears(); REQ=[S.y0,S.y1];
     if(isEvent()) syncCounties(); refresh(); };
   document.getElementById('y0In').onchange=yrChange('y0');
   document.getElementById('y1In').onchange=yrChange('y1');
@@ -2133,7 +2221,7 @@ function zoomUS(){
     const hashState=(function(){ readHash();
       const p=new URLSearchParams(location.hash.slice(1)); return p.get('v'); })();
 
-    msg.textContent='Loading storm records…';
+    msg.textContent='Loading data…';
     await loadHazard(S.hazard);
 
     document.getElementById('msg').style.display='none';
@@ -2141,8 +2229,19 @@ function zoomUS(){
 
     mapA=makeMap('mapClim'); mapB=makeMap('mapTrend');
     linkMaps(mapA,mapB);
+    /* refresh() writes the hash while a fit or zoom may still be animating, so the
+       view it records is a mid-flight one; rewrite it once the map has settled. */
+    mapA.on('moveend',()=>writeHash());
+    /* The canvas renderer throttles the layer's mousemove (32 ms), so the last
+       position before the pointer rests can be dropped; the map's own mousemove
+       is not throttled, so it keeps the open readout on the county underneath. */
+    [mapA,mapB].forEach(m=>m.on('mousemove',e=>{ LASTLL=e.latlng;
+      const st=m===mapA?stA:stB; if(!st) return;
+      st.eachLayer(l=>{ if(l._tipFn&&l.isTooltipOpen()) l.setTooltipContent(l._tipFn()); }); }));
+    /* Alaska's Aleutians cross the antimeridian, so its computed bounds span the
+       globe and fitting them zoomed out to the whole world. */
     STGEO.features.forEach(f=>STATES.push({ab:f.properties.STUSPS,name:f.properties.STATE_NAME,
-                                           bounds:L.geoJSON(f).getBounds()}));
+      bounds:f.properties.STUSPS==='AK'?[[51,-180],[71.5,-129]]:L.geoJSON(f).getBounds()}));
     STATES.sort((a,b)=>a.name.localeCompare(b.name));
     stA=stateLayer(mapA).addTo(mapA); stB=stateLayer(mapB).addTo(mapB);
 
@@ -2157,12 +2256,14 @@ function zoomUS(){
       S.y0=hazSpec().year0; S.y1=hazSpec().year1;
     }
     syncRegionSel(); syncThresholds(); syncCounties(); syncYears();
+    if(!REQ) REQ=[S.y0,S.y1];
     rebuildMatrix();
 
     if(hashState){ const [la,lo,z]=hashState.split(',').map(Number);
       if(isFinite(la)){ syncing=true; mapA.setView([la,lo],z||6);
         mapB.setView([la,lo],z||6); syncing=false; } focusState(false); }
-    else focusState(true);          // opens on Indiana
+    else if(S.region) focusState(true);   // opens on Indiana
+    else zoomUS();                        // a link to the whole country with no view
 
     refresh();
     setTimeout(()=>{ mapA.invalidateSize(); mapB.invalidateSize(); },80);

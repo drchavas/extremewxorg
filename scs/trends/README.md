@@ -233,16 +233,26 @@ so only the chunks over the U.S. are downloaded (~50 MB per month). No account o
   average of that and T is ≥ 80 °F; low- and high-humidity adjustments). RH from T and Td by
   the Magnus formula. `heatcalc.py`.
 - **Days** run midnight to midnight local standard time, by longitude (UTC offset
-  round(lon/15) h). UTC days, which the Indiana card used, end at 7 pm in Indiana and let one
+  round(lon/15) h, halves rounded up). A day needs ≥ 16 of its 24 hours. Daily maxima are
+  stored in tenths of °F **truncated**, so "stored ≥ threshold" is exactly "true value ≥
+  threshold" (rounding had let 89.95 °F count as 90). UTC days, which the Indiana card used, end at 7 pm in Indiana and let one
   hot evening count on two days: about 4% more days at ≥90 °F, 10% more at ≥105 °F.
 - **Counties**: each ERA5 cell gets its own day counts; a county's count is the
-  area-weighted mean over the cells it overlaps (`geo/weights.json`, from the site's own
-  county outlines) — the days a typical place in the county saw. State and national panels
+  area-weighted mean over the **land** cells it overlaps (ERA5 land–sea mask ≥ 0.5;
+  `geo_heat/weights.json`, from the site's own county outlines and `geo_heat/lsm.nc`).
+  Sea and lake cells carry marine temperatures; including them had pulled coastal counties
+  far down (Galveston 54 → 31 days/yr ≥ 90 °F). The 4 counties on no land cell (Nantucket,
+  Dukes, San Juan WA, Northampton VA) take the nearest land cell — the days a typical place in the county saw. State and national panels
   are the area-weighted mean over counties. Values are stored as integers: tenths
   of a day for counties and boxes (`meta.vscale` = 10), hundredths for state and national series
   (`meta.rscale` = 100); the pages divide them back out. Alaska, Hawaii and Puerto Rico are outside the domain and
   show as no data.
-- **2° boxes**: the plain mean over the ERA5 cells whose centres lie on U.S. land in the box.
+- **2° boxes**: the plain mean over the ERA5 land cells whose centres lie in a U.S. county in
+  the box (252 boxes; six all-water boxes are not drawn).
+- **Provisional last month.** Until the next month is published, the last local day of the
+  newest month lacks its final 4–8 hours (from 16:00 LST on the Pacific coast), so that month
+  is flagged `provisional` in `heat_counts/` and `meta.provisional`; `update_heat.py` redoes it
+  once the next month is out.
 - **No smoothing.** The heat maps are always drawn raw (the Smoothing control is hidden):
   ERA5 is already a continuous gridded field, so the 2° blur would only smear real contrasts
   such as desert against mountains.
@@ -256,7 +266,19 @@ two codes use different formulas below 80 °F, which no threshold reaches).
 **Caveats** (on the pages too): ERA5's daily maximum is the warmest *hourly* value over a
 ~25 km cell, so counts run below single-station records, most in deserts and cities; trends
 and geography are more trustworthy than the absolute numbers. Before ~1979 no satellite data
-fed ERA5, so the earliest decades rest on fewer observations.
+fed ERA5, so the earliest decades rest on fewer observations. **Heat index at 110/115 °F is
+unreliable before ~1960**: early ERA5 has isolated one-hour dewpoint spikes (88 °F in Nebraska,
+11 Jul 1954) that the heat index turns into 130–145 °F values; 1953–57 carry most of the
+record's ≥ 130 °F cell-days. Not screened (the data are ERA5's own); flagged on the pages.
+Credit: contains modified Copernicus Climate Change Service information; ERA5 is produced by
+ECMWF.
+
+**Independent audit (2026-10-19).** A separate reimplementation (own heat index, own
+local-day grouping from raw hourly ERA5 at Phoenix, Houston/Gulf, 97.5 W, 82.5 W, a year end,
+Nebraska 1954; own equal-area county weights; own box membership) reproduced the archive, the
+counts, the boxes, the state/US series and the page JSON to within storage rounding, and
+`update_heat.py` byte-for-byte. It found the coastal, rounding and truncated-last-day
+problems fixed above.
 
 ### Building
 
@@ -269,7 +291,10 @@ python3 build_heat_data.py counts daily heat_counts geo_heat/weights.json
 python3 build_heat_data.py site heat_counts geo_heat/weights.json geo/counties.topo.json.gz data
 ```
 
-`build_weights.py` makes `weights.json` from the county outlines (rerun if they change).
+`build_weights.py` makes `weights.json` from the county outlines (rerun if they change). It reads
+`geo/counties.geojson` (the site's `geo/counties.topo.json.gz` converted to GeoJSON) and
+`geo/lsm.nc` (ERA5 land–sea mask, kept as `geo_heat/lsm.nc`) relative to where it runs, and
+writes `geo/weights.json`; copy that to `geo_heat/`.
 
 ### Monthly update
 

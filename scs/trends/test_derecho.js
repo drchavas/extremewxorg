@@ -107,7 +107,7 @@ const ptInRing=(x,y,ring)=>{let c=false;
   say('no-data is still null, not white',w.eval("colorFor(NaN,{div:false,lo:0,hi:1})")===null);
   say('the climo bar explains the white',/exactly 0/.test($('cbClim').innerHTML));
   say('the trend bar does not',!/exactly 0/.test($('cbTrend').innerHTML));
-  say('map subtitle says events',/Mean annual derecho events per county/i.test($('climSub').textContent),
+  say('map subtitle says events',/Mean annual derecho events (.*)? ?per county/i.test($('climSub').textContent),
       $('climSub').textContent);
   say('annual panel says events',/Annual number of derecho events/i.test($('card').innerHTML));
   say('thunderstorm wind still says days', await (async()=>{

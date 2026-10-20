@@ -138,7 +138,7 @@
     },
     {
      "k": "hi105",
-     "label": "Heat index \u2265 105\u00b0F (danger)",
+     "label": "Heat index \u2265 105\u00b0F",
      "min": 105
     },
     {
