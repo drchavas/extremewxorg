@@ -172,7 +172,7 @@
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-21 16:03 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-21 16:56 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -457,6 +457,12 @@ let REQUSER=false;   // whether the reader chose it (a link or the year boxes), 
    reporting; heavy rain opens on PRISM's whole daily record, which has no such break,
    and a 45-year window is far less noisy for a variable this patchy than a 26-year one. */
 function defY0(h){ return h==='rain'?1981:h==='snow'?1951:2000; }
+/* Every hazard opens on Indiana, selected and zoomed. A place the reader chose (a link,
+   the Place menu, a click on the map) is kept across hazards. defWide() would open a
+   hazard on the whole-country view instead; none does at present. */
+function defRegion(h){ return 'IN'; }
+function defWide(h){ return false; }
+let REGUSER=false;
 /* share of the window's seasons a station needs to enter the lower panels */
 function panelFrac(){ return S.hazard==='snow'?0.9:1; }
 let GEOID=[],NAME=[],STUSPS=[],AREA=[],gidxOf={};
@@ -718,6 +724,13 @@ function rebuildMatrix(){
   }
   const ci=d.ci,yi=d.yi,g=d.g,n=ci.length;
   for(let k=0;k<n;k++){ const gi=g[ci[k]]; if(gi<0)continue; M[gi*nY+yi[k]]+=v[k]; }
+}
+/* The stations drawn on the maps: the whole country, as for counties, so choosing a
+   state re-centers the map and scopes the panels but hides nothing. */
+function stationsShown(){
+  const d=HZ[S.hazard], out=[];
+  d.stations.forEach((s,i)=>{ if(!(S.dpOnly && !s.dp)) out.push(i); });
+  return out;
 }
 function stationsInPlace(){
   const d=HZ[S.hazard], out=[];
@@ -1143,7 +1156,7 @@ function readHash(){
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get('h')) S.hazard=p.get('h');
   if(p.get('t')) S.thresh=+p.get('t');
-  if(p.get('r')!=null) S.region=p.get('r');
+  if(p.get('r')!=null){ S.region=p.get('r'); REGUSER=true; }
   if(p.get('c')) S.county=p.get('c');
   if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b; REQ=[a,b]; REQUSER=true;} }
   if(p.get('k')) S.theme=p.get('k');
@@ -1562,7 +1575,7 @@ function stateLayer(map){
       l.on('click',e=>{
         const ab=f.properties.STUSPS;
         const moved = S.region!==ab;
-        S.region=ab; S.county='';
+        S.region=ab; S.county=''; REGUSER=true;
         syncRegionSel(); syncCounties(); focusState(moved); refresh();
         L.DomEvent.stop(e);
       });
@@ -1602,7 +1615,7 @@ function drawStations(map,prev,C){
   if(prev) map.removeLayer(prev);
   if(!isStation()) return null;
   const d=HZ[S.hazard], g=L.layerGroup();
-  const list=stationsInPlace();
+  const list=stationsShown();
   const rmax=Math.max(...list.map(i=>Math.abs(C.val[i])).filter(isFinite),1e-9);
   list.forEach(i=>{
     const v=C.val[i]; if(!isFinite(v)) return;
@@ -1724,7 +1737,7 @@ function refresh(){
   cm.mean=smoothField(cm.mean); cm.trend=smoothField(cm.trend);
 
   // robust, shared-with-nothing domains: each map gets its own
-  const pool = stn ? stationsInPlace() : GEO.features.map(f=>gidxOf[f.properties.GEOID]);
+  const pool = stn ? stationsShown() : GEO.features.map(f=>gidxOf[f.properties.GEOID]);
   const mv=pool.map(c=>cm.mean[c]).filter(isFinite).sort((p,q)=>p-q);
   const tv=pool.map(c=>Math.abs(cm.trend[c])).filter(isFinite).sort((p,q)=>p-q);
   /* stations: the scale runs to the top station, except for snowfall, where a few
@@ -1879,7 +1892,7 @@ function gapNote(){
 function bindCounty(f,l){
   const c=gidxOf[f.properties.GEOID];
   l.on('click',e=>{ S.county=(S.county===f.properties.GEOID?'':f.properties.GEOID);
-    if(S.county) S.region=STUSPS[c];
+    if(S.county){ S.region=STUSPS[c]; REGUSER=true; }
     syncRegionSel(); syncCounties(); refresh(); L.DomEvent.stop(e); });
   l.bindTooltip(()=>countyTip(c),{sticky:true,className:'ctytip'});
 }
@@ -1949,7 +1962,7 @@ function mapSVG(x,y,w,h,C,title,sub){
   });
   // station symbols
   if(stn){
-    const d=HZ[S.hazard], list=stationsInPlace();
+    const d=HZ[S.hazard], list=stationsShown();
     const rmax=Math.max(...list.map(i=>Math.abs(C.val[i])).filter(isFinite),1e-9);
     list.forEach(i=>{
       const v=C.val[i]; if(!isFinite(v)) return;
@@ -2097,7 +2110,7 @@ function syncRegionSel(){ document.getElementById('regSel').value=S.region; }
    on the old hazard's 2000. */
 function writeHash(share){
   const p=new URLSearchParams();
-  p.set('h',S.hazard); p.set('t',S.thresh); p.set('r',S.region);
+  p.set('h',S.hazard); p.set('t',S.thresh); if(REGUSER||share) p.set('r',S.region);
   if(S.county) p.set('c',S.county);
   if(REQUSER||share) p.set('p',S.y0+'-'+S.y1);
   if(S.dpOnly!==dpDefault(S.hazard)) p.set('q',S.dpOnly?'1':'0');
@@ -2198,6 +2211,8 @@ function wire(){
     const keepCty = pd && !pd.station && !pd.event && !HZ[key].station && !HZ[key].event;
     S.hazard=key; S.dpOnly=dpDefault(S.hazard); S.smooth=smDefault(S.hazard);
     if(!keepCty) S.county='';
+    const regMoved = !REGUSER && (S.region!==defRegion(key) || defWide(prev)!==defWide(key));
+    if(regMoved && S.region!==defRegion(key)){ S.region=defRegion(key); S.county=''; }
     if(pthr && pspec.unit===spec.unit && typeof pthr.min==='number'){
       let k=0; spec.thresholds.forEach((t,i)=>{ if(typeof t.min==='number' && t.min<=pthr.min+1e-9) k=i; });
       S.thresh=k;
@@ -2219,6 +2234,7 @@ function wire(){
       [S.y0,S.y1]=YRSTASH; YRSTASH=null;
     }
     syncThresholds(); syncYears(); syncCounties(); rebuildMatrix();
+    if(regMoved){ syncRegionSel(); if(S.region && !defWide(key)) focusState(true); else zoomUS(); }
     document.getElementById('msg').style.display='none';
     refresh();
   };
@@ -2229,7 +2245,7 @@ function wire(){
   STATES.forEach(s=>{ const o=document.createElement('option');
     o.value=s.ab; o.textContent=s.name; rg.appendChild(o); });
   rg.value=S.region;
-  rg.onchange=e=>{ S.region=e.target.value; S.county=''; syncCounties();
+  rg.onchange=e=>{ S.region=e.target.value; S.county=''; REGUSER=true; syncCounties();
     if(S.region) focusState(true); else zoomUS(); refresh(); };
   document.getElementById('ctySel').onchange=e=>{
     S.county=e.target.value;
@@ -2266,7 +2282,7 @@ function wire(){
     if(S.county && S.dpOnly){ const i=d.idxOf[S.county];
       if(i==null||!d.stations[i].dp) S.county=''; }
     syncCounties(); refresh(); };
-  document.getElementById('usBtn').onclick=()=>{ S.region=''; S.county='';
+  document.getElementById('usBtn').onclick=()=>{ S.region=''; S.county=''; REGUSER=true;
     syncRegionSel(); syncCounties(); zoomUS(); refresh(); };
   /* Everything on this page is recoverable from the URL hash, so the honest
      reset is to drop the hash and reload rather than to unwind each control by
@@ -2374,6 +2390,7 @@ function zoomUS(){
       S.county=EVENT_DEFAULT;
       S.y0=hazSpec().year0; S.y1=hazSpec().year1;
     }
+    if(!REGUSER){ S.region=defRegion(S.hazard); }
     syncRegionSel(); syncThresholds(); syncCounties(); syncYears();
     if(!REQUSER && S.y0!==defY0(S.hazard)){ S.y0=defY0(S.hazard); syncYears(); }
     if(!REQ) REQ=[S.y0,S.y1];
@@ -2382,7 +2399,7 @@ function zoomUS(){
     if(hashState){ const [la,lo,z]=hashState.split(',').map(Number);
       if(isFinite(la)){ syncing=true; mapA.setView([la,lo],z||6);
         mapB.setView([la,lo],z||6); syncing=false; } focusState(false); }
-    else if(S.region) focusState(true);   // opens on Indiana
+    else if(S.region && !(defWide(S.hazard) && !REGUSER)) focusState(true);   // opens on the hazard's default place
     else zoomUS();                        // a link to the whole country with no view
 
     refresh();
