@@ -1204,6 +1204,16 @@ function setAdmin1(topo){
     return {name:f.properties.name, adm:f.properties.admin, polys, bb:[x0,y0,x1,y1]};
   });
 }
+/* The lower 48 as one outline, merged from the admin-1 states (Alaska and Hawaii
+   are not on the U.S. grid) */
+let L48=null;
+function usL48(){
+  if(L48||!ADMIN1) return L48;
+  const o=Object.values(ADMIN1.objects)[0];
+  L48=topojson.merge(ADMIN1,o.geometries.filter(g=>g.properties&&g.properties.adm0_a3==='USA'&&
+    !['Alaska','Hawaii'].includes(g.properties.name)));
+  return L48;
+}
 function inRing(x,y,r){
   let c=false;
   for(let i=0,j=r.length-1;i<r.length;j=i++){
@@ -1363,7 +1373,17 @@ function drawContours(vals){
 function drawSelection(){
   const t=T();
   selA.forEach(l=>mapA.removeLayer(l)); selA.length=0;
-  const c=selCell(); if(c<0) return;
+  const c=selCell();
+  if(c<0){
+    /* No box chosen on the U.S. grid: the series is the mean over all U.S. boxes,
+       so the whole lower 48 is outlined, as on the U.S. trend pages. The global
+       fields' aggregate is the whole map, which needs no outline. */
+    const l48=usL48();
+    if(DS&&!DS.grid.global&&l48)
+      selA.push(L.geoJSON(l48,{interactive:false,
+        style:{color:t.sel,weight:2.6,opacity:1,fill:false}}).addTo(mapA));
+    return;
+  }
   const g=DS.grid, la=DS.lat[c]-g.g/2, lo=DS.lon[c]-g.g/2;
   const shifts = g.global?[-360,0,360]:[0];
   shifts.forEach(dx=>selA.push(L.rectangle([[la,lo+dx],[la+g.g,lo+g.g+dx]],
@@ -2285,7 +2305,7 @@ async function init(){
   wireHover(mapA,'tipA');
   addRefLayers();
   /* state / province lines worldwide, fetched once the maps are up */
-  gzFetch('geo/admin1-10m.json.gz').then(t=>{ setAdmin1(t); addRefLayers(); drawPanels(); }).catch(()=>{});
+  gzFetch('geo/admin1-10m.json.gz').then(t=>{ setAdmin1(t); addRefLayers(); if(DS) drawSelection(); drawPanels(); }).catch(()=>{});
   await refresh();
   if(v){ const [la,lo,z]=v.split(',').map(Number);
     if(isFinite(la)&&isFinite(lo)&&isFinite(z)){ syncing=true; mapA.setView([la,lo],z,{animate:false});

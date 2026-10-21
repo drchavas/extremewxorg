@@ -65,6 +65,9 @@ process.on('unhandledRejection',e=>errors.push('unhandled rejection: '+(e&&e.mes
 w.eval(html.match(/<script>([\s\S]*?)<\/script>/g).pop().replace(/^<script>|<\/script>$/g,''));
 
 const $=id=>w.document.getElementById(id);
+/* the national outline: the one merged (MultiPolygon) unfilled layer */
+const usOut=()=>maps.length?maps[0]._layers.filter(l=>l._data&&l._data.type==='MultiPolygon'&&
+  l._opts&&l._opts.style&&l._opts.style.fill===false):[];
 const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
 const rows=()=>[...$('rankBody').querySelectorAll('tr')];
 const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))).toString());
@@ -79,6 +82,7 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
      returns maximum zoom — the page opened at street level. */
   say('map is built into a visible container',M._bodyShown==='block',
       'body display was "'+M._bodyShown+'" when L.map ran');
+  say('derecho view: no national outline (the swath is the magenta)',usOut().length===0);
   say('and the size is revalidated before fitting',M._nsize>0,M._nsize+' invalidateSize calls');
   say('hazard menu carries all four',
       [...$('hazSel').options].map(o=>o.value).join(',')==='derecho,hail,tornado,wind',
@@ -131,6 +135,9 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
   say('and the caveat names the 1974 numbers',
       /239 segments for 148 tornadoes/.test($('foot').innerHTML));
   say('and says why they cannot be collapsed',/empty before about 1990/.test($('foot').innerHTML));
+  /* The outline marks what the list describes: the whole country here. */
+  say('national list: the whole country is outlined in magenta',
+      usOut().length===1&&usOut()[0]._opts.style.color===w.eval('T().sel'));
 
   console.log('\n--- threshold changes the list');
   $('thrSel').value=3; $('thrSel').onchange({target:{value:'3'}});
@@ -153,6 +160,8 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
       rows().map(r=>r.dataset.d).join()===raw.rank[0].IN.map(([i])=>raw.days[i]).join());
   say('header names the state and the cap',/Indiana/.test($('rankHead').innerHTML)&&
       /Top 50/.test($('rankHead').innerHTML));
+  say('a state list: the national outline is gone (the state carries it)',
+      usOut().length===0&&w.eval("stStyle({properties:{STUSPS:'IN'}}).color===T().sel"));
   /* A state with fewer than 50 qualifying days must show what it has and say so. */
   $('regSel').value='RI'; $('regSel').onchange({target:{value:'RI'}});
   await new Promise(r=>setTimeout(r,300));

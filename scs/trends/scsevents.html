@@ -365,7 +365,7 @@ const EVENT_DEFAULT='definitive-069';
 /* ------------------------------------------------------------------ state */
 const S={hazard:'derecho',thresh:0,region:'',day:'',view:'cty',theme:'dark',
          tier:'firm',ev:EVENT_DEFAULT};
-let INDEX=null, GEO=null, STGEO=null;
+let INDEX=null, GEO=null, STGEO=null, STTOPO=null, USOUT=null, USGEO=null;
 const HZ={}, PTS={}, STATES=[];
 let GEOID=[],NAME=[],STUSPS=[],gidxOf={};
 let COBB=null, COBYST=null, LASTLL=null;
@@ -651,6 +651,18 @@ function stateLayer(){
     }
   });
 }
+/* With no state chosen the ranked list is national, so the magenta outline goes
+   round the whole country (every state and territory the reports come from): the
+   outline always marks the place the list below describes. Not on the derecho
+   view, where the magenta is the swath. */
+function syncUSOutline(){
+  if(USOUT&&map){ map.removeLayer(USOUT); USOUT=null; }
+  if(!map||!STTOPO||S.region||isDerecho()) return;
+  if(!USGEO){ const o=STTOPO.objects[Object.keys(STTOPO.objects)[0]];
+    USGEO=topojson.merge(STTOPO,o.geometries); }
+  USOUT=L.geoJSON(USGEO,{interactive:false,
+    style:{stroke:true,color:T().sel,weight:3.2,opacity:1,fill:false}}).addTo(map);
+}
 function focusState(zoom){
   if(stLay) stLay.setStyle(stStyle);
   const st=STATES.find(s=>s.ab===S.region);
@@ -840,6 +852,7 @@ function refresh(){
         ` · <span class="smtag">${esc(S.view==='pts'?'individual reports':'county totals')}</span>`;
     document.getElementById('foot').innerHTML=dayFoot(di);
   }
+  syncUSOutline();               /* last, so it sits above the day's county layer */
   writeHash();
 }
 
@@ -1084,6 +1097,7 @@ function addTiles(){
 
     GEO  =topojson.feature(ctopo,ctopo.objects[Object.keys(ctopo.objects)[0]]);
     STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
+    STTOPO=stopo;
     GEO.features.forEach((f,i)=>{ const p=f.properties;
       gidxOf[p.GEOID]=i; GEOID.push(p.GEOID); NAME.push(p.NAME); STUSPS.push(p.STUSPS); });
     buildCountyIndex();
