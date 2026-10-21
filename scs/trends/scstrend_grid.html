@@ -767,6 +767,24 @@ function cellMetrics(){
 /* The analysis unit is a single 2° box, always. The state menu only moves the
    camera; it does not pool boxes, because a box is the finest thing this data
    supports and averaging a handful of them just hides which one is which. */
+/* The magenta outline marks what the lower panels describe: the selected box (drawn
+   by styleOf), or, with none selected, the national mean over every box -- outlined
+   as the lower 48, where all the boxes lie. */
+let STTOPO=null, OUTL=[null,null], L48=null;
+function syncOutline(){
+  [mapA,mapB].forEach((m,k)=>{ if(OUTL[k]){ m.removeLayer(OUTL[k]); OUTL[k]=null; } });
+  if(selCell()>=0 || !STTOPO) return;
+  if(!L48){
+    const obj=STTOPO.objects[Object.keys(STTOPO.objects)[0]];
+    L48={type:'Feature',properties:{},geometry:topojson.merge(STTOPO,
+      obj.geometries.filter(g=>!['AK','HI','PR','VI','GU','AS','MP'].includes(g.properties.STUSPS)))};
+  }
+  [mapA,mapB].forEach((m,k)=>{
+    OUTL[k]=L.geoJSON(L48,{interactive:false,
+      style:{stroke:true,color:T().sel,weight:3.9,opacity:1,fill:false}}).addTo(m);
+    if(OUTL[k].bringToFront) OUTL[k].bringToFront();
+  });
+}
 function selCell(){ return S.cell===''?-1:(cidx[+S.cell]===undefined?-1:cidx[+S.cell]); }
 /* The box whose center is nearest a point — used to seed a selection. */
 function nearestCell(lat,lon){
@@ -1142,6 +1160,7 @@ function refresh(){
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
   drawPanels();
+  syncOutline();
   writeHash();
 }
 
@@ -1426,6 +1445,7 @@ function zoomUS(){
     if(!INDEX.hazards.some(h=>h.key===S.hazard)) S.hazard='hail';
     if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<hazSpec().thresholds.length)) S.thresh=0;
     if(!THEME[S.theme]) S.theme='dark';
+    STTOPO=stopo;
     STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
     COGEO=topojson.feature(ctopo,ctopo.objects[Object.keys(ctopo.objects)[0]]);
 

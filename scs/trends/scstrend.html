@@ -1546,8 +1546,41 @@ function countyTip(c){
            : 'no trend: too few years with a day here';
   return `<b>${esc(NAME[c])}, ${esc(STUSPS[c])}</b><br>${fmt(v,2)} ${countUnit()}${nt(v,rv)}<br>`+tl;
 }
+/* The magenta outline always marks what the lower panels describe: the selected
+   county, the selected state (stStyle), or -- with no state chosen -- the whole
+   area the national series covers. That is every state for Storm Events, the lower
+   48 for the ERA5 and PRISM fields, and the states with stations for station hazards. */
+let STTOPO=null, OUTL=[null,null];
+const MERGED={};
+function usStates(){
+  const d=HZ[S.hazard], all=STGEO.features.map(f=>f.properties.STUSPS);
+  if(d&&d.field) return all.filter(a=>!['AK','HI','PR','VI','GU','AS','MP'].includes(a));
+  if(d&&d.station){ const s=new Set(stationsShown().map(i=>d.stations[i].state)); return all.filter(a=>s.has(a)); }
+  return all;
+}
+function outlineGeo(){
+  if(isEvent()) return null;
+  if(S.county && !isStation()){ const c=gidxOf[S.county]; return c===undefined?null:GEO.features[c]; }
+  if(S.county || S.region || !STTOPO) return null;      // a station is ringed; a state is styled
+  const st=usStates(), key=st.join(',');
+  if(!MERGED[key]){
+    const obj=STTOPO.objects[Object.keys(STTOPO.objects)[0]], keep=new Set(st);
+    MERGED[key]={type:'Feature',properties:{},
+      geometry:topojson.merge(STTOPO,obj.geometries.filter(g=>keep.has(g.properties.STUSPS)))};
+  }
+  return MERGED[key];
+}
+function syncOutline(){
+  [mapA,mapB].forEach((m,k)=>{ if(OUTL[k]){ m.removeLayer(OUTL[k]); OUTL[k]=null; } });
+  const g=outlineGeo(); if(!g) return;
+  [mapA,mapB].forEach((m,k)=>{
+    OUTL[k]=L.geoJSON(g,{interactive:false,
+      style:{stroke:true,color:T().sel,weight:3.9,opacity:1,fill:false}}).addTo(m);
+    if(OUTL[k].bringToFront) OUTL[k].bringToFront();
+  });
+}
 function stStyle(f){
-  const on=f.properties.STUSPS===S.region;
+  const on=f.properties.STUSPS===S.region && !S.county;   // a county or station is the unit then
   /* Event mode has no choropleth under the lines — just the basemap and a
      scatter of gust reports — so black hairlines vanish into the dark tiles.
      White reads against both the basemap and the warm report colors, and it
@@ -1623,7 +1656,7 @@ function drawStations(map,prev,C){
     const r=5+9*Math.sqrt(Math.min(1,Math.abs(v)/rmax));
     const sig=C.pval && C.pval[i]<0.05;
     L.circleMarker([st.lat,st.lon],{radius:r,fillColor:colorFor(v,C),fillOpacity:.92,
-        color:S.county===st.id?T().fit:(sig?T().ink:T().cline),
+        color:S.county===st.id?T().sel:(sig?T().ink:T().cline),
         weight:S.county===st.id?3:(sig?2:.9)})
       .bindTooltip(`<b>${esc(st.name)}</b><br>${fmt(v,2)} ${esc(C.unit)}`,
                    {sticky:true,className:'ctytip'})
@@ -1792,6 +1825,7 @@ function refresh(){
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
   drawPanels();
+  syncOutline();
   writeHash();
 }
 /* Event mode. The trend map is deliberately left out for now — a single
@@ -1956,10 +1990,13 @@ function mapSVG(x,y,w,h,C,title,sub){
   });
   // state outlines, selected one picked out
   STGEO.features.forEach(f=>{
-    const on=f.properties.STUSPS===S.region;
+    const on=f.properties.STUSPS===S.region && !S.county;
     out+=`<path d="${shape(f.geometry)}" fill="none" stroke="${on?t.sel:'#000'}" `+
          `stroke-width="${on?2.6:0.6}" stroke-opacity="${on?1:.85}"/>`;
   });
+  // the county, or the whole country, the panels describe
+  const og=outlineGeo();
+  if(og) out+=`<path d="${shape(og.geometry)}" fill="none" stroke="${t.sel}" stroke-width="2.6"/>`;
   // station symbols
   if(stn){
     const d=HZ[S.hazard], list=stationsShown();
@@ -2347,6 +2384,7 @@ function zoomUS(){
        county hazard. Filtering by kind keeps any future event hazard out too. */
     INDEX={...idx, hazards: idx.hazards.filter(h=>h.kind!=='event')};
     GEO  =topojson.feature(ctopo,ctopo.objects[Object.keys(ctopo.objects)[0]]);
+    STTOPO=stopo;
     STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
     GEO.features.forEach((f,i)=>{ const p=f.properties;
       gidxOf[p.GEOID]=i; GEOID.push(p.GEOID); NAME.push(p.NAME);
