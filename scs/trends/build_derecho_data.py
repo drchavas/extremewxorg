@@ -598,7 +598,7 @@ def main():
             "thresholds": gm["thresholds"],
             "y0": gm["year0"], "y1": gm["year1"], "file": "grid_derechoday.json.gz",
         })
-        order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "rain", "fzra", "pkwnd", "derecho"])}
+        order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "rain", "snow", "fzra", "pkwnd", "derecho"])}
         gix["hazards"].sort(key=lambda h: order.get(h["k"], 99))
         json.dump(gix, open(os.path.join(outdir, "grid_index.json"), "w"), indent=1)
         print("updated grid_index.json")
@@ -654,7 +654,7 @@ def main():
         "thresholds": m["thresholds"], "year0": m["year0"], "year1": m["year1"],
         "file": "derechoday.json.gz",
     })
-    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "rain", "fzra", "pkwnd", "derecho"])}
+    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "rain", "snow", "fzra", "pkwnd", "derecho"])}
     index["hazards"].sort(key=lambda h: order.get(h["key"], 99))
     json.dump(index, open(idx_path, "w"), indent=1)
     print("updated index.json")

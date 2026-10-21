@@ -553,6 +553,28 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     await new Promise(r=>setTimeout(r,900));
   }
 
+  console.log('\n--- snowfall (QC\'d COOP stations)');
+  {
+    say('the hazard menu offers snowfall',[...$('hazSel').options].some(o=>o.value==='snow'));
+    $('regSel').value='NY'; fire('regSel','change');
+    $('hazSel').value='snow'; await $('hazSel').onchange({target:{value:'snow'}});
+    await new Promise(r=>setTimeout(r,2500));
+    const d=await w.eval("loadHazard('snow')");
+    say('a station hazard over July-June seasons, 1951-2026',d.station&&d.meta.season==='JulJun'&&d.meta.year0===1951&&d.meta.year1===2026);
+    say('thresholds 1, 4, 6 and 12 inches',d.meta.thresholds.map(t=>t.min).join()==='1,4,6,12');
+    say('opens on the QC set',/QC only/.test($('dpBtn').textContent),$('dpBtn').textContent);
+    say('the QC set is a strict subset',d.stations.filter(s=>s.dp).length>1000&&d.stations.filter(s=>s.dp).length<d.stations.length);
+    say('the guidance cites Kunkel et al. (2009)',/Kunkel/.test($('guide').innerHTML)&&/measured by people/.test($('guide').innerHTML));
+    say('the panels use the 90% rule for seasons',/at least 90% of the seasons/.test($('foot').innerHTML),$('foot').textContent.slice(0,120));
+    $('thrSel').value='0'; fire('thrSel','change');
+    const bi=d.stations.findIndex(s=>s.id==='USW00014733');
+    let n=0,sum=0; for(let y=0;y<d.nY;y++) if(d.valid[bi*d.nY+y]){ n++; sum+=d.M[bi*d.nY+y]; }
+    say('Buffalo has 15-40 days a season with ≥1″',bi>=0&&sum/n>15&&sum/n<40,bi>=0?(sum/n).toFixed(1):'missing');
+    $('regSel').value='IN'; fire('regSel','change');
+    $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+    await new Promise(r=>setTimeout(r,900));
+  }
+
   console.log('\n--- links the page cannot honor fall back to the default');
   {
     const st=()=>Object.fromEntries(new URLSearchParams(w.location.hash.slice(1)));

@@ -250,6 +250,45 @@
    "file": "rain.json.gz"
   },
   {
+   "key": "snow",
+   "label": "Snowfall",
+   "unit": "in",
+   "note": "Days with at least the threshold of new snowfall in a day at a quality-controlled NOAA Cooperative Observer or first-order station (GHCN-Daily, via ACIS), counted over a July\u2013June season labeled by its ending year.",
+   "thresholds": [
+    {
+     "key": "s1",
+     "label": "\u2265 1\u2033 of snow in a day",
+     "short": "\u22651\u2033",
+     "min": 1
+    },
+    {
+     "key": "s4",
+     "label": "\u2265 4\u2033 of snow in a day",
+     "short": "\u22654\u2033",
+     "min": 4
+    },
+    {
+     "key": "s6",
+     "label": "\u2265 6\u2033 of snow in a day",
+     "short": "\u22656\u2033",
+     "min": 6
+    },
+    {
+     "key": "s12",
+     "label": "\u2265 12\u2033 of snow in a day",
+     "short": "\u226512\u2033",
+     "min": 12
+    }
+   ],
+   "year0": 1951,
+   "year1": 2026,
+   "kind": "station",
+   "season": "JulJun",
+   "file": "snow.json.gz",
+   "nDelPizzo": 1499,
+   "nQC": 1499
+  },
+  {
    "key": "fzra",
    "label": "Freezing Rain",
    "unit": "h",

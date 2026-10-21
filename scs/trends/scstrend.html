@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Severe thunderstorm(+) Climatology and Trends</title>
-<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho, freezing-rain, peak-wind, extreme-heat and heavy-rain days, with annual and monthly series.">
+<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho, freezing-rain, peak-wind, extreme-heat, heavy-rain and heavy-snow days, with annual and monthly series.">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="referrer" content="no-referrer">
@@ -172,7 +172,7 @@
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-21 13:42 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-21 16:03 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -262,6 +262,26 @@
               from the gauges that reported each day, and that network changes over time, so trends
               carry some uncertainty from it. The method reproduces the Indiana heavy-rain analysis it
               grew out of exactly, cell by cell.</li>
+          <li><b>Heavy snow</b> comes from daily snowfall at NOAA <b>Cooperative Observer and
+              first-order stations</b> (GHCN-Daily, via ACIS) &mdash; measured by a person with a
+              ruler, since no gridded product estimates daily snowfall well enough for trends. A
+              day counts at 1, 4, 6 or 12&nbsp;inches of new snow; seasons run July&ndash;June,
+              labeled by their ending year, 1950&ndash;51 onward. Quality control follows
+              <a href="https://doi.org/10.1175/2008JTECHA1138.1" target="_blank" rel="noopener">Kunkel
+              et al. (2009)</a>, automated: blank snowfall on days that could not have had snow
+              (no precipitation, or a minimum above 32&nbsp;&deg;F) is set to zero; days with more
+              than 60&nbsp;in, with snow but exactly no precipitation, with a snow-to-liquid ratio
+              above 60:1, or that copy the snow depth already on the ground are set to missing; a
+              season counts only if October&ndash;May is at least 90% complete with no empty
+              December, January or February, and is dropped as <i>estimated</i> when most of its
+              snowfalls read exactly 10:1 from the gauge (the EPA snowfall indicator&rsquo;s
+              screen). A station appears with at least 30 valid seasons. The default <b>QC
+              stations</b> set further requires at least 60 of 76 seasons, five in each of the first
+              and last decades, and no break or drift against its neighbours (a Pettitt test and a
+              trend test on the ratio to a neighbour reference, in place of Kunkel&rsquo;s panel of
+              experts). CoCoRaHS is left out: its records mostly start after 2000. The lower panels
+              average the stations observed in at least 90% of the seasons in the window, season
+              by season over those reporting.</li>
           <li><b>Locate each report</b> (storm hazards). Storm Events reports are assigned to a county by
               <code>STATE_FIPS</code> + <code>CZ_FIPS</code> rather than by county name, which
               avoids name collisions and independent cities. Connecticut is drawn with its
@@ -426,7 +446,7 @@ function tp(t,df){ if(!(df>0)||!isFinite(t))return 1; return betai(df/2,0.5,df/(
    reporting and kept a minority of them; the rest report FZRA too erratically to
    trend. So freezing rain opens on the QC'd subset. Peak wind is a different
    measurement and that screen does not apply to it. */
-function dpDefault(h){ return h==='fzra'; }
+function dpDefault(h){ return h==='fzra'||h==='snow'; }
 const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:null,theme:'dark',
          dpOnly:dpDefault('hail'),tier:'firm',smooth:'2'};
 let INDEX=null, GEO=null, STGEO=null;
@@ -436,7 +456,9 @@ let REQUSER=false;   // whether the reader chose it (a link or the year boxes), 
 /* Default start year per hazard. Storm Events opens in 2000, after the 1990s jump in
    reporting; heavy rain opens on PRISM's whole daily record, which has no such break,
    and a 45-year window is far less noisy for a variable this patchy than a 26-year one. */
-function defY0(h){ return h==='rain'?1981:2000; }
+function defY0(h){ return h==='rain'?1981:h==='snow'?1951:2000; }
+/* share of the window's seasons a station needs to enter the lower panels */
+function panelFrac(){ return S.hazard==='snow'?0.9:1; }
 let GEOID=[],NAME=[],STUSPS=[],AREA=[],gidxOf={};
 let COCEN=null;            // county centroids, for the smoother
 let SMNB={};               // cached neighbor + weight lists, keyed by sigma
@@ -795,11 +817,13 @@ function seriesMonthYear(){
       label=d.stations[members[0]].name;
     } else {
       // balanced panel: only stations observed in EVERY year of the period, so a
-      // station entering or leaving the record can't masquerade as a trend
-      const pool=stationsInPlace();
+      // station entering or leaving the record can't masquerade as a trend. Snowfall
+      // records almost always lose the odd season, so there the bar is 90% of them,
+      // and each season averages the members that reported it.
+      const pool=stationsInPlace(), need=Math.ceil(panelFrac()*(b-a+1));
       members=pool.filter(s=>{
-        for(let y=a-y0;y<=b-y0;y++) if(!d.valid[s*nY+y]) return false;
-        return true;
+        let n=0; for(let y=a-y0;y<=b-y0;y++) n+=d.valid[s*nY+y];
+        return n>=need;
       });
       if(!members.length){                       // nothing spans the period
         let best=-1,bn=-1;
@@ -811,14 +835,17 @@ function seriesMonthYear(){
     }
     SERIESINFO={n:members.length,label,pool:stationsInPlace().length};
     if(!members.length){ valid.fill(0); vm.fill(0); return {my:out,valid,vm}; }
+    const nval=new Uint16Array(nY);
     for(let y=0;y<nY;y++){
       let ok=0; members.forEach(s=>{ if(d.valid[s*nY+y]) ok++; });
-      valid[y]= ok===members.length ? 1 : 0;
+      nval[y]=ok;
+      /* all members for the strict hazards; for snow, at least three quarters of them */
+      valid[y]= ok>0 && ok>=Math.ceil((panelFrac()<1?0.75:1)*members.length) ? 1 : 0;
     }
     const set=new Set(members);
     for(let k=0;k<d.si.length;k++){
-      if(!set.has(d.si[k])) continue;
-      out[d.yi[k]*12+(d.mi[k]-1)]+=v[k]/members.length;   // mean across stations
+      if(!set.has(d.si[k]) || !d.valid[d.si[k]*nY+d.yi[k]] || !nval[d.yi[k]]) continue;
+      out[d.yi[k]*12+(d.mi[k]-1)]+=v[k]/nval[d.yi[k]];     // mean across stations reporting
     }
     for(let y=0;y<nY;y++) if(!valid[y]) for(let m=0;m<12;m++) vm[y*12+m]=0;
     return {my:out,valid,vm};
@@ -1047,11 +1074,15 @@ function syncDpToggle(){
   const n=d.stations.filter(s=>s.dp).length;
   wrap.style.display='';
   btn.textContent = S.dpOnly ? ('QC only · '+n) : ('All · '+d.stations.length);
+  const qcn = S.hazard==='snow' ? 'the Kunkel-style snowfall QC (long, homogeneous records)'
+                                 : 'DelPizzo et al. (2025) QC';
   btn.title = S.dpOnly
-    ? `Showing the ${n} stations that passed DelPizzo et al. (2025) QC. `+
-      `Click to add the other ${d.stations.length-n}, whose reporting is erratic.`
+    ? `Showing the ${n} stations that passed ${qcn}. `+
+      `Click to add the other ${d.stations.length-n}, `+
+      (S.hazard==='snow'?`which have at least 30 valid seasons but shorter or less consistent records.`
+                        :`whose reporting is erratic.`)
     : `Showing all ${d.stations.length} stations, including ${d.stations.length-n} that failed `+
-      `DelPizzo et al. (2025) QC. Click to restrict to the ${n} QC'd sites.`;
+      `${qcn}. Click to restrict to the ${n} QC'd sites.`;
   btn.classList.toggle('on',S.dpOnly);
 }
 function syncCounties(){
@@ -1330,6 +1361,18 @@ function guideHtml(){
       '1990s as population, spotter networks and radar changed. Restricting to the NEXRAD era '+
       'removes most of that exposure, but not all of it.';
   }
+  if(S.hazard==='snow')
+    return lead+'<b>Snowfall is measured by people</b>: Cooperative Observer volunteers and staff at '+
+      'first-order stations, once a day with a ruler. Snow is notoriously hard to measure consistently '+
+      '&mdash; it settles, melts and drifts, and how often the snow board is cleared changes the total '+
+      '(first-order sites that clear it every six hours catch more than a once-a-day observer) &mdash; '+
+      'so the stations are screened hard, after '+
+      '<a href="https://doi.org/10.1175/2008JTECHA1138.1" target="_blank" rel="noopener">Kunkel et al. (2009)</a>: '+
+      'seasons that are incomplete or merely estimated from the precipitation gauge are dropped as '+
+      '<b>no observation</b>, never counted as zero, and the default <b>QC stations</b> set keeps only long '+
+      'records that track their neighbours without breaks or drifts. '+
+      '<b>Compare a station with itself over time</b> more readily than with its neighbours. Seasons run '+
+      'July&ndash;June and are labeled by the year they end.';
   if(isStation()){
     return lead+
       'These are observations from a <i>fixed instrument network</i> (NOAA/NCEI Integrated '+
@@ -1684,8 +1727,11 @@ function refresh(){
   const pool = stn ? stationsInPlace() : GEO.features.map(f=>gidxOf[f.properties.GEOID]);
   const mv=pool.map(c=>cm.mean[c]).filter(isFinite).sort((p,q)=>p-q);
   const tv=pool.map(c=>Math.abs(cm.trend[c])).filter(isFinite).sort((p,q)=>p-q);
-  const hiM=niceUp(quantile(mv,stn?1:0.995))||1;
-  const hiT=niceUp(quantile(tv,stn?1:0.95))||1;
+  /* stations: the scale runs to the top station, except for snowfall, where a few
+     mountain sites (Paradise, Mount Rainier) would bleach every other dot */
+  const snw=S.hazard==='snow';
+  const hiM=niceUp(quantile(mv,stn?(snw?0.98:1):0.995))||1;
+  const hiT=niceUp(quantile(tv,stn?(snw?0.95:1):0.95))||1;
 
   /* `over`: values run past the top of the scale, which the legend then says */
   CUR ={val:cm.mean, lo:0,    hi:hiM, div:false, dec:hiM<5?2:1, unit:countUnit(),
@@ -1996,9 +2042,13 @@ function drawPanels(){
       ? `Lower panels show <b>${esc(placeLabel())}</b> alone.`
       : stn
         ? `Lower panels average the <b>${SERIESINFO.n} of ${SERIESINFO.pool}</b> stations observed in `+
-          `every year of ${a}–${b}`+
-          (S.dpOnly?`, drawn from the QC'd subset of <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" `+
-                    `target="_blank" rel="noopener">DelPizzo et al. (2025)</a>.`:`.`)
+          (panelFrac()<1?`at least ${Math.round(panelFrac()*100)}% of the seasons of ${a}–${b}, each season `+
+                         `averaging those that reported it`:`every year of ${a}–${b}`)+
+          (S.dpOnly ? (S.hazard==='snow'
+                      ? `, drawn from the QC'd set (after <a href="https://doi.org/10.1175/2008JTECHA1138.1" `+
+                        `target="_blank" rel="noopener">Kunkel et al. 2009</a>).`
+                      : `, drawn from the QC'd subset of <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" `+
+                        `target="_blank" rel="noopener">DelPizzo et al. (2025)</a>.`) : `.`)
         : d.field
           ? `Lower panels average <b>${esc(placeLabel())}</b>: the ${countWord()}s a typical place there `+
             `saw, an area-weighted mean over its counties (not the days on which anywhere in it qualified).`
@@ -2008,7 +2058,10 @@ function drawPanels(){
     ` The maps always show the whole country; choosing a state re-centers them and scopes these `+
     `panels, it does not hide anything. `+
     (stn
-      ? `A station-year below 90% complete is dropped as <b>no observation</b>, not counted as zero.`
+      ? (S.hazard==='snow'
+          ? `A season that is incomplete, or whose snowfall was only estimated from the gauge, is dropped as `+
+            `<b>no observation</b>, not counted as zero.`
+          : `A station-year below 90% complete is dropped as <b>no observation</b>, not counted as zero.`)
       : d.field && fieldSrc()==='PRISM'
       ? `PRISM interpolates rain gauges onto a 4 km grid, so a cell's total is an area estimate rather than `+
         `one gauge, and the gauge network changes over time; read the geography first and the trends with care.`
@@ -2088,7 +2141,8 @@ function figureSVG(){
   const d=HZ[S.hazard];
   const src=d.field?(fieldSrc()==='PRISM'?'PRISM daily precipitation, PRISM Group, Oregon State University, via ACIS'
                      :'ECMWF ERA5 reanalysis (contains modified Copernicus Climate Change Service information)')
-           :stn?'NOAA/NCEI hourly station observations':'NOAA Storm Events database';
+           :stn?(S.hazard==='snow'?'NOAA GHCN-Daily snowfall (COOP and first-order stations) via ACIS'
+                 :'NOAA/NCEI hourly station observations'):'NOAA Storm Events database';
   g+=txt(8,H-9,`${hazSpec().label} \u00b7 ${thrSpec().label} \u00b7 panels: ${placeLabel()} \u00b7 ${periodLabel()} \u00b7 `+
                 `data: ${src} \u00b7 extremewx.org`,{size:11,fill:t.mute});
   return {svg:g,W:LO.W,H,mapW:mw,mapH:mh-42,aspect:asp};

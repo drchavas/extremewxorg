@@ -216,7 +216,7 @@ def stage_site(cdir, wpath, topo, outdir):
                                   "thresholds": gmeta["thresholds"], "y0": y0, "y1": y1,
                                   "kind": "field", "file": f"grid_{hz}.json.gz"})
     order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday",
-                                         "heatindex", "heat", "rain", "fzra", "pkwnd", "derecho"])}
+                                         "heatindex", "heat", "rain", "snow", "fzra", "pkwnd", "derecho"])}
     index["hazards"].sort(key=lambda h: order.get(h["key"], 99))
     gindex["hazards"].sort(key=lambda h: order.get(h["k"], 99))
     json.dump(index, open(idx_path, "w"), indent=1)

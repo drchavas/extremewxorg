@@ -357,3 +357,54 @@ python3 build_rain_data.py site rain_counts geo_rain/weights.json geo/counties.t
 provisional one through last month (one request per calendar year in that window, a minute or
 two), rewrites the affected `rain_counts/<YEAR>.npz`, and exits 0 if anything was new or
 revised (3 otherwise); then rerun the `site` step. Needs `numpy scipy requests`.
+
+## Snowfall (COOP / first-order stations)
+
+Station hazard `snow` ("Snowfall"): days with at least **1, 4, 6 or 12 inches** of new snow, over
+a **July–June season** labelled by its ending year (1951 = 1950–51 … 2026 = 2025–26), at NOAA
+Cooperative Observer and first-order stations (GHCN-Daily, through ACIS). No gridded product
+estimates daily snowfall well enough for trends (PRISM has none; NOAA's National Gridded
+Snowfall Analysis starts in the late 2000s; Kluver et al.'s 1° grid ends in 2009), so this is
+station-based. CoCoRaHS is left out: its records mostly begin after 2000.
+
+**Quality control**, after Kunkel et al. (2009, *JTECH* 26, 33–44), automated (`snow_qc.py`):
+
+- *Days.* Trace = 0. A blank snowfall becomes 0 when precipitation was 0, or fell with Tmin
+  above 32 °F (Kunkel's zero-fill). Accumulated multi-day values (A/S) are missing. Set to
+  missing as suspect: > 60 in; ≥ 1 in with exactly 0.00 in precipitation; ≥ 4 in at a ratio
+  above 60:1; ≥ 4 in equal to a snow depth already on the ground and not growing (depth keyed
+  as snowfall).
+- *Seasons* (a failed season is no observation, never zero): October–May ≥ 90% complete after
+  zero-fill; no empty December, January or February; not *estimated* — EPA's screen: more than
+  10 days with snow and precipitation, over half of them exactly 10:1.
+- *Stations.* Shown with ≥ 30 valid seasons (7,086). The default **QC set** (1,499) also needs
+  ≥ 60 of 76 seasons, ≥ 5 valid in 1951–60 and in 2017–26, and no break or drift against its
+  neighbours: log ratio of seasonal totals to the median of up to 10 neighbours (≤ 200 km,
+  ≤ 500 m elevation difference, each scaled to the station's mean); inhomogeneous if a Pettitt
+  change point has p < 0.01 and a step > 20%, or a linear drift has p < 0.01 and > 5%/decade.
+  That replaces Kunkel's seven-expert panel. Stations averaging < 3 in a season (549, mostly
+  the South, where the 1″ threshold matters) cannot be tested that way and are kept on length.
+- Every station's verdict, test statistics and membership of Kunkel's own 420-station set
+  (NCAR ds510.5) are in `snow_station_qc.txt` (CSV). Of Kunkel's 393 stations that still have
+  ≥ 30 seasons here, 193 pass, 122 fail the length rules (many closed or degraded after 2007,
+  where Kunkel's period ends), and 78 show a break against neighbours.
+
+Sanity check (mean seasonal snowfall, all valid seasons): Buffalo 94″, Syracuse 107″,
+Denver 57″, Minneapolis 52″, Boston 43″, Indianapolis 25″, Seattle 8″, Atlanta 2″. QC-set mean
+days per season 1951–2026: 7.0 at ≥ 1″ (trend −0.13/decade, p = 0.03), 1.6 at ≥ 4″, 0.7 at
+≥ 6″, 0.09 at ≥ 12″ (no significant trend at the higher thresholds).
+
+The lower panels average stations observed in ≥ 90% of the window's seasons, each season over
+those that reported it (other station hazards require every year).
+
+### Building (about an hour, in the cloud)
+
+```sh
+python3 snow_candidates.py          # station list per state -> candidates.json (~8,600 with >= 30 yr)
+python3 snow_fetch.py 6             # daily snow, depth, precip, Tmin per station -> daily/*.npz (~45 min)
+python3 snow_qc.py daily candidates.json data/snow.json.gz --report snow_report.json
+python3 snow_index.py data/snow.json.gz data/index.json
+```
+
+Rebuild once a year, after a season ends (e.g. in August): COOP reports arrive with a lag, and
+the homogeneity tests use the whole record.
