@@ -1245,12 +1245,16 @@ window.addEventListener('resize',()=>{
 });
 
 function syncRegionSel(){ document.getElementById('regSel').value=S.region; }
-function writeHash(){
+/* The period goes into the address only when the reader chose it (or is copying a
+   link to share). A default period left there would be read back on reload as a
+   choice, and a hazard with a different default (heavy rain, 1981) would then open
+   on the old hazard's 2000. */
+function writeHash(share){
   const p=new URLSearchParams();
   p.set('h',S.hazard); p.set('t',S.thresh); p.set('r',S.region);
   if(S.smooth!==smDefault(S.hazard)) p.set('sm',S.smooth);
   if(S.cell!=='') p.set('c',S.cell);
-  p.set('p',S.y0+'-'+S.y1);
+  if(REQUSER||share) p.set('p',S.y0+'-'+S.y1);
   if(S.theme!=='dark') p.set('k',S.theme);
   if(mapA){ const c=mapA.getCenter();
     p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
@@ -1392,7 +1396,7 @@ function wire(){
     refresh(); };
   document.getElementById('pngBtn').onclick=exportPNG;
   document.getElementById('linkBtn').onclick=function(){
-    writeHash();
+    writeHash(true);
     navigator.clipboard.writeText(location.href).then(()=>{
       const s=this.textContent; this.textContent='Copied'; setTimeout(()=>this.textContent=s,1200);
     }).catch(()=>{}); };
