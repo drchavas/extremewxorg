@@ -384,6 +384,20 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('back on hail the smoothing control returns',$('smWrap').style.display===''&&w.eval('smoothOn()')===true);
   }
 
+  console.log('\n--- heavy rain (PRISM gridded field)');
+  {
+    $('hazSel').value='rain'; await $('hazSel').onchange({target:{value:'rain'}});
+    await new Promise(r=>setTimeout(r,1200));
+    const d=await w.eval("loadHazard('rain')");
+    say('every box with PRISM land is listed',d.meta.boxes.length===262,String(d.meta.boxes.length));
+    say('rain gets the PRISM caveat',/PRISM/.test($('guide').innerHTML)&&!/ERA5/.test($('guide').innerHTML));
+    say('the footer and panel credit PRISM',/PRISM/.test($('foot').innerHTML)&&/PRISM/.test($('card').innerHTML));
+    say('rain is never smoothed',w.eval('smoothOn()')===false&&$('smWrap').style.display==='none');
+    say('rain series is non-zero',seriesTotal()>0,seriesTotal().toFixed(0));
+    $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+    await new Promise(r=>setTimeout(r,900));
+  }
+
   console.log('\n--- reload default');
   // jsdom makes location.reload non-configurable, so the reload itself cannot be
   // intercepted here — asserting it would only be testing a stub. What matters and

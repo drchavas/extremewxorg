@@ -529,6 +529,27 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('back on hail the smoothing control returns',$('smWrap').style.display===''&&w.eval('smoothOn()')===true);
   }
 
+  console.log('\n--- heavy rain (PRISM gridded field)');
+  {
+    say('the hazard menu offers heavy rain',[...$('hazSel').options].some(o=>o.value==='rain'));
+    $('regSel').value='IN'; fire('regSel','change');
+    $('hazSel').value='rain'; await $('hazSel').onchange({target:{value:'rain'}});
+    await new Promise(r=>setTimeout(r,1500));
+    const d=await w.eval("loadHazard('rain')");
+    say('PRISM source, 1981 start, through Sep 2026',d.meta.srcname==='PRISM'&&d.meta.year0===1981&&d.meta.through==='2026-09',
+        d.meta.srcname+' '+d.meta.year0+' '+d.meta.through);
+    say('rain gets the PRISM caveat, not ERA5 or Storm Events',/PRISM/.test($('guide').innerHTML)&&!/ERA5/.test($('guide').innerHTML)&&!/Storm Events records/.test($('guide').innerHTML));
+    say('rain is never smoothed',w.eval('smoothOn()')===false&&$('smWrap').style.display==='none');
+    say('the subtitle names the inch threshold',/\(≥\d″\)/.test($('climSub').textContent),$('climSub').textContent);
+    const mar=w.eval("probe('rain',0,'18097',1991,2020,'off')").mean, swla=w.eval("probe('rain',0,'22019',1991,2020,'off')").mean;
+    say('Marion IN sees about 8-12 days ≥1″ a year, SW Louisiana more',mar>7&&mar<13&&swla>mar,mar.toFixed(2)+' vs '+swla.toFixed(2));
+    $('regSel').value='AK'; fire('regSel','change'); $('ctySel').value='02020'; fire('ctySel','change');
+    say('an Alaska county says no PRISM data',/No PRISM data for/.test($('card').innerHTML));
+    $('regSel').value='IN'; fire('regSel','change');
+    $('hazSel').value='hail'; await $('hazSel').onchange({target:{value:'hail'}});
+    await new Promise(r=>setTimeout(r,900));
+  }
+
   console.log('\n--- links the page cannot honor fall back to the default');
   {
     const st=()=>Object.fromEntries(new URLSearchParams(w.location.hash.slice(1)));

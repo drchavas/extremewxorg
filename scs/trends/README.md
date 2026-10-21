@@ -305,3 +305,55 @@ update needs.
 `update_heat.py heat_counts geo_heat/weights.json` processes the next month NCAR has
 published (about a minute; `--max N` for several) straight into the counts, without the
 0.25° daily archive; then rerun step 3. NCAR's AWS copy runs a month or two behind real time.
+
+## Heavy rain (PRISM)
+
+One hazard, `rain`: days whose **PRISM** daily precipitation total reached 1, 2 or 3 inches,
+on PRISM's 4 km grid (PRISM Group, Oregon State University), lower 48, **1981 onward**
+(PRISM's daily record).
+
+- **No daily data are downloaded.** ACIS (grid 21 = PRISM) counts the days on its own server:
+  one `GridData` request per year with `"interval":"mly","reduce":"cnt_ge_0.995"` (and
+  1.995, 2.995) returns monthly day counts for every cell of the lower 48 — about 175 MB of
+  JSON and 2–3 minutes per year. The Indiana card instead downloaded every daily value
+  (2.5 GB for one state). `prism_fetch.py`.
+- **Thresholds** are on the daily total rounded to hundredths of an inch, the precision rain is
+  reported in (so `≥ 0.995`). That is what the card's download did, and it reproduces the card
+  **exactly**: all 8,002 Indiana cells × 3 thresholds, 2000–2007, cell by cell. Testing the
+  unrounded value instead (≥ 25.4 mm) gives about 0.8% fewer ≥ 1″ days.
+- **A day** is PRISM's: the 24 hours ending 12 UTC (about 7 am EST), the cooperative
+  observers' day.
+- **Counties**: each PRISM cell counts its own days; a county's value is the area-weighted mean
+  of the cells it overlaps (`geo_rain/weights.json`); state and national panels are the
+  area-weighted mean over counties — the days a typical place saw, the statistic of the card's
+  maps. (The card's *statewide time series* counted days on which **any** cell in Indiana
+  reached the threshold, ~130 days/yr at ≥ 1″; that is not shown here.) PRISM is land-only, so
+  no land mask is needed; a cell is used only if it has data in every month of the record.
+- **2° boxes**: the plain mean over the PRISM cells whose centres lie in a lower-48 county.
+- **Provisional months**: PRISM revises about the last six months as late reports arrive; they
+  are flagged `provisional` in `rain_counts/` and fetched again by every update.
+- **Caveats** (on the pages): PRISM interpolates whichever gauges reported each day, and that
+  network changes over time, so trends carry some network uncertainty; a 4 km cell smooths the
+  most intense local downpours.
+
+### Building
+
+```sh
+# 1. per-cell monthly counts, one request per year (2-3 min each; 3 at a time is fine)
+python3 prism_fetch.py 2024                 # -> cells/2024.npz (kept outside the repo)
+python3 prism_fetch.py 2026 9               # a partial year: through September
+# 2. county/box weights (needs cells/, geo/counties.geojson); copy geo/weights.json to geo_rain/
+python3 build_rain_weights.py
+# 3. per-year county and box counts, then the page files (merged into index.json etc.)
+python3 build_rain_data.py counts cells rain_counts geo_rain/weights.json
+python3 build_rain_data.py site rain_counts geo_rain/weights.json geo/counties.topo.json.gz data
+```
+
+`build_rain_data.py site` reuses `build_heat_data.py`'s site stage (same file format).
+
+### Monthly update
+
+`prism_update.py rain_counts geo_rain/weights.json` re-fetches every month from the oldest
+provisional one through last month (one request per calendar year in that window, a minute or
+two), rewrites the affected `rain_counts/<YEAR>.npz`, and exits 0 if anything was new or
+revised (3 otherwise); then rerun the `site` step. Needs `numpy scipy requests`.

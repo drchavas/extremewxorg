@@ -302,7 +302,7 @@ def main():
         })
 
     # keep a stable order regardless of which builder ran last
-    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "fzra", "pkwnd", "derecho"])}
+    order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday", "heatindex", "heat", "rain", "fzra", "pkwnd", "derecho"])}
     index["hazards"].sort(key=lambda h: order.get(h["key"], 99))
     with open(os.path.join(outdir, "index.json"), "w") as fh:
         json.dump(index, fh, indent=1)

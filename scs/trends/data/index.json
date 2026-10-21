@@ -220,6 +220,36 @@
    "file": "heat.json.gz"
   },
   {
+   "key": "rain",
+   "label": "Heavy Rain",
+   "unit": "in",
+   "note": "Days on which the PRISM daily precipitation total (4 km grid, the 24 hours ending 12 UTC) reached the threshold.",
+   "thresholds": [
+    {
+     "key": "r1",
+     "label": "\u2265 1.00\u2033 in a day",
+     "short": "\u22651\u2033",
+     "min": 1
+    },
+    {
+     "key": "r2",
+     "label": "\u2265 2.00\u2033 in a day",
+     "short": "\u22652\u2033",
+     "min": 2
+    },
+    {
+     "key": "r3",
+     "label": "\u2265 3.00\u2033 in a day",
+     "short": "\u22653\u2033",
+     "min": 3
+    }
+   ],
+   "year0": 1981,
+   "year1": 2026,
+   "kind": "field",
+   "file": "rain.json.gz"
+  },
+  {
    "key": "fzra",
    "label": "Freezing Rain",
    "unit": "h",

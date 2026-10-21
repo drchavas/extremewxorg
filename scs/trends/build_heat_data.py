@@ -54,6 +54,7 @@ HAZ = {
 }
 NCELL = 105 * 237
 SOURCE = "ECMWF ERA5 reanalysis (hourly, 0.25°), NCAR ds633.0 copy"
+SRCNAME = "ERA5"            # short source name the pages show (build_rain_data.py sets "PRISM")
 
 
 def matrices(W):
@@ -186,6 +187,7 @@ def stage_site(cdir, wpath, topo, outdir):
         meta = {"hazard": hz, "label": spec["label"], "unit": spec["unit"], "note": spec["note"],
                 "thresholds": thr_c, "year0": y0, "year1": y1, "gaps": gaps, "through": through,
                 "provisional": provisional, "kind": "field", "vscale": 10, "rscale": 100, "source": SOURCE,
+                "srcname": SRCNAME,
                 "coverage": "lower 48", "ncounty": len(geo),
                 "built": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
         county = {"regions": regions, "rri": rri, "ryi": ryi, "rmi": rmi, "rv": rv,
@@ -197,7 +199,7 @@ def stage_site(cdir, wpath, topo, outdir):
         G, LAT0, LON0, NLAT, NLON = W["grid"]
         gmeta = {"hazard": hz, "label": spec["label"], "unit": spec["unit"],
                  "thresholds": [{"k": k, "label": lab, "min": t} for t, k, lab, sh in spec["thr"]],
-                 "year0": y0, "year1": y1, "gaps": gaps, "through": through, "provisional": provisional, "kind": "field",
+                 "year0": y0, "year1": y1, "gaps": gaps, "through": through, "provisional": provisional, "kind": "field", "srcname": SRCNAME,
                  "vscale": 10, "grid": G, "lat0": LAT0, "lon0": LON0, "nlat": NLAT, "nlon": NLON,
                  "source": SOURCE, "boxes": bx, "ngrid": len(bx), "ncell": len(bci)}
         grid = {"meta": gmeta, "ci": bci, "yi": byi, "mi": bmi, "v": bv}
@@ -214,7 +216,7 @@ def stage_site(cdir, wpath, topo, outdir):
                                   "thresholds": gmeta["thresholds"], "y0": y0, "y1": y1,
                                   "kind": "field", "file": f"grid_{hz}.json.gz"})
     order = {k: i for i, k in enumerate(["hail", "tornado", "wind", "derechoday",
-                                         "heatindex", "heat", "fzra", "pkwnd", "derecho"])}
+                                         "heatindex", "heat", "rain", "fzra", "pkwnd", "derecho"])}
     index["hazards"].sort(key=lambda h: order.get(h["key"], 99))
     gindex["hazards"].sort(key=lambda h: order.get(h["k"], 99))
     json.dump(index, open(idx_path, "w"), indent=1)

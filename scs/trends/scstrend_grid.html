@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Severe thunderstorm(+) Climatology and Trends &mdash; 2&deg; grid</title>
-<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho and extreme-heat days on a 2-degree grid, with annual and monthly series.">
+<meta name="description" content="Side-by-side pannable climatology and trend maps of U.S. hail, tornado, thunderstorm-wind, derecho, extreme-heat and heavy-rain days on a 2-degree grid, with annual and monthly series.">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="referrer" content="no-referrer">
@@ -162,7 +162,7 @@
      <a href="scstrend.html">Prefer county resolution?</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-20 02:00 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-21 02:49 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -220,6 +220,12 @@
               unreliable</b>: early ERA5 has occasional one-hour humidity spikes that the heat index
               turns into extreme values. Contains modified Copernicus Climate Change Service
               information; ERA5 is produced by ECMWF.</li>
+          <li><b>Heavy rain</b> comes from <b>PRISM</b> daily precipitation (4&nbsp;km, PRISM Group,
+              Oregon State University) via ACIS: days whose 24-hour total (ending 12&nbsp;UTC, to the
+              nearest hundredth of an inch) reached 1, 2 or 3&nbsp;inches. Each PRISM cell counts its
+              own days, and a box&rsquo;s value is the mean over the cells inside it that lie in the
+              U.S. 1981 onward; the last six months are provisional. The gauge network behind PRISM
+              changes over time, so trends carry some uncertainty from it.</li>
           <li><b>Position each report.</b> Its own <code>BEGIN_LAT</code>/<code>BEGIN_LON</code>
               where present; otherwise the center of the county that reported it (the average of
               its simplified boundary points, which can differ slightly from the true centroid for
@@ -264,7 +270,7 @@
               interacts with the white &ldquo;exactly 0&rdquo; shading: with smoothing on, a box is
               white only when its whole neighborhood is zero, so the zero boundary is drawn more
               conservatively than it really is. Switch smoothing off to see the true edge. Extreme heat
-              is never smoothed: ERA5 is already a continuous gridded field.</li>
+              and heavy rain are never smoothed: ERA5 and PRISM are already continuous gridded fields.</li>
           <li><b>Color scales.</b> Set from the data on screen: the 98th percentile for
               climatology, the 95th of absolute values for trend, symmetric about zero.</li>
         </ol>
@@ -309,7 +315,7 @@ function tileUrl(){
   return `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/${T().tile}`+
          `/MapServer/tile/{z}/{y}/{x}`;
 }
-const TILE_ATTR='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ · data: NOAA/NCEI; ECMWF ERA5 (Copernicus)';
+const TILE_ATTR='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ · data: NOAA/NCEI; ECMWF ERA5 (Copernicus); PRISM (Oregon State)';
 
 function fmt(v,d){ return (v==null||!isFinite(v))?'—':v.toFixed(d==null?2:d); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -450,7 +456,7 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid,gate){
   let out=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   out+=txt(x+14,y+22,'Annual number of '+esc(label)+' '+countWord()+'s ('+thrSpec().label+')',{size:14.5,weight:650});
   out+=txt(x+14,y+36,`${periodLabel()} · ${esc(SCOPE)} · least-squares trend with 95% band · data: `+
-           (HZ[S.hazard].meta.kind==='field'?'ECMWF ERA5 (Copernicus)':'NOAA Storm Events'),{size:11,fill:t.mute});
+           (HZ[S.hazard].meta.kind==='field'?(fieldSrc()==='PRISM'?'PRISM (Oregon State) via ACIS':'ECMWF ERA5 (Copernicus)'):'NOAA Storm Events'),{size:11,fill:t.mute});
 
   // gridlines + y axis
   for(let i=0;i<=AX.n;i++){
@@ -1039,8 +1045,14 @@ function reportingBreakHtml(){
     'For the speed thresholds, start the period in 2003 or later.';
   return '';
 }
+/* Gridded fields: ERA5 (heat) or PRISM (heavy rain). The short name comes from
+   the data file; older heat files carry none. */
+function fieldSrc(){ const d=HZ[S.hazard]; return (d&&d.meta&&d.meta.srcname)||'ERA5'; }
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
+  if(S.hazard==='rain')
+    return lead+'<b>Heavy rain comes from PRISM, a gridded analysis of rain-gauge reports</b> (4&nbsp;km, daily, '+'PRISM Group, Oregon State University), not from storm reports. A day is the 24 hours ending 12&nbsp;UTC '+'(about 7&nbsp;am Eastern), the volunteer observers\' day, and totals are taken to the nearest hundredth of an '+'inch. PRISM is built from whatever gauges reported each day, and that network has changed over the years, '+'so <b>read the trends with some caution</b>; a 4&nbsp;km cell also smooths the most intense local downpours. '+'The record starts in 1981, and the last six months are provisional: PRISM revises them as late reports arrive. '+'Lower 48 only.'+
+      ' Each PRISM cell counts its own days; a box&rsquo;s value is the mean over the cells inside it that lie in the U.S.';
   if(HZ[S.hazard]&&HZ[S.hazard].meta.kind==='field')
     return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer, so counts run somewhat below what a single weather station records &mdash; '+'<b>trust the trends and the geography more than the absolute numbers</b>. Days run '+'midnight to midnight local standard time. Before about 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations. Lower 48 only.'+
       ' Each ERA5 cell counts its own days; a box&rsquo;s value is the mean over the cells on U.S. land inside it.'+
@@ -1151,7 +1163,10 @@ function drawPanels(){
     gapNote()+
     ` State and county outlines are geographic reference only; the state menu re-centers the maps `+
     `and does not change what is analyzed. Counties appear once you zoom in past the national view. `+
-    (HZ[S.hazard].meta.kind==='field'
+    (HZ[S.hazard].meta.kind==='field' && fieldSrc()==='PRISM'
+      ? `PRISM interpolates rain gauges onto a 4 km grid: a box's value is the mean of the day counts of the `+
+        `cells inside it, and the gauge network changes over time, so read the geography first and the trends with care.`
+      : HZ[S.hazard].meta.kind==='field'
       ? `ERA5 is a reanalysis on a 0.25° grid: a box's value is the mean of the day counts of the U.S. land `+
         `cells inside it, and each cell's daily high is the warmest hour over an area, so counts run below `+
         `single-station records; read the trends and the geography before the absolute numbers.`
@@ -1179,9 +1194,11 @@ function gapNote(){
          `than quiet. The other ten months still appear in the monthly panels.`;
   const late=yrs.filter(y=>y!==1993), thru=HZ[S.hazard].meta.through;
   if(late.length && HZ[S.hazard].meta.kind==='field')
-    out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because the ERA5 data `+
-         `here run only through ${MONTHS[+thru.split('-')[1]-1]} ${thru.split('-')[0]} (ERA5 appears a few `+
-         `months behind real time, and this page adds each month as it does). Those months appear in the monthly panels.`;
+    out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because the ${fieldSrc()} data `+
+         `here run only through ${MONTHS[+thru.split('-')[1]-1]} ${thru.split('-')[0]} (`+(fieldSrc()==='PRISM'
+           ? `each month is added once it is complete`
+           : `ERA5 appears a few months behind real time, and this page adds each month as it does`)+
+         `). Those months appear in the monthly panels.`;
   else if(late.length)
     out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
          `not yet published the whole year`+(thru?` (Storm Events currently runs through `+

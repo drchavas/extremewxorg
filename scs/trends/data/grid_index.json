@@ -187,6 +187,32 @@
    "y1": 2026,
    "kind": "field",
    "file": "grid_heat.json.gz"
+  },
+  {
+   "k": "rain",
+   "label": "Heavy Rain",
+   "unit": "in",
+   "thresholds": [
+    {
+     "k": "r1",
+     "label": "\u2265 1.00\u2033 in a day",
+     "min": 1
+    },
+    {
+     "k": "r2",
+     "label": "\u2265 2.00\u2033 in a day",
+     "min": 2
+    },
+    {
+     "k": "r3",
+     "label": "\u2265 3.00\u2033 in a day",
+     "min": 3
+    }
+   ],
+   "y0": 1981,
+   "y1": 2026,
+   "kind": "field",
+   "file": "grid_rain.json.gz"
   }
  ]
 }
