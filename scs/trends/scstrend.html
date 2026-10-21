@@ -255,7 +255,9 @@
               and a day counts at 1, 2 or 3&nbsp;inches. Each PRISM cell counts its own days; a
               county&rsquo;s value is the area-weighted mean of the cells it overlaps, and state and
               national panels the area-weighted mean over counties &mdash; the days a typical place
-              saw. 1981 onward (PRISM&rsquo;s daily record), lower 48 only. The last six months are
+              saw. 1981 onward (PRISM&rsquo;s daily record), lower 48 only; the page opens on that whole
+              record, since PRISM has no reporting break like Storm Events&rsquo; and a 45-year window
+              is much less noisy for heavy rain than a 26-year one. The last six months are
               provisional and are fetched again each month as PRISM revises them. PRISM is built
               from the gauges that reported each day, and that network changes over time, so trends
               carry some uncertainty from it. The method reproduces the Indiana heavy-rain analysis it
@@ -430,6 +432,11 @@ const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:null,theme:'dar
 let INDEX=null, GEO=null, STGEO=null;
 const HZ={}, STATES=[];
 let REQ=null;   // the period the reader asked for (hash or the year boxes), before any clamping
+let REQUSER=false;   // whether the reader chose it (a link or the year boxes), or it is a default
+/* Default start year per hazard. Storm Events opens in 2000, after the 1990s jump in
+   reporting; heavy rain opens on PRISM's whole daily record, which has no such break,
+   and a 45-year window is far less noisy for a variable this patchy than a 26-year one. */
+function defY0(h){ return h==='rain'?1981:2000; }
 let GEOID=[],NAME=[],STUSPS=[],AREA=[],gidxOf={};
 let COCEN=null;            // county centroids, for the smoother
 let SMNB={};               // cached neighbor + weight lists, keyed by sigma
@@ -1107,7 +1114,7 @@ function readHash(){
   if(p.get('t')) S.thresh=+p.get('t');
   if(p.get('r')!=null) S.region=p.get('r');
   if(p.get('c')) S.county=p.get('c');
-  if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b; REQ=[a,b];} }
+  if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b; REQ=[a,b]; REQUSER=true;} }
   if(p.get('k')) S.theme=p.get('k');
   /* Tri-state on purpose: absent means "use the hazard default", so a link that
      deliberately shows all stations survives a reload. */
@@ -2138,7 +2145,10 @@ function wire(){
       S.thresh=k;
     }
     /* the period the reader asked for, not the one the last hazard clamped it to */
-    if(!isEvent() && !wasEvent && REQ) [S.y0,S.y1]=REQ;
+    if(!isEvent() && !wasEvent){
+      if(REQUSER&&REQ) [S.y0,S.y1]=REQ;
+      else { S.y0=defY0(key); S.y1=null; }      // not chosen: this hazard's default period
+    }
     /* For a time series the year window is the analysis period; for events it is
        only a filter over a list, so opening it narrowed would hide the 1990s
        derechos without saying so. Widen on entry, put the analysis period back
@@ -2174,7 +2184,7 @@ function wire(){
     refresh(); };
   /* In event mode the year window filters which derechos are listed, so the
      menu has to be rebuilt — otherwise the dates and the window disagree. */
-  const yrChange=k=>e=>{ S[k]=+e.target.value; syncYears(); REQ=[S.y0,S.y1];
+  const yrChange=k=>e=>{ S[k]=+e.target.value; syncYears(); REQ=[S.y0,S.y1]; REQUSER=true;
     if(isEvent()) syncCounties(); refresh(); };
   document.getElementById('y0In').onchange=yrChange('y0');
   document.getElementById('y1In').onchange=yrChange('y1');
@@ -2307,6 +2317,7 @@ function zoomUS(){
       S.y0=hazSpec().year0; S.y1=hazSpec().year1;
     }
     syncRegionSel(); syncThresholds(); syncCounties(); syncYears();
+    if(!REQUSER && S.y0!==defY0(S.hazard)){ S.y0=defY0(S.hazard); syncYears(); }
     if(!REQ) REQ=[S.y0,S.y1];
     rebuildMatrix();
 
