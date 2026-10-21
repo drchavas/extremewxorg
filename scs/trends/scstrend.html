@@ -172,7 +172,7 @@
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-21 02:49 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-21 13:42 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -316,8 +316,12 @@
               changes which counties are drawn, and it never touches the annual or monthly panels.
               Because it is a neighborhood average, <b>the drawn value is not the county's own</b>
               &mdash; hover reports both when they differ. Station hazards and derecho events are
-              not smoothed: those are points and single storms, not fields. Extreme heat and heavy
-              rain are never smoothed either: ERA5 and PRISM are already continuous gridded fields.</li>
+              not smoothed: those are points and single storms, not fields. Extreme heat is never
+              smoothed either: ERA5 is already a continuous gridded field. <b>Heavy rain is smoothed
+              at 1&deg;</b> rather than 2&deg; by default, switchable to Raw: heavy rain is patchy over
+              much shorter distances than heat, so single-county trends in particular are noisy, while
+              PRISM resolves real structure at 4&nbsp;km that the 2&deg; blur would wash out. The
+              lighter blur denoises the trends while keeping coast-to-inland and terrain structure.</li>
           <li><b>Color scales.</b> Set from the data on screen: robust upper percentiles for
               climatology, symmetric about zero for trend. When values run past the top of the
               climatology scale its top label reads &ge;; hover a county for its own number.</li>
@@ -1026,8 +1030,8 @@ function syncTierSel(){
 }
 function syncSmoothSel(){
   const wrap=document.getElementById('smWrap'), sel=document.getElementById('smSel');
-  wrap.style.display = (isStation()||isEvent()||isField()) ? 'none' : '';
-  sel.value=S.smooth;
+  wrap.style.display = smoothable() ? '' : 'none';
+  smOptions();
 }
 function syncDpToggle(){
   const wrap=document.getElementById('dpWrap'), btn=document.getElementById('dpBtn');
@@ -1110,8 +1114,10 @@ function readHash(){
   if(p.get('g')) S.tier=p.get('g');
   /* 'on' is the old two-state value; treat it as this page's default sigma. */
   const smq=p.get('sm');
-  if(smq==='off'||smq==='2') S.smooth=smq;
-  else if(smq==='on'||smq==='1') S.smooth='2';   // older links
+  /* 'on', '1' and '2' from older links all mean "this hazard's smoothing";
+     smOptions() maps it to the scale the hazard offers */
+  if(smq==='off') S.smooth='off';
+  else if(smq==='on'||smq==='1'||smq==='2') S.smooth=smq==='1'&&S.hazard==='rain'?'1':'2';
   /* Old or hand-edited links must not take the page down: anything unknown
      falls back to the default. "derecho" was the event view, now on scsevents. */
   if(S.hazard==='derecho') S.hazard='derechoday';
@@ -1121,6 +1127,7 @@ function readHash(){
   if(!THEME[S.theme]) S.theme='dark';
   const q=p.get('q');
   S.dpOnly = q==null ? dpDefault(S.hazard) : q==='1';
+  if(smq==null) S.smooth=smDefault(S.hazard);    // absent: the hazard's default
 }
 function dl(blob,name){
   const u=URL.createObjectURL(blob), a=document.createElement('a');
@@ -1340,7 +1347,26 @@ function guideHtml(){
     'so 1993 is dropped from maps and annual plots rather than counted as a quiet year.';
 }
 function isField(){ return !!(HZ[S.hazard] && HZ[S.hazard].field); }
-function smoothOn(){ return S.smooth!=='off' && !isStation() && !isEvent() && !isField(); }
+/* Smoothing default per hazard. Heavy rain opens with a light 1 deg blur: rain is
+   patchy over short distances, so single-county trends are noisy, while PRISM
+   resolves real structure that the 2 deg storm-report blur would wash out.
+   Extreme heat (ERA5) is never smoothed at all. */
+function smDefault(h){ return h==='rain'?'1':'2'; }
+/* The one smoothing scale each hazard offers: 1 deg for heavy rain, whose
+   correlation lengths are short and whose 4 km grid resolves real structure; the
+   2 deg blur suits the sparse storm reports it was built for. */
+function smOn(h){ return h==='rain'?'1':'2'; }
+function smOptions(){
+  const sel=document.getElementById('smSel'), on=smOn(S.hazard);
+  if(sel.dataset.on!==on){
+    sel.innerHTML=`<option value="${on}">${on}&deg;</option><option value="off">Raw</option>`;
+    sel.dataset.on=on;
+  }
+  if(S.smooth!=='off'&&S.smooth!==on) S.smooth=on;
+  sel.value=S.smooth;
+}
+function smoothable(){ return !isStation() && !isEvent() && !(isField() && S.hazard!=='rain'); }
+function smoothOn(){ return S.smooth!=='off' && smoothable(); }
 function smoothField(v){
   if(!smoothOn()) return v;
   const {idx,wt}=smoothNeighbours();
@@ -2012,7 +2038,7 @@ function writeHash(){
   p.set('p',S.y0+'-'+S.y1);
   if(S.dpOnly!==dpDefault(S.hazard)) p.set('q',S.dpOnly?'1':'0');
   if(S.tier!=='firm') p.set('g',S.tier);
-  if(S.smooth!=='2') p.set('sm',S.smooth);
+  if(S.smooth!==smDefault(S.hazard)) p.set('sm',S.smooth);
   if(S.theme!=='dark') p.set('k',S.theme);
   if(mapA){ const c=mapA.getCenter();
     p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
@@ -2105,7 +2131,7 @@ function wire(){
     const pd=HZ[prev], pspec=INDEX.hazards.find(h=>h.key===prev);
     const pthr=pspec&&pspec.thresholds[Math.min(S.thresh,pspec.thresholds.length-1)];
     const keepCty = pd && !pd.station && !pd.event && !HZ[key].station && !HZ[key].event;
-    S.hazard=key; S.dpOnly=dpDefault(S.hazard);
+    S.hazard=key; S.dpOnly=dpDefault(S.hazard); S.smooth=smDefault(S.hazard);
     if(!keepCty) S.county='';
     if(pthr && pspec.unit===spec.unit && typeof pthr.min==='number'){
       let k=0; spec.thresholds.forEach((t,i)=>{ if(typeof t.min==='number' && t.min<=pthr.min+1e-9) k=i; });
@@ -2156,7 +2182,7 @@ function wire(){
   document.getElementById('smSel').onchange=e=>{
     /* a <select> set to an unknown value reports '', which would otherwise
        propagate into the hash as an empty setting */
-    S.smooth=e.target.value||'2';
+    S.smooth=e.target.value||smOn(S.hazard);
     refresh(); };
   document.getElementById('tierSel').onchange=e=>{
     S.tier=e.target.value;

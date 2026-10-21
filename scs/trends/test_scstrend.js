@@ -539,7 +539,10 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('PRISM source, 1981 start, through Sep 2026',d.meta.srcname==='PRISM'&&d.meta.year0===1981&&d.meta.through==='2026-09',
         d.meta.srcname+' '+d.meta.year0+' '+d.meta.through);
     say('rain gets the PRISM caveat, not ERA5 or Storm Events',/PRISM/.test($('guide').innerHTML)&&!/ERA5/.test($('guide').innerHTML)&&!/Storm Events records/.test($('guide').innerHTML));
-    say('rain is never smoothed',w.eval('smoothOn()')===false&&$('smWrap').style.display==='none');
+    say('rain opens smoothed at 1°, not the storm hazards\' 2°',w.eval('smoothOn()')===true&&w.eval('sigDeg()')===1&&$('smWrap').style.display===''&&$('smSel').value==='1'&&/1° Gaussian smoothed/.test($('climSub').innerHTML));
+    $('smSel').value='off'; fire('smSel','change');
+    say('and switches to raw',w.eval('smoothOn()')===false&&/Raw data/.test($('climSub').innerHTML));
+    $('smSel').value='1'; fire('smSel','change');
     say('the subtitle names the inch threshold',/\(≥\d″\)/.test($('climSub').textContent),$('climSub').textContent);
     const mar=w.eval("probe('rain',0,'18097',1991,2020,'off')").mean, swla=w.eval("probe('rain',0,'22019',1991,2020,'off')").mean;
     say('Marion IN sees about 8-12 days ≥1″ a year, SW Louisiana more',mar>7&&mar<13&&swla>mar,mar.toFixed(2)+' vs '+swla.toFixed(2));

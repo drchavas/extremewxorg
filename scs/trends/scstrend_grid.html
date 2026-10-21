@@ -162,7 +162,7 @@
      <a href="scstrend.html">Prefer county resolution?</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-21 02:49 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-21 13:42 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -270,7 +270,10 @@
               interacts with the white &ldquo;exactly 0&rdquo; shading: with smoothing on, a box is
               white only when its whole neighborhood is zero, so the zero boundary is drawn more
               conservatively than it really is. Switch smoothing off to see the true edge. Extreme heat
-              and heavy rain are never smoothed: ERA5 and PRISM are already continuous gridded fields.</li>
+              is never smoothed: ERA5 is already a continuous gridded field. Heavy rain is smoothed
+              at <b>1&deg;</b> rather than 2&deg; by default (half a box: a 3&nbsp;&times;&nbsp;3
+              window), switchable to Raw, to match rain&rsquo;s short correlation lengths while
+              PRISM resolves real 4&nbsp;km structure; it mostly helps the noisy single-box trends.</li>
           <li><b>Color scales.</b> Set from the data on screen: the 98th percentile for
               climatology, the 95th of absolute values for trend, symmetric about zero.</li>
         </ol>
@@ -566,7 +569,8 @@ function syncThresholds(){
     o.value=i; o.textContent=t.label; sel.appendChild(o); });
   S.thresh=Math.min(S.thresh,h.thresholds.length-1);
   sel.value=S.thresh;
-  document.getElementById('smWrap').style.display = isField() ? 'none' : '';
+  document.getElementById('smWrap').style.display = smoothable() ? '' : 'none';
+  smOptions();
 }
 function syncYears(){
   const d=HZ[S.hazard];
@@ -988,7 +992,26 @@ function drawColorbar(el,C,title){
 function sigDeg(){ const v=parseFloat(S.smooth); return isFinite(v)?v:2; }
 /* Extreme heat is a continuous gridded field (ERA5), so it is always drawn raw. */
 function isField(){ return !!(HZ[S.hazard] && HZ[S.hazard].meta.kind==='field'); }
-function smoothOn(){ return S.smooth!=='off' && !isField(); }
+/* Smoothing default per hazard. Heavy rain opens with a light 1 deg blur: rain is
+   patchy over short distances, so single-county trends are noisy, while PRISM
+   resolves real structure that the 2 deg storm-report blur would wash out.
+   Extreme heat (ERA5) is never smoothed at all. */
+function smDefault(h){ return h==='rain'?'1':'2'; }
+/* The one smoothing scale each hazard offers: 1 deg for heavy rain, whose
+   correlation lengths are short and whose 4 km grid resolves real structure; the
+   2 deg blur suits the sparse storm reports it was built for. */
+function smOn(h){ return h==='rain'?'1':'2'; }
+function smOptions(){
+  const sel=document.getElementById('smSel'), on=smOn(S.hazard);
+  if(sel.dataset.on!==on){
+    sel.innerHTML=`<option value="${on}">${on}&deg;</option><option value="off">Raw</option>`;
+    sel.dataset.on=on;
+  }
+  if(S.smooth!=='off'&&S.smooth!==on) S.smooth=on;
+  sel.value=S.smooth;
+}
+function smoothable(){ return !(isField() && S.hazard!=='rain'); }
+function smoothOn(){ return S.smooth!=='off' && smoothable(); }
 /* The badge appended to both map subtitles. */
 function smTag(){
   return smoothOn()
@@ -1220,7 +1243,7 @@ function syncRegionSel(){ document.getElementById('regSel').value=S.region; }
 function writeHash(){
   const p=new URLSearchParams();
   p.set('h',S.hazard); p.set('t',S.thresh); p.set('r',S.region);
-  if(S.smooth!=='2') p.set('sm',S.smooth);
+  if(S.smooth!==smDefault(S.hazard)) p.set('sm',S.smooth);
   if(S.cell!=='') p.set('c',S.cell);
   p.set('p',S.y0+'-'+S.y1);
   if(S.theme!=='dark') p.set('k',S.theme);
@@ -1234,8 +1257,11 @@ function readHash(){
   if(p.get('h')) S.hazard=p.get('h');
   /* 'on' is the old two-state value; treat it as this page's default sigma. */
   const smq=p.get('sm');
-  if(smq==='off'||smq==='2') S.smooth=smq;
-  else if(smq==='on'||smq==='1') S.smooth='2';   // older links
+  /* 'on', '1' and '2' from older links all mean "this hazard's smoothing";
+     smOptions() maps it to the scale the hazard offers */
+  if(smq==='off') S.smooth='off';
+  else if(smq==='on'||smq==='1'||smq==='2') S.smooth=smq==='1'&&S.hazard==='rain'?'1':'2';
+  else S.smooth=smDefault(S.hazard);              // absent: the hazard's default
   if(p.get('t')) S.thresh=+p.get('t');
   if(p.get('r')!=null) S.region=p.get('r');
   if(p.get('c')) S.cell=p.get('c');
@@ -1299,7 +1325,7 @@ function wire(){
       S.thresh=k;
     }
     if(REQ) [S.y0,S.y1]=REQ;
-    S.hazard=key;
+    S.hazard=key; S.smooth=smDefault(key);
     /* Each hazard populates a slightly different set of boxes and starts in a
        different year — hail 258 boxes from 1955, tornado 257 from 1950 — so the
        geometry and the year axis have to be rebuilt, not just the counts. */
@@ -1320,7 +1346,7 @@ function wire(){
   document.getElementById('smSel').onchange=e=>{
     /* a <select> set to an unknown value reports '', which would otherwise
        propagate into the hash as an empty setting */
-    S.smooth=e.target.value||'2';
+    S.smooth=e.target.value||smOn(S.hazard);
     refresh(); };
   document.getElementById('thrSel').onchange=e=>{ S.thresh=+e.target.value; rebuildMatrix(); refresh(); };
   const rg=document.getElementById('regSel');
