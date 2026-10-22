@@ -225,7 +225,7 @@
   #roRange::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);border:3px solid var(--panel);cursor:pointer}
   .roticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px;padding:0 3px}
   .roticks span{cursor:pointer;width:2.2em;text-align:center;margin:0 -0.6em}
-  .roval{font-size:14px;font-weight:650;margin-top:3px;min-height:1.3em}
+  .roval{font-size:14px;font-weight:650;margin-top:3px;min-height:1.3em} .roval.dim{opacity:.55}
   .roval .rofar{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:6px}
   .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:#111;font-weight:650}
   #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
@@ -241,8 +241,8 @@
 <header>
   <h1>El Ni&ntilde;o and La Ni&ntilde;a by Strength: Climatology and Impacts &mdash; global grid</h1>
   <p><a class="home" href="../">&larr; extremewx.org</a> &middot;
-     What happens around the world in an El Ni&ntilde;o or La Ni&ntilde;a of a given strength, compared with a neutral year.
-     <b>Drag the slider</b> right for El Ni&ntilde;o, left for La Ni&ntilde;a (the winter value of NOAA's ocean index, RONI), pick a
+     What happens around the world in an El Ni&ntilde;o or La Ni&ntilde;a of a given strength, compared with the average year.
+     <b>Drag the slider</b> right for El Ni&ntilde;o, left for La Ni&ntilde;a (the Dec&ndash;Feb, northern-winter value of NOAA's ocean index, RONI), pick a
      <b>variable</b>, or switch to the normal <b>Climatology</b>; choose the
      whole year, a season or a single month with the bar above the map. An <b>ENSO year</b> runs from June to May
      (1997&ndash;1998 = June 1997 &ndash; May 1998), the twelve months over which an event usually grows, peaks and decays.
@@ -257,7 +257,7 @@
   <div class="bar mainbar">
       <div class="fld"><label>Show</label>
         <div class="seg big" id="phSeg" role="group" aria-label="Show">
-          <button data-ph="reg" title="The fitted difference from a neutral year at the strength on the slider">Difference</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button>
+          <button data-ph="reg" title="The fitted value at the strength on the slider, minus the average year (the climatology)">Difference</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button>
         </div></div>
       <div class="fld"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
       <div class="fld" id="pcWrap"><label>Show difference as</label>
@@ -267,13 +267,13 @@
       <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
     </div>
   <div id="robar">
-      <div class="fld rofld" title="The Dec–Feb value of NOAA CPC's Relative Oceanic Niño Index: above 0 for El Niño, below 0 for La Niña. The map shows the fitted difference from a neutral year (RONI 0) at this value.">
+      <div class="fld rofld" title="The Dec–Feb value of NOAA CPC's Relative Oceanic Niño Index: above 0 for El Niño, below 0 for La Niña. The map shows the fitted value at this strength minus the average year (the climatology).">
         <label for="roRange">El Ni&ntilde;o or La Ni&ntilde;a strength (Dec&ndash;Feb RONI, &deg;C)</label>
         <div class="rowrap" id="roWrap"><span class="roend ln">La Ni&ntilde;a</span>
-          <div class="rotrack"><input type="range" id="roRange" min="-2.5" max="2.5" step="0.5" value="1.5" aria-label="Dec–Feb RONI">
+          <div class="rotrack"><input type="range" id="roRange" min="-2.5" max="2.5" step="0.5" value="1.5" aria-describedby="roVal">
             <div class="roticks" id="roTicks"><span data-v="-2.5">&minus;2.5</span><span data-v="-2">&minus;2</span><span data-v="-1.5">&minus;1.5</span><span data-v="-1">&minus;1</span><span data-v="-0.5">&minus;0.5</span><span data-v="0">0</span><span data-v="0.5">+0.5</span><span data-v="1">+1</span><span data-v="1.5">+1.5</span><span data-v="2">+2</span><span data-v="2.5">+2.5</span></div></div>
           <span class="roend en">El Ni&ntilde;o</span></div>
-        <div class="roval" id="roVal">&nbsp;</div></div>
+        <div class="roval" id="roVal" aria-live="polite">&nbsp;</div></div>
   </div>
   <div id="monthbar">
     <div><div class="mlab">Average over</div>
@@ -844,43 +844,67 @@ function seriesStats(xs,ys,cs,detrend,ph){
   return {mean:my,slope:b,mx,r,mE,mL,nE,nL,d,p,n};
 }
 /* ----- the regression page: two-sided linear fit on Dec-Feb RONI -----
-   Each box's anomalies r (departures from the period trend line, or from the mean with
-   the trend kept, exactly as for the composites) are fitted by least squares to
-     r = c + b+ * max(x,0) + b- * min(x,0),    x = the year's Dec-Feb RONI (unrounded),
-   two straight lines that meet at RONI 0, so El Nino and La Nina each get their own
-   slope. The map at slider value v is the fitted difference from RONI 0: b+ * v for
-   v > 0, b- * v for v < 0. p is the t-test of the slope on the side shown
-   (df = n - 3, one fewer with the trend removed). */
+   Each box's values y are fitted by least squares, in one step, to
+     y = y0 + a*(t - tbar) + b+ * max(x,0) + b- * min(x,0)
+   t the ENSO year (left out with Trend: kept), x the year's Dec-Feb RONI (two decimals).
+   The trend is fitted jointly with RONI, not removed first: RONI itself trends toward La
+   Nina over 1979-2025, and a separate first step would hand part of the La Nina signal
+   to the trend. Two straight lines meeting at RONI 0 give El Nino and La Nina their own
+   slopes.
+   The map at slider value v is the fitted value at v minus the climatology (the period
+   mean, as on the composite page):  b+ * (max(v,0) - mean max(x,0)) + b- * (min(v,0) - mean min(x,0)).
+   Measuring from the fitted point at RONI 0 instead lets a curved El Nino response, or
+   noise in that point, leak into the La Nina map with El Nino's sign.
+   p (and the dots) test the slope of the side shown, so they are the same all along a side:
+   df = n - 3, one fewer with the trend. */
 function sideOf(v){ return v>0?'p':v<0?'n':''; }
-function regFit(rx,r,n,df){
-  let mp=0,mn=0,mr=0;
-  for(let i=0;i<n;i++){ const x=rx[i]; mp+=x>0?x:0; mn+=x<0?x:0; mr+=r[i]; } mp/=n; mn/=n; mr/=n;
-  let Spp=0,Snn=0,Spn=0,Spr=0,Snr=0,Q=0,kp=0,kn=0;
-  for(let i=0;i<n;i++){ const x=rx[i], a=(x>0?x:0)-mp, b=(x<0?x:0)-mn, e=r[i]-mr;
-    Spp+=a*a; Snn+=b*b; Spn+=a*b; Spr+=a*e; Snr+=b*e; Q+=e*e; if(x>0) kp++; else if(x<0) kn++; }
+function mapAt(f,v){ return f.bp*((v>0?v:0)-f.mp)+f.bn*((v<0?v:0)-f.mn); }
+/* r: y minus its least-squares line on [1, t] (or minus its mean); tc: the centered years
+   (null with the trend kept). By Frisch-Waugh, regressing r on the hinge terms with [1, t]
+   projected out gives the slopes of the joint fit. */
+function regFit(rx,r,n,df,tc){
+  let mp=0,mn=0,mr=0,kp=0,kn=0;
+  for(let i=0;i<n;i++){ const x=rx[i]; mp+=x>0?x:0; mn+=x<0?x:0; mr+=r[i]; if(x>0) kp++; else if(x<0) kn++; }
+  mp/=n; mn/=n; mr/=n;
+  const A=new Float64Array(n), B=new Float64Array(n);
+  for(let i=0;i<n;i++){ const x=rx[i]; A[i]=(x>0?x:0)-mp; B[i]=(x<0?x:0)-mn; }
+  if(tc){ let stt=0,sa=0,sb=0; for(let i=0;i<n;i++){ stt+=tc[i]*tc[i]; sa+=tc[i]*A[i]; sb+=tc[i]*B[i]; }
+    if(stt>0){ const ka=sa/stt, kb=sb/stt; for(let i=0;i<n;i++){ A[i]-=ka*tc[i]; B[i]-=kb*tc[i]; } } }
+  let Spp=0,Snn=0,Spn=0,Spr=0,Snr=0,Q=0;
+  for(let i=0;i<n;i++){ const a=A[i], b=B[i], e=r[i]-mr;
+    Spp+=a*a; Snn+=b*b; Spn+=a*b; Spr+=a*e; Snr+=b*e; Q+=e*e; }
   const det=Spp*Snn-Spn*Spn;
-  const out={bp:NaN,bn:NaN,pp:1,pn:1,c:NaN,kp,kn,df};
+  const out={bp:NaN,bn:NaN,pp:NaN,pn:NaN,c:NaN,mp,mn,kp,kn,df};
   if(!(det>1e-12*(Spp*Snn+1e-30))||kp<2||kn<2||df<1) return out;
   const bp=(Snn*Spr-Spn*Snr)/det, bn=(Spp*Snr-Spn*Spr)/det;
   let ssr=Q-(bp*Spr+bn*Snr); if(ssr<1e-9*Q) ssr=0;              // round-off, not spread
-  out.bp=bp; out.bn=bn; out.c=mr-bp*mp-bn*mn;
+  out.bp=bp; out.bn=bn; out.c=mapAt(out,0);
   if(Q>0&&ssr>0){ const s2=ssr/df;
     out.pp=tp(bp/Math.sqrt(s2*Snn/det),df); out.pn=tp(bn/Math.sqrt(s2*Spp/det),df); }
+  else { out.pp=1; out.pn=1; }                                  // no spread at all: nothing to test
   return out;
 }
 function regStats(xs,ys,rx,detrend){
   const n=ys.length;
   if(n<5) return null;
   let mx=0,my=0; for(let i=0;i<n;i++){ mx+=xs[i]; my+=ys[i]; } mx/=n; my/=n;
-  let b=0;
-  if(detrend){ let sxx=0,sxy=0; for(let i=0;i<n;i++){ const dx=xs[i]-mx; sxx+=dx*dx; sxy+=dx*(ys[i]-my); }
+  let b=0; const tc=detrend?new Float64Array(n):null;
+  if(detrend){ let sxx=0,sxy=0; for(let i=0;i<n;i++){ const dx=xs[i]-mx; tc[i]=dx; sxx+=dx*dx; sxy+=dx*(ys[i]-my); }
     b=sxx>0?sxy/sxx:0; }
   const r=new Float64Array(n);
   for(let i=0;i<n;i++) r[i]=ys[i]-(my+b*(xs[i]-mx));
-  const fit=regFit(rx,r,n,n-3-(detrend?1:0)), v=S.ro, side=sideOf(v);
-  const d = side==='p' ? fit.bp*v : side==='n' ? fit.bn*v : (isFinite(fit.bp)?0:NaN);
-  const p = side==='p' ? fit.pp : side==='n' ? fit.pn : 1;
-  return {mean:my,slope:b,mx,r,...fit,d,p,n};
+  const fit=regFit(rx,r,n,n-3-(detrend?1:0),tc), v=S.ro, side=sideOf(v);
+  /* the trend of the joint fit, and each year's departure from climatology with only that
+     trend removed (the panel's dots, which the fitted lines pass through) */
+  let a=0;
+  if(detrend&&isFinite(fit.bp)){ let st=0,sy=0; for(let i=0;i<n;i++){ const x=rx[i];
+      st+=tc[i]*tc[i]; sy+=tc[i]*(ys[i]-my-fit.bp*((x>0?x:0)-fit.mp)-fit.bn*((x<0?x:0)-fit.mn)); }
+    a=st>0?sy/st:0; }
+  else if(detrend) a=b;
+  const rp=new Float64Array(n); for(let i=0;i<n;i++) rp[i]=ys[i]-my-a*(xs[i]-mx);
+  const d = isFinite(fit.bp) ? mapAt(fit,v) : NaN;
+  const p = side==='p' ? fit.pp : side==='n' ? fit.pn : NaN;
+  return {mean:my,slope:a,mx,r:rp,...fit,d,p,n};
 }
 /* The whole map for one month. */
 function mapStats(X,win){
@@ -1035,12 +1059,16 @@ async function clusterTest(X,win,ok,alive,seedKey){
 }
 /* The regression page's patch test: as clusterTest, but each box's statistic is the t of
    the slope on the side shown (regFit), and a shuffle permutes the years' RONI values
-   across the years (the anomalies stay put). Detrending is again done once, first. */
+   across the years. Each box's values are reduced once to their departures from the
+   line on [1, t]; for every shuffle the hinge terms are rebuilt from the shuffled RONI
+   with [1, t] projected out, so every shuffle is the same joint fit as the map's. */
 async function regClusterTest(X,win,ok,alive,seedKey){
   const ds=DS, NC=ds.NC, det=S.dt==='on', side=sideOf(S.ro), n=win.length, df0=n-3-(det?1:0);
   if(!side||n<5) return null;
   const x0=Float64Array.from(win,w=>w.x);
-  if(x0.filter(v=>side==='p'?v>0:v<0).length<3) return null;
+  if(Math.min(x0.filter(v=>v>0).length,x0.filter(v=>v<0).length)<3) return null;
+  const T0=Float64Array.from(win,w=>w.Y), tbar=T0.reduce((s,v)=>s+v,0)/n, TC=T0.map(v=>v-tbar);
+  let TT=0; for(let j=0;j<n;j++) TT+=TC[j]*TC[j];
   const E=[]; for(let c=0;c<NC;c++) if(ok(c)) E.push(c);
   const NE=E.length, R=new Float64Array(NE*n).fill(NaN), full=new Uint8Array(NE), Qe=new Float64Array(NE),
         wt=new Float64Array(NE), loc=new Int32Array(NC).fill(-1);
@@ -1056,12 +1084,15 @@ async function regClusterTest(X,win,ok,alive,seedKey){
     full[e]=k===n?1:0; Qe[e]=q;
   });
   const t=new Float64Array(NE), sg=new Int8Array(NE), lab=new Int32Array(NE), stack=new Int32Array(NE), NB=nb8(ds);
-  const xp=new Float64Array(n), xn=new Float64Array(n), rr=new Float64Array(n), xx=new Float64Array(n);
+  const xp=new Float64Array(n), xn=new Float64Array(n), rr=new Float64Array(n), xx=new Float64Array(n), tt0=new Float64Array(n);
   /* t of the shown side's slope for every box, for RONI values x (one per year) */
   const tmap=x=>{
     let mp=0,mn=0; for(let j=0;j<n;j++){ const v=x[j]; mp+=v>0?v:0; mn+=v<0?v:0; } mp/=n; mn/=n;
     let Spp=0,Snn=0,Spn=0;
-    for(let j=0;j<n;j++){ const v=x[j]; xp[j]=(v>0?v:0)-mp; xn[j]=(v<0?v:0)-mn; Spp+=xp[j]*xp[j]; Snn+=xn[j]*xn[j]; Spn+=xp[j]*xn[j]; }
+    for(let j=0;j<n;j++){ const v=x[j]; xp[j]=(v>0?v:0)-mp; xn[j]=(v<0?v:0)-mn; }
+    if(det&&TT>0){ let sa=0,sb=0; for(let j=0;j<n;j++){ sa+=TC[j]*xp[j]; sb+=TC[j]*xn[j]; }
+      const ka=sa/TT, kb=sb/TT; for(let j=0;j<n;j++){ xp[j]-=ka*TC[j]; xn[j]-=kb*TC[j]; } }
+    for(let j=0;j<n;j++){ Spp+=xp[j]*xp[j]; Snn+=xn[j]*xn[j]; Spn+=xp[j]*xn[j]; }
     const D=Spp*Snn-Spn*Spn, tc=tcrit(df0), ok2=D>1e-12*(Spp*Snn+1e-30);
     for(let e=0;e<NE;e++){
       sg[e]=0; t[e]=0; const o=e*n;
@@ -1074,9 +1105,10 @@ async function regClusterTest(X,win,ok,alive,seedKey){
         const s2=ssr/df0, tt=side==='p'?bp/Math.sqrt(s2*Snn/D):bn/Math.sqrt(s2*Spp/D);
         t[e]=tt; if(Math.abs(tt)>=tc) sg[e]=tt>0?1:-1;
       } else {                                       // a box with missing years: fit its own subset
-        let k=0; for(let j=0;j<n;j++){ const r=R[o+j]; if(r===r){ rr[k]=r; xx[k]=x[j]; k++; } }
+        let k=0, tb=0; for(let j=0;j<n;j++){ const r=R[o+j]; if(r===r){ rr[k]=r; xx[k]=x[j]; tt0[k]=T0[j]; tb+=T0[j]; k++; } }
         if(k<5) continue;
-        const f=regFit(xx,rr,k,k-3-(det?1:0)), b1=side==='p'?f.bp:f.bn, p1=side==='p'?f.pp:f.pn;
+        tb/=k; for(let q=0;q<k;q++) tt0[q]-=tb;
+        const f=regFit(xx.subarray(0,k),rr.subarray(0,k),k,k-3-(det?1:0),det?tt0.subarray(0,k):null), b1=side==='p'?f.bp:f.bn, p1=side==='p'?f.pp:f.pn;
         if(!isFinite(b1)||!(p1<1)) continue;
         const tt=Math.sign(b1)*tcritP(p1,f.df); t[e]=tt; if(p1<CL_P) sg[e]=tt>0?1:-1;
       }
@@ -1164,7 +1196,7 @@ function pctOn(){ return S.pc==='pct' && !isTemp(); }
 function minFlux(){ return isSnow()?0.05:0.1; }
 /* what one value of a count field covers: a month, a season, or the ENSO year */
 function perWord(){ return S.av==='mon'?'mo':S.av==='yr'?'yr':'season'; }
-function phaseName(ph){ if(REG&&!ph) return `RONI ${roTxt(S.ro)}`; return {en:'El Niño',ln:'La Niña',enln:'El Niño − La Niña'}[ph||S.ph]; }
+function phaseName(ph){ if(REG&&!ph) return roName(S.ro); return {en:'El Niño',ln:'La Niña',enln:'El Niño − La Niña'}[ph||S.ph]; }
 /* the regression page's slider value in words */
 function roTxt(v){ return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)+'°C'; }
 function roWord(v){ const a=Math.abs(v); return a<0.75?'weak':a<1.25?'moderate':a<1.75?'strong':'very strong'; }
@@ -1549,13 +1581,13 @@ function drawColorbar(el,dom,title,isDiff){
   let d=0; for(;d<3;d++){ let ok=true; for(let i=0;i<=4;i++){ const v=(dom.lo+(dom.hi-dom.lo)*i/4)*Math.pow(10,d);
     if(Math.abs(v-Math.round(v))>1e-6) ok=false; } if(ok) break; }
   for(let i=4;i>=0;i--){ const v=dom.lo+(dom.hi-dom.lo)*i/4;
-    let s=isDiff?sgn(v,d):fmt(v,d); if(isDiff&&Math.abs(v)<1e-9) s='0';
+    let s=isDiff?sgn(v,d):fmt(v,d).replace(/^-/,'−'); if(isDiff&&Math.abs(v)<1e-9) s='0';
     if(i===4) s='≥ '+s; if(i===0 && (isDiff||dom.lo!==0)) s='≤ '+s;
     ticks.push(s); }
   el.innerHTML=`<div class="cap">${esc(title)}</div><div class="row">`+
     `<div class="strip" style="background:${grad}"></div>`+
     `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
-    (isDiff&&S.sig?`<div class="zchip"><i></i><span>${sigChipText()}</span></div>`:'');
+    (isDiff&&S.sig&&SIGNOW!==null?`<div class="zchip"><i></i><span>${sigChipText()}</span></div>`:'');
 }
 
 /* --------------------------------------------------------- hover readout */
@@ -1585,7 +1617,7 @@ function tipHtml(c,lat,lon){
   if(isFinite(df)){
     h+=`${esc(phaseName())}: <b>${sgn(df,d.d)}</b> ${pctOn()?'%':esc(unitAbs())}`;
     if(smoothOn()&&isFinite(raw.disp[c])&&Math.abs(raw.disp[c]-df)>1e-3) h+=` (this box ${sgn(raw.disp[c],d.d)})`;
-    const p=s.p[c]; h+=` · p ${p<0.001?'< 0.001':'= '+fmt(p,3)}`;
+    const p=s.p[c]; if(isFinite(p)) h+=` · p ${p<0.001?'< 0.001':'= '+fmt(p,3)}`;
     if(SIGNOW&&SIGNOW!=='pending'&&SIGNOW.sig[c]) h+=' · in a significant patch';
   } else h+=`${esc(phaseName())}: —`+(pctOn()&&isFinite(s.diff[c])?' (climatology too small for %; try Absolute)':'');
   return h;
@@ -1697,7 +1729,7 @@ async function refresh(){
     need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
     if(S.base==='neu'&&S.ph!=='enln') need=Math.min(need,nN);
     /* regression: the years on the side shown (RONI > 0 or < 0); at RONI 0 the map is zero by construction */
-    if(REG) need = S.ro ? w.filter(x=>S.ro>0?x.x>0:x.x<0).length : 99;
+    if(REG) need = Math.min(w.filter(x=>x.x>0).length, w.filter(x=>x.x<0).length);   // both lines need 3+ years
     if(need<(REG?3:2)){ st={...st,disp:new Float32Array(st.disp.length).fill(NaN),p:new Float32Array(st.p.length).fill(NaN)}; }
     loading(false);
   } catch(err){
@@ -1721,7 +1753,7 @@ async function refresh(){
      smoothing for ERA5), so those must not change the shuffles or the dots */
   const sk=[S.f,S.thr,S.ph,REG?'reg'+sideOf(S.ro):S.str,yearsSel().join('-'),S.dt,smoothOn()?'sm':'raw',S.base,tk].join('|');
   CURSK=sk;
-  const testable = REG ? (need>=3&&S.ro!==0) : need>=2;
+  const testable = REG ? (need>=3&&S.ro!==0) : need>=2;     // regression: RONI 0 has no slope to test
   SIGNOW = (S.sig && testable && S.mode!=='clim') ? (SIGCACHE.get(sk)||'pending') : null;
   REND.D={grid:DS.grid,rgba:rgbaFor(st.disp,domD),sig:(SIGNOW&&SIGNOW!=='pending')?sigMask(SIGNOW,st.disp):null};
   REND.A=new Proxy({},{get:(o,k)=>(S.mode==='clim'?REND.C:REND.D)[k]});
@@ -1806,20 +1838,25 @@ function writeTitles(domD){
     const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
     drawColorbar(document.getElementById('cbMain'),CURDOM.clim,climCap,false);
   } else if(REG){
-    const side=sideOf(S.ro), nS=side?win.filter(w=>side==='p'?w.x>0:w.x<0).length:0, ex=roExtremes(win);
-    title.innerHTML=`${roSpan(S.ro)}${S.ro?' minus neutral (RONI 0)':''} · ${esc(tkLong())}`;
-    sub.innerHTML=esc(`${per} · fitted to the Dec–Feb RONI of all ${win.length} years, ${range}, with separate El Niño and La Niña slopes · `+
+    const side=sideOf(S.ro), nP=win.filter(w=>w.x>0).length, nM=win.filter(w=>w.x<0).length, ex=roExtremes(win);
+    const fitOK=Math.min(nP,nM)>=3, testable=fitOK&&!!S.ro;
+    title.innerHTML=`${roSpan(S.ro)} minus climatology · ${esc(tkLong())}`;
+    sub.innerHTML=esc(`${per} · fitted to the Dec–Feb RONI of all ${win.length} years, ${range}, one line each for El Niño and La Niña · `+
       (pctOn()?'% change from climatology':unitAbs())+` · `+
       (S.dt==='on'?'linear trend removed':'trend kept')+
-      (S.sig&&S.ro?' · dots: significant patches':'')+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
+      (S.sig&&testable?' · dots: significant patches':'')+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
     const far = side==='p' ? (ex.hi&&S.ro>ex.hi.x+1e-9 ? ex.hi : null) : side==='n' ? (ex.lo&&S.ro<ex.lo.x-1e-9 ? ex.lo : null) : null;
     const noDots = S.sig&&SIGNOW&&SIGNOW!=='pending'&&!(REND.D&&REND.D.sig&&REND.D.sig.some(v=>v));
-    warn.textContent = !S.ro
-      ? 'RONI 0 is the reference, a neutral year, so there is no difference to show: drag the slider right for El Niño, left for La Niña.'
-      : nS<3
-      ? `Only ${nS} year${nS===1?'':'s'} in ${a}–${b} had a Dec–Feb RONI ${side==='p'?'above':'below'} 0: too few to fit a slope, so nothing is drawn. Widen the period.`
-      : `The ${side==='p'?'El Niño':'La Niña'} slope is fitted to the ${nS} years with RONI ${side==='p'?'above':'below'} 0, so this map is that one pattern scaled to ${roTxt(S.ro)}: `+
-        `read coherent patterns (dotted = stronger signal), not the value in any single box.`+
+    const big=win.filter(w=>w.x>=2-1e-9).map(w=>ensoLabel(w.Y));
+    const lev = side==='p'&&big.length>=2 ? ` The El Niño line leans on the ${big.length===4?'four':big.length} strongest events (${big.join(', ')})`+
+      (big.includes('1991–1992')?', and 1991–92 also carries the cooling from the Pinatubo eruption':'')+'.' : '';
+    const weak = Math.abs(S.ro)<0.75 && S.ro ? ` At this weak strength the map is largely the stronger events' pattern scaled down, so it can overstate a weak ${side==='p'?'El Niño':'La Niña'}, especially for rain.` : '';
+    warn.textContent = !fitOK
+      ? `Only ${Math.min(nP,nM)} year${Math.min(nP,nM)===1?'':'s'} in ${a}–${b} had a Dec–Feb RONI ${nP<nM?'above':'below'} 0: too few to fit both lines, so nothing is drawn. Widen the period.`
+      : !S.ro
+      ? `RONI 0, where the two lines meet, compared with the average year: a neutral year is not quite an average one, since El Niño and La Niña years pull the average their way. No dots here: the dots test the El Niño or La Niña slope.`
+      : `Two straight lines fitted through all ${win.length} years, one for El Niño (${nP} years above RONI 0) and one for La Niña (${nM} below), read at ${roTxt(S.ro)} and compared with the average year.`+
+        lev+weak+` Read coherent patterns (dotted = stronger signal), not the value in any single box.`+
         (far?` No year in ${a}–${b} reached ${roTxt(S.ro)} (strongest: ${ensoLabel(far.Y)}, ${sgn(far.x,2)}°C), so this map extends the line beyond the record.`:'')+
         (noDots?' Note: no dotted areas = signal is weak in this domain.':'');
     drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':unitAbs(),true);
@@ -1885,7 +1922,7 @@ function writeBubbles(){
            : '<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>';
   const v=`<div class="bv">${esc(menuItem()[2])}</div>`, a=document.getElementById('mapMainBubble');
   if(REG){ if(a) a.innerHTML=v+(S.mode==='clim' ? `<div class="bs">Climatology · ${esc(when)}</div>`
-      : `<div class="bs">${roSpan(S.ro)}${S.ro?' minus RONI 0':''} · ${esc(when)}${pctOn()?' · % change':''}</div>`); return; }
+      : `<div class="bs">${roSpan(S.ro)} minus climatology · ${esc(when)}${pctOn()?' · % change':''}</div>`); return; }
   if(a) a.innerHTML=v+(S.mode==='clim' ? `<div class="bs">Climatology · ${esc(when)}</div>`
                                         : `<div class="bs">${ph} · ${esc(when)}${pctOn()?' · % change':''}</div>`);
 }
@@ -1931,7 +1968,8 @@ function roniPanel(x,y,w,h){
   let o=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   o+=txt(x+14,y+22,REG?'Relative Oceanic Niño Index (RONI) — every year in the fit, at its Dec–Feb value':'Relative Oceanic Niño Index (RONI) — the years in each composite',{size:14.5,weight:650});
   o+=txt(x+14,y+38, REG
-     ? `NOAA CPC ${RONI.year0}–${RONI.last} · each ENSO year (June – May) enters the regression at its unrounded Dec–Feb value`+(S.ro?` · the map shows the fit at ${roTxt(S.ro)}`:'')
+     ? (w<1000 ? `NOAA CPC ${RONI.year0}–${RONI.last} · each ENSO year at its Dec–Feb value · map: ${roTxt(S.ro)}`
+        : `NOAA CPC ${RONI.year0}–${RONI.last} · each ENSO year (June – May) enters the regression at its two-decimal Dec–Feb value · the map shows the fit at ${roTxt(S.ro)}`)
      : w<1000
      ? `NOAA CPC ${RONI.year0}–${RONI.last} · by Dec–Feb value, ±${S.str.toFixed(1)}°C, in events lasting about half a year or more`
      : w<1400
@@ -2001,7 +2039,7 @@ function roniPanel(x,y,w,h){
       if(!used){ o+=`<circle cx="${cx}" cy="${cy}" r="2.6" fill="${t.panel}" stroke="${t.mute}" stroke-width="1"><title>${ensoLabel(Y0)}: DJF RONI ${sgn(u,2)} (outside the period)</title></circle>`; return; }
       const col=u>0?t.en:u<0?t.ln:t.neu;
       o+=`<circle cx="${cx}" cy="${cy}" r="${Math.abs(u)>=0.5?4.6:3.4}" fill="${col}" stroke="${t.panel}" stroke-width="1.2"><title>${ensoLabel(Y0)}: DJF RONI ${sgn(u,2)}</title></circle>`;
-      if(Math.abs(u)>=0.5) o+=txt(cx,u>0?Y(u)-8:Y(u)+8,ensoLabel(Y0),{size:9.5,fill:col,weight:650,anchor:u>0?'start':'end',rot:-90});
+      if(Math.abs(u)>=0.5) o+=txt(Math.min(+cx,R-5),u>0?Y(u)-8:Y(u)+8,ensoLabel(Y0),{size:9.5,fill:col,weight:650,anchor:u>0?'start':'end',rot:-90});
       return;
     }
     if(used==='EN'||used==='LN'){
@@ -2022,8 +2060,7 @@ function roniPanel(x,y,w,h){
 /* the regression page's box panel: each year's anomaly against its Dec-Feb RONI, with
    the two fitted lines and the slider value */
 function regBoxPanel(x,y,w,h,bs){
-  const t=T(), [a,b]=yearsSel(), m=MSEQ[S.mi], st=bs.st, mon=S.av==='mon';
-  const L=x+70,R=x+w-18,TOP=y+76,BOT=y+h-40;
+  const t=T(), [a,b]=yearsSel(), m=MSEQ[S.mi], st=bs.st, mon=S.av==='mon', narrow=w<1000;
   let o=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   const sc=selCell(), a1=sc>=0?admin1At(DS.lat[sc],DS.lon[sc]):'';
   const where=placeName(sc)+(a1?` (${a1})`:'');
@@ -2032,26 +2069,37 @@ function regBoxPanel(x,y,w,h,bs){
   if(isCount() && bs.ys.every(v=>v===0)){
     o+=txt(x+14,y+44,`None on record here in ${mon?MFULL[m-1]:AV().long} in any year of ${a}–${b}: nothing to fit.`,{size:12,fill:t.mute});
     return o+'</g>'; }
+  if(Math.min(st.kp,st.kn)<3){
+    o+=txt(x+14,y+44,`Only ${Math.min(st.kp,st.kn)} year${Math.min(st.kp,st.kn)===1?'':'s'} here with a Dec–Feb RONI ${st.kp<st.kn?'above':'below'} 0 in ${a}–${b}: too few to fit both lines.`,{size:12,fill:t.mute});
+    return o+'</g>'; }
   const pct=pctOn(), qP=pct?pctDenom(st.mean,STATS?STATS.climRef:0):NaN;
   const okPct=pct && isFinite(qP);
   const cv=u=> okPct?100*u/qP : cvD(u);
-  const unit=okPct?'% change from climatology':unitAbs();
+  const unit=okPct?'% change from climatology':unitAbs(), uS=okPct?'%':unitAbs();
   const clim=cvC(st.mean), dd=decs();
-  o+=txt(x+14,y+38,(w<1000?`Each dot: one year's departure from the ${S.dt==='on'?'trend':'mean'}, ${a}–${b}`
-       :`Each dot is one ENSO year's departure from the ${S.dt==='on'?'least-squares trend through':'mean of'} ${a}–${b}, against its Dec–Feb RONI`)+
-     ` (${unit}) · climatology ${fmt(clim,dd.c)} ${unitAbs()}`+
+  /* one decimal for small percentages, and never "−0" */
+  const num=u=>{ const d=okPct&&Math.abs(u)<10?1:dd.d, s=sgn(u,d); return /^[−+]0(\.0+)?$/.test(s)?'0':s; };
+  o+=txt(x+14,y+38,`Each dot: one ENSO year's departure from climatology${S.dt==='on'?' (trend removed)':''}, ${a}–${b}, against its Dec–Feb RONI (${unit})`,{size:11,fill:t.mute});
+  o+=txt(x+14,y+53,`climatology ${fmt(clim,dd.c)} ${unitAbs()}`+
      (S.dt==='on'?` · trend ${sgn(cvD(st.slope*10),dd.c+1)} ${unitAbs()}/decade, removed`:'')+
      (smoothOn()&&selCell()>=0?' · this box only, not smoothed':'')+(pct&&!okPct?' · climatology too small for %, shown as amount':''),
      {size:11,fill:t.mute});
-  const pstr=p=>!isFinite(p)?'p —':p<0.001?'p < 0.001':'p = '+fmt(p,3), per=`per °C`;
+  const pstr=p=>!isFinite(p)?'p —':p<0.001?'p < 0.001':'p = '+fmt(p,3);
   const onP=S.ro>0, onN=S.ro<0;
-  const sP=`El Niño slope ${sgn(cv(st.bp),dd.d)} ${okPct?'%':unitAbs()} ${per} (${st.kp} yrs, ${pstr(st.pp)})`;
-  const sN=`La Niña slope ${sgn(cv(-st.bn),dd.d)} ${okPct?'%':unitAbs()} per °C colder (${st.kn} yrs, ${pstr(st.pn)})`;
-  o+=txt(x+14,y+58,sP,{size:12,weight:onP?650:400,fill:t.en,op:onP?1:.75});
-  o+=txt(x+14+Math.max(300,sP.length*6.6),y+58,sN,{size:12,weight:onN?650:400,fill:t.ln,op:onN?1:.75});
-  if(S.ro) o+=txt(R,y+58,`at ${roTxt(S.ro)}: ${sgn(cv(st.d),dd.d)} ${okPct?'%':unitAbs()}`,{size:12,weight:650,anchor:'end',fill:S.ro>0?t.en:t.ln});
+  const sP=`El Niño slope ${num(cv(st.bp))} ${uS} per °C (${st.kp} yrs, ${pstr(st.pp)})`;
+  const sN=`La Niña slope ${num(cv(-st.bn))} ${uS} per °C colder (${st.kn} yrs, ${pstr(st.pn)})`;
+  const sV=`at ${roTxt(S.ro)}: ${num(cv(st.d))} ${uS}`;
+  let ys=y+73;
+  o+=txt(x+14,ys,sP,{size:12,weight:onP?650:400,fill:t.en,op:onP?1:.75});
+  if(narrow){ o+=txt(x+w-18,ys,sV,{size:12,weight:650,anchor:'end',fill:S.ro>0?t.en:S.ro<0?t.ln:t.ink}); ys+=17;
+    o+=txt(x+14,ys,sN,{size:12,weight:onN?650:400,fill:t.ln,op:onN?1:.75}); }
+  else { o+=txt(x+14+Math.max(330,sP.length*6.7),ys,sN,{size:12,weight:onN?650:400,fill:t.ln,op:onN?1:.75});
+    o+=txt(x+w-18,ys,sV,{size:12,weight:650,anchor:'end',fill:S.ro>0?t.en:S.ro<0?t.ln:t.ink}); }
+  const L=x+70,R=x+w-18,TOP=ys+16,BOT=y+h-40;
   const XLO=-2.5, XHI=2.5;
-  const rs=Array.from(st.r,cv), fitAt=u=>cv(st.c+(u>0?st.bp*u:st.bn*u));
+  /* dots: each year's departure from climatology (minus the fitted trend); the lines: the
+     fit, measured from climatology, so the ring at the slider value is the map's value */
+  const rs=Array.from(st.r,cv), fitAt=u=>cv(mapAt(st,u));
   const fl=[XLO,0,XHI].map(fitAt).filter(isFinite);
   let lo=Math.min(0,...rs,...fl), hi=Math.max(0,...rs,...fl);
   const AX=niceAxis(lo,hi,5);
@@ -2067,7 +2115,7 @@ function regBoxPanel(x,y,w,h,bs){
     o+=txt(xx,BOT+17,(u>0?'+':u<0?'−':'')+Math.abs(u).toFixed(1),{size:11,fill:Math.abs(u)<1e-9?t.mute:u>0?t.en:t.ln,anchor:'middle'});
   }
   /* the slider value */
-  if(S.ro){ const xx=X(S.ro).toFixed(1), c=S.ro>0?t.en:t.ln;
+  { const xx=X(S.ro).toFixed(1), c=S.ro>0?t.en:S.ro<0?t.ln:t.mute;
     o+=`<line x1="${xx}" y1="${TOP}" x2="${xx}" y2="${BOT}" stroke="${c}" stroke-width="1.4" stroke-dasharray="4 4"/>`; }
   /* the fit: solid over the RONI range of the years, dashed beyond it */
   const ex=roExtremes(windowYears()), dlo=ex.lo?ex.lo.x:0, dhi=ex.hi?ex.hi.x:0;
@@ -2077,12 +2125,13 @@ function regBoxPanel(x,y,w,h,bs){
   bs.rx.forEach((u,i)=>{
     const col=u>0?t.en:u<0?t.ln:t.neu, v=rs[i], Y0=bs.xs[i];
     o+=`<circle cx="${X(u).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="4" fill="${col}" stroke="${t.panel}" stroke-width="1" opacity=".9">`+
-       `<title>${mon?MONTHS[m-1]+' '+calYear(Y0,S.mi)+' (ENSO year '+ensoLabel(Y0)+')':AV().label+' '+ensoLabel(Y0)}: RONI ${sgn(u,2)}°C, ${sgn(v,dd.d)} ${xesc(unit)}; value ${fmt(cvC(bs.ys[i]),dd.c)} ${xesc(unitAbs())}</title></circle>`;
+       `<title>${mon?MONTHS[m-1]+' '+calYear(Y0,S.mi)+' (ENSO year '+ensoLabel(Y0)+')':AV().label+' '+ensoLabel(Y0)}: RONI ${sgn(u,2)}°C, ${num(v)} ${xesc(unit)}; value ${fmt(cvC(bs.ys[i]),dd.c)} ${xesc(unitAbs())}</title></circle>`;
   });
-  if(S.ro){ const yv=fitAt(S.ro); if(isFinite(yv)) o+=`<circle cx="${X(S.ro).toFixed(1)}" cy="${Y(yv).toFixed(1)}" r="5.5" fill="none" stroke="${S.ro>0?t.en:t.ln}" stroke-width="2.2"/>`; }
+  { const yv=fitAt(S.ro); if(isFinite(yv)) o+=`<circle cx="${X(S.ro).toFixed(1)}" cy="${Y(yv).toFixed(1)}" r="5.5" fill="none" stroke="${S.ro>0?t.en:S.ro<0?t.ln:t.ink}" stroke-width="2.2"/>`; }
   o+=`<line x1="${L}" y1="${TOP}" x2="${L}" y2="${BOT}" stroke="${t.axis}"/>`;
-  o+=`<text x="${x+20}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+20} ${(TOP+BOT)/2})" font-family="${FF}" font-size="12" fill="${t.mute}" text-anchor="middle">${xesc('Departure ('+unit+')')}</text>`;
-  o+=txt((L+R)/2,BOT+35,`Dec–Feb RONI (°C) · lines: the fit (dashed beyond the strongest year) · ring: the map's value · click a box on the map to change place, again for the ${aggLabel()}`,{size:11,fill:t.mute,anchor:'middle'});
+  o+=`<text x="${x+20}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+20} ${(TOP+BOT)/2})" font-family="${FF}" font-size="12" fill="${t.mute}" text-anchor="middle">${xesc(narrow?'Departure':'Departure ('+uS+')')}</text>`;
+  o+=txt((L+R)/2,BOT+35,narrow?`Dec–Feb RONI (°C) · lines: the fit (dashed beyond the record) · ring: the map's value`
+     :`Dec–Feb RONI (°C) · lines: the fit, dashed beyond the strongest year · ring: the map's value · click the map to pick a box, again for the ${aggLabel()}`,{size:11,fill:t.mute,anchor:'middle'});
   return o+'</g>';
 }
 function boxPanel(x,y,w,h,bs){
@@ -2175,9 +2224,9 @@ function writeFoot(bs){
   let s;
   if(REG){ const ex=roExtremes(win), nP=win.filter(w=>w.x>0).length, nM=win.filter(w=>w.x<0).length;
     s=`<b>All ${win.length} ENSO years of ${a}–${b}</b> enter the fit, each at its own Dec–Feb RONI: `+
-      `<b style="color:var(--en)">${nP} above 0</b> set the El Niño slope`+(ex.hi?` (strongest ${ensoLabel(ex.hi.Y)}, ${sgn(ex.hi.x,2)}°C)`:'')+`, `+
-      `<b style="color:var(--ln)">${nM} below 0</b> the La Niña slope`+(ex.lo?` (strongest ${ensoLabel(ex.lo.Y)}, ${sgn(ex.lo.x,2)}°C)`:'')+`. `+
-      `The two lines meet at RONI 0, so every year, neutral ones included, helps pin down both. `+
+      `<b style="color:var(--en)">${nP} above 0</b>`+(ex.hi?` (strongest ${ensoLabel(ex.hi.Y)}, ${sgn(ex.hi.x,2)}°C)`:'')+` and `+
+      `<b style="color:var(--ln)">${nM} below 0</b>`+(ex.lo?` (strongest ${ensoLabel(ex.lo.Y)}, ${sgn(ex.lo.x,2)}°C)`:'')+`. `+
+      `Each slope rests mainly on the years on its own side, but the two lines share the point where they meet at RONI 0, so every year affects both. `+
       `Each ENSO year is the twelve months June to May: <i>1997–1998</i> means June 1997 through May 1998, so the January–May maps use the second calendar year. `;
   } else
   s=`<b style="color:var(--en)">El Niño years (${nE}):</b> ${list('EN')}.<br>`+
@@ -2205,18 +2254,32 @@ window.addEventListener('resize',()=>{
 });
 
 /* ------------------------------------------------------- guidance text */
-function guideHtml(){
+/* words written for the composites, as they read on the regression page */
+const REGWORDS=[['so these monthly composites are noisy','so these monthly maps are noisy'],
+  ['in El Niño years are the textbook signals','with El Niño are the textbook signals'],
+  ['treat these composites as exploratory','treat these maps as exploratory'],
+  ['so the per-box trend is removed before compositing','so each box\'s trend is fitted along with RONI'],
+  ['Because years are classified by the winter','Because years are placed by their winter RONI'],
+  [', or ±100% for El Niño − La Niña',''],
+  ['before the composite is formed','before the fit'],['before compositing','before the fit'],
+  ['in proportion to when each phase happened','in proportion to when El Niño and La Niña happened']];
+function regWords(s){ if(!REG) return s; for(const [a,b] of REGWORDS) s=s.split(a).join(b); return s; }
+function guideHtml(){ return regWords(guideHtml0()); }
+function guideHtml0(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
-  const common=REG ? ' These maps are <b>regressions</b>: each box\'s year-to-year anomalies are fitted to the Dec–Feb RONI '+
-    'with one straight line for El Niño (RONI above 0) and one for La Niña (below 0), and the map is the fitted difference from a '+
-    'neutral year at the strength on the slider. On each side the map is one pattern scaled by the slider, so <b>dragging the slider '+
-    'changes the strength, not the shape</b>, and the shape can differ between El Niño and La Niña. A straight line is an assumption: '+
-    'the strongest events can do things weak ones do not, and values beyond the strongest year on record extend the line past the data. '+
-    'Any single event can look quite different from the fit. '+
-    'Dots mark <b>significant patches</b>: neighboring boxes whose slope passes a t-test (p&nbsp;&lt;&nbsp;0.05) and that '+
-    'together are stronger than the strongest patch chance produces anywhere on the map in 95% of 1,000–2,000 reshufflings '+
-    'of the RONI values across the years. The dots are the same at every strength on one side. The test is strict, so an '+
-    'undotted pattern is not evidence of no effect, only that this sample cannot rule out chance.'
+  const common=REG ? ' These maps are <b>regressions</b>: each box\'s values over the years are fitted to the Dec–Feb RONI '+
+    'with one straight line for El Niño (RONI above 0) and one for La Niña (below 0), and the map is the fitted value at the '+
+    'strength on the slider minus the average year (the climatology), as on the composite page. Dragging the slider mainly '+
+    'changes how strong the map is; the pattern can differ between El Niño and La Niña. A straight line is an assumption, '+
+    'and it cuts both ways. The El Niño line leans heavily on the four strongest events (1982–83, 1991–92, 1997–98, 2015–16), '+
+    'so a <b>weak</b> El Niño map is largely their pattern scaled down: features seen only in strong events, such as the '+
+    'coastal Peru rains, still appear at reduced size, so rain in particular can be overstated for weak events. And values '+
+    'beyond the strongest year on record extend the line past the data. Any single event can look quite different from the fit. '+
+    'Dots mark <b>significant patches</b>: neighboring boxes whose El Niño (or La Niña) slope passes a t-test '+
+    '(p&nbsp;&lt;&nbsp;0.05) and that together are stronger than the strongest patch chance produces anywhere on the map in '+
+    '95% of 1,000–2,000 reshufflings of the RONI values across the years. They test the slope, the whole line, so they are the '+
+    'same at every strength on one side: a signal that is small at a weak strength is no less believable for it. The test is '+
+    'strict, so an undotted pattern is not evidence of no effect, only that this sample cannot rule out chance.'
     : ' The El Niño and La Niña maps are <b>composites</b> — the average over a dozen or so years — so they '+
     'describe what El Niño or La Niña <i>tends</i> to do; any single event can look quite different. '+
     'Dots mark <b>significant patches</b>: neighboring boxes that each pass a t-test (p&nbsp;&lt;&nbsp;0.05) and that '+
@@ -2228,7 +2291,7 @@ function guideHtml(){
   const kept=(isTemp()&&S.dt==='off')?(()=>{ const w=windowYears().slice(-8), k=w.filter(x=>x.c==='LN').length;
     return '<b>Trend kept:</b> '+(REG?'the fit now carries':'the composites now carry')+' the warming trend, in proportion to when each phase happened. '+
       `${k} of the last ${w.length} ENSO years of the period were La Niña, so La Niña inherits the recent warmth: `+
-      'La Niña looks warm, and El Niño − La Niña cool, over much of the Arctic and northern continents. That is the '+
+      (REG?'La Niña looks warm over much of the Arctic and northern continents. That is the ':'La Niña looks warm, and El Niño − La Niña cool, over much of the Arctic and northern continents. That is the ')+
       'trend, not ENSO; <i>Trend: removed</i> shows the ENSO signal. '; })():'';
   if(f.src==='era5') return lead+kept+'ERA5 is a <b>reanalysis</b>: a weather model continually corrected by observations. '+
     'Its temperatures are well constrained almost everywhere; its <b>precipitation and snowfall are model products</b> and '+
@@ -2250,11 +2313,14 @@ function guideHtml(){
     '<b>winter</b> (choose Dec–Feb above): in Dec–Feb, El Niño brings fewer tornado and hail days to the Mid-South and Ohio Valley and more '+
     'to Florida and the Gulf Coast. <b>Spring</b> is less settled. '+
     '<a href="https://doi.org/10.1038/ngeo2385" target="_blank" rel="noopener">Allen, Tippett &amp; Sobel (2015)</a> '+
-    'found fewer spring tornadoes and hailstorms in the southern Plains after El Niño over 1979–2013, and these data '+
+    (REG ? 'found fewer spring tornadoes and hailstorms in the southern Plains after El Niño over 1979–2013. Since then, '+
+      'though, the springs of 2015, 2016, 2019 and 2024, all after El Niño, were very active there, so the spring maps '+
+      'depend on the period chosen: a handful of years can overturn a modest signal. '
+    : 'found fewer spring tornadoes and hailstorms in the southern Plains after El Niño over 1979–2013, and these data '+
     'agree for that period (fewer ≥1″ hail days, little change in tornadoes). Since then, though, the springs of '+
     '2015, 2016, 2019 and 2024, all after El Niño, were very active there, so the Mar–May maps show slightly '+
     '<i>more</i> southern-Plains tornado days after El Niño over 1979–2025, and clearly more over 2000–2025: a '+
-    'handful of years can overturn a modest signal. '+
+    'handful of years can overturn a modest signal. ')+
     (()=>{ const w=windowYears(), [a,b]=yearsSel();
       if(REG) return `${a}–${b} holds ${w.filter(x=>x.x>0).length} years with RONI above 0 and ${w.filter(x=>x.x<0).length} below, `+
         `and its 2° boxes are noisy, so patches here rarely pass the significance test; a pattern that recurs in neighboring `+
@@ -2385,7 +2451,7 @@ function methodsHtml(){
     For the count fields they follow the map on screen (the seasonal cycle is far too strong for one scale):
     the 98th percentile of climatology and the 95th of the size of the difference (percent or absolute), over the boxes drawn — so check the
     color bar when you change month.`);
-  if(REG) regMethods(li);
+  if(REG){ regMethods(li); for(let i=0;i<li.length;i++) li[i]=regWords(li[i]); }
   return '<ol>'+li.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
 }
 /* the regression page's Methods: the same list with the composite items rewritten */
@@ -2401,29 +2467,41 @@ function regMethods(li){
     in 2025 because the plain ONI is pushed upward by the warming of the whole tropical ocean. A year whose December–February
     has not happened yet is not used. The composite version of this page, which averages the years past a RONI threshold instead,
     is <a href="ensogrid.html">here</a>.`);
-  rep('<b>El Niño and La Niña maps.</b>',`<b>The regression maps.</b> For each box, every year's value is first turned into an anomaly: its departure from
-    the least-squares line through the period (<i>Trend: removed</i>, the default) or from the period mean (<i>Trend: kept</i>), as on the
-    composite page. The anomalies are then fitted by least squares to the year's Dec–Feb RONI <i>x</i> with two straight lines that meet at
-    RONI 0: <i>anomaly = c + b<sub>+</sub>·max(x, 0) + b<sub>−</sub>·min(x, 0)</i>. The El Niño slope b<sub>+</sub> is set by the years
-    with RONI above 0 and the La Niña slope b<sub>−</sub> by those below, so the two phases can differ in pattern and strength
-    (a single straight line would make La Niña the exact mirror image of El Niño). The map at slider value <i>v</i> is the fitted
-    difference from a neutral year, b<sub>+</sub>·v for v &gt; 0 and b<sub>−</sub>·v for v &lt; 0: on each side it is one pattern,
-    scaled by v, so the slider changes the strength of the map but not its shape within El Niño or within La Niña. A straight line
-    is an assumption: strong events can behave differently from weak ones (the eastern-Pacific rains of 1982–83, 1997–98 and
-    2015–16, say), which the composite page at strength ≥ 1.5 shows directly. Values of v beyond the strongest year of the
-    period on that side extend the line past the record and are flagged under the map.`);
+  rep('<b>El Niño and La Niña maps.</b>',`<b>The regression maps.</b> Each box's values over the period are fitted by least squares,
+    in one step, to <i>y = y<sub>0</sub> + a·(year − mean year) + b<sub>+</sub>·max(x, 0) + b<sub>−</sub>·min(x, 0)</i>, where x is the
+    year's Dec–Feb RONI: two straight lines that meet at RONI 0, so El Niño and La Niña get their own slopes (a single straight line
+    would make La Niña the exact mirror image of El Niño). The trend term is fitted <i>together</i> with RONI (<i>Trend: removed</i>,
+    the default) or left out (<i>Trend: kept</i>); fitting it first and separately would hand part of the La Niña signal to the trend,
+    since RONI itself has drifted toward La Niña over 1979–2025. The map at slider value v is the fitted value at v minus the
+    climatology, the mean of all the years of the period (the composite page's reference too): b<sub>+</sub>·(max(v,0) − mean of
+    max(x,0)) + b<sub>−</sub>·(min(v,0) − mean of min(x,0)). It is measured from the climatology rather than from the fitted value
+    at RONI 0 because the two lines share that point: a curved El Niño response (rain on the Peru coast in only the strongest events,
+    say) or noise in that point would otherwise leak into the La Niña map with El Niño's sign. At RONI 0 the map shows how the
+    fitted neutral year differs from the climatology. Each slope rests mainly on the years on its own side, and the El Niño slope
+    especially on the four years with RONI ≥ 2 (1982–83, 1991–92, 1997–98, 2015–16), so a weak-El Niño map is largely their pattern
+    scaled down and can overstate what weak events do, especially for rain; the composite page at strength ≥ 0.5 shows weak and
+    moderate events directly. Values of v beyond the strongest year of the period on that side extend the line past the record and
+    are flagged under the map. Strength names (weak 0.5, moderate 1.0, strong 1.5, very strong 2.0 and up) follow RONI, which ranks
+    some events differently from the ONI used in most news coverage (RONI puts 1991–92 among the very strong, 2023–24 at moderate).`);
   rep('<b>Significance.</b>',`<b>Significance.</b> The same cluster-based permutation test as the composite page
     (<a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener">Maris &amp; Oostenveld 2007</a>), on the
     slope of the side shown. (1) Each box gets the t statistic of that slope (b<sub>+</sub> for El Niño, b<sub>−</sub> for La Niña;
-    n − 3 degrees of freedom, one fewer with the trend removed). (2) Boxes with p &lt; 0.05 join neighboring boxes of the same sign
+    n − 3 degrees of freedom, one fewer with the trend). (2) Boxes with p &lt; 0.05 join neighboring boxes of the same sign
     (including diagonals) into patches, each scored by its <i>mass</i>, the sum of |t| × box area. (3) The years' RONI values are then
-    shuffled at random across the years (1,000 times on the ERA5 grid, 2,000 on the tropical-cyclone and U.S. grids) and steps 1–2
-    repeated, recording the heaviest patch anywhere on the map each time. (4) A patch is dotted if fewer than 5% of the shuffles
-    produced a patch as heavy, which holds the chance of dotting any spurious patch on the map to 5%. Because the map on one side is
-    a single pattern times v, the dots are the same for every slider value on that side; RONI 0 has no difference and no dots.
-    Shuffles are seeded from the settings; detrending is done once, before shuffling; shuffling treats years as exchangeable, so
-    back-to-back events make the test somewhat generous. Water fluxes are not dotted where the climatology is below
-    ${isSnow()?'0.05':'0.1'} mm/day, nor count fields below 5% of their typical value. The p shown on hover is the box's own t-test.`);
+    shuffled at random across the years (1,000 times on the ERA5 grid, 2,000 on the tropical-cyclone and U.S. grids) and the whole fit,
+    trend included, repeated, recording the heaviest patch anywhere on the map each time. (4) A patch is dotted if fewer than 5% of the
+    shuffles produced a patch as heavy. The dots test the slope, the whole line, so they are the same at every strength on one side
+    (a signal that is small at a weak strength is no less believable for it); RONI 0 has no slope and no dots. Shuffles are seeded from
+    the settings, so the same settings give the same dots, and a patch whose chance is very close to 5% can fall on either side of the
+    line. Shuffling treats years as exchangeable, which they are not quite: ENSO tends to alternate from one year to the next, and the
+    maps share that rhythm, which makes the real chance of a spurious dotted patch about 6–9% rather than 5%. Water fluxes are not
+    dotted where the climatology is below ${isSnow()?'0.05':'0.1'} mm/day, nor count fields below 5% of their typical value. The p
+    shown on hover is the box's own t-test of the slope.`);
+  rep('<b>Reading the temperatures.</b>',`<b>Reading the temperatures.</b> Over the ocean, the 2 m air temperature anomaly is
+    smaller than the sea-surface temperature anomaly beneath it (roughly 0.7–0.8 times). Two large volcanic eruptions, El Chichón
+    (1982) and Pinatubo (1991), cooled the globe in two of the four strongest El Niño years (1982–83 and 1991–92). Because the El Niño
+    line leans on those years, this lowers the fitted El Niño warming of the global and tropical mean: by about a third in Mar–May and
+    about an eighth over the ENSO year.`);
   rep('<b>Panels.</b>',`<b>Panels.</b> The RONI panel shows every season since ${RONI?RONI.year0:1950}, with the period shaded and
     every ENSO year of ${a}–${b} marked at its Dec–Feb value. The panel under <i>Other advanced</i> plots the selected box (or, with
     none selected, the ${aggLabel()}) one dot per year against that year's RONI, with the two fitted lines and the map's value.`);
@@ -2455,7 +2533,10 @@ function syncControls(){
     document.getElementById('roRange').value=String(S.ro);
     const rv=document.getElementById('roVal'), ex=roExtremes(windowYears());
     const far=(S.ro>0&&ex.hi&&S.ro>ex.hi.x+1e-9)||(S.ro<0&&ex.lo&&S.ro<ex.lo.x-1e-9);
-    rv.innerHTML=roSpan(S.ro)+(far?' <span class="rofar">beyond the record</span>':'');
+    const fitOK=Math.min(windowYears().filter(w=>w.x>0).length,windowYears().filter(w=>w.x<0).length)>=3;
+    rv.innerHTML=roSpan(S.ro)+(far&&fitOK?' <span class="rofar">beyond the record</span>':'')+(S.mode==='clim'?' <span class="rofar">(map shows the climatology)</span>':'');
+    rv.classList.toggle('dim',S.mode==='clim');
+    document.getElementById('roRange').setAttribute('aria-valuetext',roName(S.ro));
     document.querySelectorAll('#phSeg button').forEach(b=>{ const on=b.dataset.ph===(S.mode==='clim'?'clim':'reg');
       b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
     document.getElementById('roWrap').classList.toggle('dim',S.mode==='clim');
@@ -2516,7 +2597,8 @@ function readHash(){
   if(p.get('t')) S.thr=Math.max(0,+p.get('t')||0);
   S.thr=menuItem()[1];                                  // only menu combinations exist
   if(REG){ if(p.get('ph')==='clim') S.mode='clim';
-    const r=+p.get('r'); if(p.get('r')!==null&&isFinite(r)) S.ro=Math.max(-2.5,Math.min(2.5,Math.round(r*2)/2)); }
+    const rq=p.get('r'), r=parseFloat(rq);
+    if(rq&&isFinite(r)) S.ro=Math.max(-2.5,Math.min(2.5,Math.sign(r)*Math.round(Math.abs(r)*2)/2)); }
   else {
   if(['en','ln','enln'].includes(p.get('ph'))){ S.ph=p.get('ph'); S.mode='diff'; }
   else if(p.get('ph')==='clim') S.mode='clim';
@@ -2539,7 +2621,7 @@ function readHash(){
   if(p.get('sg')==='0') S.sig=0;
   if(p.get('ct')==='1') S.ct=1;
   if(p.get('b')==='neu'&&!REG) S.base='neu';
-  if(p.get('c')){ const [la,lo]=p.get('c').split(',').map(Number); if(isFinite(la)&&isFinite(lo)) S.pt=[la,lo]; }
+  if(p.get('c')){ const [la,lo]=p.get('c').split(',').map(Number); if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90&&Math.abs(lo)<=540) S.pt=[la,lo]; }
   if(p.get('k')==='light') S.theme='light';
   return p.get('v');
 }
@@ -2597,8 +2679,12 @@ function wire(){
     /* Custom opens on the range on screen, so nothing changes until a year is edited */
     if(b.dataset.per==='custom'&&S.per!=='custom'){ const [a,c]=yearsSel(); S.y0=a; S.y1=c; }
     S.per=b.dataset.per; refresh(); });
-  document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; refresh(); };
-  document.getElementById('y1In').onchange=e=>{ S.y1=+e.target.value; refresh(); };
+  /* Custom From/To: an empty or non-numeric entry is ignored; the stored range is always the
+     normalized one on screen, so a later edit never meets a stale hidden value */
+  const perEdit=(k,e)=>{ const v=parseInt(e.target.value,10);
+    if(isFinite(v)){ S[k]=v; const [a,c]=yearsSel(); S.y0=a; S.y1=c; } refresh(); };
+  document.getElementById('y0In').onchange=e=>perEdit('y0',e);
+  document.getElementById('y1In').onchange=e=>perEdit('y1',e);
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
   document.querySelectorAll('#pcSeg button').forEach(b=>b.onclick=()=>{ S.pc=b.dataset.pc; refresh(); });
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; refresh(); };
@@ -2639,7 +2725,11 @@ async function init(){
       'or try again in a few minutes.';
     return;
   }
-  if(REG) document.body.classList.add('reg');
+  if(REG){ document.body.classList.add('reg');
+    const tt=(sel,s)=>{ const e=document.querySelector(sel); if(e) e.title=s; };
+    tt('#sigChk',''); tt('label.chk:has(#sigChk)','Dot the patches of boxes where the fitted El Niño (or La Niña) slope is significant: each box at p < 0.05 (t-test on the slope), and the patch as a whole stronger than chance (permutation test; see Methods)');
+    tt('.fld:has(#dtSel)','Fit a linear trend over the period along with RONI, so the warming trend, or a reporting trend, is not read as an ENSO signal.');
+    tt('#smBox','A Gaussian blur of one grid box, applied to each year’s map before the fit. Maps only; the panels below are never smoothed.'); }
   const v=readHash();
   if(!S.per) S.per=defaultPer();
   applyTheme();
@@ -2669,7 +2759,7 @@ async function init(){
   await refresh();
   if(v){ const [la,lo,z]=v.split(',').map(Number);
     if(isFinite(la)&&isFinite(lo)&&isFinite(z)){ syncing=true; mapA.setView([la,lo],z,{animate:false});
-      syncing=false; } }
+      syncing=false; writeHash(); } }
   mapA.on('moveend',writeHash);
   /* a link pasted into a tab already on this page changes only the hash: reload so it
      opens exactly as shared (the page itself only ever uses replaceState, which does not

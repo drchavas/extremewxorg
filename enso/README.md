@@ -54,25 +54,48 @@ per-pixel map geolocation). Fixes from that review are noted below.
 **El Niño and La Niña by Strength.** Built from the *same sources* as ensogrid: `assemble.sh` writes both
 pages, ensoreg with `const REG=true` and the template's `<!--R-->…<!--/R-->` blocks (ensogrid keeps
 `<!--C-->…<!--/C-->`). All `REG` branches are no-ops on ensogrid.
-- **Model (per box):** anomalies r as on ensogrid (detrended by default), then least squares
-  `r = c + b+·max(x,0) + b−·min(x,0)`, x = the year's **unrounded** Dec–Feb RONI (no threshold, no
-  episode rule; all years incl. neutral). Two lines meeting at RONI 0, so El Niño and La Niña have
-  their own slopes (asymmetry allowed). Map at slider v = b+·v (v>0) or b−·v (v<0) = fitted
-  difference from RONI 0; % change divides by the climatology as on ensogrid. Within a side the map is
-  one pattern × v (shape doesn't change with v). Chosen over plain linear (La Niña = mirror) and
-  quadratic (noisy, hard to explain). `regStats`/`regFit` in src_part2.
-- **p / dots:** t of the shown side's slope, df = n − 3 (− 1 detrended). `regClusterTest`: same
-  cluster permutation test, shuffling the RONI values across years; dots are identical for every v on
-  a side (seed key uses the side, not v); RONI 0 → zero map, no dots. Null check (shuffled RONI,
-  200 runs each on TC yr, hail DJF, TC genesis SON): any-patch rate 5.5 / 6.0 / 5.0%. ERA5 ~2–3 s.
+- **Model (per box), revised Oct 22 after the independent review:** one-step OLS
+  `y = y0 + a·(t − t̄) + b+·max(x,0) + b−·min(x,0)` (trend term only with Trend: removed), x = the
+  year's two-decimal Dec–Feb RONI (no threshold, no episode rule; all years incl. neutral). Two lines
+  meeting at RONI 0. Implemented by Frisch–Waugh (`regFit`: y residualized on [1,t], hinge terms with
+  [1,t] projected out). **Map at slider v = fitted value at v minus climatology**
+  = b+·(max(v,0) − mean max(x,0)) + b−·(min(v,0) − mean min(x,0)) (`mapAt`), the composite page's
+  reference; % divides by climatology. At v = 0 the map is "fitted neutral minus climatology".
+  - First version measured from the fitted point at RONI 0 (b·v). Reviewers showed the shared intercept
+    leaks a curved El Niño response or intercept noise into La Niña with El Niño's sign (same-sign
+    +1.5/−1.5 area 45–80% vs composites 16–26%; Peru DJF rain at −1.5 +102%, composite −5%; central
+    Canada DJF t2m +0.93 °C). Now: same-sign area 21–33%; Peru +16%; Canada −0.31 °C. Synthetic
+    El Niño-only convex response max(x−1,0): La Niña −1.5 map −0.06 (true −0.13) vs +0.24 before.
+  - Two-step detrend (y only) was replaced: RONI trends toward La Niña (corr(year, min(x,0)) = −0.29),
+    so it shrank La Niña slopes ~9–10%.
+  - Both sides need ≥ 3 years (the map uses both slopes at any v).
+- **p / dots (Dan: test the slope, option b):** t of the shown side's slope of the joint fit, df = n − 3
+  (− 1 with trend). `regClusterTest` shuffles RONI across years and redoes the joint fit (time projected
+  out of the shuffled hinge terms each shuffle). Dots identical for every v on a side, and in % vs
+  absolute; none at RONI 0. Null any-patch rate (iid shuffles, 200 runs): 6.0% TC days yr, 5.5% hail
+  DJF. Reviewer surrogate tests (ENSO's 2-year alternation) give ~6–9%: stated in Methods. ERA5 ~2–3 s.
+- **Caveats on the page:** the El Niño line leans on the four RONI ≥ 2 years (1982–83, 1991–92
+  Pinatubo, 1997–98, 2015–16; hat values 0.17–0.22) — named in the note; weak (±0.5) maps are the
+  strong-event pattern scaled down and can overstate weak events (rain ~55–75%) — note at |v| = 0.5,
+  guide and Methods; strength names follow RONI, not ONI.
 - **UI:** slider −2.5…+2.5 step 0.5 (`#roRange`, ticks clickable), readout "Strong El Niño (RONI
   +1.5°C)" (weak 0.5, moderate 1.0, strong 1.5, very strong ≥2.0); Show = Difference | Climatology;
   strength, Compare with and El Niño − La Niña are not offered. Default +1.5. Values beyond the
   strongest year of the period on that side (1979–2025: +2.40 in 1982–83, −1.73 in 2007–08) are
   flagged "beyond the record" and in the note under the map. Hash `r=<v>` (`ph=clim` for climatology).
 - **Panels:** RONI panel marks every year in the period by its DJF value (labels beyond ±0.5) with a
-  dashed line at v; the box panel (Other advanced) is a scatter of each year's anomaly vs RONI with
-  the two fitted lines (dashed beyond the strongest year) and a ring at the map's value.
+  dashed line at v; the box panel (Other advanced) is a scatter of each year's departure from
+  climatology (joint trend removed) vs RONI with the two fitted lines measured from climatology
+  (dashed beyond the strongest year), so the ring at v is exactly the map's value.
+- **Other review fixes (Oct 22):** box/RONI panel text no longer clipped (two-line subtitle, shorter
+  narrow captions); panel refuses a fit with < 3 years on either side; undefined p shows "p —";
+  small % with one decimal, no "−0"; dots text/chip only when testable; slider aria-valuetext,
+  live readout, dimmed in Climatology; REG tooltips/guide/Methods reworded (no composite wording);
+  U.S. spring paragraph without the composite page's numbers; hash `r=` empty ignored, symmetric
+  rounding, `c` range-checked. Shared with ensogrid: hash `v` written after a shared view is
+  applied; Custom From/To ignores empty input and stores the normalized range; climatology colorbar
+  uses "−"; hover omits p when undefined. Not done: pr/sf int16 at 0.01 (store at 0.001 in a data
+  rebuild); borderline patches (p≈0.05) can flip with the seed; ensogrid's own two-step detrend.
 - **Checked:** box values and p match numpy/scipy OLS for ERA5 T/precip, TC and hail boxes (to
   float precision); x = roni.json DJF exactly; map = fresh recompute; dots ⊂ p<0.05 boxes;
   dots same in % and absolute and across v on a side; drag sequence ends in a consistent state.
