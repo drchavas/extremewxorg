@@ -5,6 +5,11 @@ build_station_data.py
 Turn NOAA ISD "Global Hourly" station-year CSVs into compact, browser-ready JSON
 for the station-based hazards on the extreme-weather trend pages.
 
+NOTE (2026-10): freezing rain is now built nationally from GHCNh by
+build_fzra_data.py (ghcnh_fetch.py -> ghcnh_daily.py -> build_fzra_data.py), which
+reproduces this script's Indiana counts.  This script now writes PEAK WIND only
+(BUILD below); its freezing-rain code is kept as the reference implementation.
+
 Two hazards come out of the same downloads:
 
   freezing rain  — days with FZRA in the METAR remarks (REM), counted over a
@@ -41,6 +46,7 @@ GUST_MAX = 99
 # days on these stations into the record, July included.
 FZRA = re.compile(r"FZRA(?!NO)")
 COMPLETENESS = 0.90
+BUILD = ["pkwnd"]          # fzra: see build_fzra_data.py
 
 # Restrict to the 86 stations DelPizzo et al. (2025) retained after QC.  Their
 # decisive criterion is one we cannot reconstruct from the ISD files themselves:
@@ -298,9 +304,9 @@ def main():
 
     idx_path = os.path.join(outdir, "index.json")
     index = json.load(open(idx_path)) if os.path.exists(idx_path) else {"hazards": []}
-    index["hazards"] = [h for h in index["hazards"] if h["key"] not in HAZARDS]
+    index["hazards"] = [h for h in index["hazards"] if h["key"] not in BUILD]
 
-    for hz in HAZARDS:
+    for hz in BUILD:
         print(f"\n== {hz}")
         res = build(hz, data_dir, y0, y1, listed)
         # Writing an empty file is worse than failing: it looks like a successful

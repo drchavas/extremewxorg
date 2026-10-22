@@ -172,7 +172,7 @@
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-21 16:56 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-21 19:13 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -187,7 +187,7 @@
     <div class="fld" id="tierWrap" style="display:none"><label for="tierSel">Confidence</label>
       <select id="tierSel"></select></div>
     <div class="fld" id="dpWrap" style="display:none"><label>&nbsp;</label>
-      <button class="btn" id="dpBtn" title="Restrict to the 86 QC'd stations of DelPizzo et al. (2025)">QC stations</button></div>
+      <button class="btn" id="dpBtn" title="Restrict to the quality-controlled stations">QC stations</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole country">&#8592; Full U.S.</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
@@ -223,8 +223,10 @@
         <ol>
           <li><b>Sources.</b> Hail, tornado and thunderstorm wind come from the NOAA/NCEI Storm
               Events Database, using county-type records (<code>CZ_TYPE = C</code>). Freezing rain
-              and peak wind come from NOAA/NCEI Integrated Surface Database hourly observations at
-              ASOS stations. The remark <code>FZRANO</code> (freezing-rain sensor not operational)
+              comes from NOAA/NCEI&rsquo;s <b>GHCNh</b> (Global Historical Climatology Network-hourly,
+              the successor to the Integrated Surface Database): the hourly and special reports
+              (METARs) of airport weather stations across the lower 48. Peak wind comes from the
+              Integrated Surface Database for Indiana stations. The remark <code>FZRANO</code> (freezing-rain sensor not operational)
               is not counted as freezing rain, and a peak-wind group with a three-digit speed
               (100&nbsp;kt or more) is treated as a coding error.</li>
           <li><b>Extreme heat</b> comes from the ECMWF <b>ERA5</b> reanalysis (hourly, 0.25&deg;,
@@ -298,12 +300,18 @@
           <li><b>Screen the station records.</b> A station-year below 90% complete is treated as
               <b>no observation and dropped</b>, not as zero days. That is the opposite of the
               county rule below, and both are right: every county exists every year, a station
-              does not. <b>QC stations</b> further restricts to the set of
+              does not. For freezing rain, <b>QC stations</b> applies the criterion of
               <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" target="_blank" rel="noopener">DelPizzo
-              et al. (2025)</a>, who kept only sites with an overnight manual observer.
-              <b>Freezing rain opens on that QC'd subset</b>, because automated present-weather
-              sensors report FZRA too erratically to trend; the button adds the rest back if you
-              want to see the difference. Peak wind is measured differently and is not screened
+              et al. (2025)</a>, who kept only sites with an overnight human observer. Their list
+              covers the Great Lakes; nationally the page applies the same test from the record
+              itself: a site qualifies if, before automation (1985, 1987 or 1990), it reported in the
+              small hours (1&ndash;5&nbsp;am local) on at least 90% of its days. That reproduces their
+              list &mdash; 75 of their 76 U.S. sites pass, and the 76th, Champaign, is kept as theirs
+              &mdash; and gives about 550 of the roughly 960 stations nationally (every federal ASOS,
+              plus military fields with their own observers). <b>Freezing rain opens on that subset.</b> In this record the
+              screen matters less than expected: unscreened stations average about 5% more
+              freezing-rain days than a screened station nearby (median of 165 pairs within 60&nbsp;km).
+              Peak wind is measured differently and is not screened
               this way, so it opens on all stations.</li>
           <li><b>Store</b> those counts per county (or station) × year × month × threshold.
               Everything below is computed live in the browser from that table.</li>
@@ -442,10 +450,9 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function sgn(v,d){ return (v>=0?'+':'')+fmt(v,d); }
 function tp(t,df){ if(!(df>0)||!isFinite(t))return 1; return betai(df/2,0.5,df/(df+t*t)); }
 
-/* DelPizzo et al. (2025) screened Great Lakes ASOS sites for freezing-rain
-   reporting and kept a minority of them; the rest report FZRA too erratically to
-   trend. So freezing rain opens on the QC'd subset. Peak wind is a different
-   measurement and that screen does not apply to it. */
+/* Freezing rain opens on the 24-h observer stations (DelPizzo et al. 2025's
+   criterion, applied nationally -- see fzra_stations.py); snow on its Kunkel-style
+   QC set. Peak wind is a different measurement and that screen does not apply. */
 function dpDefault(h){ return h==='fzra'||h==='snow'; }
 const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:null,theme:'dark',
          dpOnly:dpDefault('hail'),tier:'firm',smooth:'2'};
@@ -1088,11 +1095,13 @@ function syncDpToggle(){
   wrap.style.display='';
   btn.textContent = S.dpOnly ? ('QC only · '+n) : ('All · '+d.stations.length);
   const qcn = S.hazard==='snow' ? 'the Kunkel-style snowfall QC (long, homogeneous records)'
+            : S.hazard==='fzra' ? 'the overnight-observer screen of DelPizzo et al. (2025)'
                                  : 'DelPizzo et al. (2025) QC';
   btn.title = S.dpOnly
     ? `Showing the ${n} stations that passed ${qcn}. `+
       `Click to add the other ${d.stations.length-n}, `+
       (S.hazard==='snow'?`which have at least 30 valid seasons but shorter or less consistent records.`
+       :S.hazard==='fzra'?`automated sites that never had a round-the-clock observer.`
                         :`whose reporting is erratic.`)
     : `Showing all ${d.stations.length} stations, including ${d.stations.length-n} that failed `+
       `${qcn}. Click to restrict to the ${n} QC'd sites.`;
@@ -1388,17 +1397,19 @@ function guideHtml(){
       'July&ndash;June and are labeled by the year they end.';
   if(isStation()){
     return lead+
-      'These are observations from a <i>fixed instrument network</i> (NOAA/NCEI Integrated '+
-      'Surface Database), not public storm reports, so they carry none of the '+
+      'These are observations from a <i>fixed instrument network</i> ('+
+      (S.hazard==='fzra'?'the airport weather stations of NOAA/NCEI GHCNh, lower 48'
+                        :'NOAA/NCEI Integrated Surface Database')+'), not public storm reports, so they carry none of the '+
       'reporting-volume growth that affects Storm Events. The trade is that the instruments '+
       'themselves changed: ASOS replaced human observers through the mid-1990s, and '+
       'present-weather and peak-gust reporting still varies by site, sensor and era &mdash; so '+
       '<b>compare a station with itself over time far more readily than with its neighbors</b>. '+
       'A station-year less than 90% complete is treated as <b>no observation and dropped</b>, '+
       'never as zero, so a gap in the record leaves a gap in the plot rather than a false quiet '+
-      'year. For freezing rain the <b>QC stations</b> button restricts to the sites '+
+      'year. For freezing rain the <b>QC stations</b> button, the default, keeps the sites that had a '+
+      'round-the-clock human observer before automation, the criterion of '+
       '<a href="https://doi.org/10.1175/JAMC-D-24-0204.1" target="_blank" rel="noopener">DelPizzo '+
-      'et al. (2025)</a> judged reliable, which is the default.';
+      'et al. (2025)</a>, applied nationally.';
   }
   return lead+
     'Storm Events records <i>reports</i>, not observations from a fixed network. National counts '+
@@ -1643,7 +1654,10 @@ function focusState(zoom){
 }
 
 /* Station hazards have no county geometry, so they draw as circles sized by
-   magnitude over the same basemap. */
+   magnitude over the same basemap. The circles shrink when zoomed far out, where
+   at full size a national network (7,000 snowfall stations) is one solid mass:
+   0.6x at the whole-country view (zoom 4), full size from zoom 6 in. */
+function stK(map){ const z=map.getZoom(); return Math.max(.6,Math.min(1,.6+(z-4)*.2)); }
 function drawStations(map,prev,C){
   if(prev) map.removeLayer(prev);
   if(!isStation()) return null;
@@ -1654,16 +1668,25 @@ function drawStations(map,prev,C){
     const v=C.val[i]; if(!isFinite(v)) return;
     const st=d.stations[i];
     const r=5+9*Math.sqrt(Math.min(1,Math.abs(v)/rmax));
-    const sig=C.pval && C.pval[i]<0.05;
-    L.circleMarker([st.lat,st.lon],{radius:r,fillColor:colorFor(v,C),fillOpacity:.92,
-        color:S.county===st.id?T().sel:(sig?T().ink:T().cline),
-        weight:S.county===st.id?3:(sig?2:.9)})
-      .bindTooltip(`<b>${esc(st.name)}</b><br>${fmt(v,2)} ${esc(C.unit)}`,
+    const sig=C.pval && C.pval[i]<0.05, k=stK(map), on=S.county===st.id;
+    const m=L.circleMarker([st.lat,st.lon],{radius:r*k,fillColor:colorFor(v,C),fillOpacity:.92,
+        color:on?T().sel:(sig?T().ink:T().cline),
+        weight:on?3:(sig?2:.9)*(.6+.4*k)});
+    m._r0=r; m._w0=on?0:(sig?2:.9);
+    m
+      .bindTooltip(`<b>${esc(st.name)}</b>${st.icao?' · '+esc(st.icao):''}<br>${fmt(v,2)} ${esc(C.unit)}`+
+                   (S.hazard==='fzra'?`<br><span style="opacity:.75">${st.dp?'24-h observer station':'automated, no overnight observer'}`+
+                    `${st.dpl?' · on DelPizzo et al. list':''}</span>`:''),
                    {sticky:true,className:'ctytip'})
       .on('click',()=>{ S.county=(S.county===st.id?'':st.id); syncCounties(); refresh(); })
       .addTo(g);
   });
-  g.addTo(map); return g;
+  g.addTo(map);
+  if(!map._stZoom){ map._stZoom=true;
+    map.on('zoomend',()=>{ const l=map===mapA?ptLayA:ptLayB, k=stK(map);
+      if(l&&l.eachLayer) l.eachLayer(c=>{ if(c._r0){ c.setRadius(c._r0*k);
+        if(c._w0) c.setStyle({weight:c._w0*(.6+.4*k)}); } }); }); }
+  return g;
 }
 
 /* Reports and the envelope enclosing them. Everything is drawn on the
@@ -1773,9 +1796,11 @@ function refresh(){
   const pool = stn ? stationsShown() : GEO.features.map(f=>gidxOf[f.properties.GEOID]);
   const mv=pool.map(c=>cm.mean[c]).filter(isFinite).sort((p,q)=>p-q);
   const tv=pool.map(c=>Math.abs(cm.trend[c])).filter(isFinite).sort((p,q)=>p-q);
-  /* stations: the scale runs to the top station, except for snowfall, where a few
-     mountain sites (Paradise, Mount Rainier) would bleach every other dot */
-  const snw=S.hazard==='snow';
+  /* stations: the scale runs to the top station, except for the national networks,
+     where a few mountain sites (Paradise and Mount Rainier for snow; Stampede Pass and
+     Mount Washington, with 25-35 freezing-rain days a season, for ice) would bleach
+     every other dot */
+  const snw=S.hazard==='snow'||S.hazard==='fzra';
   const hiM=niceUp(quantile(mv,stn?(snw?0.98:1):0.995))||1;
   const hiT=niceUp(quantile(tv,stn?(snw?0.95:1):0.95))||1;
 
@@ -2003,7 +2028,7 @@ function mapSVG(x,y,w,h,C,title,sub){
     const rmax=Math.max(...list.map(i=>Math.abs(C.val[i])).filter(isFinite),1e-9);
     list.forEach(i=>{
       const v=C.val[i]; if(!isFinite(v)) return;
-      const st=d.stations[i], r=4+7*Math.sqrt(Math.min(1,Math.abs(v)/rmax));
+      const st=d.stations[i], r=(4+7*Math.sqrt(Math.min(1,Math.abs(v)/rmax)))*(mapA?stK(mapA):1);
       const sig=C.pval&&C.pval[i]<0.05;
       out+=`<circle cx="${px(st.lon).toFixed(1)}" cy="${py(st.lat).toFixed(1)}" r="${r.toFixed(1)}" `+
            `fill="${colorFor(v,C)}" fill-opacity=".92" stroke="${sig?t.ink:t.cline}" `+
@@ -2097,8 +2122,9 @@ function drawPanels(){
           (S.dpOnly ? (S.hazard==='snow'
                       ? `, drawn from the QC'd set (after <a href="https://doi.org/10.1175/2008JTECHA1138.1" `+
                         `target="_blank" rel="noopener">Kunkel et al. 2009</a>).`
-                      : `, drawn from the QC'd subset of <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" `+
-                        `target="_blank" rel="noopener">DelPizzo et al. (2025)</a>.`) : `.`)
+                      : `, drawn from the overnight-observer stations (the criterion of `+
+                        `<a href="https://doi.org/10.1175/JAMC-D-24-0204.1" `+
+                        `target="_blank" rel="noopener">DelPizzo et al. 2025</a>).`) : `.`)
         : d.field
           ? `Lower panels average <b>${esc(placeLabel())}</b>: the ${countWord()}s a typical place there `+
             `saw, an area-weighted mean over its counties (not the days on which anywhere in it qualified).`
@@ -2192,6 +2218,7 @@ function figureSVG(){
   const src=d.field?(fieldSrc()==='PRISM'?'PRISM daily precipitation, PRISM Group, Oregon State University, via ACIS'
                      :'ECMWF ERA5 reanalysis (contains modified Copernicus Climate Change Service information)')
            :stn?(S.hazard==='snow'?'NOAA GHCN-Daily snowfall (COOP and first-order stations) via ACIS'
+                 :S.hazard==='fzra'?'NOAA/NCEI GHCNh hourly airport observations'
                  :'NOAA/NCEI hourly station observations'):'NOAA Storm Events database';
   g+=txt(8,H-9,`${hazSpec().label} \u00b7 ${thrSpec().label} \u00b7 panels: ${placeLabel()} \u00b7 ${periodLabel()} \u00b7 `+
                 `data: ${src} \u00b7 extremewx.org`,{size:11,fill:t.mute});

@@ -45,7 +45,7 @@ Two hazards do not use that definition, on purpose:
 | Tornado | NOAA/NCEI Storm Events | 1950–latest | EF0+, EF1+, EF2+, EF3+ |
 | Thunderstorm wind | NOAA/NCEI Storm Events | 1955–latest | any, ≥50 kt, ≥65 kt, ≥80 kt |
 | Derecho | SPC archive + Storm Events | 1996–end of archive | ≥50 kt, ≥64 kt, ≥74 kt |
-| Freezing rain | NOAA ISD hourly | 2000–2025 season (ISD frozen) | ≥1 h, ≥3 h, ≥6 h |
+| Freezing rain | NOAA GHCNh hourly, lower 48 | 2001–2026 seasons | any, ≥3 h, ≥6 h |
 | Peak wind | NOAA ISD hourly | 2000–2024 (ISD frozen) | ≥40 kt, ≥50 kt, ≥60 kt |
 
 "latest" is whatever `update_storm_events.py` last fetched; `data/*.json.gz` `meta.year1` is
@@ -122,9 +122,10 @@ reachable from the To box.
 **ISD is frozen.** NOAA stopped updating ISD Global Hourly on 24 Aug 2025 and, from
 31 Jul 2026, serves the CSVs only from the NODD bucket
 `noaa-global-hourly-pds.s3.amazonaws.com`. `--isd` fills in missing station-years up to 2025
-from there. That extends freezing rain (Jul–Jun seasons) through the 2025 season; peak wind
-(calendar years) cannot pass 2024 because 2025 fails the 90% completeness screen. Going
-further means moving the station builder to GHCNh, NOAA's successor product.
+from there. Peak wind (calendar years, Indiana) cannot pass 2024 because 2025 fails the 90%
+completeness screen. Freezing rain has moved to GHCNh, NOAA's successor product, and is now
+national — see *Freezing rain (national, GHCNh)* below; peak wind can follow the same way
+(the GHCNh daily tables already carry the PK WND gust).
 
 ## Rebuilding
 
@@ -133,7 +134,7 @@ derecho builder reads the grid definition from `grid_index.json`.
 
 ```sh
 python3 build_hazard_data.py   "/path/to/Baseball Cards" data   # hail, tornado, wind
-python3 build_station_data.py  "/path/to/ISD csvs"        data   # fzra, pkwnd
+python3 build_station_data.py  "/path/to/ISD csvs"        data   # pkwnd (fzra: build_fzra_data.py)
 python3 extract_derecho_archive.py SquitieriWadeJirak2026_supp.pdf   # only if the archive changes
 python3 build_scs_grid.py      "/path/to/Baseball Cards" data   # 2 deg grid
 python3 build_derecho_data.py  "/path/to/Baseball Cards" data   # derecho swaths + county + grid
@@ -408,3 +409,65 @@ python3 snow_index.py data/snow.json.gz data/index.json
 
 Rebuild once a year, after a season ends (e.g. in August): COOP reports arrive with a lag, and
 the homogeneity tests use the whole record.
+
+## Freezing rain (national, GHCNh)
+
+`fzra`: days with freezing rain at airport weather stations across the **lower 48**, July–June
+seasons labelled by the ending year, **2001–2026** (the 2025–26 season is the newest complete one).
+Levels: any, ≥ 3 h, ≥ 6 h of freezing rain in the day.
+
+- **Source: NOAA GHCNh** (Global Historical Climatology Network-hourly), NCEI's successor to ISD
+  Global Hourly, which froze in Aug 2025. GHCNh carries the same raw METAR text, is rewritten
+  daily, and runs about three months behind real time. Per station-year **parquet** files
+  (~1.2 MB, against 13 MB as PSV): the whole national record, 1,062 ids × 27 years, downloads
+  in ~6 minutes (`ghcnh_fetch.py`).
+- **Method unchanged from the Indiana build** (`build_station_data.py`, which this replaces for
+  freezing rain): a day counts when any report that UTC day contains `FZRA` (`FZRANO` excluded);
+  higher levels count distinct UTC hours with such a report; a season below 90% of days reported
+  is *no observation*. Rebuilt from GHCNh, the 12 Indiana stations reproduce the ISD counts in
+  **258 of 264 station-seasons**; the other six are GHCNh carrying reports the ISD copies lacked
+  (Goshen 2002–04) or one-hour boundary cases (Indianapolis 2004–05 at ≥ 3/≥ 6 h).
+- **Stations** (`fzra_stations.py` → `fzra_stations.csv`): every federal ASOS in the lower 48
+  (NCEI HOMR `asos-stations.txt`), plus other GHCNh airfields that had round-the-clock observers
+  before automation (mostly military fields). 957 stations have at least one complete season.
+  Stations within 3 km are one site, read as the union of their ids (GHCNh often files a site's
+  pre-ASOS years under an older WBAN, e.g. Terre Haute 93823 / 03868).
+- **QC set, the default** (`dp` = 1; 554 stations): DelPizzo et al. (2025)'s criterion, an
+  overnight human observer, applied nationally from the data. A site qualifies if in 1985, 1987
+  or 1990 it had a report in the local small hours (01–05 LST) on ≥ 90% of its observing days
+  (`overnight.py`; the distribution is sharply bimodal: 480 of 833 sites ≥ 0.95, 114 < 0.05).
+  This reproduces their Great Lakes list: **75 of their 76 U.S. sites pass**; the 76th,
+  Champaign (0.55), is kept because it is on their list (`dpl` = 1 marks their sites). In
+  Indiana it keeps exactly their five plus Terre Haute and Grissom AFB. In their region it also
+  passes ~38 sites they did not keep; about 14 of those have long gaps in 1979–2020, their
+  period, and the rest (mostly military fields, Terre Haute, Quincy, Waterloo, Dubuque…) are
+  unexplained without their station-selection notes.
+- **How much the screen matters**: less than assumed. Over 165 pairs of an unscreened station
+  and a QC station within 60 km, the unscreened one averages **+5%** freezing-rain days (median;
+  +4% at ≥ 3 h, −5% at ≥ 6 h). In Indiana the unscreened sites run ~+20%. (The older "74% more,
+  Eagle Creek 3.5× Indianapolis" figure predates the FZRANO fix.)
+- **Results, 2001–2026, QC stations in every season (491)**: 2.55 freezing-rain days a season
+  on average, trending **−0.36 days/decade (p = 0.04)**; the unscreened stations −0.53 (p = 0.007).
+  Highest: Stampede Pass WA (34/season), Mount Washington NH (28), then Sexton Summit OR,
+  Bradford PA, Blue Canyon CA, Rochester MN, Worcester MA, northern Maine and New York (9–13).
+- `daily/` is kept as `fzra_daily.tgz` (3.5 MB): per station id, every observed UTC day with its
+  FZRA hour count and highest PK WND gust (kept for a future national peak-wind build).
+
+### Building
+
+```sh
+# stl.csv, inv.txt = GHCNh doc/ghcnh-station-list.csv and doc/ghcnh-inventory.txt (not kept: 95 MB)
+python3 ghcnh_fetch.py cache 1985 @cand_usw.txt   # and 1987, 1990: USW sites with 1980s data and a modern record
+python3 overnight.py 1985; python3 overnight.py 1987; python3 overnight.py 1990
+python3 fzra_stations.py                     # -> fzra_stations.csv
+python3 ghcnh_fetch.py cache 2000-2026 @ids_all.txt
+python3 ghcnh_daily.py cache daily           # reduces and deletes the parquet files
+python3 build_fzra_data.py fzra_stations.csv daily data
+```
+
+### Monthly update
+
+`tar xzf fzra_daily.tgz && python3 fzra_update.py fzra_stations.csv daily data` re-fetches the
+current and previous calendar years for every id (GHCNh revises both), re-reduces them, rebuilds,
+and exits 0 if `fzra.json.gz` changed (3 otherwise); then re-pack `fzra_daily.tgz`.
+Needs `numpy pandas pyarrow requests`.

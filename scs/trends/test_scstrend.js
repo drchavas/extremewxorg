@@ -421,10 +421,22 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('the QC button reads as engaged',$('dpBtn').classList.contains('on'));
   say('footer credits the QC source',/DelPizzo/.test($('foot').innerHTML));
   const nStn=()=>{const g=A._layers.find(l=>l._marks);return g?g._marks.length:0;};
-  say('five QC stations plotted',nStn()===5,nStn()+' markers');
+  /* National since 2026-10 (GHCNh): the maps draw every QC station in the lower 48,
+     Indiana stays selected, and the panels use Indiana's QC stations. */
+  const FZ=JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data/fzra.json.gz'))));
+  const nQC=FZ.stations.filter(s=>s.dp).length;
+  say('every QC station nationwide is plotted',nStn()===nQC&&nQC>400,nStn()+' markers of '+nQC);
+  say('all of DelPizzo\'s sites are in the QC set',FZ.stations.filter(s=>s.dpl).every(s=>s.dp)&&
+      FZ.stations.filter(s=>s.dpl).length===76);
+  const inQC=FZ.stations.filter(s=>s.dp&&s.state==='IN').map(s=>s.icao).sort().join(' ');
+  say('Indiana QC: DelPizzo\'s five plus Terre Haute and Grissom',
+      inQC==='KEVV KFWA KGUS KHUF KIND KLAF KSBN',inQC);
+  say('the panels describe Indiana\'s QC stations',/7 of 7<\/b> stations/.test($('foot').innerHTML),
+      ($('foot').innerHTML.match(/<b>[^<]*<\/b> stations/)||[''])[0]);
+  say('the source is GHCNh',/GHCNh/.test($('guide').innerHTML));
   $('dpBtn').onclick.call($('dpBtn'));
   await new Promise(r=>setTimeout(r,300));
-  say('the toggle still reaches the full pool',nStn()===12&&/^All/.test($('dpBtn').textContent),
+  say('the toggle still reaches the full pool',nStn()===FZ.stations.length&&/^All/.test($('dpBtn').textContent),
       nStn()+' markers, "'+$('dpBtn').textContent+'"');
   say('opting out survives in the hash',/[?&]q=0/.test(w.location.hash),
       w.location.hash.slice(-16));
