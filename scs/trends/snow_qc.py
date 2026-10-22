@@ -11,17 +11,22 @@ Day level
   * Zero-fill (Kunkel): a missing snowfall becomes 0 when that day's precipitation
     is 0, or when precipitation fell with a minimum temperature above 32 F.
     Observers often left the snowfall column blank on days that could not have
-    had snow.
+    had snow. A station that had stopped measuring snowfall altogether must not
+    get seasons of invented zeros, so the season-level check below on December,
+    January and February is made on the REPORTS, before zero-fill (review of
+    2026-10-22: 2,967 such seasons in the QC set, e.g. Sea-Tac 1997-2003).
   * Accumulated multi-day values (A / S flags) cannot be put on one day: missing.
   * Suspect days are set to missing:
       - more than 60 in in a day;
-      - 1 in or more of snow with exactly 0.00 in of precipitation;
-      - 4 in or more at a snow-to-liquid ratio above 60:1;
-      - 4 in or more equal to a snow depth that was already on the ground the day
-        before and did not grow (snow depth keyed as snowfall).
+      - 1 in or more of snow with exactly 0.00 in of precipitation.
+    (Two further screens -- ratio above 60:1, and snowfall equal to the depth
+    already on the ground -- were dropped on 2026-10-22: Kunkel did not use them
+    and they deleted real heavy-snow days, mostly at first-order stations, e.g.
+    Syracuse's 1991-2020 mean 111 in instead of the normal's 128 in.)
 Season level (a failed season is "no observation", never zero)
   * October-May at least 90% complete after zero-fill;
-  * none of December, January, February entirely missing;
+  * none of December, January, February without a single snowfall report
+    (judged on the reports themselves, before zero-fill);
   * not an estimated season: if more than 10 days had both snow and precipitation
     and more than half of them read exactly 10:1, the snowfall was computed from
     the gauge, not measured (the EPA snowfall indicator's screen).
@@ -67,24 +72,19 @@ def clean(a):
     d = snwd.astype(float); d[snwd == TR] = 0.0; d[(snwd == MISS) | (snwd == ACC)] = np.nan
     flags = {}
     # zero-fill: no snow possible
-    zf = np.isnan(s) & (snow != ACC) & ((p == 0) | ((p > 0) & (t > 32)))
+    rawmiss = np.isnan(s)                                 # no snowfall report that day
+    zf = rawmiss & (snow != ACC) & ((p == 0) | ((p > 0) & (t > 32)))
     s[zf] = 0.0; flags["zero_filled"] = int(zf.sum())
     # suspect days
     big = s > 600
     nopcp = (s >= 10) & (pcp == 0)                         # exactly 0.00, not trace or missing
-    with np.errstate(divide="ignore", invalid="ignore"):
-        ratio = (s >= 40) & (p > 0) & (s * 10 / p > 60)     # s tenths in / p hundredths in
-    dprev = np.r_[np.nan, d[:-1]]
-    sin = s / 10.0
-    depth = (s >= 40) & (dprev >= np.round(sin)) & (d <= dprev) & (np.abs(d - np.round(sin)) <= 1)
-    sus = big | nopcp | ratio | depth
-    flags.update(big=int(big.sum()), snow_no_precip=int(nopcp.sum()), ratio60=int(ratio.sum()),
-                 depth_as_snowfall=int(depth.sum()))
+    sus = big | nopcp
+    flags.update(big=int(big.sum()), snow_no_precip=int(nopcp.sum()))
     s[sus] = np.nan
-    return s, p, flags
+    return s, p, flags, rawmiss
 
 
-def seasons(s, p):
+def seasons(s, p, rawmiss):
     """valid[NS] bool, total[NS] (in), monthly counts [NS, 12, nthr], est[NS]."""
     valid = np.zeros(NS, bool); total = np.full(NS, np.nan)
     cnt = np.zeros((NS, 12, len(THR)), np.int16); est = np.zeros(NS, bool)
@@ -98,7 +98,7 @@ def seasons(s, p):
         ok = miss <= 0.10
         for mo in (12, 1, 2):
             mm = m & (MON == mo)
-            if mm.any() and np.isnan(s[mm]).all():
+            if mm.any() and rawmiss[mm].all():           # nobody reported snowfall that month
                 ok = False
         both = m & (s > 0) & (p > 0)
         if both.sum() > 10:
@@ -182,8 +182,8 @@ def main():
         z = np.load(f)["a"]
         if z.shape[0] != NDAY:
             continue
-        s, p, fl = clean(z)
-        valid, total, cnt, est = seasons(s, p)
+        s, p, fl, rawmiss = clean(z)
+        valid, total, cnt, est = seasons(s, p, rawmiss)
         if valid.sum() < LEN_ALL:
             continue
         S.append(C[sid]); V.append(valid); T.append(total); N.append(cnt); F.append(fl); E.append(int(est.sum()))

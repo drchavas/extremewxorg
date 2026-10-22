@@ -636,6 +636,73 @@ async function load(hash) {
   }
 
   // ---- Stages: the eight lifecycle selections -----------------------------
+  // ---- NA/EP decided per position by IBTrACS's BASIN flag -----------------
+  console.log('\nper-position NA/EP basin');
+  {
+    const yr = y => y - 1980;
+    const sum = (w, y) => w.basinCells().reduce((a, c) => a + w.cellValue(c, yr(y)), 0);
+    const all = {};
+    const named = ['NA', 'EP', 'WP', 'NI', 'SI', 'AU', 'SP', 'SA'];
+    for (const b of ['GL', ...named]) all[b] = await load(`v=density&t=ts&b=${b}&p=1990-2024&sm=off`);
+    // storm-days: named basins still add up to Global, position by position
+    for (const y of [2005, 2020, 2023]) {
+      const g = all.GL.regionValue(all.GL.basinCells(), yr(y));
+      const parts = named.reduce((a, b) => a + all[b].regionValue(all[b].basinCells(), yr(y)), 0);
+      near(`  ${y}: named basins sum to Global storm-days`, parts, g, 1e-3);
+    }
+    // the map cells of a basin view add up to that basin's series
+    for (const b of ['NA', 'EP']) {
+      const w = all[b];
+      near(`  ${b} 2023: map cells sum to the basin total`, sum(w, 2023),
+           w.regionValue(w.basinCells(), yr(2023)), 1e-3);
+    }
+    // TS+ storms in the North Atlantic match IBTrACS's own NA basin label
+    // (Dora 2005, Julio 2020, Beatriz and Otis 2023 are East Pacific storms
+    // on the Oaxaca/Guerrero coast that the 5-degree box used to count as NA)
+    const ns = await load('v=storms&t=ts&b=NA&p=1990-2024');
+    for (const [y, n] of [[2005, 29], [2020, 30], [2023, 20]])
+      ok(`  NA TS+ storms ${y} = ${n} (IBTrACS BASIN label)`,
+         ns.totalValue(ns.basinCells(), yr(y)) === n, ns.totalValue(ns.basinCells(), yr(y)), n);
+    // Otis (924 mb in the 15-20N, 100-95W cell) is no longer North Atlantic pressure
+    const pn = await load('v=pmin&s=ext&t=ts&b=NA&p=1990-2024');
+    ok('  Otis 2023 is not the North Atlantic minimum pressure',
+       pn.regionValue(pn.basinCells(), yr(2023)) > 924,
+       pn.regionValue(pn.basinCells(), yr(2023)), '> 924 mb');
+    const pe = await load('v=pmin&s=ext&t=ts&b=EP&p=1990-2024');
+    ok('  but is in the East Pacific series',
+       pe.regionValue(pe.basinCells(), yr(2023)) <= 924,
+       pe.regionValue(pe.basinCells(), yr(2023)), '<= 924 mb');
+    // the shared cell holds different storms in each basin view
+    const c = Math.floor((15 + 90) / 5) * 72 + Math.floor(260 / 5);   // 15-20N, 100-95W
+    const nc = all.NA.cellValue(c, yr(2023)), ec = all.EP.cellValue(c, yr(2023)),
+          gc = all.GL.cellValue(c, yr(2023));
+    near('  15-20N 100-95W: NA + EP parts make the global cell', nc + ec, gc, 1e-6);
+    ok('  and the East Pacific view draws it', all.EP.basinCells().includes(c), 'absent', 'present');
+  }
+
+  // ---- North Indian: IBTrACS NR stage must survive the default -------------
+  console.log('\nNorth Indian, default stages');
+  {
+    const w = await load('v=density&t=ts&b=NI&p=1990-2024');
+    const c = w.basinCells(), xs = [], ys = [];
+    for (let y = 1990; y <= 2024; y++) { xs.push(y); ys.push(w.regionValue(c, y - 1980)); }
+    ok('  1990-1995 are not empty (all NR-stage in IBTrACS)',
+       ys.slice(0, 6).every(v => v > 0), ys.slice(0, 6).join(', '), 'all > 0');
+    const r = w.fit(xs, ys);
+    near('  default NI storm-days trend per decade', r.slope * 10, 1.307, 0.01);
+    near('  and is not significant', r.p, 0.363, 0.01);
+    const note = id => id.document.getElementById('fieldnote').textContent;
+    ok('  the North Indian caveat is shown', note(w).includes('North Indian trends need care'),
+       note(w).slice(0, 60), 'NI caveat');
+    const p1 = await load('v=pmin&b=NA&p=2001-2024'), p2 = await load('v=pmin&b=NA&p=2001-2024&g=trop');
+    ok('  Pmin with ET included warns about high latitudes',
+       note(p1).includes('Poleward of about 40°') && !note(p2).includes('Poleward of about 40°'),
+       'note wrong', 'shown with ET, not without');
+    const vg = await load('v=vmax&b=GL&p=1990-2024');
+    ok('  a global mean Vmax warns about basin mix', note(vg).includes('mixes basins'),
+       note(vg).slice(0, 60), 'basin-mix note');
+  }
+
   console.log('\nlifecycle stages');
   {
     const P = 'b=NA&t=ts&p=2004-2024';
@@ -650,17 +717,21 @@ async function load(hash) {
     };
     const w0 = await load('v=density&' + P);
     ok('stage selections come from the data file, not the page',
-       w0.st.IX.stage_sets.length === 8, w0.st.IX.stage_sets.length, 8);
+       w0.st.IX.stage_sets.length === 9, w0.st.IX.stage_sets.length, 9);
     ok('  and default to tropical + extratropical', w0.st.S.stage === 'tset',
        w0.st.S.stage, 'tset');
 
     const d = {};
-    for (const k of ['all', 'ts', 'et', 'tset', 'ss', 'ds', 'mx', 'nr'])
+    for (const k of ['all', 'ts', 'et', 'tset', 'trop', 'ss', 'ds', 'mx', 'nr'])
       d[k] = await tot('density', k);
     // the six single stages partition the record exactly
     const singles = ['ts', 'ss', 'et', 'ds', 'mx', 'nr'].reduce((a, k) => a + d[k], 0);
     near('the six single stages sum to all stages', singles, d.all, 1e-6);
-    near('  and ts + et equals the tset selection', d.ts + d.et, d.tset, 1e-6);
+    // the composites keep NR and MX (tropical-or-unknown): tset is everything
+    // but disturbance, trop is everything but disturbance and extratropical
+    near('  and tset is all stages minus disturbance', d.all - d.ds, d.tset, 1e-6);
+    near('  and trop is tset minus extratropical', d.tset - d.et, d.trop, 1e-6);
+    near('  and trop is ts + ss + mx + nr', d.ts + d.ss + d.mx + d.nr, d.trop, 1e-6);
     ok('  every stage is a strict subset of all', ['ts', 'et', 'ss', 'ds'].every(k =>
        d[k] > 0 && d[k] < d.all), 'not a subset', 'all smaller and non-empty');
 
@@ -807,7 +878,10 @@ async function load(hash) {
      ['funding', 'NSF grants 2519425, 2431970 and 1945113'],
      ['contributor credit', 'Aniket Dev Roy and Dr. Aaron Kruskie'],
      ['basin definition', 'geographic'],
-     ['basins not being IBTrACS labels', "not IBTrACS's own basin labels"]
+     ['NA/EP divide by the IBTrACS label', "own per-position BASIN label"],
+     ['stage composites keep NR', 'Both keep NR and MX as tropical-or-unknown'],
+     ['what drives trends', 'not as attribution'],
+     ['basin-mix caveat', 'Means over several basins mix in changes of basin share']
     ].forEach(([what, phrase]) =>
       ok('  states the ' + what, txt.includes(phrase), 'missing', phrase.slice(0, 34)));
     // numbers must come from the data, not be typed in

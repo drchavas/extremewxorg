@@ -96,6 +96,14 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
   say('footer credits the archive',/Squitieri, Wade and Jirak \(2026\)/.test($('foot').innerHTML));
   say('the report file was NOT fetched',!fetched.some(u=>/_pts\./.test(u)),
       fetched.filter(u=>/data\//.test(u)).join(' '));
+  /* Every severe-weather page opens on Indiana. */
+  say('place menu opens on Indiana',$('regSel').value==='IN',$('regSel').value);
+  say('and Indiana carries the magenta outline',
+      w.eval("stStyle({properties:{STUSPS:'IN'}}).color===T().sel"));
+  const guide=w.document.querySelector('.guide').textContent;
+  say('guidance spells Derechos and says the archive is warm-season',
+      !/Derechoes/.test(guide)&&/Derechos are single storms/.test(guide)&&
+      /warm-season archive/.test(guide)&&/April.August/.test(guide));
 
   console.log('\n--- the biggest tornado days');
   $('hazSel').value='tornado'; await $('hazSel').onchange({target:{value:'tornado'}});
@@ -106,6 +114,13 @@ const gz=f=>JSON.parse(zlib.gunzipSync(fs.readFileSync(path.join(ROOT,'data',f))
   say('view toggle shown, on counties',$('viewWrap').style.display===''&&
       $('viewSel').value==='cty');
   const raw=gz('events_tornado.json.gz');
+  say('it opens on Indiana\'s list, as the place menu says',
+      rows().map(r=>r.dataset.d).join()===raw.rank[0].IN.map(([i])=>raw.days[i]).join()&&
+      /Indiana/.test($('rankHead').innerHTML),rows().length+' rows');
+  say('with Indiana, not the whole country, outlined',usOut().length===0);
+  $('usBtn').onclick();
+  await new Promise(r=>setTimeout(r,300));
+  say('Full U.S. sets the place menu to the United States',$('regSel').value==='',$('regSel').value);
   say('national list is the builder\'s top 100',rows().length===100,rows().length+' rows');
   say('#1 nationally is the 1974 Super Outbreak',
       rows()[0].dataset.d==='1974-04-03',rows()[0].dataset.d);

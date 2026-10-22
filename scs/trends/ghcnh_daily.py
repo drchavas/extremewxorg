@@ -4,12 +4,19 @@ one small daily table per station: daily/<ID>.npz with
    day  int32   days since 1970-01-01 (UTC date, as ISD/GHCNh DATE)
    fz   uint8   distinct UTC hours with a report whose text contains FZRA (not FZRANO)
    pk   uint8   highest 'PK WND' gust in the day, kt (0 = none; >99 kt dropped as garbled)
+   fg   uint8   of the fz hours, those whose report also carries freezing fog (FZFG)
+   lv   uint8   of the fz hours, those whose report gives visibility <= 1/2 statute mile
+(fg and lv flag mountain sites where "FZRA" is mostly ice from cloud or fog --
+see build_fzra_data.py)
 Every UTC day with at least one report (REM or temperature present) gets a row, so
 row count = observed days (the completeness screen). Each parquet is deleted after it
 is reduced unless --keep. Re-running merges new years into existing tables."""
 import glob, os, re, sys
 import numpy as np, pandas as pd, pyarrow.parquet as pq
 FZRA = re.compile(r"FZRA(?!NO)")
+FZFG = re.compile(r"(?<![A-Z])FZFG")
+# body visibility: "M1/4SM", "1/2SM", "1 1/2SM", "3SM" -> statute miles
+VIS = re.compile(r"\s(M?)(?:(\d+)\s)?(\d+)(?:/(\d+))?SM\s")
 PKWND = re.compile(r"PK WND \d{3}(\d{2,3})/(?:\d{4}|\d{2})(?!\d)")
 EPOCH = pd.Timestamp("1970-01-01")
 
@@ -26,13 +33,26 @@ def reduce_file(f):
     fz = rem.str.contains(FZRA)
     fzh = pd.Series(dt.dt.hour.values, index=day.values)[fz.values]
     fzc = fzh.groupby(level=0).nunique() if len(fzh) else pd.Series(dtype=int)
+    body = rem.str.split(" RMK").str[0]
+    fg = fz & body.str.contains(FZFG)
+    def vis(b):
+        m = VIS.search(" " + b + " ")
+        if not m: return 99.0
+        whole = float(m.group(2) or 0); num = float(m.group(3)); den = m.group(4)
+        return whole + (num / float(den) if den else num)
+    lv = fz & body.where(fz, "").map(vis).le(0.5)
+    hrs = pd.Series(dt.dt.hour.values, index=day.values)
+    fgc = hrs[fg.values].groupby(level=0).nunique() if fg.any() else pd.Series(dtype=int)
+    lvc = hrs[lv.values].groupby(level=0).nunique() if lv.any() else pd.Series(dtype=int)
     g = rem.str.extract(PKWND)[0].astype(float)
     g = g.where(g <= 99)
     pk = pd.Series(g.values, index=day.values).groupby(level=0).max()
     days = np.unique(day.values)
     return pd.DataFrame({"day": days,
                          "fz": fzc.reindex(days).fillna(0).astype(np.uint8).values,
-                         "pk": pk.reindex(days).fillna(0).astype(np.uint8).values})
+                         "pk": pk.reindex(days).fillna(0).astype(np.uint8).values,
+                         "fg": fgc.reindex(days).fillna(0).astype(np.uint8).values,
+                         "lv": lvc.reindex(days).fillna(0).astype(np.uint8).values})
 
 
 def main(cache, out, keep=False):
@@ -52,7 +72,8 @@ def one(job):
         p = os.path.join(out, sid + ".npz")
         old = None
         if os.path.exists(p):
-            z = np.load(p); old = pd.DataFrame({k: z[k] for k in ("day", "fz", "pk")})
+            z = np.load(p); old = pd.DataFrame({k: (z[k] if k in z else np.zeros(len(z["day"]), np.uint8))
+                                                for k in ("day", "fz", "pk", "fg", "lv")})
         parts = [x for x in (reduce_file(f) for f in fs) if x is not None]
         if old is not None:
             yrs = {int(os.path.basename(os.path.dirname(f))) for f in fs}
@@ -61,7 +82,8 @@ def one(job):
         if parts:
             d = pd.concat(parts).groupby("day").max().reset_index()
             np.savez_compressed(p + ".tmp.npz", day=d.day.values.astype(np.int32),
-                                fz=d.fz.values.astype(np.uint8), pk=d.pk.values.astype(np.uint8))
+                                fz=d.fz.values.astype(np.uint8), pk=d.pk.values.astype(np.uint8),
+                                fg=d.fg.values.astype(np.uint8), lv=d.lv.values.astype(np.uint8))
             os.replace(p + ".tmp.npz", p)
         if not keep:
             for f in fs: os.remove(f)

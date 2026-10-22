@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Extreme Weather Data and Visualization Hub</title>
-  <meta name="description" content="Interactive maps and trends for extreme weather — global tropical cyclones, and severe weather: wind, hail, tornado, derecho and freezing rain." />
+  <meta name="description" content="Interactive maps and trends for extreme weather — global tropical cyclones; U.S. severe weather (wind, hail, tornado, derecho); extreme heat, heavy rain, snowfall and freezing rain; and El Niño and La Niña impacts." />
   <meta name="color-scheme" content="light dark" />
   <style>
     :root{
       --bg:#f6f8fb; --panel:#ffffff; --line:#dde5ee; --line-soft:#eaf0f7;
       --text:#132231; --muted:#55677a; --accent:#0b5fbe; --accent-soft:#e8f1fd;
-      --accent2:#c2620a; --accent2-soft:#fdf1e3;
+      --accent2:#c2620a; --accent2-soft:#fdf1e3; --beta-ink:#9a4a00;
       --shadow:0 1px 2px rgba(16,36,60,.05), 0 6px 18px rgba(16,36,60,.06);
       --shadow-lift:0 2px 4px rgba(16,36,60,.07), 0 14px 32px rgba(16,36,60,.12);
       --wash1:rgba(11,95,190,.10); --wash2:rgba(230,140,40,.10);
@@ -20,7 +20,7 @@
       :root{
         --bg:#0f1720; --panel:#16212e; --line:#2a3a4d; --line-soft:#223044;
         --text:#e6edf3; --muted:#9fb0c0; --accent:#57aaff; --accent-soft:rgba(70,163,255,.12);
-        --accent2:#ffb14e; --accent2-soft:rgba(255,177,78,.12);
+        --accent2:#ffb14e; --accent2-soft:rgba(255,177,78,.12); --beta-ink:#ffb14e;
         --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 18px rgba(0,0,0,.28);
         --shadow-lift:0 2px 4px rgba(0,0,0,.4), 0 14px 32px rgba(0,0,0,.45);
         --wash1:rgba(70,163,255,.12); --wash2:rgba(255,177,78,.08);
@@ -93,7 +93,7 @@
     .card .ext{display:inline-block;margin-left:7px;font-size:12px;font-weight:600;color:var(--muted);
       padding:1px 7px;border-radius:999px;border:1px solid var(--line);vertical-align:1px}
     .card .beta{display:inline-block;margin-left:7px;font-size:12px;font-weight:700;letter-spacing:.02em;
-      color:var(--accent2);background:var(--accent2-soft);padding:1px 8px;border-radius:999px;
+      color:var(--beta-ink);background:var(--accent2-soft);padding:1px 8px;border-radius:999px;
       border:1px solid color-mix(in srgb, var(--accent2) 34%, transparent);vertical-align:1px;white-space:nowrap}
     .sec-title + .cards{margin-top:18px}
 
@@ -197,7 +197,7 @@
           <path d="M12.6 11.5 L9.4 16 H12 L10.4 20 L15 14 H12.1 Z" fill="var(--accent2)"/>
         </svg>
         <span>Severe Weather
-          <span class="qual">wind, hail, tornado, derecho, freezing rain</span>
+          <span class="qual">wind, hail, tornado, derecho, extreme heat, heavy rain, snow, freezing rain</span>
         </span>
       </h2>
 
@@ -218,14 +218,14 @@
           <div class="shot"><img src="assets/thumbs/scstrend.webp" width="720" height="360" loading="lazy" alt="County-level U.S. hail climatology, deep red through the central Plains fading to pale yellow at the coasts" /></div>
           <div class="txt">
             <h3>Climatology &amp; Trends — county level</h3>
-            <p class="desc">Paired climatology and trend maps at U.S. county resolution, with annual and month-by-month series. Hail, tornado, thunderstorm wind and derecho, plus freezing rain and peak wind at Indiana stations.</p>
+            <p class="desc">Paired climatology and trend maps at U.S. county resolution, with annual and month-by-month series. Hail, tornado, thunderstorm wind and derecho days, extreme heat and heat index (ERA5) and heavy rain (PRISM), plus station records: snowfall (GHCN-Daily), freezing rain (airport stations nationwide) and peak wind (Indiana).</p>
           </div>
         </a>
         <a class="card" href="scs/trends/scstrend_grid.html">
           <div class="shot"><img src="assets/thumbs/scstrend_grid.webp" width="720" height="360" loading="lazy" alt="The same U.S. hail climatology binned into coarse 2-degree grid squares" /></div>
           <div class="txt">
             <h3>Climatology &amp; Trends — 2° grid</h3>
-            <p class="desc">Paired climatology and trend maps of hail, tornado, thunderstorm wind and derecho, binned into a regular 2° grid.</p>
+            <p class="desc">Paired climatology and trend maps of hail, tornado, thunderstorm wind and derecho days, extreme heat and heat index, and heavy rain, binned into a regular 2° grid.</p>
           </div>
         </a>
       </div>
@@ -263,7 +263,7 @@
     </section>
 
     <footer>
-      <p class="dataupd">Data last updated 2026-10-22 00:45 UTC</p>
+      <p class="dataupd">Data last updated 2026-10-22 15:32 UTC</p>
       <p>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)</p>
     </footer>
   </main>

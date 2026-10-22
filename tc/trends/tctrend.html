@@ -106,7 +106,7 @@
      Opens on 1990, after which the global record is reasonably homogeneous
      (<a href="https://doi.org/10.1029/2021GL095774">Klotzbach et al. 2022</a>); earlier
      years are available from the period boxes.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-13 03:20 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-22 15:32 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)</div>
   <div class="fieldnote" id="fieldnote" hidden></div>
 
@@ -115,7 +115,7 @@
     <div class="fld"><label for="statSel">Statistic</label><select id="statSel"></select></div>
     <div class="fld"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
     <div class="fld"><label for="basSel">Region</label><select id="basSel"></select></div>
-    <div class="fld" title="Whether positions after extratropical transition (and other non-tropical stages) are counted."><label for="stgSel">Stages</label><select id="stgSel"></select></div>
+    <div class="fld" title="Which IBTrACS lifecycle stages are counted. The default keeps everything but disturbances, including positions whose stage is not reported (NR) or contested (MX) &mdash; a large share of the early North Indian record."><label for="stgSel">Stages</label><select id="stgSel"></select></div>
     <div class="fld" title="A Gaussian blur over the two maps, sigma = 5 degrees. Gaps and grayed cells are excluded and stay gray; the zonal profiles and the series panels are unaffected."><label for="smSel">Smoothing</label><select id="smSel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
@@ -175,6 +175,17 @@ const R34S = 12;
    and Dvorak practice had settled by then.  Earlier years remain available from
    the period control; they are just not the default. */
 const DEFAULT_Y0 = 1990;
+/* References for the "what drives these trends" framing, each checked to resolve
+   at doi.org. */
+const REF={
+  gold01:'<a href="https://doi.org/10.1126/science.1060040">Goldenberg et al. 2001</a>',
+  mur20:'<a href="https://doi.org/10.1073/pnas.1922500117">Murakami et al. 2020</a>',
+  mur22:'<a href="https://doi.org/10.1126/sciadv.abn9493">Murakami 2022</a>',
+  land10:'<a href="https://doi.org/10.1175/2009JCLI3034.1">Landsea et al. 2010</a>',
+  kos13:'<a href="https://doi.org/10.1175/JCLI-D-13-00262.1">Kossin et al. 2013</a>',
+  knu19:'<a href="https://doi.org/10.1175/BAMS-D-18-0189.1">Knutson et al. 2019</a>',
+  knu20:'<a href="https://doi.org/10.1175/BAMS-D-18-0194.1">2020</a>'
+};
 /* And it stops one short of the provisional seasons.  The most recent season
    is complete but has not been through post-season reanalysis, so its
    intensities will still move; ending the default window there would let a
@@ -194,8 +205,8 @@ function defaultY1(ix){
    NR not reported.
 
    ACE deliberately ignores this control.  Its definition is fixed at tropical
-   and subtropical stages, so letting a selection like "tropical + extratropical"
-   apply to it would silently drop the subtropical contribution and produce a
+   and subtropical stages, so letting a selection like "TS-labeled only" apply
+   to it would silently drop the subtropical contribution and produce a
    non-standard number under a standard name. */
 /* Built at fill() time, not as a constant: GRID is only known once the data
    file has loaded, and the label is derived from it. */
@@ -500,9 +511,16 @@ function rebuild(){
   const keepNa=new Uint8Array(IX.natures.length).fill(ss.nat?0:1);
   if(ss.nat) ss.nat.forEach(x=>{ const j=IX.natures.indexOf(x); if(j>=0) keepNa[j]=1; });
   const NSC = ss.k==='all' ? 'ns' : 'ns_'+ss.k;
-  const ci=G.ci,yi=G.yi,bi=G.bi,na=G.na;
+  /* Region.  A named basin keeps only the records whose positions count in it
+     (`pb`, decided per position across the North Atlantic / East Pacific divide
+     by IBTrACS's BASIN flag), so a cell on the isthmus shows only that basin's
+     storms and the map, the bands and the basin series all agree.  Global and
+     the hemispheres are unions of basins and keep everything. */
+  const BIX=namedBasinIndex();
+  const ci=G.ci,yi=G.yi,bi=G.bi,na=G.na,pb=G.pb;
   for(let k=0;k<ci.length;k++){
     if(!keep[bi[k]]) continue;
+    if(BIX>=0 && pb && pb[k]!==BIX) continue;
     const i=ci[k]*NY+yi[k];
     // ACE is tropical+subtropical by definition whatever the Stages control
     // says, and the build has already zeroed v2 for every other stage, so it
@@ -528,6 +546,13 @@ function rebuild(){
   const sc=G.sc;
   for(let k=0;k<sc.ti.length;k++)
     if(sc.ti[k]===ti) SCELL[sc.ci[k]*NY+sc.yi[k]]=sc[NSC][k];
+  /* the few cells split between basins take their per-basin counts instead */
+  if(BIX>=0 && G.scx && IX.mixed_cells){
+    for(const c of IX.mixed_cells) SCELL.fill(0,c*NY,(c+1)*NY);
+    const sx=G.scx;
+    for(let k=0;k<sx.ti.length;k++)
+      if(sx.ti[k]===ti && sx.pb[k]===BIX) SCELL[sx.ci[k]*NY+sx.yi[k]]=sx[NSC][k];
+  }
   SBAND={}; SREG={};
   BKEYS.forEach(k=>{ SBAND[k]=new Float32Array(NLAT*NY); SREG[k]=new Float32Array(NY); });
   const sb=G.sb;
@@ -704,7 +729,21 @@ function yearsSel(){
   return [a,b];
 }
 function basinSpec(){ return IX.basins.find(b=>b.k===S.basin)||IX.basins[0]; }
-function basinCells(){ return IX.basin_cells[S.basin]||[]; }
+/* The cells summed and drawn for the selected region: its box, plus the few
+   cells just outside it that hold positions counted in it under the per-position
+   NA/EP rule (a Caribbean storm crossing Nicaragua, say). */
+let BCELLS=null, BCELLS_K=null;
+function basinCells(){
+  if(BCELLS_K!==S.basin){
+    BCELLS=(IX.basin_cells[S.basin]||[]).concat((IX.basin_extra||{})[S.basin]||[]);
+    BCELLS_K=S.basin;
+  }
+  return BCELLS;
+}
+/* Index of the selected basin when it is one of the named basins, else -1 */
+function namedBasinIndex(){
+  return ['GL','NH','SH'].includes(S.basin) ? -1 : BKEYS.indexOf(S.basin);
+}
 
 /* Gaussian smoother for the two maps.
    Sigma is one grid cell (5 degrees), a 5x5 kernel with about 16% of the
@@ -1471,7 +1510,7 @@ function setBasin(k){
   if(!IX.basins.some(b=>b.k===k) || k===S.basin) return;
   S.basin=k;
   document.getElementById('basSel').value=k;
-  render();
+  rebuild(); render();
 }
 function syncZoomOut(){
   const b=document.getElementById('zoomOutBtn');
@@ -1593,10 +1632,38 @@ function render(){
 
   document.getElementById('foot').innerHTML = methodsHTML();
   const fn=document.getElementById('fieldnote'), raw=VARS[S.v].note;
-  const nt = typeof raw==='function' ? raw() : raw;
-  fn.innerHTML = nt||''; fn.hidden = !nt;
+  const nts=[typeof raw==='function' ? raw() : raw].concat(contextNotes()).filter(Boolean);
+  fn.innerHTML = nts.join('<br>'); fn.hidden = !nts.length;
 
   writeHash();
+}
+
+/* Caveats that depend on what is on screen rather than on the field alone.
+   Short on purpose: each names the specific trap for the current selection and
+   points to Methods for the rest. */
+function contextNotes(){
+  const out=[], ss=stageSpec(), withET=!ss.nat||ss.nat.includes('ET');
+  if(S.basin==='NI')
+    out.push('<b>North Indian trends need care.</b> This is JTWC\'s best track. Its early-1990s '+
+      'positions carry no stage label (NR — kept by the default Stages; <i>TS-labeled only</i> '+
+      'drops them and so shows a spurious rise), and analysis practice has changed since. '+
+      'IMD, the regional centre, keeps its own best track, and studies built on it do not all '+
+      'agree with JTWC-based trends here.');
+  if((S.v==='pmin'||S.v==='size') && withET)
+    out.push('<b>Poleward of about 40° most positions are extratropical</b> under the '+
+      'current Stages selection (over half at 40–50°, nearly all beyond 50°), so the deep '+
+      'pressures and large radii there describe post-transition lows, not tropical cyclones. '+
+      'Choose Stages → <i>Tropical</i> to leave them out.');
+  if(S.v==='vmax' && ['GL','NH','SH'].includes(S.basin))
+    out.push('<b>A hemispheric or global mean Vmax mixes basins.</b> If the share of positions '+
+      'shifts between basins with different typical intensities, the mean moves even when no '+
+      'basin changes: at TS+ over 1990–2024, holding the basin mix fixed shrinks the global '+
+      'trend by about a quarter and the Northern Hemisphere one by about half. Compare '+
+      'basins individually before reading an intensity trend.');
+  if(S.basin==='WP' && (S.v==='vmax'||S.v==='pmin'||S.v==='ace'))
+    out.push('<b>West Pacific intensity depends on the agency.</b> These are JTWC winds; '+
+      'JMA\'s best track for the same storms gives different intensity trends ('+REF.kos13+').');
+  return out;
 }
 
 /* Click a basin on the global map to drop into it.
@@ -1673,14 +1740,22 @@ function methodsHTML(){
     '<b>Lifecycle stage is yours to choose.</b> IBTrACS classifies every position into one of '+
       'six stages: tropical (TS), subtropical (SS), extratropical (ET), disturbance (DS), '+
       'mixture where agencies disagree (MX), and not reported (NR). The <b>Stages</b> control '+
-      'offers each on its own plus <i>all stages</i> and <i>tropical + extratropical</i>, which '+
-      'is the default — a cyclone and the post-transition storm it becomes, which is what most '+
-      'hazard questions mean by the event. The six single stages partition the record exactly, '+
-      'so they sum back to <i>all stages</i>. 95% of extratropical positions follow the '+
-      'tropical phase, so ET is in practice the post-tropical stage; disturbance is not, being '+
-      'split roughly evenly between the pre-genesis disturbance and the decaying remnant.',
+      'offers each on its own plus three composites. The default, <i>tropical + '+
+      'extratropical</i>, drops only disturbances — a cyclone and the post-transition storm it '+
+      'becomes, which is what most hazard questions mean by the event. <i>Tropical</i> also '+
+      'drops ET. Both keep NR and MX as tropical-or-unknown, because they are labels for a '+
+      'missing or contested stage, not a stage: every North Indian position in 1990, 1991 and '+
+      '1993–95 is NR, and leaving them out once erased those seasons and drew a false '+
+      'North Indian trend. <i>TS-labeled only</i> is the strict reading. The six single stages '+
+      'partition the record exactly, so they sum back to <i>all stages</i>. 95% of '+
+      'extratropical positions follow the tropical phase, so ET is in practice the '+
+      'post-tropical stage; disturbance is not, being split roughly evenly between the '+
+      'pre-genesis disturbance and the decaying remnant.',
+    '<b>Extratropical positions dominate high latitudes.</b> Under the default, over half of '+
+      'TS+ positions at 40–50° and nearly all beyond 50° are ET, so Pmin and R34 there describe '+
+      'post-transition lows. Use <i>Tropical</i> for a tropical-cyclone-only view.',
     '<b>ACE ignores the Stages control</b>, on purpose. It is defined over tropical and '+
-      'subtropical stages, so letting a selection like <i>tropical + extratropical</i> apply to '+
+      'subtropical stages, so letting a selection like <i>TS-labeled only</i> apply to '+
       'it would drop the subtropical contribution and produce a non-standard number under a '+
       'standard name. It is the same value under every setting.'
   ]))+
@@ -1694,11 +1769,15 @@ function methodsHTML(){
     '1999–2002.</p>')+
 
   h('Basins', '<p>Fixed longitude–latitude boxes that <b>exactly partition</b> the global box, '+
-    'so every cell belongs to one basin and basin totals add to the global total. They are '+
-    '<i>geographic</i> regions, not IBTrACS\'s own basin labels: what is measured here is '+
-    'cyclone activity at a place, so a position counts where the storm physically was rather '+
-    'than under whichever agency filed the track, so a storm that crosses Mexico into the Gulf '+
-    'counts in the North Atlantic from then on. The North Atlantic box wraps the prime meridian '+
+    'so every position belongs to one basin and basin totals add to the global total. They are '+
+    '<i>geographic</i> regions: what is measured here is cyclone activity at a place, so a '+
+    'position counts where the storm physically was. The one exception is the boundary '+
+    'between the <b>North Atlantic and East Pacific</b>, which follows the Central American '+
+    'isthmus and cannot be traced by '+GRID+'° cells — the box at 15–20°N, 100–95°W holds both '+
+    'the Oaxaca–Guerrero Pacific coast and the Bay of Campeche. There each position goes by '+
+    'IBTrACS\'s own per-position <code>BASIN</code> label, which changes where a storm crosses '+
+    'the isthmus. The maps still draw every position in the box it fell in, so in a basin view '+
+    'a coastal box shows only that basin\'s storms. The North Atlantic box wraps the prime meridian '+
     '(100°W–40°E) so that no strip of ocean falls inside Global and inside no basin, but its '+
     'corner south of 15°N and west of 85°W — the Pacific off Central America — belongs to the '+
     'East Pacific. The Australian region is the Bureau of '+
@@ -1806,6 +1885,25 @@ function methodsHTML(){
       'depends on landfall geometry a '+GRID+'° grid cannot resolve.'
   ]))+
 
+  h('What a trend here can and cannot tell you', '<p>A best-track trend over a few decades '+
+    'mixes several things, and this page does not separate them. <b>Natural multidecadal '+
+    'variability</b> is large: North Atlantic activity rose sharply after the mid-1990s with '+
+    'the Atlantic Multidecadal Oscillation ('+REF.gold01+'). <b>Anthropogenic aerosols</b>, '+
+    'whose decline over the US and Europe and rise over Asia reshaped regional activity, are '+
+    'a forced driver distinct from greenhouse warming ('+REF.mur20+'; '+REF.mur22+'). '+
+    '<b>Observing practice</b> changes too: short-lived, weak storms are detected far more '+
+    'often in the satellite and scatterometer era, so part of any rise in counts is better '+
+    'detection ('+REF.land10+'), and agencies disagree on intensity — JTWC and JMA give different '+
+    'West Pacific intensity trends from the same storms ('+REF.kos13+'). The WMO expert-team '+
+    'assessments find that most observed tropical-cyclone changes cannot yet be confidently '+
+    'attributed to greenhouse warming, even where projected changes — higher peak intensities '+
+    'and rain rates — are robust ('+REF.knu19+', '+REF.knu20+'). Read a significant slope as a description of this '+
+    'record over this window, not as attribution.</p>'+
+    '<p><b>Means over several basins mix in changes of basin share.</b> A global or '+
+    'hemispheric mean Vmax shifts when activity moves between basins of different typical '+
+    'intensity, even if no basin changes; at TS+ over 1990–2024 that accounts for roughly a '+
+    'quarter of the global mean-Vmax trend and half the Northern Hemisphere one.</p>')+
+
   h('Known limitations', ul([
     'Best-track intensities rest on Dvorak satellite analysis whose procedures have changed over '+
       'time. Modest trends should be read with that in mind — this is the reason the page opens on '+
@@ -1813,6 +1911,9 @@ function methodsHTML(){
     'JTWC did not formalise responsibility for the Indian Ocean and South Pacific basins until '+
       '1985, so pre-1990 activity in those basins is understated here relative to compilations '+
       'that fill the gap from other archives.',
+    '<b>North Indian</b> numbers are JTWC\'s. IMD, the regional specialized centre, keeps its '+
+      'own best track, and studies built on it do not all agree with JTWC-based trends; treat a '+
+      'North Indian trend as one agency\'s record.',
     '<b>Size (R34) is the mean gale radius over the quadrants that have gales</b>, needing at '+
       'least three of the four '+
       '(<a href="https://doi.org/10.1175/WAF-D-24-0031.1">Chavas, Knaff and Klotzbach 2025</a>). '+
@@ -2020,6 +2121,7 @@ function wire(){
     G.ci=Int32Array.from(G.ci); G.yi=Int16Array.from(G.yi); G.bi=Int8Array.from(G.bi);
     ['n','sumv','sumv2','nv','maxv','sump','np','minp','sumr','nr','maxr','na']
       .forEach(k=>G[k]=Float32Array.from(G[k]));
+    G.pb = G.pb ? Int8Array.from(G.pb) : null;
 
     readHash();
     /* Old or hand-edited links must not blank or crash the page. */

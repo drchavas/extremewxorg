@@ -24,7 +24,7 @@
      uses, so the page and the drawings agree. */
   html[data-theme="light"]{
     --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
-    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#a85d09;
   }
   html[data-theme="light"] body{
     background:
@@ -245,7 +245,7 @@
      <a href="scstrend_grid.html">2&deg; grid maps by hazard</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-22 00:45 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-22 15:32 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -368,9 +368,14 @@
           <li><b>Counties.</b> Connecticut uses its eight historical counties, because Storm Events
               still files reports under them rather than the planning regions the Census adopted in
               2022. Puerto Rico reports count from 2009, the first year they carry municipio codes.</li>
-          <li><b>Freezing rain and peak wind are not here yet.</b> They are station data &mdash; twelve
-              Indiana sites, not a national county field &mdash; so there is no county value to
-              show. They remain on <a href="scstrend.html">the hazard page</a>.</li>
+          <li><b>Freezing rain and peak wind are not here yet.</b> They are station data, not a county
+              field, so there is no county value to show. Freezing rain comes from about 950 airport
+              weather stations nationwide; its quality-controlled set, after
+              <a href="https://doi.org/10.1175/JAMC-D-24-0204.1" target="_blank" rel="noopener">DelPizzo
+              et al. (2025)</a>, keeps the roughly 550 that had an overnight observer before
+              automation. Peak wind is from Indiana stations. Both remain on
+              <a href="scstrend.html">the hazard page</a>, as do extreme heat, heavy rain and
+              snowfall, which are not yet rows here.</li>
           <li><b>June and July 1993 are missing</b> from Storm Events entirely, so 1993 is dropped
               from any window that contains it rather than counted as a quiet year.</li>
           <li><b>Storm Events is a report database</b>, not a fixed observing network. National
@@ -934,6 +939,22 @@ function defaultCounty(ab){
   }
   return GEOID[best];
 }
+/* A state's bounds for fitting the map. Alaska's Aleutians cross 180 degrees, so
+   its plain bounds run from -179 to +180 and their centre falls at 0 degrees E (an
+   empty map of Europe). When a state spans more than half the globe, take its
+   eastern-hemisphere longitudes as west of -180 instead. */
+function stateBounds(f){
+  const b=L.geoJSON(f).getBounds();
+  if(!(b.getEast()-b.getWest()>180)) return b;   // also returns an empty (invalid) bounds as is
+  let s=90,n=-90,w=Infinity,e=-Infinity;
+  const walk=c=>{
+    if(typeof c[0]==='number'){ const lo=c[0]>0?c[0]-360:c[0];
+      s=Math.min(s,c[1]); n=Math.max(n,c[1]); w=Math.min(w,lo); e=Math.max(e,lo); }
+    else c.forEach(walk);
+  };
+  walk(f.geometry.coordinates);
+  return L.latLngBounds([s,w],[n,e]);
+}
 function zoomState(ab){
   const st=stateOf(ab); if(!st||!map) return;
   S.state=ab; syncStateSel(); map.fitBounds(st.bounds,{padding:[12,12]});
@@ -1381,7 +1402,7 @@ function wire(){
 
     map=makeMap('map'); tiles=addTiles();
     STGEO.features.forEach(f=>STATES.push({ab:f.properties.STUSPS,
-      name:f.properties.STATE_NAME,bounds:L.geoJSON(f).getBounds()}));
+      name:f.properties.STATE_NAME,bounds:stateBounds(f)}));
     STATES.sort((x,y)=>x.name.localeCompare(y.name));
     stLay=stateLayer().addTo(map);
 

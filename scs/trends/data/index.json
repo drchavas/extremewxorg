@@ -115,7 +115,7 @@
    "key": "derechoday",
    "label": "Derecho",
    "unit": "kt",
-   "note": "Calendar dates on which a county lay inside a definitive derecho wind swath from the SPC archive of Squitieri, Wade and Jirak (2026), dated by the swath's start. NEXRAD era only, so the record starts in 1996.",
+   "note": "Calendar dates on which a county had a qualifying wind report inside a definitive derecho wind swath from the SPC archive of Squitieri, Wade and Jirak (2026), dated by the swath's start. NEXRAD era only, so the record starts in 1996.",
    "countword": "event",
    "thresholds": [
     {
@@ -285,8 +285,8 @@
    "kind": "station",
    "season": "JulJun",
    "file": "snow.json.gz",
-   "nDelPizzo": 1499,
-   "nQC": 1499
+   "nDelPizzo": 1134,
+   "nQC": 1134
   },
   {
    "key": "fzra",
@@ -319,7 +319,7 @@
    "season": "JulJun",
    "file": "fzra.json.gz",
    "nDelPizzo": 76,
-   "nQC": 554
+   "nQC": 547
   },
   {
    "key": "pkwnd",

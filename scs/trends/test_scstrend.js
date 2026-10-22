@@ -47,7 +47,7 @@ w.L={
   map:id=>mkMap(id),
   tileLayer:()=>({addTo(m){ this._t=true; m.addLayer(this); return this; }, _tile:true}),
   layerGroup:()=>({_marks:[],addTo(m){m.addLayer(this);return this}}),
-  circleMarker:()=>({bindTooltip(){return this},on(){return this},addTo(g){g._marks.push(this);return this}}),
+  circleMarker:(ll,o)=>({_ll:ll,_o:o||{},_h:{},bindTooltip(){return this},on(e,f){this._h[e]=f;return this},addTo(g){g._marks.push(this);return this}}),
   DomEvent:{stop(){}},
   TileLayer:function(){},
   geoJSON:(data,opts)=>{
@@ -227,8 +227,9 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   await new Promise(r=>setTimeout(r,900));
   say('peak wind warns that the view is provisional',warnShown()&&
       /not working correctly yet/.test($('hazwarn').innerHTML));
-  say('and says why — the QC screen is unsettled',
-      /quality-control/.test($('hazwarn').innerHTML));
+  say('and says why — the 2008 step, Indiana only, no trends',
+      /step up in 2008/.test($('hazwarn').innerHTML)&&/Indiana/.test($('hazwarn').innerHTML)&&
+      /No trends are shown/.test($('hazwarn').innerHTML));
   say('and asks the reader to come back',
       /check back later/.test($('hazwarn').innerHTML));
   /* Freezing rain has the DelPizzo screen, so it is not provisional. */
@@ -344,12 +345,14 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     const L=JSON.parse(w.eval('JSON.stringify(panelLayout())'));
     if(o) Object.defineProperty(w,'innerWidth',o);
     return L; };
-  const wide=layoutAt(1400), narrow=layoutAt(400);
+  const wide=layoutAt(1400), narrow=layoutAt(700), phone=layoutAt(390);
   say('wide screens keep the side-by-side layout',
       wide.W===1520&&wide.H===470&&wide.monthly[0]>0,
       `${wide.W}x${wide.H}, monthly at x=${wide.monthly[0]}`);
   /* A 1520-wide viewBox on a phone rendered both panels at about a third of
      legible size; stacking gives each the full width. */
+  say('phones get a viewBox near the screen width',phone.W===440&&phone.monthly[1]>phone.annual[1],
+      `${phone.W}x${phone.H}`);
   say('narrow screens stack them',
       narrow.W===760&&narrow.monthly[0]===0&&narrow.monthly[1]>narrow.annual[1],
       `${narrow.W}x${narrow.H}, monthly at y=${narrow.monthly[1]}`);
@@ -440,6 +443,24 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
       nStn()+' markers, "'+$('dpBtn').textContent+'"');
   say('opting out survives in the hash',/[?&]q=0/.test(w.location.hash),
       w.location.hash.slice(-16));
+  /* Review 2026-10-22: the maps show every station, but a click on one outside the
+     chosen state used to be dropped. It must select it and move the Place there. */
+  {
+    const g=A._layers.find(l=>l._marks);
+    const oh=FZ.stations.find(s=>s.icao==='KCMH');
+    const mk=g&&g._marks.find(m=>m._ll&&Math.abs(m._ll[0]-oh.lat)<1e-6&&Math.abs(m._ll[1]-oh.lon)<1e-6);
+    if(mk&&mk._h.click) mk._h.click();
+    await new Promise(r=>setTimeout(r,300));
+    say('clicking an Ohio station from Indiana selects it and moves to Ohio',
+        $('regSel').value==='OH'&&$('ctySel').value===oh.id,`${$('regSel').value} ${$('ctySel').value}`);
+    if(mk&&mk._h.click) mk._h.click();
+    await new Promise(r=>setTimeout(r,300));
+    say('clicking it again lets go',$('ctySel').value==='',$('ctySel').value);
+    const gb=Bm._layers.find(l=>l._marks);
+    const hollow=gb?gb._marks.filter(m=>m._o.fill===false).length:0;
+    say('stations too sparse for a trend are drawn hollow on the trend map',hollow>0,hollow+' hollow');
+    $('regSel').value='IN'; fire('regSel','change'); await new Promise(r=>setTimeout(r,300));
+  }
   $('dpBtn').onclick.call($('dpBtn'));
   await new Promise(r=>setTimeout(r,300));
   /* Stations have no county values, so the choropleth goes — but the counties
@@ -551,7 +572,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('PRISM source, 1981 start, through Sep 2026',d.meta.srcname==='PRISM'&&d.meta.year0===1981&&d.meta.through==='2026-09',
         d.meta.srcname+' '+d.meta.year0+' '+d.meta.through);
     say('rain gets the PRISM caveat, not ERA5 or Storm Events',/PRISM/.test($('guide').innerHTML)&&!/ERA5/.test($('guide').innerHTML)&&!/Storm Events records/.test($('guide').innerHTML));
-    say('rain opens smoothed at 1°, not the storm hazards\' 2°',w.eval('smoothOn()')===true&&w.eval('sigDeg()')===1&&$('smWrap').style.display===''&&$('smSel').value==='1'&&/1° Gaussian smoothed/.test($('climSub').innerHTML));
+    say('rain opens smoothed at 1°, not the storm hazards\' 2° — on the trend map only',w.eval('smoothOn()')===true&&w.eval('sigDeg()')===1&&$('smWrap').style.display===''&&$('smSel').value==='1'&&/1° Gaussian smoothed/.test($('trendSub').innerHTML)&&/Raw data/.test($('climSub').innerHTML));
     $('smSel').value='off'; fire('smSel','change');
     say('and switches to raw',w.eval('smoothOn()')===false&&/Raw data/.test($('climSub').innerHTML));
     $('smSel').value='1'; fire('smSel','change');
@@ -598,7 +619,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('an unknown theme becomes the default',!('k' in st()),st().k||'(default)');
     w.history.replaceState(null,'','#h=bogus&t=7&r=IN&p=2000-2025');
     w.eval("readHash(); writeHash()");
-    say('an unknown hazard becomes hail',st().h==='hail'&&st().t==='0',st().h+'/'+st().t);
+    say('an unknown hazard becomes hail, at its default >= 1 in',st().h==='hail'&&st().t==='1',st().h+'/'+st().t);
     w.history.replaceState(null,'',keep); w.eval("readHash()");
   }
 

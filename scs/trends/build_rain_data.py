@@ -20,7 +20,7 @@ national series are area-weighted means over counties).
 PRISM revises recent months for about six months; those are flagged
 `provisional` and prism_update.py fetches them again.
 """
-import glob, json, os, sys
+import glob, json, math, os, sys
 import numpy as np
 import gzip
 
@@ -126,8 +126,13 @@ def stage_site(cdir, wpath, topo, outdir):
     if wpath.endswith(".gz"):                  # the heat site stage reads plain JSON (only its "grid")
         import tempfile
         W = load_json(wpath)
+        # box land areas for area-weighted national means on the grid page:
+        # PRISM cells (1/24 deg) in the box x cos(latitude of the box centre)
+        G, LAT0 = W["grid"][0], W["grid"][1]; NLON = W["grid"][4]
+        bw = {k: round(len(v) / 576.0 * math.cos(math.radians(LAT0 + G * (int(k) // NLON + 0.5))), 5)
+              for k, v in W["boxes"].items()}
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
-            json.dump({"grid": W["grid"]}, fh)
+            json.dump({"grid": W["grid"], "bw": bw}, fh)
         wpath = fh.name
     B.stage_site(cdir, wpath, topo, outdir)
 

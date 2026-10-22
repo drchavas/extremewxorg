@@ -12,7 +12,9 @@ const HASH = process.argv[4] || '';
 
 (async () => {
   const html = fs.readFileSync(path.join(DIR, 'tctrend.html'), 'utf8')
-    .replace(/<script src="https:\/\/unpkg\.com\/topojson-client[^>]*><\/script>/, '');
+    .replace(/<script src="https:\/\/unpkg\.com\/topojson-client[^>]*><\/script>/, '')
+    // the feedback pop-up is a separate script after the page's own
+    .replace(/<script src="[^"]*feedback\.js"[^>]*><\/script>/, '');
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => console.error('jsdom:', e.message));
   const dom = new JSDOM(html, { runScripts: 'outside-only', pretendToBeVisual: true,

@@ -56,7 +56,11 @@ THRESH = [
 # excluding the entire Cape Verde main development region; these do not.)
 # Geographic boxes, not IBTrACS's own BASIN column.  What these pages measure is
 # cyclone activity *at a place*, so a position belongs where the storm physically
-# was, not to whichever agency's ledger the track was filed under.
+# was, not to whichever agency's ledger the track was filed under.  The one
+# exception is the North Atlantic / East Pacific divide, which runs along the
+# Central American isthmus and cannot be followed by 5-degree cells: there the
+# position's own IBTrACS BASIN flag decides (FLAG_BASINS, below).  The maps
+# still draw every position in the cell it fell in.
 #
 # The North Atlantic box used to start at 100W all the way down to the equator,
 # which put the Gulf of Tehuantepec and the Pacific off Central America -- the
@@ -101,16 +105,40 @@ NATURES = ['TS', 'SS', 'ET', 'DS', 'MX', 'NR']
 # Selections the page offers.  `None` means every stage.  Distinct storm counts
 # are not additive over stages, so the build emits one count column per
 # selection rather than one per stage -- these keys are those column names.
+#
+# NR ("not reported") and MX ("mixture": agencies disagree) are not stages of
+# their own; they say the stage is unknown or contested.  They are a large share
+# of some basins' records -- every North Indian position in 1990, 1991, 1993,
+# 1994 and 1995 is NR -- so the composite selections treat them as
+# tropical-or-unknown and keep them.  The default used to be TS + ET only, which
+# deleted the North Indian Ocean for 1990-95 and manufactured a +5.1
+# storm-days/yr per decade trend there (p < 0.001; +1.3, p = 0.36, with NR kept;
+# independent review, 2026-10-22).  The composites now match the ENSO page's TC
+# builder (enso/build_enso_tc.py), which drops only ET and DS for "tropical".
 STAGE_SETS = [
-    ('all',  'All stages',               None),
-    ('ts',   'Tropical only',            ['TS']),
-    ('et',   'Extratropical only',       ['ET']),
-    ('tset', 'Tropical + extratropical', ['TS', 'ET']),
-    ('ss',   'Subtropical only',         ['SS']),
-    ('ds',   'Disturbance only',         ['DS']),
-    ('mx',   'Mixture only',             ['MX']),
-    ('nr',   'Not reported only',        ['NR']),
+    ('all',  'All stages',                                   None),
+    ('tset', 'Tropical + extratropical (all but disturbance)',
+             ['TS', 'SS', 'ET', 'MX', 'NR']),
+    ('trop', 'Tropical (all but extratropical and disturbance)',
+             ['TS', 'SS', 'MX', 'NR']),
+    ('ts',   'TS-labeled only',                              ['TS']),
+    ('et',   'Extratropical only',                           ['ET']),
+    ('ss',   'Subtropical only',                             ['SS']),
+    ('ds',   'Disturbance only',                             ['DS']),
+    ('mx',   'Mixture only',                                 ['MX']),
+    ('nr',   'Not reported only',                            ['NR']),
 ]
+
+# Basins whose shared boundary is decided per position by IBTrACS's own BASIN
+# flag rather than by the 5-degree boxes.  The North Atlantic / East Pacific
+# divide runs along the Central American isthmus, which no 5-degree partition
+# can follow: the cell 15-20N, 100-95W holds the Oaxaca/Guerrero Pacific coast
+# and the southern Bay of Campeche, and was counting ~0.9 East Pacific storms a
+# year (Otis and Beatriz 2023, Dora 2005, Julio 2020, Pauline 1997, ...) as
+# North Atlantic.  IBTrACS assigns BASIN position by position, so a storm that
+# crosses the isthmus changes basin where it crosses.  Every other boundary is
+# open ocean and stays geographic (the Australian region has no IBTrACS flag).
+FLAG_BASINS = ('NA', 'EP')
 
 R34Q = ['USA_R34_NE', 'USA_R34_SE', 'USA_R34_SW', 'USA_R34_NW']
 R34S = 12       # fixed-point scale for the R34 sums; see the emit block.
@@ -182,6 +210,9 @@ def prepare(df, y0, y1, grid):
                  yi=(d.SEASON.to_numpy() - y0).astype(int),
                  trop=d.NATURE.isin(['TS', 'SS']).to_numpy(),
                  na=pd.Categorical(d.NATURE, categories=NATURES).codes)
+    # IBTrACS's NATURE list is closed; a code outside it would land at -1 and be
+    # silently dropped by every stage filter, which is how NR was lost before.
+    assert (d.na >= 0).all(), d.NATURE[d.na < 0].unique()
     print(f'  {len(d):,} synoptic points, {d.SID.nunique():,} storms, '
           f'{y0}-{y1}')
     return d, nlat, nlon
@@ -211,7 +242,7 @@ def aggregate(d, wind_col, pres_col, nyear):
     # emitted as two parallel value columns instead (see storm_counts).
     t = pd.DataFrame({
         'ci': d.ci.to_numpy(), 'yi': d.yi.to_numpy(), 'bi': b,
-        'na': d.na.to_numpy(),
+        'na': d.na.to_numpy(), 'pb': d.pb.to_numpy(),
         'v': v, 'v2': np.where(d.trop.to_numpy(), v * v, 0.0), 'p': p,
         'r': r,
         'nv': np.isfinite(v).astype(np.int32),
@@ -223,7 +254,7 @@ def aggregate(d, wind_col, pres_col, nyear):
     # sum across bins — a storm that crosses 34 kt inside one cell appears in two
     # bins and would be counted twice — so storm counts are built separately, per
     # cumulative threshold, in storm_counts().
-    g = t.groupby(['ci', 'yi', 'bi', 'na'], sort=True)
+    g = t.groupby(['ci', 'yi', 'bi', 'na', 'pb'], sort=True)
     a = g.agg(n=('v', 'size'),
               sumv=('v', 'sum'), sumv2=('v2', 'sum'), nv=('nv', 'sum'),
               maxv=('v', 'max'),
@@ -249,7 +280,7 @@ def q(x, s=1):
     return [int(round(float(u) * s)) for u in x]
 
 
-def month_table(d, wind_col, pres_col, mask):
+def month_table(d, wind_col, pres_col, member):
     """Basin x year x month x cumulative-threshold aggregates.
 
     Only the seasonal-cycle and month-by-month panels need a month dimension,
@@ -271,6 +302,7 @@ def month_table(d, wind_col, pres_col, mask):
         s = pd.DataFrame({
             'yi': d.yi.to_numpy()[sel], 'mi': d.month.to_numpy()[sel],
             'ci': d.ci.to_numpy()[sel], 'sid': d.SID.to_numpy()[sel],
+            'pb': d.pb.to_numpy()[sel],
             'na': d.na.to_numpy()[sel],
             'nat': d.NATURE.to_numpy()[sel],
             'v': v[sel],
@@ -281,8 +313,8 @@ def month_table(d, wind_col, pres_col, mask):
             'np_': np.isfinite(p[sel]).astype(np.int32),
             'nr_': np.isfinite(d.r34.to_numpy(dtype=float)[sel]).astype(np.int32),
         })
-        for bk, m in mask.items():
-            inb = m[s.ci.to_numpy()]
+        for bk in member:
+            inb = member[bk](s.ci.to_numpy(), s.pb.to_numpy())
             if not inb.any():
                 continue
             sb = s[inb]
@@ -323,7 +355,7 @@ def month_table(d, wind_col, pres_col, mask):
     return r
 
 
-def storm_counts(d, wind_col, mask, nlon):
+def storm_counts(d, wind_col, member, nlon, mixed):
     """Distinct storms, counted once per box per year, at three levels.
 
     A storm is a track, not a set of positions: one cyclone sitting in a box for
@@ -339,12 +371,17 @@ def storm_counts(d, wind_col, mask, nlon):
 
     and the three are deliberately not derivable from one another.  Everything is
     per cumulative threshold `ti`, not per intensity bin, for the same reason.
+
+    `cellx` is the cell table again, restricted to the few cells (`mixed`) that
+    hold positions of more than one basin under the per-position NA/EP rule, and
+    split by that basin: inside the North Atlantic view the cell 15-20N, 100-95W
+    must count only its North Atlantic storms.
     """
     v = d[wind_col].to_numpy(dtype=float)
-    out = {'cell': [], 'band': [], 'basin': []}
+    out = {'cell': [], 'cellx': [], 'band': [], 'basin': []}
     for ti, th in enumerate(THRESH):
         sel = np.ones(len(d), bool) if th['cut'] is None else (v >= th['cut'])
-        s = d.loc[sel, ['ci', 'yi', 'SID', 'NATURE']]
+        s = d.loc[sel, ['ci', 'yi', 'SID', 'NATURE', 'pb']]
         if not len(s):
             continue
 
@@ -374,10 +411,15 @@ def storm_counts(d, wind_col, mask, nlon):
         c = two(s, ['ci', 'yi'])
         c['ti'] = ti
         out['cell'].append(c)
+        sx = s[np.isin(s.ci.to_numpy(), mixed)]
+        if len(sx):
+            cx = two(sx, ['ci', 'yi', 'pb'])
+            cx['ti'] = ti
+            out['cellx'].append(cx)
 
         li = (s.ci.to_numpy() // nlon)
-        for bk, m in mask.items():
-            inb = m[s.ci.to_numpy()]
+        for bk in member:
+            inb = member[bk](s.ci.to_numpy(), s.pb.to_numpy())
             if not inb.any():
                 continue
             sb = s[inb].assign(li=li[inb], bk=bk)
@@ -390,8 +432,8 @@ def storm_counts(d, wind_col, mask, nlon):
 
     res = {k: (pd.concat(v_, ignore_index=True) if v_ else pd.DataFrame())
            for k, v_ in out.items()}
-    print(f'    storms: {len(res["cell"]):,} cell / {len(res["band"]):,} band / '
-          f'{len(res["basin"]):,} basin records')
+    print(f'    storms: {len(res["cell"]):,} cell / {len(res["cellx"]):,} mixed-cell / '
+          f'{len(res["band"]):,} band / {len(res["basin"]):,} basin records')
     return res
 
 
@@ -422,6 +464,46 @@ def build(args):
                    (LAT >= cut['lat'][0]) & (LAT < cut['lat'][1]))
         mask[bs['k']] = m.ravel()
 
+    # Per-position basin `pb`: an index into BASINS of the named basin each
+    # position counts in.  The cell's box decides, except across the NA/EP
+    # divide, where IBTrACS's BASIN flag does (see FLAG_BASINS).  0 (Global)
+    # marks a position outside every named basin, i.e. poleward of 60 degrees.
+    bkeys = [b['k'] for b in BASINS]
+    named = [k for k in bkeys if k not in ('GL', 'NH', 'SH')]
+    cb = np.zeros(nlat * nlon, dtype=np.int8)
+    for k in named:
+        assert not cb[mask[k]].any(), 'named basins overlap'
+        cb[mask[k]] = bkeys.index(k)
+    ci_ = d.ci.to_numpy()
+    pb = cb[ci_].copy()
+    flag = d.BASIN.to_numpy()
+    for k in FLAG_BASINS:
+        other = [x for x in FLAG_BASINS if x != k]
+        sw = (flag == k) & np.isin(pb, [bkeys.index(x) for x in other])
+        pb[sw] = bkeys.index(k)
+    d = d.assign(pb=pb)
+    moved = int((pb != cb[ci_]).sum())
+    mixed = np.unique(ci_[pb != cb[ci_]])
+    print(f'  {moved:,} positions assigned across the NA/EP divide by BASIN flag, '
+          f'in {len(mixed)} cells')
+
+    # Region membership of a position.  Named basins go by `pb`; Global and the
+    # hemispheres are unions of named basins, so they go by cell as before.
+    def _member(k):
+        if k in named:
+            j = bkeys.index(k)
+            return lambda ci, pbv: pbv == j
+        m = mask[k]
+        return lambda ci, pbv: m[ci]
+    member = {k: _member(k) for k in bkeys}
+    # cells outside a basin's box that nonetheless hold positions counted in it
+    extra = {}
+    for k in named:
+        j = bkeys.index(k)
+        c_ = np.unique(ci_[(pb == j) & ~mask[k][ci_]])
+        if len(c_):
+            extra[k] = c_.tolist()
+
     # A season is "provisional" while most of its positions still carry a
     # PROVISIONAL track type — best tracks are reanalysed after the season and
     # intensities can move.  Report the first such year rather than dropping it:
@@ -450,25 +532,37 @@ def build(args):
         'stage_sets': [{'k': k, 'label': l, 'nat': nats} for k, l, nats in STAGE_SETS],
         'basins': BASINS,
         'basin_cells': {k: np.flatnonzero(v).tolist() for k, v in mask.items()},
+        # Per-position NA/EP rule (FLAG_BASINS).  `basin_extra` lists, per basin,
+        # the cells outside its box that hold positions counted in it -- the page
+        # draws and sums them with the box.  `mixed_cells` are the cells whose
+        # positions are split between basins: in a basin view their storm counts
+        # come from the `scx` table and their sums from records keyed by `pb`.
+        'flag_basins': list(FLAG_BASINS),
+        'basin_extra': extra,
+        'mixed_cells': mixed.tolist(),
         'sources': {},
     }
 
     for src, (wc, pc) in {'usa': ('USA_WIND', 'USA_PRES')}.items():
         print(f'aggregating {src} ...')
         a = aggregate(d, wc, pc, nyear)
-        sc = storm_counts(d, wc, mask, nlon)
-        mt = month_table(d, wc, pc, mask)
-        bkeys = [b['k'] for b in BASINS]
+        sc = storm_counts(d, wc, member, nlon, mixed)
+        mt = month_table(d, wc, pc, member)
         obj = {
             'ci':   a.ci.tolist(),
             'yi':   a.yi.tolist(),
             'bi':   a.bi.tolist(),
             'na':   a.na.tolist(),
+            # basin the record's positions count in (index into BASINS)
+            'pb':   a.pb.tolist(),
             'n':    a.n.tolist(),
             'sumv2': q(a.sumv2),
             # distinct storms, counted once per box per year, at each level
             'sc': dict({'ci': sc['cell'].ci.tolist(), 'yi': sc['cell'].yi.tolist(),
                         'ti': sc['cell'].ti.tolist()}, **ns_cols(sc['cell'])),
+            'scx': dict({'ci': sc['cellx'].ci.tolist(), 'yi': sc['cellx'].yi.tolist(),
+                         'pb': sc['cellx'].pb.tolist(),
+                         'ti': sc['cellx'].ti.tolist()}, **ns_cols(sc['cellx'])),
             'sb': dict({'bk': [bkeys.index(x) for x in sc['band'].bk],
                         'li': sc['band'].li.tolist(), 'yi': sc['band'].yi.tolist(),
                         'ti': sc['band'].ti.tolist()}, **ns_cols(sc['band'])),
@@ -532,7 +626,7 @@ def build(args):
             per = {}
             ci, ssn = d.ci.to_numpy(), d.SEASON.to_numpy()
             for bs in BASINS:
-                m = mask[bs['k']][ci]
+                m = member[bs['k']](ci, d.pb.to_numpy())
                 if not m.any():
                     continue
                 if col is None:

@@ -196,6 +196,29 @@ the evolution of reporting. Trends from ~2000 on are much more defensible, and h
 thresholds (≥2″ hail, EF2+ tornadoes) are far less sensitive to reporting practice than
 "any report."
 
+Further caveats now shown on the pages (2026-10-22 review):
+
+- **Hail opens on ≥ 1″** on both map pages: the NWS raised its severe-hail criterion from ¾″ to
+  1″ in January 2010 and sub-inch reports largely stopped, so 935 of 941 significant county
+  any-hail trends were negative.
+- **Intermountain West wind** is largely automated measured gusts entering the database (Utah:
+  6 measured ≥ 50 kt reports in 2004, 234 in 2023), not more storms.
+- **Tornado ratings** changed F → EF in February 2007, and unrated EFU segments roughly tripled
+  from 2015–19 to 2020–24, so EF1+ and higher trends partly measure rating.
+- **County size**: a county's report days grow with its area (big western counties), so the
+  county page points to the 2° grid for like-with-like comparison.
+- **Derechos** credit a county only where it has a qualifying wind report inside the swath (about
+  a third of counties at least half inside the swath polygons have none), and all 96 definitive
+  cases fall in April–August.
+- **Grid boxes** are weighted by their U.S. land fraction in the smoothing and the national panel
+  (`geo/grid_landfrac.json`), so mostly-water and border boxes no longer drag inland boxes down.
+- **Peak wind** (Indiana, ISD) shows no trends: every full-record station roughly doubles its
+  ≥ 40 kt days at 2008, a reporting change.
+
+Not changed: wind reports ≥ 100 kt (~350) are not screened as errors, and
+`update_storm_events.py` re-checks only the last three years, so NCEI re-issues of older years
+(tornado 2010, 2017–2020) are picked up only by a full rebuild.
+
 ## Testing
 
 Everything runs under node with jsdom (`npm i jsdom topojson-client`):
@@ -239,8 +262,13 @@ so only the chunks over the U.S. are downloaded (~50 MB per month). No account o
   threshold" (rounding had let 89.95 °F count as 90). UTC days, which the Indiana card used, end at 7 pm in Indiana and let one
   hot evening count on two days: about 4% more days at ≥90 °F, 10% more at ≥105 °F.
 - **Counties**: each ERA5 cell gets its own day counts; a county's count is the
-  area-weighted mean over the **land** cells it overlaps (ERA5 land–sea mask ≥ 0.5;
-  `geo_heat/weights.json`, from the site's own county outlines and `geo_heat/lsm.nc`).
+  area-weighted mean over the **land** cells it overlaps (ERA5 land–sea mask ≥ 0.5), each also
+  weighted by its **land fraction** (`geo_heat/weights.json`, from the site's own county outlines
+  and `geo_heat/lsm.nc`). Partly-sea cells (mask 0.5–0.9) still run cooler than the land beside
+  them, so they count in proportion to their land (2026-10-22 review: 1991–2020 days ≥ 90 °F,
+  Miami-Dade 41 → 47, Monroe FL 40 → 50, Galveston 44 → 46; inland counties unchanged). A
+  stricter rule (cells ≥ 0.8 land, nearest-land fallback) would move coastal counties further
+  (Miami-Dade ≈ 66 for 2015–24) but leaves counties such as Orleans with no cell at all.
   Sea and lake cells carry marine temperatures; including them had pulled coastal counties
   far down (Galveston 54 → 31 days/yr ≥ 90 °F). The 4 counties on no land cell (Nantucket,
   Dukes, San Juan WA, Northampton VA) take the nearest land cell — the days a typical place in the county saw. State and national panels
@@ -248,8 +276,10 @@ so only the chunks over the U.S. are downloaded (~50 MB per month). No account o
   of a day for counties and boxes (`meta.vscale` = 10), hundredths for state and national series
   (`meta.rscale` = 100); the pages divide them back out. Alaska, Hawaii and Puerto Rico are outside the domain and
   show as no data.
-- **2° boxes**: the plain mean over the ERA5 land cells whose centres lie in a U.S. county in
-  the box (252 boxes; six all-water boxes are not drawn).
+- **2° boxes**: the land-fraction-weighted mean over the ERA5 land cells whose centres lie in a
+  U.S. county in the box (252 boxes; six all-water boxes are not drawn). On the grid page, the
+  national panel and the smoothing weight each box by the U.S. land it holds
+  (`geo/grid_landfrac.json`, county area inside the box over the box's area), for every hazard.
 - **Provisional last month.** Until the next month is published, the last local day of the
   newest month lacks its final 4–8 hours (from 16:00 LST on the Pacific coast), so that month
   is flagged `provisional` in `heat_counts/` and `meta.provisional`; `update_heat.py` redoes it
@@ -265,9 +295,12 @@ at all but 2 of ~86,000 point-days; daily maxima agree to 0.2 °F wherever HI �
 two codes use different formulas below 80 °F, which no threshold reaches).
 
 **Caveats** (on the pages too): ERA5's daily maximum is the warmest *hourly* value over a
-~25 km cell, so counts run below single-station records, most in deserts and cities; trends
-and geography are more trustworthy than the absolute numbers. Before ~1979 no satellite data
-fed ERA5, so the earliest decades rest on fewer observations. **Heat index at 110/115 °F is
+~25 km cell, so **temperature counts run well below airport stations**: about 0.6× the station's
+days ≥ 90 °F at the median of 26 airports (2000–2025), 0.1–0.4× in some coastal and lake cities
+(Seattle, Boston, Chicago, New Orleans), and Las Vegas 41 vs 82 days ≥ 100 °F. **Heat-index counts
+are much closer** (Houston 2023: 139 vs 140 days ≥ 90 °F; Indianapolis 21 vs 22). Trends and
+geography are more trustworthy than the absolute numbers. Before 1979 no satellite data fed
+ERA5, so the earliest decades rest on fewer observations, and **the pages open on 1979**. **Heat index at 110/115 °F is
 unreliable before ~1960**: early ERA5 has isolated one-hour dewpoint spikes (88 °F in Nebraska,
 11 Jul 1954) that the heat index turns into 130–145 °F values; 1953–57 carry most of the
 record's ≥ 130 °F cell-days. Not screened (the data are ERA5's own); flagged on the pages.
@@ -311,7 +344,15 @@ published (about a minute; `--max N` for several) straight into the counts, with
 
 One hazard, `rain`: days whose **PRISM** daily precipitation total reached 1, 2 or 3 inches,
 on PRISM's 4 km grid (PRISM Group, Oregon State University), lower 48, **1981 onward**
-(PRISM's daily record).
+(PRISM's daily record). **The pages open on 2002** (changed 2026-10-22): from 1 January 2002
+PRISM's daily precipitation uses radar (NWS Stage II/IV, MRMS from July 2020) to place rain
+between gauges in the central and eastern U.S., and PRISM's own dataset document warns of
+non-climatic trend effects. An independent check against long-record ACIS stations found
+PRISM's heavy-rain days stepping up at 2002 in all 14 eastern states tested (PRISM ÷ station,
+1981–2001 → 2002–2025: ≥ 1″ 0.83 → 0.97, ≥ 2″ 0.61 → 0.86, ≥ 3″ 0.47 → 0.78), with no step
+in the West. Most of Indiana's 1981–2025 trend (≈ 0.47 of +0.75/decade) is that step. The
+pages also smooth only the **trend** map for rain; the climatology is drawn raw (a blur moved
+western rain-shadow counties by up to two orders of magnitude).
 
 - **No daily data are downloaded.** ACIS (grid 21 = PRISM) counts the days on its own server:
   one `GridData` request per year with `"interval":"mly","reduce":"cnt_ge_0.995"` (and
@@ -372,31 +413,42 @@ station-based. CoCoRaHS is left out: its records mostly begin after 2000.
 
 - *Days.* Trace = 0. A blank snowfall becomes 0 when precipitation was 0, or fell with Tmin
   above 32 °F (Kunkel's zero-fill). Accumulated multi-day values (A/S) are missing. Set to
-  missing as suspect: > 60 in; ≥ 1 in with exactly 0.00 in precipitation; ≥ 4 in at a ratio
-  above 60:1; ≥ 4 in equal to a snow depth already on the ground and not growing (depth keyed
-  as snowfall).
+  missing as suspect: > 60 in; ≥ 1 in with exactly 0.00 in precipitation.
 - *Seasons* (a failed season is no observation, never zero): October–May ≥ 90% complete after
-  zero-fill; no empty December, January or February; not *estimated* — EPA's screen: more than
-  10 days with snow and precipitation, over half of them exactly 10:1.
-- *Stations.* Shown with ≥ 30 valid seasons (7,086). The default **QC set** (1,499) also needs
+  zero-fill; at least one snowfall **report** (judged before zero-fill) in each of December,
+  January and February; not *estimated* — EPA's screen: more than 10 days with snow and
+  precipitation, over half of them exactly 10:1.
+- *Changed 2026-10-22 after an independent review:* the December–February check used to run
+  after zero-fill, so a station that had stopped measuring snowfall (e.g. Sea-Tac 1997–2003,
+  Atlantic City Marina) still got "valid" seasons of zeros — 2,967 such seasons in the old QC
+  set. And two screens Kunkel did not use (ratio > 60:1; snowfall equal to the depth already on
+  the ground) were dropped: they removed real heavy-snow days, mostly at first-order stations
+  (Syracuse's 1991–2020 mean 111″ with them vs the 128″ normal).
+- *Stations.* Shown with ≥ 30 valid seasons (6,673). The default **QC set** (1,134) also needs
   ≥ 60 of 76 seasons, ≥ 5 valid in 1951–60 and in 2017–26, and no break or drift against its
   neighbours: log ratio of seasonal totals to the median of up to 10 neighbours (≤ 200 km,
   ≤ 500 m elevation difference, each scaled to the station's mean); inhomogeneous if a Pettitt
   change point has p < 0.01 and a step > 20%, or a linear drift has p < 0.01 and > 5%/decade.
-  That replaces Kunkel's seven-expert panel. Stations averaging < 3 in a season (549, mostly
-  the South, where the 1″ threshold matters) cannot be tested that way and are kept on length.
+  That replaces Kunkel's seven-expert panel. Stations averaging < 3 in a season, or with too
+  few neighbours (285 of the QC set: 849 homogeneous + 285 untestable), cannot be tested that
+  way and are kept on length.
 - Every station's verdict, test statistics and membership of Kunkel's own 420-station set
   (NCAR ds510.5) are in `snow_station_qc.txt` (CSV). Of Kunkel's 393 stations that still have
-  ≥ 30 seasons here, 193 pass, 122 fail the length rules (many closed or degraded after 2007,
-  where Kunkel's period ends), and 78 show a break against neighbours.
+  ≥ 30 seasons here, 201 pass, 141 fail the length rules (many closed or degraded after 2007,
+  where Kunkel's period ends), and 51 show a break against neighbours.
 
 Sanity check (mean seasonal snowfall, all valid seasons): Buffalo 94″, Syracuse 107″,
-Denver 57″, Minneapolis 52″, Boston 43″, Indianapolis 25″, Seattle 8″, Atlanta 2″. QC-set mean
-days per season 1951–2026: 7.0 at ≥ 1″ (trend −0.13/decade, p = 0.03), 1.6 at ≥ 4″, 0.7 at
-≥ 6″, 0.09 at ≥ 12″ (no significant trend at the higher thresholds).
+Denver 57″, Minneapolis 52″, Boston 43″, Indianapolis 25″, Seattle 8″, Atlanta 2″ (before the
+2026-10-22 rerun). QC-set national panel (558 stations in ≥ 90% of seasons), 1951–2026: 11.0
+days a season at ≥ 1″ (trend −0.23/decade, p = 0.01), 2.5 at ≥ 4″ (−0.04, p = 0.10), 1.1 at
+≥ 6″, 0.14 at ≥ 12″ (no significant trend). The mean is higher than before the rerun (7.1)
+because the invented zero seasons, mostly at low-snow stations, are gone.
 
-The lower panels average stations observed in ≥ 90% of the window's seasons, each season over
-those that reported it (other station hazards require every year).
+The lower panels average stations observed in ≥ 90% of the window's seasons, as departures from
+each station's own mean (added back to their average), so a station missing a season does not
+shift the series (other station hazards require every year). Station trend maps apply the same
+coverage gates as counties, over the station's observed seasons (which must cover at least half
+the period); stations that fail are drawn hollow.
 
 ### Building (about an hour, in the cloud)
 
@@ -429,13 +481,24 @@ Levels: any, ≥ 3 h, ≥ 6 h of freezing rain in the day.
   (Goshen 2002–04) or one-hour boundary cases (Indianapolis 2004–05 at ≥ 3/≥ 6 h).
 - **Stations** (`fzra_stations.py` → `fzra_stations.csv`): every federal ASOS in the lower 48
   (NCEI HOMR `asos-stations.txt`), plus other GHCNh airfields that had round-the-clock observers
-  before automation (mostly military fields). 957 stations have at least one complete season.
+  before automation (mostly military fields), inside a lower-48 lat/lon box (GHCNh files Aruba
+  and Curaçao under state "CA"). 948 stations have at least one complete season.
   Stations within 3 km are one site, read as the union of their ids (GHCNh often files a site's
   pre-ASOS years under an older WBAN, e.g. Terre Haute 93823 / 03868).
-- **QC set, the default** (`dp` = 1; 554 stations): DelPizzo et al. (2025)'s criterion, an
+- **Fog and rime sites left out** (2026-10-22): `ghcnh_daily.py` also counts, of each day's
+  FZRA hours, those reported with freezing fog (`fg`) and with visibility ≤ ½ mile (`lv`).
+  `build_fzra_data.py` drops a site when either share is ≥ 50% over its record (with ≥ 20 FZRA
+  hours): Mount Washington, Sexton Summit, Stampede Pass, Blue Canyon, Mullan Pass, Guadalupe
+  Mountains and Bryce Canyon (listed in `meta.fogExcluded`). Their "freezing rain" is mostly ice
+  from cloud or fog (Sexton Summit: 79% of FZRA reports with no measurable precipitation). Across
+  the 676 sites with ≥ 20 FZRA hours the median shares are 0.7% and 1.3%.
+- **QC set, the default** (`dp` = 1; 547 stations): DelPizzo et al. (2025)'s criterion, an
   overnight human observer, applied nationally from the data. A site qualifies if in 1985, 1987
   or 1990 it had a report in the local small hours (01–05 LST) on ≥ 90% of its observing days
-  (`overnight.py`; the distribution is sharply bimodal: 480 of 833 sites ≥ 0.95, 114 < 0.05).
+  (`overnight.py`; the distribution is bimodal but not cleanly: about 546 sites pass, 127 never
+  observed overnight and 285 did so on 5–90% of nights). The test describes 1985–90, not today:
+  many QC sites are now fully automated, and sites opened after 1990 (Denver International) fail
+  it by construction.
   This reproduces their Great Lakes list: **75 of their 76 U.S. sites pass**; the 76th,
   Champaign (0.55), is kept because it is on their list (`dpl` = 1 marks their sites). In
   Indiana it keeps exactly their five plus Terre Haute and Grissom AFB. In their region it also
@@ -446,12 +509,16 @@ Levels: any, ≥ 3 h, ≥ 6 h of freezing rain in the day.
   and a QC station within 60 km, the unscreened one averages **+5%** freezing-rain days (median;
   +4% at ≥ 3 h, −5% at ≥ 6 h). In Indiana the unscreened sites run ~+20%. (The older "74% more,
   Eagle Creek 3.5× Indianapolis" figure predates the FZRANO fix.)
-- **Results, 2001–2026, QC stations in every season (491)**: 2.55 freezing-rain days a season
-  on average, trending **−0.36 days/decade (p = 0.04)**; the unscreened stations −0.53 (p = 0.007).
-  Highest: Stampede Pass WA (34/season), Mount Washington NH (28), then Sexton Summit OR,
-  Bradford PA, Blue Canyon CA, Rochester MN, Worcester MA, northern Maine and New York (9–13).
-- `daily/` is kept as `fzra_daily.tgz` (3.5 MB): per station id, every observed UTC day with its
-  FZRA hour count and highest PK WND gust (kept for a future national peak-wind build).
+- **Results, 2001–2026, QC stations in every season (487)**: 2.49 freezing-rain days a season
+  on average, trending **−0.37 days/decade (p = 0.04)**; ≥ 3 h −0.26 (p = 0.01), ≥ 6 h −0.12
+  (p = 0.005). Treat the decline cautiously: p moves to 0.08 for 2001–2025 or 2002–2026, no region
+  is significant alone, and the unscreened/QC ratio fell from 1.11–1.26 in 2001–05 to about 1.0
+  after (trend p = 0.008), pointing to an early-2000s change in automated reporting. Highest
+  lowland climatologies: Bradford PA, Rochester MN, Worcester MA, northern Maine and New York
+  (9–13 days a season).
+- `daily/` is kept as `fzra_daily.tgz` (3.8 MB): per station id, every observed UTC day with its
+  FZRA hour count, the fog and low-visibility subsets of those hours, and the highest PK WND gust
+  (kept for a future national peak-wind build).
 
 ### Building
 

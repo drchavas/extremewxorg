@@ -22,7 +22,7 @@
      uses, so the page and the drawings agree. */
   html[data-theme="light"]{
     --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
-    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#9a5508;
   }
   html[data-theme="light"] body{
     background:
@@ -162,7 +162,7 @@
      <a href="scstrend.html">Prefer county resolution?</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-22 00:45 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-22 15:32 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -213,8 +213,9 @@
               0.25&deg;): days whose maximum 2&nbsp;m temperature, or maximum NWS heat index, reached
               the threshold, midnight to midnight local standard time. Each ERA5 cell counts its own
               days, and a box&rsquo;s value is the mean over the ERA5 land cells (land&ndash;sea mask
-              &ge; 0.5) whose centres lie in the U.S. inside it, so sea, lakes, Canada and Mexico are
-              left out; a box with no such cell is not drawn. 1950 onward. The newest month&rsquo;s
+              &ge; 0.5) whose centres lie in the U.S. inside it, each weighted by its land fraction
+              (a partly-sea cell still runs cooler than the land beside it), so sea, lakes, Canada and
+              Mexico are left out; a box with no such cell is not drawn. 1950 onward. The newest month&rsquo;s
               last day lacks a few overnight hours until the following month is out, and is recomputed
               then. <b>Before about 1960 the top heat-index thresholds (110 and 115&nbsp;&deg;F) are
               unreliable</b>: early ERA5 has occasional one-hour humidity spikes that the heat index
@@ -224,8 +225,17 @@
               Oregon State University) via ACIS: days whose 24-hour total (ending 12&nbsp;UTC, to the
               nearest hundredth of an inch) reached 1, 2 or 3&nbsp;inches. Each PRISM cell counts its
               own days, and a box&rsquo;s value is the mean over the cells inside it that lie in the
-              U.S. 1981 onward, and the page opens on that whole record; the last six months are provisional. The gauge network behind PRISM
-              changes over time, so trends carry some uncertainty from it.</li>
+              U.S. 1981 onward; the last six months are provisional. The gauge network behind PRISM
+              changes over time, so trends carry some uncertainty from it. <b>Heavy rain opens on 2002</b> because PRISM itself changes then: from 1&nbsp;January 2002 its daily precipitation uses weather radar (NWS Stage&nbsp;II/IV, then MRMS from July 2020) to place rain between the gauges across the central and eastern U.S., and PRISM warns that this adds non-climatic variation to trends. Against long-record gauges, heavy-rain days jump at 2002 in every eastern state we checked (&ge;&nbsp;2&Prime; days go from about 0.6 to 0.86 of the gauge count; no jump in the West, where radar is not used), so a trend that spans 2002 is inflated. Earlier years can still be chosen in the year boxes.</li>
+          <li><b>Derecho</b> counts, per box, the <b>events</b> (not days) on which a box has a
+              qualifying wind report inside the coherent wind swath of a <b>definitive</b> derecho in
+              the SPC archive of
+              <a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" rel="noopener">Squitieri,
+              Wade and Jirak (2026)</a> &mdash; NEXRAD-confirmed cases only, so the record begins in
+              1996, and all of them fall in April&ndash;August. Each event is dated by its swath&rsquo;s
+              start, so a storm crossing midnight counts once. A box the swath crossed without a
+              report is not credited. Individual swaths are on the
+              <a href="scsevents.html">historical events page</a>.</li>
           <li><b>Position each report.</b> Its own <code>BEGIN_LAT</code>/<code>BEGIN_LON</code>
               where present; otherwise the center of the county that reported it (the average of
               its simplified boundary points, which can differ slightly from the true centroid for
@@ -254,7 +264,9 @@
           <li><b>Smoothing.</b> The two maps are drawn through a light <b>Gaussian blur</b>,
               sigma <b>2&deg;</b>, on by default and switchable to <b>Raw</b>. On this 2&deg;
               grid that is exactly one box, and the kernel is cut off at two boxes (a 5&nbsp;&times;&nbsp;5
-              window). The county page uses the same 2&deg; sigma, so the two
+              window). Each neighbour is weighted by the share of its box that is U.S. land, so a
+              coastal or border box that counts few days because it holds little country does not
+              pull its inland neighbours down. The county page uses the same 2&deg; sigma, so the two
               are smoothed at a matched physical scale; it bites much harder there, because
               counties are roughly 0.3&deg; while this field is already 2&deg;-averaged by
               construction. A single 2&deg; box
@@ -273,9 +285,12 @@
               is never smoothed: ERA5 is already a continuous gridded field. Heavy rain is smoothed
               at <b>1&deg;</b> rather than 2&deg; by default (half a box: a 3&nbsp;&times;&nbsp;3
               window), switchable to Raw, to match rain&rsquo;s short correlation lengths while
-              PRISM resolves real 4&nbsp;km structure; it mostly helps the noisy single-box trends.</li>
-          <li><b>Color scales.</b> Set from the data on screen: the 98th percentile for
-              climatology, the 95th of absolute values for trend, symmetric about zero.</li>
+              PRISM resolves real 4&nbsp;km structure. For heavy rain only the <b>trend</b> map is
+              smoothed; its climatology is always drawn raw, because a long-term mean is not noisy
+              and a blur misplaces terrain and rain-shadow structure.</li>
+          <li><b>Color scales.</b> Set nationally from all boxes: the 98th percentile for
+              climatology, and for trend the 95th percentile of the non-zero absolute values,
+              symmetric about zero.</li>
         </ol>
       </div>
     </details>
@@ -300,11 +315,11 @@ const CMAP={
 };
 const THEME={
   dark :{bg:'#111c26',panel:'#16212e',ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',
-         grid:'#22303f',axis:'#6d8299',land:'#182635',pt:'#6cb6ff',fit:'#ffb14e',
+         grid:'#22303f',axis:'#6d8299',land:'#182635',nofit:'#2b3a4b',pt:'#6cb6ff',fit:'#ffb14e',
          band:'rgba(255,177,78,.10)',bandEdge:'rgba(255,177,78,.42)',
          sea:'#0d151d',cline:'rgba(0,0,0,.45)',tile:'World_Dark_Gray_Base',sel:'#ff3ecb'},
   light:{bg:'#ffffff',panel:'#ffffff',ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',
-         grid:'#e6ecf2',axis:'#8494a4',land:'#f2f5f8',pt:'#2b7bd4',fit:'#d4770f',
+         grid:'#e6ecf2',axis:'#8494a4',land:'#f2f5f8',nofit:'#b9c4cf',pt:'#2b7bd4',fit:'#a85a00',
          band:'rgba(212,119,15,.13)',bandEdge:'rgba(212,119,15,.45)',
          sea:'#ffffff',cline:'rgba(0,0,0,.35)',tile:'World_Light_Gray_Base',sel:'#c2007a'}
 };
@@ -459,7 +474,7 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid,gate){
   let out=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   out+=txt(x+14,y+22,'Annual number of '+esc(label)+' '+countWord()+'s ('+thrSpec().label+')',{size:14.5,weight:650});
   out+=txt(x+14,y+36,`${periodLabel()} · ${esc(SCOPE)} · least-squares trend with 95% band · data: `+
-           (HZ[S.hazard].meta.kind==='field'?(fieldSrc()==='PRISM'?'PRISM (Oregon State) via ACIS':'ECMWF ERA5 (Copernicus)'):'NOAA Storm Events'),{size:11,fill:t.mute});
+           (HZ[S.hazard].meta.kind==='field'?(fieldSrc()==='PRISM'?'PRISM (Oregon State) via ACIS':'ECMWF ERA5 (contains modified Copernicus Climate Change Service information)'):'NOAA Storm Events'),{size:11,fill:t.mute});
 
   // gridlines + y axis
   for(let i=0;i<=AX.n;i++){
@@ -513,7 +528,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,gate,vm){
   out+=txt(x+14,y+36,`${esc(SCOPE)}, ${a}–${b} · trend with 95% band, bold R² = significant at p < 0.05`,
            {size:11,fill:t.mute});
 
-  const cols=4,rows=3, gx=10,gy=10;
+  const cols=w<520?2:4, rows=12/cols, gx=10,gy=10;
   const cw=(w-28-(cols-1)*gx)/cols, ch=(h-56-(rows-1)*gy)/rows;
 
   // common y scale across all months
@@ -593,15 +608,21 @@ function dl(blob,name){
   a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
 }
 
-const S={hazard:'hail',thresh:0,region:'',cell:'',y0:2000,y1:null,theme:'dark',smooth:'2'};
+const S={hazard:'hail',thresh:defThr('hail'),region:'IN',cell:'',y0:2000,y1:null,theme:'dark',smooth:'2'};
 let INDEX=null, GEO=null, STGEO=null, COGEO=null;
 const HZ={}, STATES=[];
 let REQ=null;   // the period the reader asked for (hash or the year boxes), before any clamping
 let REQUSER=false;   // whether the reader chose it (a link or the year boxes), or it is a default
 /* Default start year per hazard. Storm Events opens in 2000, after the 1990s jump in
-   reporting; heavy rain opens on PRISM's whole daily record, which has no such break,
-   and a 45-year window is far less noisy for a variable this patchy than a 26-year one. */
-function defY0(h){ return h==='rain'?1981:2000; }
+   reporting; heavy rain in 2002, when PRISM began using radar between gauges in the
+   central and eastern U.S. (a step in heavy-rain days, review of 2026-10-22); ERA5 heat
+   in 1979, the start of the satellite era. */
+/* Hail opens on >= 1 in: the NWS raised its severe-hail criterion to 1 in in
+   January 2010 and sub-inch reports largely stopped, so an any-hail trend mostly
+   measures that change. */
+function defThr(h){ return h==='hail'?1:0; }
+let GOTPLACE=false;   // the link named a place (r) or a box (c)
+function defY0(h){ return h==='rain'?2002:(h==='heat'||h==='heatindex')?1979:2000; }
 let CELLS=[];              // {ci, lat, lon, state} for every populated 2° box
 let cidx={};               // ci -> index into CELLS
 let NLAT=0,NLON=0,GRID=2,LAT0=0,LON0=0,NY=0,Y0=0;
@@ -787,6 +808,13 @@ function syncOutline(){
 }
 function selCell(){ return S.cell===''?-1:(cidx[+S.cell]===undefined?-1:cidx[+S.cell]); }
 /* The box whose center is nearest a point — used to seed a selection. */
+/* U.S. land fraction of each 2° box (geo/grid_landfrac.json: lower-48 county
+   area inside the box over the box's area); 1 where unknown */
+let LANDF={};
+/* a box absent from the file holds no U.S. land (offshore or foreign boxes with stray
+   reports): near-zero weight, so it neither drags its neighbours nor the national mean */
+function landW(ci){ const f=LANDF[ci]; return f==null?(LANDN?0.02:1):Math.max(0.02,f); }
+let LANDN=0;
 function nearestCell(lat,lon){
   let best=-1,bd=1e9;
   CELLS.forEach((c,i)=>{ const d=(c.lat-lat)**2+((c.lon-lon)*0.77)**2;
@@ -806,13 +834,17 @@ function seriesMonthYear(){
     /* No box picked: average over every populated box in the lower 48. The mean
        rather than the sum, so the panels carry the same units as the maps —
        hazard days per 2° box — and clicking a box is a change of scope, not of
-       quantity. */
+       quantity. Weighted by each box's U.S. land area (land fraction x cos lat),
+       so mostly-water boxes do not dilute the national value and the ERA5/PRISM
+       fields give a true area mean. */
     const n=CELLS.length;
     SERIESINFO={n};
     if(!n) return {my:out,valid,vm};
+    const wt={}; let W=0;
+    CELLS.forEach(cc=>{ const x=landW(cc.ci)*Math.cos(cc.lat*Math.PI/180); wt[cc.ci]=x; W+=x; });
     for(let k=0;k<d.ci.length;k++){
       if(cidx[d.ci[k]]===undefined) continue;
-      out[d.yi[k]*12+(d.mi[k]-1)]+=v[k]/n;
+      out[d.yi[k]*12+(d.mi[k]-1)]+=v[k]*wt[d.ci[k]]/W;
     }
     return applyGaps({my:out,valid,vm});
   }
@@ -918,7 +950,7 @@ function styleOf(C){
     const c=cidx[feat.properties.ci], col=colorFor(C.val[c],C);
     const on=(S.cell!==''&&+S.cell===feat.properties.ci);
     if(col===null) return {stroke:true,color:T().line,weight:.3,fill:true,
-                           fillColor:T().land,fillOpacity:.35};
+                           fillColor:T().nofit,fillOpacity:.6};
     return {stroke:true,color:on?T().sel:T().cline,weight:on?3.9:.4,
             fill:true,fillColor:col,fillOpacity:.85};
   };
@@ -985,7 +1017,8 @@ function drawColorbar(el,C,title){
     `<div class="strip" style="background:${grad}"></div>`+
     `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
     /* say what the white means, or it reads as missing data */
-    (C.div?'':`<div class="zchip"><i></i>exactly 0</div>`);
+    (C.div?`<div class="zchip"><i style="background:${T().nofit};opacity:.8"></i>no trend fitted</div>`
+          :`<div class="zchip"><i></i>exactly 0</div>`);
 }
 
 /* Gaussian smoother for the two maps.
@@ -1036,7 +1069,11 @@ function smOptions(){
 function smoothable(){ return !(isField() && S.hazard!=='rain'); }
 function smoothOn(){ return S.smooth!=='off' && smoothable(); }
 /* The badge appended to both map subtitles. */
-function smTag(){
+/* Heavy rain smooths the TREND map only: its climatology is not noisy, and a blur
+   misplaces terrain and rain-shadow structure (review of 2026-10-22). */
+function smClim(){ return S.hazard!=='rain'; }
+function smTag(which){
+  if(which==='clim' && !smClim()) return ` · <span class="smtag">Raw data</span>`;
   return smoothOn()
     ? ` · <span class="smtag">${sigDeg()}° Gaussian smoothed</span>`
     : ` · <span class="smtag">Raw data</span>`;
@@ -1060,7 +1097,10 @@ function smoothField(v){
         const kj=ki+dx; if(kj<0||kj>=NLON) continue;   // no wrap: CONUS has edges
         const n=cidx[lj*NLON+kj];
         if(n===undefined || !isFinite(v[n])) continue;
-        const g=w[dy+R]*w[dx+R];
+        /* weighted by the box's U.S. land: a box that is mostly sea, lake or
+           Canada counts few days because it holds little country, and must not
+           drag its inland neighbours down (south Florida 7.9 -> 4.6 hail days) */
+        const g=w[dy+R]*w[dx+R]*landW(lj*NLON+kj);
         sum+=g*v[n]; ww+=g;
       }
     }
@@ -1085,10 +1125,15 @@ function reportingBreakHtml(){
   if(S.hazard==='hail') return ' <b>Hail: the NWS raised its severe-hail criterion from &frac34;&Prime; to 1&Prime; in January 2010</b>, '+
     'and reports of hail smaller than 1&Prime; largely stopped &mdash; they were about half of all hail days through 2008 and '+
     'under a quarter from 2011. So a trend in <i>any hail</i> across 2010 mostly measures that change: use '+
-    '&ge;&nbsp;1&Prime; or larger, or start the period in 2010.';
+    '&ge;&nbsp;1&Prime; or larger, or start the period in 2010 (the page opens on &ge;&nbsp;1&Prime;).';
   if(S.hazard==='wind') return ' <b>Wind: until 2003 many thunderstorm-wind reports carried no speed</b> (about a third in 2002, '+
     'almost none from 2003), so counts at <i>&ge;&nbsp;50&nbsp;kt and above</i> step up at 2003 for reporting reasons. '+
-    'For the speed thresholds, start the period in 2003 or later.';
+    'For the speed thresholds, start the period in 2003 or later. '+
+    '<b>In the Intermountain West the rise in wind days is largely automated measured gusts</b> entering the '+
+    'database (Utah: 6 measured reports of &ge;&nbsp;50&nbsp;kt in 2004, 234 in 2023), not more storms.';
+  if(S.hazard==='tornado') return ' <b>Tornado ratings changed from the F to the EF scale in February 2007</b>, and rating '+
+    'practice has kept shifting (unrated EFU segments roughly tripled from 2015&ndash;19 to 2020&ndash;24), so '+
+    'EF1+ and higher trends partly measure rating.';
   return '';
 }
 /* Gridded fields: ERA5 (heat) or PRISM (heavy rain). The short name comes from
@@ -1097,10 +1142,13 @@ function fieldSrc(){ const d=HZ[S.hazard]; return (d&&d.meta&&d.meta.srcname)||'
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
   if(S.hazard==='rain')
-    return lead+'<b>Heavy rain comes from PRISM, a gridded analysis of rain-gauge reports</b> (4&nbsp;km, daily, '+'PRISM Group, Oregon State University), not from storm reports. A day is the 24 hours ending 12&nbsp;UTC '+'(about 7&nbsp;am Eastern), the volunteer observers\' day, and totals are taken to the nearest hundredth of an '+'inch. PRISM is built from whatever gauges reported each day, and that network has changed over the years, '+'so <b>read the trends with some caution</b>; a 4&nbsp;km cell also smooths the most intense local downpours. '+'The record starts in 1981, and the last six months are provisional: PRISM revises them as late reports arrive. '+'Lower 48 only.'+
+    return lead+'<b>Heavy rain comes from PRISM, a gridded analysis of rain-gauge reports</b> (4&nbsp;km, daily, '+'PRISM Group, Oregon State University), not from storm reports. A day is the 24 hours ending 12&nbsp;UTC '+'(7&nbsp;am EST, 8&nbsp;am EDT), the volunteer observers\' day, and totals are taken to the nearest hundredth of an '+'inch. PRISM is built from whatever gauges reported each day, and that network has changed over the years, '+'so <b>read the trends with some caution</b>; a 4&nbsp;km cell also smooths the most intense local downpours. '+'The record starts in 1981, and the last six months are provisional: PRISM revises them as late reports arrive. '+
+      '<b>The page opens on 2002</b>: from then on PRISM uses weather radar to place rain between the gauges in the '+
+      'central and eastern U.S. (MRMS from July 2020), and heavy-rain days jump at 2002 against long-record gauges '+
+      '&mdash; so a trend reaching back before 2002 is inflated there. '+'Lower 48 only.'+
       ' Each PRISM cell counts its own days; a box&rsquo;s value is the mean over the cells inside it that lie in the U.S.';
   if(HZ[S.hazard]&&HZ[S.hazard].meta.kind==='field')
-    return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer, so counts run somewhat below what a single weather station records &mdash; '+'<b>trust the trends and the geography more than the absolute numbers</b>. Days run '+'midnight to midnight local standard time. Before about 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations. Lower 48 only.'+
+    return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer. <b>Temperature counts run well below an airport station\'s</b>: about 0.6&times; the station\'s '+'days &ge;&nbsp;90&nbsp;&deg;F at the median of 26 airports, 0.1&ndash;0.4&times; in some coastal and lake cities '+'(Seattle, Boston, Chicago, New Orleans), and about half at &ge;&nbsp;100&nbsp;&deg;F in the desert (Las Vegas 41 vs 82 days/yr). '+'<b>Heat-index counts are much closer</b> (Houston 2023: 139 vs 140 days &ge;&nbsp;90&nbsp;&deg;F). So '+'<b>trust the trends and the geography more than the absolute numbers</b>, especially for temperature. Days run '+'midnight to midnight local standard time. Before 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations, and the page opens on 1979. Lower 48 only.'+
       ' Each ERA5 cell counts its own days; a box&rsquo;s value is the mean over the cells on U.S. land inside it.'+
       (S.hazard==='heatindex'?' <b>Heat index at 110 and 115&nbsp;&deg;F is unreliable before about 1960</b> '+
         '(one-hour humidity spikes in early ERA5; see Methods).':'');
@@ -1126,7 +1174,8 @@ function refresh(){
      actually drawn. RAWM/RAWT are kept so a box can still report its own
      number on hover. */
   RAWM=cm.mean; RAWT=cm.trend;
-  cm.mean=smoothField(cm.mean); cm.trend=smoothField(cm.trend);
+  if(smClim()) cm.mean=smoothField(cm.mean);
+  cm.trend=smoothField(cm.trend);
   const mv=cm.mean.length?[...cm.mean].filter(isFinite).sort((p,q)=>p-q):[];
   const tv=[...cm.trend].map(Math.abs).filter(isFinite).sort((p,q)=>p-q);
   const hiM=niceUp(quantile(mv,0.98))||1;
@@ -1149,13 +1198,13 @@ function refresh(){
   /* The smoothing state is the one thing about these maps a reader can most
      easily forget, so it is called out rather than tucked into gray prose. */
   document.getElementById('climSub').innerHTML =
-    esc(`Mean annual ${lab} ${countWord()}s (${thrSpec().label}) per ${GRID}° box, ${periodLabel()}`)+smTag();
+    esc(`Mean annual ${lab} ${countWord()}s (${thrSpec().label}) per ${GRID}° box, ${periodLabel()}`)+smTag('clim');
   const gy=new Set(gapYears()); let nwin=0; for(let y=a;y<=b;y++) if(!gy.has(y)) nwin++;
   const need=yearsNeeded(nwin);
   document.getElementById('trendSub').innerHTML = nwin<need
     ? esc(`No trends shown: ${periodLabel()} gives ${nwin} usable year${nwin===1?'':'s'} and a fit needs at `+
           `least ${need} years carrying a hazard ${countWord()}`)
-    : esc(`Change per decade · gray boxes are too sparse to fit a trend`)+smTag();
+    : esc(`Change per decade · gray boxes are too sparse to fit a trend`)+smTag('trend');
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
@@ -1174,7 +1223,13 @@ const PANEL_BREAK = 780;
 function panelLayout(){
   const narrow = (typeof window!=='undefined' && window.innerWidth &&
                   window.innerWidth < PANEL_BREAK);
-  return narrow
+  /* phones: a viewBox close to the screen width, so text renders near its nominal
+     size (at 760 units on a 390 px screen the axis labels were 5 px tall), and
+     the twelve months in two columns */
+  const phone = narrow && window.innerWidth < 560;
+  return phone
+    ? {W:440, H:1400, annual:[0,10,440,400], monthly:[0,425,440,965]}
+    : narrow
     ? {W:760, H:1000, annual:[0,10,760,440], monthly:[0,480,760,510]}
     : {W:1520, H:470, annual:[0,10,720,450], monthly:[740,10,780,450]};
 }
@@ -1192,7 +1247,7 @@ function drawPanels(){
     if(valid&&!valid[i]){ annual.push(0); continue; }   // the map skips it too
     let v=0; for(let m=0;m<12;m++) v+=my[i*12+m]; annual.push(v); }
   // one place decides how the panels describe their scope
-  SCOPE = selCell()<0 ? `mean over all ${CELLS.length} boxes` : `box at ${placeLabel()}`;
+  SCOPE = selCell()<0 ? `land-weighted mean over all ${CELLS.length} boxes` : `box at ${placeLabel()}`;
   const gate=gateOf(annual,b-a+1);
   svg+=annualPanel(...LO.annual,my,Y0,NY,a,b,label,valid,gate);
   svg+=monthlyPanel(...LO.monthly,my,Y0,NY,a,b,valid,gate,S2.vm);
@@ -1203,8 +1258,8 @@ function drawPanels(){
   document.getElementById('foot').innerHTML =
     (selCell()<0
       ? `Annual and monthly panels average all <b>${SERIESINFO.n}</b> ${GRID}° boxes in the lower `+
-        `48 — the same per-box quantity the maps show, so the axis means the same thing either `+
-        `way. <b>Click any box</b> to narrow to it.`
+        `48, each weighted by the U.S. land it holds — the same per-box quantity the maps show, so `+
+        `the axis means the same thing either way. <b>Click any box</b> to narrow to it.`
       : `Annual and monthly panels are for the single ${GRID}° box at <b>${esc(placeLabel())}</b>. `+
         `Choose <i>All boxes</i> in the Box menu to go back to the national mean.`)+
     gapNote()+
@@ -1225,6 +1280,8 @@ function drawPanels(){
 }
 /* Say so on screen when the window straddles the missing months. */
 /* The requested period, saying when an incomplete year inside it was left out. */
+function monthName2(ym){ const M=['January','February','March','April','May','June','July','August',
+  'September','October','November','December']; const [y,m]=String(ym).split('-'); return `${M[+m-1]} ${y}`; }
 function periodLabel(){
   const [a,b]=yearsSel(), ex=gapYears().filter(y=>y>=a&&y<=b);
   return `${a}–${b}`+(ex.length?` (${ex.join(', ')} incomplete, left out)`:'');
@@ -1244,7 +1301,9 @@ function gapNote(){
     out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because the ${fieldSrc()} data `+
          `here run only through ${MONTHS[+thru.split('-')[1]-1]} ${thru.split('-')[0]} (`+(fieldSrc()==='PRISM'
            ? `each month is added once it is complete`
-           : `ERA5 appears a few months behind real time, and this page adds each month as it does`)+
+           : `ERA5 appears a few months behind real time, and this page adds each month as it does`+
+          (HZ[S.hazard].meta.provisional ? `; the newest month, ${monthName2(HZ[S.hazard].meta.provisional)}, `+
+            `is provisional (its last day lacks a few overnight hours) and is redone next month` : ``))+
          `). Those months appear in the monthly panels.`;
   else if(late.length)
     out+=` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
@@ -1266,14 +1325,16 @@ window.addEventListener('resize',()=>{
 function syncRegionSel(){ document.getElementById('regSel').value=S.region; }
 /* The period goes into the address only when the reader chose it (or is copying a
    link to share). A default period left there would be read back on reload as a
-   choice, and a hazard with a different default (heavy rain, 1981) would then open
+   choice, and a hazard with a different default (heavy rain, 2002) would then open
    on the old hazard's 2000. */
 function writeHash(share){
   const p=new URLSearchParams();
   p.set('h',S.hazard); p.set('t',S.thresh); p.set('r',S.region);
   if(S.smooth!==smDefault(S.hazard)) p.set('sm',S.smooth);
   if(S.cell!=='') p.set('c',S.cell);
-  if(REQUSER||share) p.set('p',S.y0+'-'+S.y1);
+  // the period only when the reader chose it: a copied default link must open each
+  // hazard on its own default (rain 2002, snow 1951), not on the sharer's hazard's
+  if(REQUSER) p.set('p',S.y0+'-'+S.y1);
   if(S.theme!=='dark') p.set('k',S.theme);
   if(mapA){ const c=mapA.getCenter();
     p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
@@ -1290,9 +1351,10 @@ function readHash(){
   if(smq==='off') S.smooth='off';
   else if(smq==='on'||smq==='1'||smq==='2') S.smooth=smq==='1'&&S.hazard==='rain'?'1':'2';
   else S.smooth=smDefault(S.hazard);              // absent: the hazard's default
-  if(p.get('t')) S.thresh=+p.get('t');
+  if(p.get('t')) S.thresh=+p.get('t'); else S.thresh=defThr(S.hazard);
   if(p.get('r')!=null) S.region=p.get('r');
   if(p.get('c')) S.cell=p.get('c');
+  GOTPLACE = p.get('r')!=null || !!p.get('c');
   if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b; REQ=[a,b]; REQUSER=true;} }
   if(p.get('k')) S.theme=p.get('k');
   return p.get('v');
@@ -1351,10 +1413,11 @@ function wire(){
     if(pthr && pspec.unit===spec.unit && typeof pthr.min==='number'){
       let k=0; spec.thresholds.forEach((t,i)=>{ if(typeof t.min==='number' && t.min<=pthr.min+1e-9) k=i; });
       S.thresh=k;
-    }
+    } else if(!(pspec && pspec.unit===spec.unit)) S.thresh=defThr(key);  // other units: start over
     if(REQUSER&&REQ) [S.y0,S.y1]=REQ;
     else { S.y0=defY0(key); S.y1=null; }        // not chosen: this hazard's default period
-    S.hazard=key; S.smooth=smDefault(key);
+    const keepRaw=S.smooth==='off';                // a Raw choice is kept across hazards
+    S.hazard=key; S.smooth=keepRaw?'off':smDefault(key);
     /* Each hazard populates a slightly different set of boxes and starts in a
        different year — hail 258 boxes from 1955, tornado 257 from 1950 — so the
        geometry and the year axis have to be rebuilt, not just the counts. */
@@ -1393,7 +1456,8 @@ function wire(){
     refresh(); };
   document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; syncYears(); REQ=[S.y0,S.y1]; REQUSER=true; refresh(); };
   document.getElementById('y1In').onchange=e=>{ S.y1=+e.target.value; syncYears(); REQ=[S.y0,S.y1]; REQUSER=true; refresh(); };
-  document.getElementById('usBtn').onclick=()=>{ S.region='';
+  // Full U.S.: the national mean of all boxes, outlined as the whole lower 48
+  document.getElementById('usBtn').onclick=()=>{ S.region=''; S.cell='';
     syncRegionSel(); syncCells(); zoomUS(); refresh(); };
   /* Everything on this page is recoverable from the URL hash, so the honest
      reset is to drop the hash and reload rather than to unwind each control by
@@ -1431,19 +1495,22 @@ function zoomUS(){
   try{
     const view=readHash();
     msg.textContent='Loading grid…';
-    const [ix,stopo,ctopo]=await Promise.all([
+    const [ix,stopo,ctopo,lf]=await Promise.all([
       fetch('data/grid_index.json').then(r=>r.json()),
       gzFetch('geo/states.topo.json.gz'),
-      gzFetch('geo/counties.topo.json.gz')
+      gzFetch('geo/counties.topo.json.gz'),
+      fetch('geo/grid_landfrac.json').then(r=>r.ok?r.json():{}).catch(()=>({}))
     ]);
+    LANDF=lf||{}; LANDN=Object.keys(LANDF).length;
     // the grid index names things differently from the county one
     INDEX={hazards:ix.hazards.map(h=>({key:h.k,label:h.label,unit:h.unit,
              countword:h.countword,
              thresholds:h.thresholds.map(t=>({key:t.k,label:t.label})),
              year0:h.y0,year1:h.y1,file:h.file}))};
     /* Old or hand-edited links must not take the page down. */
-    if(!INDEX.hazards.some(h=>h.key===S.hazard)) S.hazard='hail';
-    if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<hazSpec().thresholds.length)) S.thresh=0;
+    if(!INDEX.hazards.some(h=>h.key===S.hazard)){ S.hazard='hail'; S.thresh=defThr('hail'); }
+    if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<hazSpec().thresholds.length))
+      S.thresh=Math.min(defThr(S.hazard),hazSpec().thresholds.length-1);
     if(!THEME[S.theme]) S.theme='dark';
     STTOPO=stopo;
     STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
@@ -1452,6 +1519,10 @@ function zoomUS(){
     msg.textContent='Loading data…';
     const d=await loadHazard(S.hazard);
     buildCells(d);
+    /* Like every other page, open on Indiana: the box holding Indianapolis is
+       selected (panels and magenta outline describe it) and the map is framed on
+       the state. A link that names a place or a box keeps it. */
+    if(!GOTPLACE){ const i=nearestCell(39.77,-86.16); if(i>=0) S.cell=String(CELLS[i].ci); }
 
     document.getElementById('msg').style.display='none';
     document.getElementById('body').style.display='block';
@@ -1472,7 +1543,7 @@ function zoomUS(){
     document.documentElement.dataset.theme=S.theme;
     document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
 
-    // opens on the national mean; clicking a box narrows to it
+    // opens on the Indianapolis box; "All boxes" or Full U.S. gives the national mean
     document.getElementById('smSel').value=S.smooth;
   syncRegionSel(); syncThresholds(); syncCells(); syncYears();
     if(!REQUSER && S.y0!==defY0(S.hazard)){ S.y0=defY0(S.hazard); syncYears(); }
@@ -1481,6 +1552,7 @@ function zoomUS(){
     if(view){ const [la,lo,z]=view.split(',').map(Number);
       if(isFinite(la)){ syncing=true; mapA.setView([la,lo],z||4);
         mapB.setView([la,lo],z||4); syncing=false; } }
+    else if(S.region) focusState(true);
     else zoomUS();
 
     refresh();

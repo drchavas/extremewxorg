@@ -21,6 +21,7 @@ BOX = {
     'NA': ((260, 40), (0, 60)),
     'WP': ((100, 180), (0, 60)),
     'EP': ((180, 275), (0, 60)),
+    'NI': ((40, 100), (0, 60)),
     'SI': ((0, 90), (-60, 0)),
     'AU': ((90, 160), (-60, 0)),
     'SP': ((160, 290), (-60, 0)),
@@ -30,14 +31,16 @@ MINUS = {'NA': [((260, 275), (0, 15))], 'EP': [((260, 275), (15, 60))]}
 CUT = {'all': -1e9, 'ts': 34, 'hu': 64, 'maj': 96}
 
 # Same stage selections as build_tc_trends.STAGE_SETS, restated on purpose.
+# The composites keep NR (not reported) and MX (mixture) as tropical-or-unknown.
 STAGE_SETS = {
-    'all': None, 'ts': ['TS'], 'et': ['ET'], 'tset': ['TS', 'ET'],
+    'all': None, 'tset': ['TS', 'SS', 'ET', 'MX', 'NR'],
+    'trop': ['TS', 'SS', 'MX', 'NR'], 'ts': ['TS'], 'et': ['ET'],
     'ss': ['SS'], 'ds': ['DS'], 'mx': ['MX'], 'nr': ['NR'],
 }
 
 
 def points():
-    d = pd.read_csv(CSV, usecols=['SID', 'SEASON', 'ISO_TIME', 'NATURE', 'LAT', 'LON',
+    d = pd.read_csv(CSV, usecols=['SID', 'SEASON', 'BASIN', 'ISO_TIME', 'NATURE', 'LAT', 'LON',
                                   'USA_WIND', 'USA_PRES', 'TRACK_TYPE',
                                   'USA_R34_NE', 'USA_R34_SE', 'USA_R34_SW',
                                   'USA_R34_NW'],
@@ -73,14 +76,28 @@ def in_box(d, lo, hi, la, lb):
     return inlon & (d.clat >= la) & (d.clat < lb)
 
 
+def region(d, basin):
+    """Box membership, except that North Atlantic vs East Pacific is decided by
+    the position's own IBTrACS BASIN flag anywhere inside the two boxes."""
+    def box(b):
+        (lo, hi), (la, lb) = BOX[b]
+        m = in_box(d, lo, hi, la, lb)
+        for (c0, c1), (r0, r1) in MINUS.get(b, []):
+            m &= ~in_box(d, c0, c1, r0, r1)
+        return m
+    m = box(basin)
+    if basin in ('NA', 'EP'):
+        both = box('NA') | box('EP')
+        flagged = d.BASIN.isin(['NA', 'EP'])
+        m = (m & ~flagged) | (both & (d.BASIN == basin))
+    return m
+
+
 def series(d, basin, thr, field, stat, y0=1980, y1=2024, band=None, stage='all'):
     """`band`, if given, is the southern edge of a GRID-wide latitude band, which
     scopes the result the way the trend-by-latitude panel does.  `stage` mirrors
     the page's Stages control."""
-    (lo, hi), (la, lb) = BOX[basin]
-    m = in_box(d, lo, hi, la, lb)
-    for (c0, c1), (r0, r1) in MINUS.get(basin, []):
-        m &= ~in_box(d, c0, c1, r0, r1)
+    m = region(d, basin)
     nats = STAGE_SETS[stage]
     if nats is not None:
         m &= d.NATURE.isin(nats)
@@ -158,6 +175,15 @@ def main():
         ('storms NA ts+ TSET',     'NA', 'ts',  'density', 'storms', None, 'tset'),
         ('storms NA ts+ ET',       'NA', 'ts',  'density', 'storms', None, 'et'),
         ('storms NA ts+ SS',       'NA', 'ts',  'density', 'storms', None, 'ss'),
+        ('storm-days NA ts+ TROP', 'NA', 'ts',  'density', 'days',   None, 'trop'),
+        ('storms NA ts+ TROP',     'NA', 'ts',  'density', 'storms', None, 'trop'),
+        # North Indian 1990-95 is entirely NOT REPORTED stage in IBTrACS; the
+        # default selection must keep it (it once dropped it and drew a false trend)
+        ('storm-days NI ts+ TSET', 'NI', 'ts',  'density', 'days',   None, 'tset'),
+        ('storm-days NI ts+ TS',   'NI', 'ts',  'density', 'days',   None, 'ts'),
+        # NA/EP decided per position by the BASIN flag along the isthmus
+        ('storms EP ts+ TSET',     'EP', 'ts',  'density', 'storms', None, 'tset'),
+        ('pmin NA ts+ min TSET',   'NA', 'ts',  'pmin',    'ext',    None, 'tset'),
     ]
     for name, b, t, f, st, band, *rest in spec:
         stage = rest[0] if rest else 'all'
@@ -186,10 +212,7 @@ def main():
     for name, b, t, f, st in [('ace NA ts+', 'NA', 'ts', 'ace', 'sum'),
                               ('storm-days NA ts+', 'NA', 'ts', 'density', 'days'),
                               ('vmax WP hu+ mean', 'WP', 'hu', 'vmax', 'mean')]:
-        (lo, hi), (la, lb) = BOX[b]
-        m = in_box(d, lo, hi, la, lb)
-        for (c0, c1), (r0, r1) in MINUS.get(b, []):
-            m &= ~in_box(d, c0, c1, r0, r1)
+        m = region(d, b)
         if t != 'all':
             m &= d.USA_WIND >= CUT[t]
         s_ = d[m]

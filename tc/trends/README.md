@@ -203,31 +203,58 @@ remnant; labeling it post-tropical would be wrong about half the time. Splitting
 within the track would give a genuine remnant-low category, but that is a derived quantity, not
 one the file carries. `SS` is always mid-life, never a transition state.
 
-### The eight selections
+### The nine selections
 
-**Tropical + extratropical is the default** — a cyclone and the post-transition storm it becomes,
-which is what most hazard questions mean by the event. North Atlantic, TS+, 2004–2024 storm-days:
+**`NR` and `MX` are not stages.** They say the stage is unknown (`NR`, not reported) or contested
+(`MX`, agencies disagree). In some basins they are a large share of the record: every North
+Indian position in 1990, 1991, 1993, 1994 and 1995 is `NR` (and 30.5 of 36.75 TS+ storm-days in
+1992). So the composite selections treat them as **tropical-or-unknown and keep them**, the same
+rule as the ENSO page's TC builder (`enso/build_enso_tc.py`, which drops only `ET` and `DS`).
 
-| selection | storm-days |
-|---|---|
-| All stages | 2023.5 |
-| Tropical only | 1619.8 |
-| Extratropical only | 278.8 |
-| **Tropical + extratropical** (default) | **1898.5** |
-| Subtropical only | 56.0 |
-| Disturbance only | 69.0 |
-| Mixture only | 0.0 |
-| Not reported only | 0.0 |
+| key | selection | stages | NA, TS+, 2004–2024 storm-days |
+|---|---|---|---|
+| `all` | All stages | all six | 1949.5 |
+| **`tset`** | **Tropical + extratropical (all but disturbance)** — default | TS SS ET MX NR | **1880.75** |
+| `trop` | Tropical (all but extratropical and disturbance) | TS SS MX NR | 1602.0 |
+| `ts` | TS-labeled only | TS | 1546.5 |
+| `et` | Extratropical only | ET | 278.75 |
+| `ss` | Subtropical only | SS | 55.5 |
+| `ds` | Disturbance only | DS | 68.75 |
+| `mx` | Mixture only | MX | 0 |
+| `nr` | Not reported only | NR | 0 |
 
-The six single stages partition the record exactly: they sum to 2023.5, and `ts + et` equals the
-`tset` selection to machine precision. `test_tctrend.js` asserts both.
+**The default** — a cyclone and the post-transition storm it becomes, which is what most hazard
+questions mean by the event — drops only disturbances. **`trop`** is the tropical-cyclone-only
+view. **`ts`** is the strict label, kept for completeness; it drops `NR` and so shows the same
+false North Indian rise the old default did.
+
+The six single stages partition the record exactly (they sum to `all`), `tset = all − ds` and
+`trop = tset − et = ts + ss + mx + nr`, all to machine precision. `test_tctrend.js` asserts each.
+
+**Corrected 2026-10-22: the default used to be `TS + ET` only.** That deleted every `NR`
+position, which erased the North Indian Ocean for 1990–95 (TS+ storm-days 0, 0, 6.25, 0, 0, 0
+against 9, 11, 36.75, 6, 12, 11) and turned its trend into **+5.06 storm-days/yr per decade,
+*p* < 0.001**. With `NR` kept it is **+1.31, *p* = 0.36** — small and not significant (found by an
+independent review). It also dropped `SS` and `MX`. Other basins moved by much less: at TS+
+over 1990–2024 the global storm-day trend went from −20.4 to −20.1 per decade and the South
+Indian from −3.7 to −2.1 (its early `NR`/`MX` positions); global TS+ storms went from 86.0 to
+87.3 a year. The stage labels in old links still resolve (`g=tset`, `g=ts`, …) — `ts` now
+means the strict TS label, as its new name says.
+
+**Extratropical positions dominate high latitudes.** Under the default, ET is under 1% of TS+
+positions equatorward of 30°, 6% at 30–35°, 15% at 35–40°, 56% at 40–50° and 98% at 50–60° (global, 1980–2025). So the
+deep pressures and large radii on the poleward side of the Pmin and R34 maps and profiles are
+post-transition lows. The default was kept rather than switched per field (a control that
+silently changes with the field is worse than a note), and the page says so in a note whenever
+Pmin or R34 is shown with ET included.
 
 ### ACE ignores this control
 
 ACE is defined over tropical **and subtropical** stages. Letting a selection like
-*tropical + extratropical* apply to it would silently drop the subtropical contribution and
+*TS-labeled only* apply to it would silently drop the subtropical contribution (and the default
+would add extratropical positions) and
 produce a non-standard number under a standard name, so ACE is summed outside the stage filter
-and is identical under all eight settings — asserted to 1e-6.
+and is identical under all nine settings — asserted to 1e-6.
 
 Worth noting that even a careful outside source leaves this implicit:
 [global-tropical-cyclones.com](https://global-tropical-cyclones.com/methodology) states the
@@ -245,10 +272,11 @@ costs +17% rows (34,552 → 40,325) rather than eight copies of everything.
 **Distinct storm counts are not additive over stages.** A cyclone with both tropical and
 extratropical positions in one box is one storm there, not two — summing the per-stage counts
 over-counts, which `test_tctrend.js` asserts directly. So the build emits **one count column per
-selection** (`ns`, `ns_ts`, `ns_et`, `ns_tset`, …) on the all-stages key set. Eight reference
-cases in `ref_values.py` re-derive stage-filtered series independently, storm counts included.
+selection** (`ns`, `ns_tset`, `ns_trop`, `ns_ts`, …) on the all-stages key set. Fourteen
+reference cases in `ref_values.py` re-derive stage-filtered series independently, storm counts
+included.
 
-Payload: 0.47 → 0.68 MB gzipped.
+Payload: 0.47 → 0.68 MB gzipped (0.71 MB with the ninth selection and the per-position basin).
 
 ## Period: 1980–2025 in the data, 1990–2024 by default
 
@@ -634,18 +662,21 @@ The pages read whichever table matches the panel. Both test suites assert that s
 map cells over-counts the global total several-fold; if that check ever starts passing,
 someone has wired a storm panel back onto a sum.
 
-Sanity: the basin table reproduces the published climatologies — **86.4** TS+ storms per year
-globally, **47.0** at hurricane strength, **14.5** in the North Atlantic box, **25.9** in the West
-Pacific, **17.7** in the East Pacific — all verified against an independent `nunique` in
-`ref_values.py`. (The North Atlantic *box* still sits above the 13.7 storms/yr labeled `NA` by
-IBTrACS, because East Pacific storms that cross Mexico into the Gulf are counted where they went.
-Before 2026-10-10 it read 16.1: see "Basins" for the corner that was moved to the East Pacific.)
+Sanity: the basin table reproduces the published climatologies — **86.5** TS+ storms per year
+globally (all stages, 1980–2024), **47.0** at hurricane strength, **13.7** in the North Atlantic,
+**25.9** in the West Pacific, **17.5** in the East Pacific — all verified against an independent
+`nunique` in `ref_values.py`. The North Atlantic now equals the 13.7 storms/yr labeled `NA` by
+IBTrACS, and over 1990–2024 at the default stages it is **14.97** (14.83 for `trop`) — exactly the
+IBTrACS-labeled count, year by year (2005: 29, 2020: 30, 2023: 20). It read 16.1 before
+2026-10-10 and 14.5 (15.8 at the default, 1990–2024) before 2026-10-22: see "Basins".
 
 ## Basins
 
 Fixed longitude–latitude boxes, in 0–360° longitude, that **exactly partition the globe**.
 Every cell inside |lat| < 60 belongs to one basin and one only, so basin sums add to the global
-sum. `test_tctrend.js` asserts all three halves of that — no orphan cell, no shared cell, no basin
+sum. **Exception: across the North Atlantic / East Pacific divide each position goes by its
+IBTrACS `BASIN` label** (below), so there the partition is of positions rather than cells — it
+still adds up to Global exactly. `test_tctrend.js` asserts all three halves of that — no orphan cell, no shared cell, no basin
 cell outside Global — because it is the kind of property that quietly stops being true.
 
 | | lon | lat | | | lon | lat |
@@ -698,17 +729,39 @@ but loses the part of that strip north of 15°N. On a 5° grid that is as close 
 follow the isthmus (the Pacific coast is at 85–92°W in that band, the Caribbean coast east of 84°W).
 The outlines on the global map are now traced from the cells, so the notch shows.
 
-### These are geographic boxes, not IBTrACS's `BASIN` column
+### Geographic boxes — except along the isthmus, where IBTrACS's `BASIN` label decides (2026-10-22)
 
 What these pages measure is cyclone activity **at a place**, so a position belongs where the
-storm physically was — not to whichever agency's ledger the track was filed under. Tracks that
-really do cross the isthmus (into the Bay of Campeche or the Caribbean) are counted where they
-went.
+storm physically was. Every basin boundary is open ocean except one: the North Atlantic / East
+Pacific divide follows the Central American isthmus, which 5° cells cannot trace. Moving the
+corner south of 15°N (above) still left the cell **15–20°N, 100–95°W** in the North Atlantic, and
+it holds both the Oaxaca–Guerrero Pacific coast and the southern Bay of Campeche — 141 East
+Pacific positions against 56 Atlantic ones (1980–2025). About 0.8–0.9 East Pacific storms a year were
+counted as Atlantic: Otis 2023 (924 mb) was the North Atlantic's 2023 minimum pressure, Pauline
+1997 its maximum wind, and Beatriz 2023, Dora 2005 and Julio 2020 were Atlantic storms.
 
-Only 18 grid cells contain positions from more than one IBTrACS basin, all of them around
-Central America and the dateline, but they are busy cells holding 3.6% of all positions. Keying
-the grid on `BASIN` instead would cost just +0.13% in file size, so this is a choice about
-meaning rather than about cost.
+IBTrACS assigns `BASIN` **per position**, and it changes where a storm crosses the isthmus, so it
+is a geographic label with a better coastline than a 5° grid has. The build therefore gives every
+position a basin `pb`: the cell's box, except that a position inside the NA or EP box takes its
+own `BASIN` label when that label is `NA` or `EP` (`FLAG_BASINS` in the build). 287 positions in
+15 cells change basin (189 to the East Pacific, 98 to the North Atlantic; 1980–2025). Every other boundary, and the Australian
+region (which IBTrACS does not label), stays purely geographic.
+
+How the page uses it:
+
+- Additive records are keyed `(cell, year, bin, stage, pb)`; a named-basin view keeps only its own
+  `pb`, so the shared cell shows only that basin's storms and the map, latitude bands and basin
+  series agree. Global and the hemispheres keep everything.
+- `index.json` lists `basin_extra` — cells outside a basin's box that hold its positions (an
+  Atlantic storm crossing Nicaragua, say) — which the page draws and sums with the box, and
+  `mixed_cells`, whose per-basin distinct-storm counts come from a separate `scx` table.
+- The basin outlines, the click-to-zoom boxes and the "exact partition" tests are unchanged,
+  because they are about cells.
+
+Effect, TS+, 1990–2024, default stages: North Atlantic storms 15.80 → **14.97/yr** (the IBTrACS
+`NA` count exactly), East Pacific unchanged at 17.14 (its storms were already counted there too).
+`test_tctrend.js` pins the 2005/2020/2023 counts and that Otis is East Pacific; `audit.py`
+re-derives the rule independently.
 
 ### Closing the gaps
 
@@ -758,8 +811,8 @@ that, the 0–360 cell geometry, and each basin's span.
 
 ## Data
 
-- Source: NOAA **IBTrACS v04r01**, global, 1980–2024. 149,942 synoptic positions from 4,741
-  storms.
+- Source: NOAA **IBTrACS v04r01**, global, 1980–2025 (2025 provisional), file of
+  2026-10-20. 153,119 synoptic positions from 4,858 storms.
 - `spur` tracks — duplicate representations of a storm already present as `main` — are
   dropped.
 - Output is sparse and columnar: one record per (cell, year, intensity bin) with counts and
@@ -772,7 +825,8 @@ that, the 0–360 cell geometry, and each basin's span.
 
 ```sh
 # 330 MB IBTrACS CSV lives one level up; takes ~4 s
-python3 build_tc_trends.py ../ibtracs.ALL.list.v04r01.csv data --grid 5 --y0 1980 --y1 2024
+# from https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/csv/
+python3 build_tc_trends.py ../ibtracs.ALL.list.v04r01.csv data --grid 5 --y0 1980 --y1 2025
 
 # coastline (110m land, ~55 KB)
 curl -sL -o geo/land-110m.json https://unpkg.com/world-atlas@2.0.2/land-110m.json
@@ -786,8 +840,8 @@ to `aggregate()` in the build script.
 ```sh
 npm i jsdom topojson-client
 python3 ref_values.py          # recomputes reference values from the CSV via scipy
-node test_tctrend.js .            # tctrend.html — renders it, checks the numbers  (365)
-python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (118)
+node test_tctrend.js .            # tctrend.html — renders it, checks the numbers  (424)
+python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (157)
 ```
 
 `ref_values.py` shares no code with either the build script or the pages: it re-derives the
@@ -827,6 +881,33 @@ procedures, sensors and analyst practice have all changed since 1980. Trends in 
 maximum intensity therefore carry some of that history. Track *counts* above a fixed
 threshold are less exposed than intensity *values*, and the post-1980 geostationary era is
 the shortest defensible record; this is why the page does not offer the earlier data at all.
+
+### What a trend here can and cannot tell you (added 2026-10-22)
+
+The page's Methods carry a short, cited paragraph on this, and context notes appear above the
+figure when they apply. In brief:
+
+- **Multidecadal variability** is large — North Atlantic activity rose sharply after the
+  mid-1990s with the AMO ([Goldenberg et al. 2001](https://doi.org/10.1126/science.1060040)).
+- **Anthropogenic aerosols** reshaped regional activity separately from greenhouse warming
+  ([Murakami et al. 2020](https://doi.org/10.1073/pnas.1922500117);
+  [Murakami 2022](https://doi.org/10.1126/sciadv.abn9493)).
+- **Detection of short-lived storms** improved with satellites and scatterometers, so part of any
+  rise in counts is observing practice ([Landsea et al. 2010](https://doi.org/10.1175/2009JCLI3034.1)).
+- **Agencies disagree on intensity**: JTWC and JMA give different West Pacific intensity trends
+  for the same storms ([Kossin et al. 2013](https://doi.org/10.1175/JCLI-D-13-00262.1)); the page
+  notes this on West Pacific Vmax, Pmin and ACE.
+- **Assessments**: most observed TC changes cannot yet be confidently attributed to greenhouse
+  warming, even where projections are robust
+  ([Knutson et al. 2019](https://doi.org/10.1175/BAMS-D-18-0189.1),
+  [2020](https://doi.org/10.1175/BAMS-D-18-0194.1)).
+- **Means over several basins mix basin share.** Holding the 1990–2024 basin mix of TS+ positions
+  fixed, the global mean-Vmax trend goes from −1.11 to −0.83 kt/decade (about a quarter is
+  reweighting) and the Northern Hemisphere one from −1.30 to −0.71 (about half). A note says so
+  whenever Vmax is shown for Global or a hemisphere.
+- **North Indian** numbers are JTWC's. IMD keeps its own best track and studies based on it do not
+  all agree with JTWC-based trends; the page shows a caveat whenever the North Indian is selected.
+  The large "North Indian increase" in earlier builds was mostly the `NR`-stage artifact above.
 
 ## Origin
 

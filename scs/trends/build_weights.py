@@ -1,16 +1,21 @@
 """County <- ERA5 cell overlap weights, and 2 deg box <- ERA5 land cells.
 
 County weight of a 0.25 deg ERA5 cell = area of (county polygon intersect cell)
-on the sphere (degrees^2 x cos(lat)), over LAND cells only (ERA5 land-sea mask
->= 0.5). Sea and lake cells carry marine temperatures, and letting them in pulled
-coastal counties far down (Galveston 54 -> 31 days/yr >= 90 F). A county that
-overlaps no land cell at all (Nantucket, Dukes, San Juan WA, ...) takes the land
-cell nearest to it.
+on the sphere (degrees^2 x cos(lat)) x the cell's LAND FRACTION (ERA5 land-sea
+mask), over land cells only (mask >= 0.5). Sea and lake cells carry marine
+temperatures, and letting them in pulled coastal counties far down (Galveston
+54 -> 31 days/yr >= 90 F). Partly-land cells (mask 0.5-0.9) still run cooler than
+the land beside them, so they count in proportion to their land (review of
+2026-10-22: Miami-Dade 58 -> 66, Monroe 52 -> 65 days/yr >= 90 F, 2015-24).
+A county that overlaps no land cell at all (Nantucket, Dukes, San Juan WA, ...)
+takes the land cell nearest to it.
 
 2 deg boxes follow the grid page (24-50 N, 126-66 W, 2 deg): a box's value is the
-plain mean over the ERA5 LAND cells (mask >= 0.5) whose centres fall inside a
-U.S. county and in the box, so coastal boxes are not diluted by sea points and border boxes carry
-no Canadian or Mexican land.
+land-fraction-weighted mean over the ERA5 land cells (mask >= 0.5) whose centres
+fall inside a U.S. county and in the box, so coastal boxes are not diluted by sea
+points and border boxes carry no Canadian or Mexican land. Each box also gets a
+weight (its cells' summed land area, cos(lat) x land fraction) for area-weighted
+national means on the grid page.
 """
 import json, math, gzip
 import numpy as np
@@ -51,7 +56,7 @@ for f in gj["features"]:
             continue
         a = geom.intersection(cells[k]).area
         if a > 0:
-            idx.append(int(k)); w.append(a * math.cos(math.radians(LAT[i])))
+            idx.append(int(k)); w.append(a * math.cos(math.radians(LAT[i])) * float(LSM[i, j]))
     if not idx:                                         # island or spit: nearest land cell
         p = geom.representative_point()
         d = (landpts[:, 0] - p.x) ** 2 * math.cos(math.radians(p.y)) ** 2 + (landpts[:, 1] - p.y) ** 2
@@ -81,8 +86,11 @@ for i, la in enumerate(LAT):
         nus += 1
         bi, bj = int((la - LAT0) // GRID), int((lo - LON0) // GRID)
         if 0 <= bi < NLAT and 0 <= bj < NLON:
-            boxes.setdefault(bi * NLON + bj, []).append(i * NJ + j)
+            boxes.setdefault(bi * NLON + bj, []).append((i * NJ + j, float(LSM[i, j]) * math.cos(math.radians(la))))
 print(f"US land cells: {nus}")
+# [cell ids, normalised land weights, box land weight (deg^2-equivalent)]
+boxes = {k: [[c for c, _ in v], [w / sum(x for _, x in v) for _, w in v],
+             round(sum(x for _, x in v) * 0.0625, 5)] for k, v in boxes.items()}
 
 json.dump({"counties": out, "boxes": {str(k): v for k, v in boxes.items()},
            "grid": [GRID, LAT0, LON0, NLAT, NLON], "skipped": skipped, "nearest": nearest},
@@ -90,7 +98,7 @@ json.dump({"counties": out, "boxes": {str(k): v for k, v in boxes.items()},
 print(f"counties with weights: {len(out)}  skipped (outside lower 48): {len(skipped)} "
       f"e.g. {sorted(skipped)[:3]}..{sorted(skipped)[-3:]}")
 print(f"2-deg boxes with land: {len(boxes)}  cells per box: "
-      f"min {min(map(len, boxes.values()))} median {int(np.median(list(map(len, boxes.values()))))}")
+      f"min {min(len(v[0]) for v in boxes.values())} median {int(np.median([len(v[0]) for v in boxes.values()]))}")
 print(f"counties on no land cell (nearest land cell used): {len(nearest)} {nearest}")
 n = [len(v[0]) for v in out.values()]
 print(f"cells per county: min {min(n)} median {int(np.median(n))} max {max(n)}")

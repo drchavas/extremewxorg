@@ -27,7 +27,10 @@ NY = Y1 - Y0 + 1
 
 # --- rules restated from the page, deliberately not imported -----------------
 CUT = {'all': None, 'ts': 34.0, 'hu': 64.0, 'maj': 96.0}
-STAGES = {'all': None, 'ts': ['TS'], 'et': ['ET'], 'tset': ['TS', 'ET'],
+# composites: NR (not reported) and MX (mixture) count as tropical-or-unknown;
+# tset drops only disturbances, trop drops disturbances and extratropical
+STAGES = {'all': None, 'tset': ['TS', 'SS', 'ET', 'MX', 'NR'],
+          'trop': ['TS', 'SS', 'MX', 'NR'], 'ts': ['TS'], 'et': ['ET'],
           'ss': ['SS'], 'ds': ['DS'], 'mx': ['MX'], 'nr': ['NR']}
 BOX = {
     'GL': ((0, 360), (-60, 60)),
@@ -55,7 +58,7 @@ def years_needed(nwin):
 
 
 def load():
-    cols = ['SID', 'SEASON', 'ISO_TIME', 'NATURE', 'LAT', 'LON',
+    cols = ['SID', 'SEASON', 'BASIN', 'ISO_TIME', 'NATURE', 'LAT', 'LON',
             'USA_WIND', 'USA_PRES', 'TRACK_TYPE'] + R34Q
     d = pd.read_csv(CSV, usecols=cols, skiprows=[1],
                     keep_default_na=False, low_memory=False)
@@ -175,8 +178,18 @@ def run(d, cfg):
     nwin = i1 - i0 + 1
     years = np.arange(a, b + 1, dtype=float)
 
+    # Positions in the region: the box, except that within the NA and EP boxes
+    # the position's IBTrACS BASIN label decides between those two.  The cells
+    # drawn and summed are the box plus any cell holding such a position.
     m = basin_mask(basin)
-    sub = d[m[d.ci.to_numpy()]]
+    inbox = m[d.ci.to_numpy()]
+    if basin in ('NA', 'EP'):
+        both = (basin_mask('NA') | basin_mask('EP'))[d.ci.to_numpy()]
+        lab = d.BASIN.isin(['NA', 'EP']).to_numpy()
+        inbox = (inbox & ~lab) | (both & (d.BASIN == basin).to_numpy())
+    sub = d[inbox]
+    m = m.copy()
+    m[np.unique(sub.ci.to_numpy())] = True
     if CUT[thr] is not None:
         sub = sub[sub.USA_WIND >= CUT[thr]]
     if STAGES[stage] is not None and field != 'ace':
@@ -334,6 +347,11 @@ CONFIGS = [
     dict(v='pmin',    stat='mean', b='NA', thr='ts',  stage='tset', y0=2001, y1=2024),
     dict(v='size',    stat='mean', b='NA', thr='ts',  stage='tset', y0=2004, y1=2024),
     dict(v='size',    stat='ext',  b='EP', thr='hu',  stage='all',  y0=2004, y1=2024),
+    # North Indian 1990-95 is all NR stage; the default must keep it
+    dict(v='density', stat='mean', b='NI', thr='ts',  stage='tset', y0=1990, y1=2024),
+    # NA/EP split per position along the isthmus
+    dict(v='storms',  stat='mean', b='EP', thr='ts',  stage='tset', y0=1990, y1=2024),
+    dict(v='pmin',    stat='ext',  b='NA', thr='ts',  stage='trop', y0=1990, y1=2024),
 ]
 
 if __name__ == '__main__':

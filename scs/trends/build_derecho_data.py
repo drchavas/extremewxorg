@@ -244,7 +244,7 @@ def county_days(events, geo_state, thresholds):
             # word rather than assuming "day".
             "countword": "event",
             "gaps": [],                       # the NCEI 1993 gap predates this record
-            "note": ("Calendar dates on which a county lay inside a definitive derecho wind "
+            "note": ("Calendar dates on which a county had a qualifying wind report inside a definitive derecho wind "
                      "swath from the SPC archive of Squitieri, Wade and Jirak (2026), dated by "
                      "the swath's start. NEXRAD era only, so the record starts in 1996."),
             "thresholds": [{"key": t["k"], "label": t["label"],

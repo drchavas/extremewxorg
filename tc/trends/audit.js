@@ -36,7 +36,9 @@ const relErr = (a, b) => Math.abs(a - b) / Math.max(1, Math.abs(b));
 
 async function load(hash) {
   const html = fs.readFileSync(path.join(DIR, 'tctrend.html'), 'utf8')
-    .replace(/<script src="https:\/\/unpkg\.com\/topojson-client[^>]*><\/script>/, '');
+    .replace(/<script src="https:\/\/unpkg\.com\/topojson-client[^>]*><\/script>/, '')
+    // the feedback pop-up is a separate script after the page's own; not under test here
+    .replace(/<script src="[^"]*feedback\.js"[^>]*><\/script>/, '');
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => console.error('jsdom error:', e.message));
   const dom = new JSDOM(html, {

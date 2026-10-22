@@ -102,17 +102,23 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('body shown',$('body').style.display==='block');
   say('grid layer on each map',gridLayers().length===2, gridLayers().length+'');
   say('state layer on each map',gjLayers.filter(isState).length===2);
-  say('opens on the Lower 48',$('regSel').value===''&&A.getZoom()===4,
+  /* Like every other page, the grid opens on Indiana: framed on the state, with
+     the box holding Indianapolis selected (39.77N 86.16W -> 38-40N, 88-86W). */
+  say('opens on Indiana',$('regSel').value==='IN'&&A.getZoom()>4,
       `region="${$('regSel').value}" z${A.getZoom()}`);
-  say('opens on the national aggregate, not one box',$('ctySel').value==='',
-      `ctySel="${$('ctySel').value}"`);
+  const indyBox=w.eval("String(cellIdList()[nearestCell(39.77,-86.16)])");
+  say('opens on the Indianapolis box',$('ctySel').value===indyBox,
+      `ctySel="${$('ctySel').value}" vs ${indyBox}`);
   say('the aggregate is the first option',
       $('ctySel').options[0].textContent==='All boxes (lower 48)',
       $('ctySel').options[0].textContent);
   say('the opening series is non-zero',
       w.eval("[...seriesMonthYear().my].reduce((a,b)=>a+b,0)")>0);
-  say('panels name the national scope',/mean over all \d+ boxes/.test($('card').innerHTML),
-      ($('card').innerHTML.match(/mean over all \d+ boxes/)||[''])[0]);
+  say('panels name the box',/box at /.test($('card').innerHTML));
+  $('usBtn').onclick(); await new Promise(r=>setTimeout(r,300));
+  say('Full U.S. gives the national, land-weighted mean',$('ctySel').value===''&&
+      /land-weighted mean over all \d+ boxes/.test($('card').innerHTML),
+      ($('card').innerHTML.match(/land-weighted mean over all \d+ boxes/)||[''])[0]);
   say('panels drawn',$('card').innerHTML.length>4000,$('card').innerHTML.length+' chars');
   say('two color bars',$('cbClim').innerHTML.includes('linear-gradient')&&
                         $('cbTrend').innerHTML.includes('linear-gradient'));
@@ -211,7 +217,8 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     const L=JSON.parse(w.eval('JSON.stringify(panelLayout())'));
     if(o) Object.defineProperty(w,'innerWidth',o);
     return L; };
-  const wide=layoutAt(1400), narrow=layoutAt(400);
+  const wide=layoutAt(1400), narrow=layoutAt(700), phone=layoutAt(390);
+  say('phones get a viewBox near the screen width',phone.W===440,`${phone.W}x${phone.H}`);
   say('wide screens keep the side-by-side layout',
       wide.W===1520&&wide.H===470&&wide.monthly[0]>0,
       `${wide.W}x${wide.H}, monthly at x=${wide.monthly[0]}`);
@@ -351,6 +358,8 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   const seriesTotal=()=>w.eval("(function(){const s=seriesMonthYear();"+
     "return [...s.my].reduce((a,b)=>a+b,0);})()");
   say('hail series is non-zero',seriesTotal()>0,seriesTotal().toFixed(0));
+  $('ctySel').value=indyBox; $('ctySel').onchange({target:{value:indyBox}});
+  await new Promise(r=>setTimeout(r,300));
   const boxBefore=$('ctySel').value;
   $('hazSel').value='tornado'; await $('hazSel').onchange({target:{value:'tornado'}});
   await new Promise(r=>setTimeout(r,800));
@@ -392,7 +401,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
     say('every box with PRISM land is listed',d.meta.boxes.length===262,String(d.meta.boxes.length));
     say('rain gets the PRISM caveat',/PRISM/.test($('guide').innerHTML)&&!/ERA5/.test($('guide').innerHTML));
     say('the footer and panel credit PRISM',/PRISM/.test($('foot').innerHTML)&&/PRISM/.test($('card').innerHTML));
-    say('rain opens smoothed at 1°, not the storm hazards\' 2°',w.eval('smoothOn()')===true&&w.eval('sigDeg()')===1&&$('smWrap').style.display===''&&$('smSel').value==='1'&&/1° Gaussian smoothed/.test($('climSub').innerHTML));
+    say('rain opens smoothed at 1°, not the storm hazards\' 2° — on the trend map only',w.eval('smoothOn()')===true&&w.eval('sigDeg()')===1&&$('smWrap').style.display===''&&$('smSel').value==='1'&&/1° Gaussian smoothed/.test($('trendSub').innerHTML)&&/Raw data/.test($('climSub').innerHTML));
     $('smSel').value='off'; fire('smSel','change');
     say('and switches to raw',w.eval('smoothOn()')===false&&/Raw data/.test($('climSub').innerHTML));
     $('smSel').value='1'; fire('smSel','change');

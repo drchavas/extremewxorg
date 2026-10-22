@@ -53,6 +53,8 @@ const svg=()=>$('card').innerHTML;
   $('hazSel').value='wind'; await $('hazSel').onchange({target:{value:'wind'}});
   await new Promise(r=>setTimeout(r,800));
   $('thrSel').value=2; $('thrSel').onchange({target:{value:2}});
+  // the page opens on Indiana, whose Box menu lists only Indiana's boxes
+  $('usBtn').onclick(); await new Promise(r=>setTimeout(r,300));
   const pick=ci=>{ $('ctySel').value=String(ci); $('ctySel').onchange({target:$('ctySel')});
     return w.eval(`(function(){const cm=cellMetrics();const i=selCell();
       return {trend:cm.trend[i], place:placeLabel()};})()`); };

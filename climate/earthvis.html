@@ -257,8 +257,8 @@
         <div class="seg" id="seasSeg" role="group" aria-label="Season"><button data-s="djf">Dec&ndash;Feb</button><button data-s="mam">Mar&ndash;May</button><button data-s="jja">Jun&ndash;Aug</button><button data-s="son">Sep&ndash;Nov</button></div>
         <button class="btn hot" id="expBtn" title="Save this map as a PNG, or the animation as an MP4 video or GIF">&#11015;&#xFE0E; Export</button>
       </div>
-      <div id="stage" role="img" aria-label="Map of the selected field; click a place to see its seasonal cycle">
-        <canvas id="cvMap"></canvas><canvas id="cvFlow"></canvas><canvas id="cvTop"></canvas>
+      <div id="stage" role="group" aria-label="Map">
+        <canvas id="cvMap" role="img" aria-label="Map of the selected field; click a place to see its seasonal cycle"></canvas><canvas id="cvFlow"></canvas><canvas id="cvTop"></canvas>
         <div class="mapbtns"><button id="zIn" title="Zoom in" aria-label="Zoom in">+</button><button id="zOut" title="Zoom out" aria-label="Zoom out">&minus;</button><button id="zHome" title="Reset the map view" aria-label="Reset the map view">&#8962;</button></div>
         <div class="loadchip" id="loadchip">Loading&hellip;</div>
         <div class="loadchip errchip" id="errchip" role="alert"></div>

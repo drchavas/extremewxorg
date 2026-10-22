@@ -54,24 +54,48 @@ def nice(name):
     return " ".join(w if w in KEEP_UP else w.title() for w in s.split())
 
 
+# Mountain sites where "FZRA" is mostly ice from cloud or fog, not freezing rain
+# (review of 2026-10-22: Sexton Summit 79% of its FZRA reports with no measurable
+# precipitation, Mount Washington 92% with freezing fog). A site is left out when,
+# over its whole record, at least half of its freezing-rain hours were reported
+# together with freezing fog (FZFG), or at least half with visibility at or below
+# 1/2 statute mile. Across the 676 sites with >= 20 FZRA hours the median shares are
+# 0.7% and 1.3% (95th percentile 11% and 17%); the rule removes exactly the
+# mountain and pass sites: Mount Washington, Sexton Summit, Blue Canyon, Stampede
+# Pass, Mullan Pass, Guadalupe Mountains (Pine Springs) and Bryce Canyon.
+# Shares from fewer than MIN_FZH freezing-rain hours are noise and never exclude a site.
+FOG_SHARE, LOWVIS_SHARE, MIN_FZH = 0.50, 0.50, 20
+
+
 def load_site(daily, ids):
+    """daily FZRA-hour series for a site, and its fog / low-visibility shares"""
     parts = []
     for i in ids:
         p = os.path.join(daily, i + ".npz")
         if os.path.exists(p):
-            z = np.load(p); parts.append(pd.DataFrame({"day": z["day"], "fz": z["fz"]}))
+            z = np.load(p)
+            n = len(z["day"])
+            parts.append(pd.DataFrame({"day": z["day"], "fz": z["fz"],
+                                       "fg": z["fg"] if "fg" in z else np.zeros(n, np.uint8),
+                                       "lv": z["lv"] if "lv" in z else np.zeros(n, np.uint8)}))
     if not parts:
-        return None
-    return pd.concat(parts).groupby("day").fz.max()
+        return None, 0.0, 0.0, 0
+    d = pd.concat(parts).groupby("day")[["fz", "fg", "lv"]].max()
+    nfz = float(d.fz.sum())
+    return d.fz, (d.fg.sum() / nfz if nfz else 0.0), (d.lv.sum() / nfz if nfz else 0.0), nfz
 
 
 def build(stfile, daily):
     S = pd.read_csv(stfile, dtype=str).fillna("")
     mins = [t["min"] for t in SPEC["thresholds"]]; nlev = len(mins)
-    stations, cells, valid = [], {}, {}
+    stations, cells, valid, fogout = [], {}, {}, []
     for _, r in S.iterrows():
-        fz = load_site(daily, [r.id] + r.also.split())
+        fz, fgs, lvs, nfz = load_site(daily, [r.id] + r.also.split())
         if fz is None:
+            continue
+        if nfz >= MIN_FZH and (fgs >= FOG_SHARE or lvs >= LOWVIS_SHARE):
+            fogout.append({"id": r.id, "name": nice(r["name"]), "state": r.state,
+                           "fog_share": round(fgs, 3), "lowvis_share": round(lvs, 3)})
             continue
         date = EPOCH + pd.to_timedelta(fz.index.values, unit="D")
         season = np.where(date.month >= 7, date.year + 1, date.year)
@@ -100,6 +124,7 @@ def build(stfile, daily):
                  "season": SPEC["season"], "year0": y0, "year1": y1, "kind": "station",
                  "completeness": COMPLETENESS, "source": SOURCE,
                  "nQC": sum(s["dp"] for s in stations),
+                 "fogExcluded": fogout,
                  "nDelPizzo": sum(s.get("dpl", 0) for s in stations),
                  "ncell": len(keys)},
         "stations": stations,

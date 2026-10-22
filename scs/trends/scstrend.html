@@ -22,7 +22,7 @@
      uses, so the page and the drawings agree. */
   html[data-theme="light"]{
     --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
-    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#9a5508;
   }
   html[data-theme="light"] body{
     background:
@@ -165,14 +165,14 @@
   <h1>Severe thunderstorm(+) Climatology and Trends</h1>
   <p><a class="home" href="../../" style="font-weight:650;text-decoration:none">&larr; extremewx.org</a> &middot;
      Climatology and trend side by side on one shared map. <b>Drag or zoom either map and both
-     follow</b>, so the two are always showing the same ground. <b>Click a new state</b> to center on it; clicking inside the state you are already on leaves
-     the view exactly where you put it. Pick a county from the County menu to pin it. Nothing is
+     follow</b>, so the two are always showing the same ground. <b>Click a new state</b> to center on it; inside the state you are already on, a click
+     picks the county (or station) under the cursor for the panels below, and clicking it again lets go. Nothing is
      ever hidden, you are just moving around the country.
      For individual storms &mdash; the SPC derecho archive and the biggest days on record
      &mdash; see <a href="scsevents.html">historical events</a>.
      <a href="scstrend_grid.html">See data 2&deg; bins instead</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-22 00:45 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-22 15:32 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -205,11 +205,11 @@
       <div class="mapcol">
         <div class="maphead"><h2>Climatology</h2><p id="climSub">&nbsp;</p></div>
         <div class="lmap" id="mapClim"><div class="cbar" id="cbClim"></div>
-          <div class="hint">drag &middot; scroll to zoom &middot; click a state to center</div></div>
+          <div class="hint">drag &middot; scroll to zoom &middot; click a state to center, a county to pick it</div></div>
       </div>
       <div class="mapcol" id="trendCol">
         <div class="maphead"><h2>Trend</h2><p id="trendSub">&nbsp;</p>
-        <p class="warn">Trends are inherently far noisier: focus on coherent spatial patterns, not the value in any single county.</p>
+        <p class="warn" id="trendWarn">Trends are inherently far noisier: focus on coherent spatial patterns, not the value in any single county.</p>
         </div>
         <div class="lmap" id="mapTrend"><div class="cbar" id="cbTrend"></div>
           <div class="hint">both maps share one view</div></div>
@@ -257,9 +257,7 @@
               and a day counts at 1, 2 or 3&nbsp;inches. Each PRISM cell counts its own days; a
               county&rsquo;s value is the area-weighted mean of the cells it overlaps, and state and
               national panels the area-weighted mean over counties &mdash; the days a typical place
-              saw. 1981 onward (PRISM&rsquo;s daily record), lower 48 only; the page opens on that whole
-              record, since PRISM has no reporting break like Storm Events&rsquo; and a 45-year window
-              is much less noisy for heavy rain than a 26-year one. The last six months are
+              saw. 1981 onward (PRISM&rsquo;s daily record), lower 48 only. <b>Heavy rain opens on 2002</b> because PRISM itself changes then: from 1&nbsp;January 2002 its daily precipitation uses weather radar (NWS Stage&nbsp;II/IV, then MRMS from July 2020) to place rain between the gauges across the central and eastern U.S., and PRISM warns that this adds non-climatic variation to trends. Against long-record gauges, heavy-rain days jump at 2002 in every eastern state we checked (&ge;&nbsp;2&Prime; days go from about 0.6 to 0.86 of the gauge count; no jump in the West, where radar is not used), so a trend that spans 2002 is inflated. Earlier years can still be chosen in the year boxes. The last six months are
               provisional and are fetched again each month as PRISM revises them. PRISM is built
               from the gauges that reported each day, and that network changes over time, so trends
               carry some uncertainty from it. The method reproduces the Indiana heavy-rain analysis it
@@ -272,18 +270,20 @@
               <a href="https://doi.org/10.1175/2008JTECHA1138.1" target="_blank" rel="noopener">Kunkel
               et al. (2009)</a>, automated: blank snowfall on days that could not have had snow
               (no precipitation, or a minimum above 32&nbsp;&deg;F) is set to zero; days with more
-              than 60&nbsp;in, with snow but exactly no precipitation, with a snow-to-liquid ratio
-              above 60:1, or that copy the snow depth already on the ground are set to missing; a
-              season counts only if October&ndash;May is at least 90% complete with no empty
-              December, January or February, and is dropped as <i>estimated</i> when most of its
+              than 60&nbsp;in, or with snow but exactly no precipitation, are set to missing; a
+              season counts only if October&ndash;May is at least 90% complete and the observer
+              actually reported snowfall at least once in each of December, January and February (so a
+              station that had stopped measuring snow gets no invented zero seasons), and is dropped as
+              <i>estimated</i> when most of its
               snowfalls read exactly 10:1 from the gauge (the EPA snowfall indicator&rsquo;s
               screen). A station appears with at least 30 valid seasons. The default <b>QC
               stations</b> set further requires at least 60 of 76 seasons, five in each of the first
               and last decades, and no break or drift against its neighbours (a Pettitt test and a
               trend test on the ratio to a neighbour reference, in place of Kunkel&rsquo;s panel of
               experts). CoCoRaHS is left out: its records mostly start after 2000. The lower panels
-              average the stations observed in at least 90% of the seasons in the window, season
-              by season over those reporting.</li>
+              average the stations observed in at least 90% of the seasons in the window, as
+              departures from each station&rsquo;s own mean (added back to their average), so a station
+              missing a season does not shift the series.</li>
           <li><b>Locate each report</b> (storm hazards). Storm Events reports are assigned to a county by
               <code>STATE_FIPS</code> + <code>CZ_FIPS</code> rather than by county name, which
               avoids name collisions and independent cities. Connecticut is drawn with its
@@ -307,10 +307,17 @@
               itself: a site qualifies if, before automation (1985, 1987 or 1990), it reported in the
               small hours (1&ndash;5&nbsp;am local) on at least 90% of its days. That reproduces their
               list &mdash; 75 of their 76 U.S. sites pass, and the 76th, Champaign, is kept as theirs
-              &mdash; and gives about 550 of the roughly 960 stations nationally (every federal ASOS,
-              plus military fields with their own observers). <b>Freezing rain opens on that subset.</b> In this record the
-              screen matters less than expected: unscreened stations average about 5% more
-              freezing-rain days than a screened station nearby (median of 165 pairs within 60&nbsp;km).
+              &mdash; and gives about 550 of the roughly 950 stations nationally (every federal ASOS,
+              plus military fields with their own observers). The test describes 1985&ndash;90, not
+              today: many of these sites are now automated too. <b>Freezing rain opens on that subset.</b>
+              In this record the screen matters less than expected: unscreened stations average about
+              5% more freezing-rain days than a screened station nearby (median of 165 pairs within
+              60&nbsp;km), though more in 2001&ndash;05 (11&ndash;26%) than since, a sign that automated
+              freezing-rain reporting changed in the early 2000s. A day is a <b>UTC</b> day (7&nbsp;pm to
+              7&nbsp;pm EST), as in the METAR record. Seven mountain and pass sites where most
+              &ldquo;FZRA&rdquo; hours came with freezing fog or visibility at or below half a mile &mdash;
+              ice from cloud rather than rain (Mount Washington, Sexton Summit, Stampede Pass, Blue
+              Canyon, Mullan Pass, Guadalupe Mountains, Bryce Canyon) &mdash; are left out.
               Peak wind is measured differently and is not screened
               this way, so it opens on all stations.</li>
           <li><b>Store</b> those counts per county (or station) × year × month × threshold.
@@ -319,9 +326,11 @@
               counties a year with no days is a real zero and is counted in the denominator; for
               stations, unobserved years are excluded rather than counted as zero.</li>
           <li><b>Trend map.</b> Ordinary least squares on the annual counts, reported per decade.
-              A county (or station) is left gray unless it clears the same three coverage gates as
+              A county is left gray (a station hollow) unless it clears the same three coverage gates as
               the 2&deg; grid page: enough years carrying a day (at least 8, or 30% of the period),
-              those years spanning at least 70% of the period, and at least 2 of them in each half.
+              those years spanning at least 70% of the period, and at least 2 of them in each half
+              &mdash; for a station counted over its observed seasons, which must also cover at least
+              half the period.
               The annual and monthly panels apply the same gates. Significance is a two-sided
               <i>t</i> test on the slope; stations reaching <i>p</i> &lt; 0.05 are ringed.</li>
           <li><b>Annual and monthly panels.</b> For a selected county, that county alone. For a
@@ -350,15 +359,24 @@
               smoothed either: ERA5 is already a continuous gridded field. <b>Heavy rain is smoothed
               at 1&deg;</b> rather than 2&deg; by default, switchable to Raw: heavy rain is patchy over
               much shorter distances than heat, so single-county trends in particular are noisy, while
-              PRISM resolves real structure at 4&nbsp;km that the 2&deg; blur would wash out. The
-              lighter blur denoises the trends while keeping coast-to-inland and terrain structure.</li>
-          <li><b>Color scales.</b> Set from the data on screen: robust upper percentiles for
-              climatology, symmetric about zero for trend. When values run past the top of the
+              PRISM resolves real structure at 4&nbsp;km that the 2&deg; blur would wash out. For
+              heavy rain only the <b>trend</b> map is smoothed; its climatology is always drawn raw,
+              because a long-term mean is not noisy and a blur moved western rain shadows badly
+              (Grant County, WA: 0.02 &rarr; 2.9 days/yr at &ge;&nbsp;1&Prime;).</li>
+          <li><b>Color scales.</b> Set nationally (all counties, or every station shown), whatever
+              part of the map is on screen: robust upper percentiles for climatology (the 98th for the
+              snowfall and freezing-rain station networks, whose few mountain sites would otherwise
+              bleach every other dot), symmetric about zero for trend. When values run past the top of the
               climatology scale its top label reads &ge;; hover a county for its own number.</li>
           <li><b>Derecho</b> is the same county climatology and trend as thunderstorm wind,
               but counting only wind reports that belong to a derecho. A county scores a derecho
-              event when it lay inside the coherent wind swath of a <b>definitive</b> derecho in the
-              SPC archive — NEXRAD-confirmed cases only, so the record begins in <b>1996</b>. It is
+              event when it has a qualifying wind report inside the coherent wind swath of a
+              <b>definitive</b> derecho in the SPC archive &mdash; NEXRAD-confirmed cases only, so the
+              record begins in <b>1996</b>. A county the swath crossed without a report is not credited
+              (about a third of the counties at least half inside the swath polygons), so the map
+              understates swath coverage, and early swaths whose reports often carry no speed (1996&ndash;2002)
+              lose the most. Derechos here are <b>warm-season</b> storms: all 96 definitive cases fall in
+              April&ndash;August. It is
               counted in <b>events per year</b> rather than hazard days, because a derecho is one
               coherent storm rather than a category of report. Each event is dated by the swath's
               own start (UTC) rather than each report's local date: half these
@@ -373,33 +391,8 @@
               counties see about one derecho every two years — so read the map as a corridor map,
               not a frequency map, and treat trends over a record this short with the caution the yellow note
               above the trend panel describes.</li>
-          <li><b>Derecho events</b> work differently — they are single storms, not a
-              climatology, so that mode shows one map and no trend. The swaths come from the
-              SPC archive of
-              <a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" rel="noopener">Squitieri,
-              Wade and Jirak (2026)</a>, the first comprehensive US derecho archive: 184 events
-              from 1956 to 2025. The archive publishes a UTC start and end time and start/end
-              coordinates for every swath, so the <b>track drawn in solid magenta is theirs</b>.
-              Wind reports are screened by the paper's own three tests: they must fall inside the
-              published UTC window, their spatial progress along the track must match their
-              temporal progress (|SP&nbsp;&minus;&nbsp;TP| under 0.5 for short swaths, 0.25 above
-              1000&nbsp;km), and they must lie no farther from either endpoint than the swath's
-              length plus 100&nbsp;km. We add a fourth: within 300&nbsp;km of the straight
-              start-to-end track line. Surviving
-              reports are then linked into a coherent swath by growing disks of 25&nbsp;km or more
-              around each until one connected group holds 90% of them, and the dashed outline is
-              the boundary of that union — the paper's wind-swath polygon, not a convex hull.
-              Reports that fail a screen stay on the map in gray; about 7% of reports in-window do.
-              A swath can legitimately draw as more than one piece. The <b>Confidence</b> menu exposes the
-              archive's tiers: 96 <i>definitive</i> cases confirmed against NEXRAD (1996–2025),
-              48 <i>likely</i> and 16 <i>possible</i> pre-NEXRAD cases reconstructed from radar
-              summary charts and paper storm reports, 13 further NEXRAD-era <i>likely</i> cases,
-              and 11 suspected <i>hybrids</i> the paper deliberately keeps separate. The default
-              is the 144 the paper headlines. Report counts here run well above those quoted in
-              the derecho literature, which works from SPC <i>filtered</i> reports that thin
-              near-duplicate reports of a single gust. A few swaths show a track but no reports:
-              four fall in June–July 1993, which are missing outright from the wind file, and any
-              others are too recent for the Storm Events data used here.</li>
+          <li><b>Derecho events</b> &mdash; individual swaths, their tracks and reports &mdash; are on the
+              <a href="scsevents.html">historical events page</a>, with the archive&rsquo;s confidence tiers.</li>
         </ol>
       </div>
     </details>
@@ -425,11 +418,11 @@ const CMAP={
 };
 const THEME={
   dark :{bg:'#111c26',panel:'#16212e',ink:'#e6edf3',mute:'#9fb0c0',line:'#2a3a4d',
-         grid:'#22303f',axis:'#6d8299',land:'#182635',pt:'#6cb6ff',fit:'#ffb14e',
+         grid:'#22303f',axis:'#6d8299',land:'#182635',nofit:'#2b3a4b',pt:'#6cb6ff',fit:'#ffb14e',
          band:'rgba(255,177,78,.10)',bandEdge:'rgba(255,177,78,.42)',
          sea:'#0d151d',cline:'rgba(0,0,0,.45)',tile:'World_Dark_Gray_Base',sel:'#ff3ecb'},
   light:{bg:'#ffffff',panel:'#ffffff',ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',
-         grid:'#e6ecf2',axis:'#8494a4',land:'#f2f5f8',pt:'#2b7bd4',fit:'#d4770f',
+         grid:'#e6ecf2',axis:'#8494a4',land:'#f2f5f8',nofit:'#b9c4cf',pt:'#2b7bd4',fit:'#a85a00',
          band:'rgba(212,119,15,.13)',bandEdge:'rgba(212,119,15,.45)',
          sea:'#ffffff',cline:'rgba(0,0,0,.35)',tile:'World_Light_Gray_Base',sel:'#c2007a'}
 };
@@ -454,16 +447,23 @@ function tp(t,df){ if(!(df>0)||!isFinite(t))return 1; return betai(df/2,0.5,df/(
    criterion, applied nationally -- see fzra_stations.py); snow on its Kunkel-style
    QC set. Peak wind is a different measurement and that screen does not apply. */
 function dpDefault(h){ return h==='fzra'||h==='snow'; }
-const S={hazard:'hail',thresh:0,region:'IN',county:'',y0:2000,y1:null,theme:'dark',
+const S={hazard:'hail',thresh:defThr('hail'),region:'IN',county:'',y0:2000,y1:null,theme:'dark',
          dpOnly:dpDefault('hail'),tier:'firm',smooth:'2'};
 let INDEX=null, GEO=null, STGEO=null;
 const HZ={}, STATES=[];
 let REQ=null;   // the period the reader asked for (hash or the year boxes), before any clamping
 let REQUSER=false;   // whether the reader chose it (a link or the year boxes), or it is a default
-/* Default start year per hazard. Storm Events opens in 2000, after the 1990s jump in
-   reporting; heavy rain opens on PRISM's whole daily record, which has no such break,
-   and a 45-year window is far less noisy for a variable this patchy than a 26-year one. */
-function defY0(h){ return h==='rain'?1981:h==='snow'?1951:2000; }
+/* Default first year: Storm Events opens in 2000, after the 1990s jump in reporting;
+   heavy rain in 2002, when PRISM began using radar between gauges in the central and
+   eastern U.S. (a step in heavy-rain days, review of 2026-10-22); snowfall on its whole
+   QC'd record; ERA5 heat in 1979, the start of the satellite era (ERA5 is far less
+   constrained before it, and the early-1950s heat index is unreliable). */
+/* Default threshold: hail opens on >= 1 in, not "any hail" -- the NWS raised its
+   severe-hail criterion from 3/4 in to 1 in in January 2010 and sub-inch reports
+   largely stopped, so an any-hail trend mostly measures that change (935 of 941
+   significant county trends negative). Everything else opens on its first level. */
+function defThr(h){ return h==='hail'?1:0; }
+function defY0(h){ return h==='rain'?2002:h==='snow'?1951:(h==='heat'||h==='heatindex')?1979:2000; }
 /* Every hazard opens on Indiana, selected and zoomed. A place the reader chose (a link,
    the Place menu, a click on the map) is kept across hazards. defWide() would open a
    hazard on the whole-country view instead; none does at present. */
@@ -650,6 +650,8 @@ function usedYears(){
   for(let y=a;y<=b;y++) if(!g.has(y)) out.push(y);
   return out;
 }
+function monthName2(ym){ const M=['January','February','March','April','May','June','July','August',
+  'September','October','November','December']; const [y,m]=String(ym).split('-'); return `${M[+m-1]} ${y}`; }
 function periodLabel(){
   const d=HZ[S.hazard], [a,b]=yearsSel();
   const ex=gapYears(d).filter(y=>y>=a&&y<=b);
@@ -762,6 +764,11 @@ function stationMetrics(){
     nyr[s]=xs.length;
     if(!xs.length) continue;
     mean[s]=ys.reduce((p,q)=>p+q,0)/xs.length;
+    /* The same coverage gates as the counties and the annual panel, applied to
+       the station's observed seasons, plus observed seasons covering at least
+       half the period: a station with a day in 2 of 74 seasons, or with 30
+       seasons out of 76, gets no slope (it is drawn hollow on the trend map). */
+    if(!trendsShown() || !gateOf(ys,ys.length).ok || xs.length<Math.ceil(0.5*(i1-i0+1))) continue;
     const r=ols(xs,ys); if(r){ trend[s]=r.slope*10; pv[s]=r.p; }
   }
   return {mean,trend,pv,nyr,y0:a,y1:b};
@@ -863,9 +870,35 @@ function seriesMonthYear(){
       valid[y]= ok>0 && ok>=Math.ceil((panelFrac()<1?0.75:1)*members.length) ? 1 : 0;
     }
     const set=new Set(members);
-    for(let k=0;k<d.si.length;k++){
-      if(!set.has(d.si[k]) || !d.valid[d.si[k]*nY+d.yi[k]] || !nval[d.yi[k]]) continue;
-      out[d.yi[k]*12+(d.mi[k]-1)]+=v[k]/nval[d.yi[k]];     // mean across stations reporting
+    if(panelFrac()>=1){
+      for(let k=0;k<d.si.length;k++){
+        if(!set.has(d.si[k]) || !d.valid[d.si[k]*nY+d.yi[k]] || !nval[d.yi[k]]) continue;
+        out[d.yi[k]*12+(d.mi[k]-1)]+=v[k]/nval[d.yi[k]];     // every member reports every year
+      }
+    } else {
+      /* Members may miss up to 10% of seasons, so a plain mean over whoever
+         reported would shift with the mix (a snowy station missing a season pulls
+         that season down). Average ANOMALIES instead: each station's departure
+         from its own mean for that month over the window, added back to the
+         members' average mean -- identical to the plain mean when all report. */
+      const nm=members.length, idx=new Map(members.map((s,j)=>[s,j]));
+      const X=new Float32Array(nm*nY*12);
+      for(let k=0;k<d.si.length;k++){
+        const j=idx.get(d.si[k]); if(j===undefined || !d.valid[d.si[k]*nY+d.yi[k]]) continue;
+        X[(j*nY+d.yi[k])*12+(d.mi[k]-1)]+=v[k];
+      }
+      const mu=new Float32Array(nm*12), G=new Float32Array(12);
+      members.forEach((s,j)=>{ let n=0;
+        for(let y=a-y0;y<=b-y0;y++){ if(!d.valid[s*nY+y]) continue; n++;
+          for(let m=0;m<12;m++) mu[j*12+m]+=X[(j*nY+y)*12+m]; }
+        for(let m=0;m<12;m++){ mu[j*12+m]/=Math.max(1,n); G[m]+=mu[j*12+m]/nm; } });
+      for(let y=0;y<nY;y++){
+        if(!nval[y]) continue;
+        for(let m=0;m<12;m++){
+          let an=0; members.forEach((s,j)=>{ if(d.valid[s*nY+y]) an+=X[(j*nY+y)*12+m]-mu[j*12+m]; });
+          out[y*12+m]=G[m]+an/nval[y];
+        }
+      }
     }
     for(let y=0;y<nY;y++) if(!valid[y]) for(let m=0;m<12;m++) vm[y*12+m]=0;
     return {my:out,valid,vm};
@@ -942,11 +975,12 @@ function annualPanel(x,y,w,h,my,y0,nY,a,b,label,valid){
   const X=yr=>L+(R-L)*((yr-a)/Math.max(1,b-a));
   const Y=v=>BOT-(BOT-TOP)*(v/vTop);
   const gate=gateOf(vals,vals.length);
-  const r=gate.ok?ols(years,vals):null;        // same gate as the trend map
+  const r=(gate.ok&&trendsShown())?ols(years,vals):null;        // same gate as the trend map
 
   let out=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   out+=txt(x+14,y+22,'Annual number of '+esc(label)+' '+countWord()+'s ('+thrSpec().short+') · '+placeLabel(),{size:14.5,weight:650});
-  out+=txt(x+14,y+36,`${periodLabel()} · with least-squares trend and 95% confidence band`,{size:11,fill:t.mute});
+  out+=txt(x+14,y+36,`${periodLabel()} · `+(r?'with least-squares trend and 95% confidence band'
+      :!trendsShown()?'no trend shown for this hazard (see the warning above)':'no trend fitted: too few years carry a '+countWord()),{size:11,fill:t.mute});
 
   // gridlines + y axis
   for(let i=0;i<=AX.n;i++){
@@ -996,10 +1030,12 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
   const t=T();
   let out=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   out+=txt(x+14,y+22,'Month by month',{size:14.5,weight:650});
-  out+=txt(x+14,y+36,`${countWord()[0].toUpperCase()+countWord().slice(1)}s per month each year, ${a}–${b} · trend with 95% band, bold R² = significant at p < 0.05`,
+  out+=txt(x+14,y+36,`${countWord()[0].toUpperCase()+countWord().slice(1)}s per month each `+
+           (hazSpec()&&hazSpec().season==='JulJun'?`season (July–June, labeled by the year it ends), ${a}–${b}`:`year, ${a}–${b}`)+
+           ` · trend with 95% band, bold R² = significant at p < 0.05`,
            {size:11,fill:t.mute});
 
-  const cols=4,rows=3, gx=10,gy=10;
+  const cols=w<520?2:4, rows=12/cols, gx=10,gy=10;
   const cw=(w-28-(cols-1)*gx)/cols, ch=(h-56-(rows-1)*gy)/rows;
 
   // common y scale across all months
@@ -1010,8 +1046,12 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
                            vmax=Math.max(vmax,my[i*12+m]); } }
   const vTop=niceAxis(vmax,4).top;
 
-  for(let m=0;m<12;m++){
-    const cx=x+14+(m%cols)*(cw+gx), cy=y+50+Math.floor(m/cols)*(ch+gy);
+  /* a July-June season (snow, freezing rain) reads July first, so winter is not
+     split across the grid */
+  const jj=hazSpec()&&hazSpec().season==='JulJun';
+  for(let pos=0;pos<12;pos++){
+    const m=jj?(pos+6)%12:pos;
+    const cx=x+14+(pos%cols)*(cw+gx), cy=y+50+Math.floor(pos/cols)*(ch+gy);
     const L=cx+26,R=cx+cw-6,TOP=cy+16,BOT=cy+ch-14;
     const years=[],vals=[];
     for(let i=0;i<nY;i++){ const yr=i+y0; if(yr<a||yr>b) continue;
@@ -1026,7 +1066,7 @@ function monthlyPanel(x,y,w,h,my,y0,nY,a,b,valid,vm){
     out+=txt(L-4,BOT+3,'0',{size:9,fill:t.mute,anchor:'end'});
     out+=`<line x1="${L}" y1="${BOT}" x2="${R}" y2="${BOT}" stroke="${t.axis}" stroke-width=".8"/>`;
     /* gated per month: one month is far sparser than the year it feeds */
-    const r=gateOf(vals,vals.length).ok?ols(years,vals):null;
+    const r=(gateOf(vals,vals.length).ok&&trendsShown())?ols(years,vals):null;
     if(r){
       out+=`<path class="ciband" d="${ciBand(r,a,b,X,Y,vTop,28)}" fill="${t.band}"`+
            ` stroke="${t.bandEdge}" stroke-width="0.6" stroke-dasharray="2 2"/>`;
@@ -1061,6 +1101,12 @@ function placeLabel(){
     }
   }
   const st=STATES.find(s=>s.ab===S.region);
+  if(!st && isStation()){
+    /* a network inside one state (peak wind: Indiana) is not "the United States" */
+    const d=HZ[S.hazard], sh=stationsShown(), ss=new Set(sh.map(i=>d.stations[i].state));
+    if(ss.size===1){ const one=STATES.find(s=>s.ab===[...ss][0]);
+      return `${sh.length} ${one?one.name:[...ss][0]} stations`; }
+  }
   return st?st.name:'United States';
 }
 function syncThresholds(){
@@ -1101,7 +1147,7 @@ function syncDpToggle(){
     ? `Showing the ${n} stations that passed ${qcn}. `+
       `Click to add the other ${d.stations.length-n}, `+
       (S.hazard==='snow'?`which have at least 30 valid seasons but shorter or less consistent records.`
-       :S.hazard==='fzra'?`automated sites that never had a round-the-clock observer.`
+       :S.hazard==='fzra'?`whose 1985–90 records show no round-the-clock observer.`
                         :`whose reporting is erratic.`)
     : `Showing all ${d.stations.length} stations, including ${d.stations.length-n} that failed `+
       `${qcn}. Click to restrict to the ${n} QC'd sites.`;
@@ -1164,7 +1210,7 @@ function readHash(){
   if(!location.hash) return;
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get('h')) S.hazard=p.get('h');
-  if(p.get('t')) S.thresh=+p.get('t');
+  if(p.get('t')) S.thresh=+p.get('t'); else S.thresh=defThr(S.hazard);
   if(p.get('r')!=null){ S.region=p.get('r'); REGUSER=true; }
   if(p.get('c')) S.county=p.get('c');
   if(p.get('p')){ const [a,b]=p.get('p').split('-').map(Number); if(a&&b){S.y0=a;S.y1=b; REQ=[a,b]; REQUSER=true;} }
@@ -1181,9 +1227,9 @@ function readHash(){
   /* Old or hand-edited links must not take the page down: anything unknown
      falls back to the default. "derecho" was the event view, now on scsevents. */
   if(S.hazard==='derecho') S.hazard='derechoday';
-  if(!INDEX.hazards.some(h=>h.key===S.hazard)) S.hazard='hail';
+  if(!INDEX.hazards.some(h=>h.key===S.hazard)){ S.hazard='hail'; S.thresh=defThr('hail'); }
   const nt=hazSpec().thresholds.length;
-  if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<nt)) S.thresh=0;
+  if(!(Number.isInteger(S.thresh)&&S.thresh>=0&&S.thresh<nt)) S.thresh=Math.min(defThr(S.hazard),nt-1);
   if(!THEME[S.theme]) S.theme='dark';
   const q=p.get('q');
   S.dpOnly = q==null ? dpDefault(S.hazard) : q==='1';
@@ -1283,8 +1329,13 @@ function smoothNeighbours(){
 function smoothGeom(){ return {cen:COCEN, area:AREA, nnb:smoothNeighbours().idx.map(a=>a.length)}; }
 /* The badge appended to both map subtitles. Only where smoothing is an option:
    station hazards and derecho events are points and single storms, not fields. */
-function smTag(){
+/* Heavy rain smooths the TREND map only: a 45-year climatology is not noisy, and
+   blurring it moved western rain shadows by up to two orders of magnitude (Grant
+   County WA 0.02 -> 2.9 days/yr at >= 1 in; review of 2026-10-22). */
+function smClim(){ return S.hazard!=='rain'; }
+function smTag(which){
   if(isStation()||isEvent()) return '';
+  if(which==='clim' && !smClim()) return ` · <span class="smtag">Raw data</span>`;
   return smoothOn()
     ? ` · <span class="smtag">${sigDeg()}° Gaussian smoothed</span>`
     : ` · <span class="smtag">Raw data</span>`;
@@ -1297,12 +1348,17 @@ function smTag(){
 /* Peak wind has no settled quality screen yet — unlike freezing rain, which has
    the DelPizzo list. Until that is resolved the numbers on this view should not
    be used, and saying so plainly beats letting someone quote them. */
+/* Peak wind: the records step up at 2008 (all five full-record Indiana stations
+   roughly double their >= 40 kt days, 5.2 -> 10.8 a year), a reporting change rather
+   than weather, so no trend is fitted or drawn until that is resolved. */
+function trendsShown(){ return S.hazard!=='pkwnd'; }
 function hazWarnHtml(){
   if(S.hazard!=='pkwnd') return '';
-  return '&#9888; <b>This view is not working correctly yet.</b> We are still working through '+
-         'how to quality-control the peak-wind station records &mdash; reporting of peak gusts '+
-         'varies by site, sensor and era, and the screen that handles it is not settled. '+
-         'Treat everything here as provisional and <b>please check back later for updates</b>.';
+  return '&#9888; <b>This view is not working correctly yet.</b> Peak wind covers <b>12 Indiana airport '+
+         'stations only, 2000&ndash;2024</b>, and their records <b>step up in 2008</b>: the five with full '+
+         'records roughly double their days &ge;&nbsp;40&nbsp;kt (about 5 to 11 a year), a change in how peak '+
+         'gusts were reported rather than in the weather. <b>No trends are shown</b> until that is resolved; '+
+         'treat the climatology as provisional and <b>please check back later for updates</b>.';
 }
 function syncHazWarn(){
   const el=document.getElementById('hazwarn'), h=hazWarnHtml();
@@ -1346,11 +1402,25 @@ function reportingBreakHtml(){
   if(S.hazard==='hail') return ' <b>Hail: the NWS raised its severe-hail criterion from &frac34;&Prime; to 1&Prime; in January 2010</b>, '+
     'and reports of hail smaller than 1&Prime; largely stopped &mdash; they were about half of all hail days through 2008 and '+
     'under a quarter from 2011. So a trend in <i>any hail</i> across 2010 mostly measures that change: use '+
-    '&ge;&nbsp;1&Prime; or larger, or start the period in 2010.';
+    '&ge;&nbsp;1&Prime; or larger, or start the period in 2010 (the page opens on &ge;&nbsp;1&Prime;).'+countyAreaHtml();
   if(S.hazard==='wind') return ' <b>Wind: until 2003 many thunderstorm-wind reports carried no speed</b> (about a third in 2002, '+
     'almost none from 2003), so counts at <i>&ge;&nbsp;50&nbsp;kt and above</i> step up at 2003 for reporting reasons. '+
-    'For the speed thresholds, start the period in 2003 or later.';
+    'For the speed thresholds, start the period in 2003 or later. '+
+    '<b>In the Intermountain West the rise in wind days is largely automated measured gusts</b> entering the '+
+    'database (Utah: 6 measured reports of &ge;&nbsp;50&nbsp;kt in 2004, 234 in 2023), not more storms.' + countyAreaHtml();
+  if(S.hazard==='tornado') return ' <b>Tornado ratings changed from the F to the EF scale in February 2007</b>, and rating '+
+    'practice has kept shifting (unrated EFU segments roughly tripled from 2015&ndash;19 to 2020&ndash;24), so '+
+    'EF1+ and higher trends partly measure rating. South Florida&rsquo;s decline also leans on the 2004&ndash;05 '+
+    'hurricane tornadoes early in the window.'+countyAreaHtml();
+  if(S.hazard==='derechoday') return countyAreaHtml();
   return '';
+}
+/* A county's count of report days grows with its size: one big western county
+   collects reports from an area that would be a dozen eastern counties. */
+function countyAreaHtml(){
+  return ' <b>Counts also grow with county size</b>: a large western county (Arizona, Nevada, California) gathers '+
+    'reports from an area that would be a dozen counties in the East, so compare like-sized counties, or use the '+
+    '<a href="scstrend_grid.html">2&deg; grid page</a>, whose boxes are all the same size.';
 }
 /* Gridded fields: ERA5 (heat) or PRISM (heavy rain). The short name comes from
    the data file; older heat files carry none. */
@@ -1358,11 +1428,14 @@ function fieldSrc(){ const d=HZ[S.hazard]; return (d&&d.meta&&d.meta.srcname)||'
 function guideHtml(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ';
   if(S.hazard==='rain')
-    return lead+'<b>Heavy rain comes from PRISM, a gridded analysis of rain-gauge reports</b> (4&nbsp;km, daily, '+'PRISM Group, Oregon State University), not from storm reports. A day is the 24 hours ending 12&nbsp;UTC '+'(about 7&nbsp;am Eastern), the volunteer observers\' day, and totals are taken to the nearest hundredth of an '+'inch. PRISM is built from whatever gauges reported each day, and that network has changed over the years, '+'so <b>read the trends with some caution</b>; a 4&nbsp;km cell also smooths the most intense local downpours. '+'The record starts in 1981, and the last six months are provisional: PRISM revises them as late reports arrive. '+'Lower 48 only.'+
+    return lead+'<b>Heavy rain comes from PRISM, a gridded analysis of rain-gauge reports</b> (4&nbsp;km, daily, '+'PRISM Group, Oregon State University), not from storm reports. A day is the 24 hours ending 12&nbsp;UTC '+'(7&nbsp;am EST, 8&nbsp;am EDT), the volunteer observers\' day, and totals are taken to the nearest hundredth of an '+'inch. PRISM is built from whatever gauges reported each day, and that network has changed over the years, '+'so <b>read the trends with some caution</b>; a 4&nbsp;km cell also smooths the most intense local downpours. '+'The record starts in 1981, and the last six months are provisional: PRISM revises them as late reports arrive. '+
+      '<b>The page opens on 2002</b>: from then on PRISM uses weather radar to place rain between the gauges in the '+
+      'central and eastern U.S. (MRMS from July 2020), and heavy-rain days jump at 2002 against long-record gauges '+
+      '&mdash; so a trend reaching back before 2002 is inflated there. '+'Lower 48 only.'+
       ' Each PRISM cell counts its own days; a county&rsquo;s value is the area-weighted mean of its '+
       'cells, so it describes a typical place in the county.';
   if(HZ[S.hazard]&&HZ[S.hazard].field)
-    return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer, so counts run somewhat below what a single weather station records &mdash; '+'<b>trust the trends and the geography more than the absolute numbers</b>. Days run '+'midnight to midnight local standard time. Before about 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations. Lower 48 only.'+
+    return lead+'<b>Heat comes from a reanalysis, not from reports or stations.</b> ERA5 is a weather model '+'continually corrected by observations, on a 0.25&deg; (about 25&nbsp;km) grid, every hour. '+'Its daily maximum is the warmest hourly value, and it describes an area rather than one '+'thermometer. <b>Temperature counts run well below an airport station\'s</b>: about 0.6&times; the station\'s '+'days &ge;&nbsp;90&nbsp;&deg;F at the median of 26 airports, 0.1&ndash;0.4&times; in some coastal and lake cities '+'(Seattle, Boston, Chicago, New Orleans), and about half at &ge;&nbsp;100&nbsp;&deg;F in the desert (Las Vegas 41 vs 82 days/yr). '+'<b>Heat-index counts are much closer</b> (Houston 2023: 139 vs 140 days &ge;&nbsp;90&nbsp;&deg;F). So '+'<b>trust the trends and the geography more than the absolute numbers</b>, especially for temperature. Days run '+'midnight to midnight local standard time. Before 1979 no satellite data fed ERA5, so '+'the earliest decades rest on fewer observations, and the page opens on 1979. Lower 48 only.'+
       ' Each ERA5 cell counts its own days; a county&rsquo;s value is the area-weighted mean of the '+
       'land cells it overlaps, so it describes a typical place in the county rather than its hottest spot.'+
       (S.hazard==='heatindex'?' <b>Heat index at 110 and 115&nbsp;&deg;F is unreliable before about 1960</b> '+
@@ -1392,7 +1465,9 @@ function guideHtml(){
       '<a href="https://doi.org/10.1175/2008JTECHA1138.1" target="_blank" rel="noopener">Kunkel et al. (2009)</a>: '+
       'seasons that are incomplete or merely estimated from the precipitation gauge are dropped as '+
       '<b>no observation</b>, never counted as zero, and the default <b>QC stations</b> set keeps only long '+
-      'records that track their neighbours without breaks or drifts. '+
+      'records that track their neighbours without large breaks or drifts (stations too snow-poor or too isolated '+
+      'to test against neighbours &mdash; about a quarter of the set, including some mountain sites &mdash; are kept on '+
+      'record length alone). '+
       '<b>Compare a station with itself over time</b> more readily than with its neighbours. Seasons run '+
       'July&ndash;June and are labeled by the year they end.';
   if(isStation()){
@@ -1407,9 +1482,14 @@ function guideHtml(){
       'A station-year less than 90% complete is treated as <b>no observation and dropped</b>, '+
       'never as zero, so a gap in the record leaves a gap in the plot rather than a false quiet '+
       'year. For freezing rain the <b>QC stations</b> button, the default, keeps the sites that had a '+
-      'round-the-clock human observer before automation, the criterion of '+
+      'round-the-clock human observer before automation (1985&ndash;90), the criterion of '+
       '<a href="https://doi.org/10.1175/JAMC-D-24-0204.1" target="_blank" rel="noopener">DelPizzo '+
-      'et al. (2025)</a>, applied nationally.';
+      'et al. (2025)</a>, applied nationally.'+
+      (S.hazard==='fzra'?' <b>Read the national decline cautiously</b>: it appears at every threshold, but for days with '+
+        '<i>any</i> freezing rain it is only marginally significant (p moves between about 0.04 and 0.1 with a year more '+
+        'or less at either end; the 3- and 6-hour declines are firmer), no region is significant alone, and the stations without an overnight observer reported relatively more '+
+        'freezing rain in 2001&ndash;05 than since &mdash; a change in automated reporting that may touch the QC '+
+        'sites too. Mountain and pass sites whose &ldquo;freezing rain&rdquo; is mostly ice from cloud or fog are left out.':'');
   }
   return lead+
     'Storm Events records <i>reports</i>, not observations from a fixed network. National counts '+
@@ -1478,7 +1558,7 @@ function styleOf(C){
   return feat=>{
     const c=gidxOf[feat.properties.GEOID], col=colorFor(C.val[c],C);
     if(col===null) return {stroke:true,color:T().line,weight:.3,fill:true,
-                           fillColor:T().land,fillOpacity:.45};
+                           fillColor:T().nofit,fillOpacity:.6};
     return {stroke:true,color:T().cline,weight:.3,fill:true,fillColor:col,fillOpacity:.88};
   };
 }
@@ -1619,8 +1699,21 @@ function stateLayer(map){
       l.on('click',e=>{
         const ab=f.properties.STUSPS;
         const moved = S.region!==ab;
-        S.region=ab; S.county=''; REGUSER=true;
-        syncRegionSel(); syncCounties(); focusState(moved); refresh();
+        /* A click inside the state already chosen picks the county under the cursor
+           (again to deselect); a click on another state goes there. The state
+           outlines sit above the counties, so this is the only way a county click
+           can arrive. */
+        const c=(!moved && !isStation() && !isEvent() && e.latlng)?countyAt(e.latlng.lat,e.latlng.lng,ab):-1;
+        if(c>=0){
+          S.county = S.county===GEOID[c] ? '' : GEOID[c];
+          syncCounties(); refresh();
+        } else {
+          S.region=ab; S.county=''; REGUSER=true;
+          syncRegionSel(); syncCounties(); focusState(moved); refresh();
+        }
+        /* touch screens have no hover: show the readout on tap */
+        if(e.latlng && window.matchMedia && matchMedia('(hover: none)').matches){
+          LASTLL=e.latlng; l.openTooltip(e.latlng); }
         L.DomEvent.stop(e);
       });
       const tip=()=>{
@@ -1658,34 +1751,69 @@ function focusState(zoom){
    at full size a national network (7,000 snowfall stations) is one solid mass:
    0.6x at the whole-country view (zoom 4), full size from zoom 6 in. */
 function stK(map){ const z=map.getZoom(); return Math.max(.6,Math.min(1,.6+(z-4)*.2)); }
+/* A station click selects it (or deselects it) and moves the Place to its state:
+   the maps show every station nationwide, but the Station menu and panels are
+   scoped to the Place, so a click on an out-of-state dot used to be dropped. */
+function pickStation(st){
+  if(S.county===st.id){ S.county=''; syncCounties(); refresh(); return; }
+  if(st.state && S.region!==st.state){
+    S.region=st.state; REGUSER=true;
+    if(typeof syncRegionSel==='function') syncRegionSel();
+  }
+  S.county=st.id; syncCounties(); refresh();
+}
 function drawStations(map,prev,C){
   if(prev) map.removeLayer(prev);
   if(!isStation()) return null;
+  /* (A separate canvas for the markers was tried for speed, but a Leaflet canvas
+     swallows every click and hover over the whole map, so state and county clicks
+     stopped working; the markers stay on the map's own renderer.) */
+  const rd=undefined;
+  map._stK=stK(map);
   const d=HZ[S.hazard], g=L.layerGroup();
   const list=stationsShown();
   const rmax=Math.max(...list.map(i=>Math.abs(C.val[i])).filter(isFinite),1e-9);
   list.forEach(i=>{
-    const v=C.val[i]; if(!isFinite(v)) return;
+    const v=C.val[i];
+    if(!isFinite(v)){
+      /* trend map: a station observed but too sparse to fit -- hollow, not hidden,
+         so the map does not suggest there is no station there */
+      if(C.hollow && C.hollow[i]){
+        const st=d.stations[i], k=stK(map), on=S.county===st.id;
+        const m=L.circleMarker([st.lat,st.lon],{radius:4*k,fill:false,color:on?T().sel:T().mute,
+            weight:on?3:1, opacity:.8, renderer:rd});
+        m._r0=4;
+        m.bindTooltip(`<b>${esc(st.name)}</b>${st.icao?' · '+esc(st.icao):''}<br>no trend: too few seasons with a ${countWord()}`,
+                      {sticky:true,className:'ctytip'})
+         .on('click',()=>pickStation(st))
+         .addTo(g);
+      }
+      return;
+    }
     const st=d.stations[i];
     const r=5+9*Math.sqrt(Math.min(1,Math.abs(v)/rmax));
     const sig=C.pval && C.pval[i]<0.05, k=stK(map), on=S.county===st.id;
     const m=L.circleMarker([st.lat,st.lon],{radius:r*k,fillColor:colorFor(v,C),fillOpacity:.92,
         color:on?T().sel:(sig?T().ink:T().cline),
-        weight:on?3:(sig?2:.9)*(.6+.4*k)});
+        weight:on?3:(sig?2:.9)*(.6+.4*k), renderer:rd});
     m._r0=r; m._w0=on?0:(sig?2:.9);
     m
       .bindTooltip(`<b>${esc(st.name)}</b>${st.icao?' · '+esc(st.icao):''}<br>${fmt(v,2)} ${esc(C.unit)}`+
-                   (S.hazard==='fzra'?`<br><span style="opacity:.75">${st.dp?'24-h observer station':'automated, no overnight observer'}`+
+                   (S.hazard==='fzra'?`<br><span style="opacity:.75">${st.dp?'QC: had an overnight observer before automation (1985–90)':'not QC: no round-the-clock observer in 1985–90'}`+
                     `${st.dpl?' · on DelPizzo et al. list':''}</span>`:''),
                    {sticky:true,className:'ctytip'})
-      .on('click',()=>{ S.county=(S.county===st.id?'':st.id); syncCounties(); refresh(); })
+      .on('click',()=>pickStation(st))
       .addTo(g);
   });
   g.addTo(map);
+  /* on a zoom that changes the marker scale, redraw the layer once rather than
+     restyling thousands of markers one by one */
   if(!map._stZoom){ map._stZoom=true;
-    map.on('zoomend',()=>{ const l=map===mapA?ptLayA:ptLayB, k=stK(map);
-      if(l&&l.eachLayer) l.eachLayer(c=>{ if(c._r0){ c.setRadius(c._r0*k);
-        if(c._w0) c.setStyle({weight:c._w0*(.6+.4*k)}); } }); }); }
+    map.on('zoomend',()=>{
+      if(!isStation() || stK(map)===map._stK) return;
+      if(map===mapA) ptLayA=drawStations(mapA,ptLayA,CUR);
+      else ptLayB=drawStations(mapB,ptLayB,CURT);
+    }); }
   return g;
 }
 
@@ -1765,7 +1893,8 @@ function drawColorbar(el,C,title){
     `<div class="strip" style="background:${grad}"></div>`+
     `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
     /* say what the white means, or it reads as missing data */
-    (C.div?'':`<div class="zchip"><i></i>exactly 0</div>`);
+    (C.div?`<div class="zchip"><i style="background:${T().nofit};opacity:.8"></i>no trend fitted</div>`
+          :`<div class="zchip"><i></i>exactly 0</div>`);
 }
 
 /* Recompute both maps and both color bars from the current controls. */
@@ -1790,7 +1919,8 @@ function refresh(){
      drawn. The raw fields are kept so a county can still report its own number
      on hover. */
   RAWM=cm.mean; RAWT=cm.trend;
-  cm.mean=smoothField(cm.mean); cm.trend=smoothField(cm.trend);
+  if(smClim()) cm.mean=smoothField(cm.mean);
+  cm.trend=smoothField(cm.trend);
 
   // robust, shared-with-nothing domains: each map gets its own
   const pool = stn ? stationsShown() : GEO.features.map(f=>gidxOf[f.properties.GEOID]);
@@ -1805,9 +1935,13 @@ function refresh(){
   const hiT=niceUp(quantile(tv,stn?(snw?0.95:1):0.95))||1;
 
   /* `over`: values run past the top of the scale, which the legend then says */
-  CUR ={val:cm.mean, lo:0,    hi:hiM, div:false, dec:hiM<5?2:1, unit:countUnit(),
+  /* Legend decimals follow the tick step (hi/4), so 3.75 is not printed 3.8 and an
+     EF4+ scale reads 0.012/0.009/... rather than 0.01/0.01/0.01 */
+  CUR ={val:cm.mean, lo:0,    hi:hiM, div:false, dec:Math.min(3,stepDec(hiM/4)), unit:countUnit(),
         over:mv.length>0&&mv[mv.length-1]>hiM*1.0001};
-  CURT={val:cm.trend,lo:-hiT, hi:hiT, div:true,  dec:hiT>=1?2:Math.max(2,Math.min(4,Math.ceil(-Math.log10(hiT/4)))), unit:countUnit()+' per decade', pval:cm.pv};
+  CURT={val:cm.trend,lo:-hiT, hi:hiT, div:true,  dec:Math.min(3,stepDec(hiT/4)), unit:countUnit()+' per decade', pval:cm.pv,
+        none:tv.length===0,
+        hollow:stn?cm.mean.map((m,i)=>isFinite(m)&&!isFinite(cm.trend[i])):null};
 
   if(stn){
     /* Station hazards have no county values, but the counties still get drawn —
@@ -1838,16 +1972,26 @@ function refresh(){
   /* The smoothing state is the one thing about these maps a reader can most
      easily forget, so it is called out rather than tucked into gray prose. */
   document.getElementById('climSub').innerHTML =
-    esc(`Mean annual ${lab} ${countWord()}s (${thrSpec().short}) per ${stn?'station':'county'}, ${periodLabel()}`)+smTag();
+    esc(`Mean annual ${lab} ${countWord()}s (${thrSpec().short}) per ${stn?'station':'county'}, ${periodLabel()}`)+smTag('clim');
   /* A window shorter than the gate's minimum leaves every county gray; say that,
      rather than blaming each county for being sparse. */
   const nUse=usedYears().length, need=yearsNeeded(nUse);
+  const unitW=stn?'station':'county';
   document.getElementById('trendSub').innerHTML = (!stn && nUse<need)
     ? esc(`No trends shown: ${periodLabel()} gives ${nUse} usable year${nUse===1?'':'s'} and a fit needs at `+
-          `least ${need} years carrying a ${countWord()}`)
-    : esc(stn?'Change per decade · ringed where p < 0.05':'Change per decade · gray counties are too sparse to fit a trend')+smTag();
+          `least ${need} years carrying a${countWord()==='event'?'n':''} ${countWord()}`)
+    : !trendsShown()
+    ? esc('No trends shown for peak wind: its records step up in 2008 for reporting reasons (see the warning above).')
+    : CURT.none
+    ? esc(`No ${unitW} clears the trend gates at ${thrSpec().short} for ${periodLabel()}: too few years carry a`+
+          `${countWord()==='event'?'n':''} ${countWord()}. Try a lower threshold or a longer period`+(stn?'.':', or the 2° grid page.'))
+    : esc(stn?'Change per decade · ringed where p < 0.05 · hollow = too sparse to fit a trend'
+             :'Change per decade · gray counties are too sparse to fit a trend')+smTag('trend');
+  const tw=document.getElementById('trendWarn');
+  if(tw) tw.textContent='Trends are inherently far noisier: focus on coherent spatial patterns, not the value at any single '+unitW+'.';
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
-  drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
+  if(CURT.none) document.getElementById('cbTrend').innerHTML='';
+  else drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 
   drawPanels();
   syncOutline();
@@ -1940,7 +2084,9 @@ function gapNote(){
       ? ` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because the ${fieldSrc()} data `+
         `here run only through ${monthName(d.meta.through)} (`+(fieldSrc()==='PRISM'
           ? `each month is added once it is complete`
-          : `ERA5 appears a few months behind real time, and this page adds each month as it does`)+
+          : `ERA5 appears a few months behind real time, and this page adds each month as it does`+
+          (HZ[S.hazard].meta.provisional ? `; the newest month, ${monthName2(HZ[S.hazard].meta.provisional)}, `+
+            `is provisional (its last day lacks a few overnight hours) and is redone next month` : ``))+
         `). Those months appear in the monthly panels.`
       : ` <b>${late.join(', ')} is excluded</b> from the maps and the annual plot because NOAA has `+
          `not yet published the whole year`+(d.meta.through?` (Storm Events currently runs through `+
@@ -2010,8 +2156,8 @@ function mapSVG(x,y,w,h,C,title,sub){
   GEO.features.forEach(f=>{
     const c=gidxOf[f.properties.GEOID];
     const col=stn?t.land:colorFor(C.val[c],C);
-    out+=`<path d="${shape(f.geometry)}" fill="${col===null?t.land:col}" `+
-         `fill-opacity="${col===null?0.45:0.95}" stroke="${t.cline}" stroke-width="0.25"/>`;
+    out+=`<path d="${shape(f.geometry)}" fill="${col===null?(stn?t.land:t.nofit):col}" `+
+         `fill-opacity="${col===null?(stn?0.45:0.6):0.95}" stroke="${t.cline}" stroke-width="0.25"/>`;
   });
   // state outlines, selected one picked out
   STGEO.features.forEach(f=>{
@@ -2026,13 +2172,20 @@ function mapSVG(x,y,w,h,C,title,sub){
   if(stn){
     const d=HZ[S.hazard], list=stationsShown();
     const rmax=Math.max(...list.map(i=>Math.abs(C.val[i])).filter(isFinite),1e-9);
+    const k0=mapA?stK(mapA):1;
     list.forEach(i=>{
-      const v=C.val[i]; if(!isFinite(v)) return;
-      const st=d.stations[i], r=(4+7*Math.sqrt(Math.min(1,Math.abs(v)/rmax)))*(mapA?stK(mapA):1);
+      const v=C.val[i], st=d.stations[i], on=S.county===st.id;
+      if(!isFinite(v)){
+        if(C.hollow&&C.hollow[i])
+          out+=`<circle cx="${px(st.lon).toFixed(1)}" cy="${py(st.lat).toFixed(1)}" r="${(3*k0).toFixed(1)}" `+
+               `fill="none" stroke="${on?t.sel:t.mute}" stroke-width="${on?2.4:0.8}"/>`;
+        return;
+      }
+      const r=(4+7*Math.sqrt(Math.min(1,Math.abs(v)/rmax)))*k0;
       const sig=C.pval&&C.pval[i]<0.05;
       out+=`<circle cx="${px(st.lon).toFixed(1)}" cy="${py(st.lat).toFixed(1)}" r="${r.toFixed(1)}" `+
-           `fill="${colorFor(v,C)}" fill-opacity=".92" stroke="${sig?t.ink:t.cline}" `+
-           `stroke-width="${sig?1.6:0.7}"/>`;
+           `fill="${colorFor(v,C)}" fill-opacity=".92" stroke="${on?t.sel:(sig?t.ink:t.cline)}" `+
+           `stroke-width="${on?2.6:(sig?1.6:0.7)}"/>`;
     });
   }
   out+='</g>';
@@ -2078,7 +2231,13 @@ const PANEL_BREAK = 780;
 function panelLayout(){
   const narrow = (typeof window!=='undefined' && window.innerWidth &&
                   window.innerWidth < PANEL_BREAK);
-  return narrow
+  /* phones: a viewBox close to the screen width, so text renders near its nominal
+     size (at 760 units on a 390 px screen the axis labels were 5 px tall), and
+     the twelve months in two columns */
+  const phone = narrow && window.innerWidth < 560;
+  return phone
+    ? {W:440, H:1400, annual:[0,10,440,400], monthly:[0,425,440,965]}
+    : narrow
     ? {W:760, H:1000, annual:[0,10,760,440], monthly:[0,480,760,510]}
     : {W:1520, H:470, annual:[0,10,720,450], monthly:[740,10,780,450]};
 }
@@ -2117,8 +2276,9 @@ function drawPanels(){
       ? `Lower panels show <b>${esc(placeLabel())}</b> alone.`
       : stn
         ? `Lower panels average the <b>${SERIESINFO.n} of ${SERIESINFO.pool}</b> stations observed in `+
-          (panelFrac()<1?`at least ${Math.round(panelFrac()*100)}% of the seasons of ${a}–${b}, each season `+
-                         `averaging those that reported it`:`every year of ${a}–${b}`)+
+          (panelFrac()<1?`at least ${Math.round(panelFrac()*100)}% of the seasons of ${a}–${b}, averaged as `+
+                         `departures from each station's own mean so a station missing a season does not shift it`
+                        :`every year of ${a}–${b}`)+
           (S.dpOnly ? (S.hazard==='snow'
                       ? `, drawn from the QC'd set (after <a href="https://doi.org/10.1175/2008JTECHA1138.1" `+
                         `target="_blank" rel="noopener">Kunkel et al. 2009</a>).`
@@ -2169,13 +2329,15 @@ function syncRegionSel(){ document.getElementById('regSel').value=S.region; }
 
 /* The period goes into the address only when the reader chose it (or is copying a
    link to share). A default period left there would be read back on reload as a
-   choice, and a hazard with a different default (heavy rain, 1981) would then open
+   choice, and a hazard with a different default (heavy rain, 2002) would then open
    on the old hazard's 2000. */
 function writeHash(share){
   const p=new URLSearchParams();
   p.set('h',S.hazard); p.set('t',S.thresh); if(REGUSER||share) p.set('r',S.region);
   if(S.county) p.set('c',S.county);
-  if(REQUSER||share) p.set('p',S.y0+'-'+S.y1);
+  // the period only when the reader chose it: a copied default link must open each
+  // hazard on its own default (rain 2002, snow 1951), not on the sharer's hazard's
+  if(REQUSER) p.set('p',S.y0+'-'+S.y1);
   if(S.dpOnly!==dpDefault(S.hazard)) p.set('q',S.dpOnly?'1':'0');
   if(S.tier!=='firm') p.set('g',S.tier);
   if(S.smooth!==smDefault(S.hazard)) p.set('sm',S.smooth);
@@ -2208,9 +2370,11 @@ function figureSVG(){
   let g=`<rect x="0" y="0" width="${LO.W}" height="${H}" fill="${t.bg}"/>`;
   g+=mapSVG(0,10,mw,mh,CUR,'Climatology',
       `Mean annual ${lab} ${countWord()}s (${thrSpec().short}) per ${stn?'station':'county'}, ${periodLabel()}`+
-      (smoothOn()?` \u00b7 ${sigDeg()}\u00b0 Gaussian smoothed`:''));
+      (smoothOn()&&smClim()?` \u00b7 ${sigDeg()}\u00b0 Gaussian smoothed`:(stn?'':' \u00b7 raw data')));
   g+=mapSVG(mw+30,10,mw,mh,CURT,'Trend',
-      stn?'Change per decade \u00b7 ringed where p < 0.05':'Change per decade');
+      stn?'Change per decade \u00b7 ringed where p < 0.05 \u00b7 hollow = too sparse to fit'
+         :'Change per decade \u00b7 gray = too sparse to fit'+
+          (smoothOn()?` \u00b7 ${sigDeg()}\u00b0 Gaussian smoothed`:' \u00b7 raw data'));
   g+=`<g transform="translate(0,${top})">`+document.getElementById('card').innerHTML+'</g>';
   /* A saved figure travels without the page around it, so it carries what it
      shows: hazard, threshold, place, period and where the data came from. */
@@ -2219,7 +2383,9 @@ function figureSVG(){
                      :'ECMWF ERA5 reanalysis (contains modified Copernicus Climate Change Service information)')
            :stn?(S.hazard==='snow'?'NOAA GHCN-Daily snowfall (COOP and first-order stations) via ACIS'
                  :S.hazard==='fzra'?'NOAA/NCEI GHCNh hourly airport observations'
-                 :'NOAA/NCEI hourly station observations'):'NOAA Storm Events database';
+                 :'NOAA/NCEI hourly station observations')+
+                (S.dpOnly?` (QC stations, n=${d.stations.filter(x=>x.dp).length})`:` (all ${d.stations.length} stations)`)
+               :'NOAA Storm Events database';
   g+=txt(8,H-9,`${hazSpec().label} \u00b7 ${thrSpec().label} \u00b7 panels: ${placeLabel()} \u00b7 ${periodLabel()} \u00b7 `+
                 `data: ${src} \u00b7 extremewx.org`,{size:11,fill:t.mute});
   return {svg:g,W:LO.W,H,mapW:mw,mapH:mh-42,aspect:asp};
@@ -2273,14 +2439,16 @@ function wire(){
     const pd=HZ[prev], pspec=INDEX.hazards.find(h=>h.key===prev);
     const pthr=pspec&&pspec.thresholds[Math.min(S.thresh,pspec.thresholds.length-1)];
     const keepCty = pd && !pd.station && !pd.event && !HZ[key].station && !HZ[key].event;
-    S.hazard=key; S.dpOnly=dpDefault(S.hazard); S.smooth=smDefault(S.hazard);
+    /* a Raw choice is kept across hazards; otherwise each opens on its own default */
+    const keepRaw=S.smooth==='off';
+    S.hazard=key; S.dpOnly=dpDefault(S.hazard); S.smooth=keepRaw?'off':smDefault(S.hazard);
     if(!keepCty) S.county='';
     const regMoved = !REGUSER && (S.region!==defRegion(key) || defWide(prev)!==defWide(key));
     if(regMoved && S.region!==defRegion(key)){ S.region=defRegion(key); S.county=''; }
     if(pthr && pspec.unit===spec.unit && typeof pthr.min==='number'){
       let k=0; spec.thresholds.forEach((t,i)=>{ if(typeof t.min==='number' && t.min<=pthr.min+1e-9) k=i; });
       S.thresh=k;
-    }
+    } else S.thresh=defThr(key);   // different units: "the second one" means nothing
     /* the period the reader asked for, not the one the last hazard clamped it to */
     if(!isEvent() && !wasEvent){
       if(REQUSER&&REQ) [S.y0,S.y1]=REQ;

@@ -55,6 +55,7 @@ HAZ = {
 NCELL = 105 * 237
 SOURCE = "ECMWF ERA5 reanalysis (hourly, 0.25°), NCAR ds633.0 copy"
 SRCNAME = "ERA5"            # short source name the pages show (build_rain_data.py sets "PRISM")
+BW = {}                     # box -> land area (deg^2 x cos lat x land fraction), set in stage_site
 
 
 def matrices(W):
@@ -67,8 +68,12 @@ def matrices(W):
     bx = sorted(int(k) for k in W["boxes"])
     rows, cols, vals = [], [], []
     for r, b in enumerate(bx):
-        idx = W["boxes"][str(b)]
-        rows += [r] * len(idx); cols += idx; vals += [1.0 / len(idx)] * len(idx)
+        e = W["boxes"][str(b)]
+        if e and isinstance(e[0], list):         # [ids, land weights, box land area]
+            idx, w = e[0], e[1]
+        else:                                    # older weights: plain mean over ids
+            idx, w = e, [1.0 / len(e)] * len(e)
+        rows += [r] * len(idx); cols += idx; vals += list(w)
     Mb = sparse.csr_matrix((vals, (rows, cols)), shape=(len(bx), NCELL))
     return geo, Mc, bx, Mb
 
@@ -128,6 +133,9 @@ def _mdays(y, m):
 
 def stage_site(cdir, wpath, topo, outdir):
     W = json.load(open(wpath))
+    global BW
+    BW = W.get("bw") or {k: e[2] for k, e in W.get("boxes", {}).items()
+                         if e and isinstance(e[0], list) and len(e) > 2}
     t = json.load(gzip.open(topo))
     gm = t["objects"][list(t["objects"])[0]]["geometries"]
     props = {g["properties"]["GEOID"]: g["properties"] for g in gm}
@@ -202,6 +210,8 @@ def stage_site(cdir, wpath, topo, outdir):
                  "year0": y0, "year1": y1, "gaps": gaps, "through": through, "provisional": provisional, "kind": "field", "srcname": SRCNAME,
                  "vscale": 10, "grid": G, "lat0": LAT0, "lon0": LON0, "nlat": NLAT, "nlon": NLON,
                  "source": SOURCE, "boxes": bx, "ngrid": len(bx), "ncell": len(bci)}
+        if BW:                                   # box land areas: area-weighted national means
+            gmeta["bw"] = [BW.get(str(b), 0) for b in bx]
         grid = {"meta": gmeta, "ci": bci, "yi": byi, "mi": bmi, "v": bv}
         p = os.path.join(outdir, f"grid_{hz}.json.gz")
         with gzip.open(p, "wt", encoding="utf-8") as fh:

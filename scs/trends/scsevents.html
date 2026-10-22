@@ -20,7 +20,7 @@
      uses, so the page and the drawings agree. */
   html[data-theme="light"]{
     --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
-    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#a85d09;
   }
   html[data-theme="light"] body{
     background:
@@ -183,7 +183,7 @@
      <a href="scstrend.html">Climatology and trends</a> &middot;
      <a href="scstrend_grid.html">the same on a 2&deg; grid</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-22 00:45 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-22 15:32 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
   <div class="bar">
@@ -206,7 +206,7 @@
 </header>
 
 <div id="wrap">
-  <div class="guide"><b class="lead">Guidance on interpreting these data:</b> Storm Events records <i>reports</i>, not observations from a fixed network. National counts rose roughly thirtyfold between 1955 and the late 1990s as population, spotter networks, radar and NWS verification practice changed, so trends spanning that era partly measure the growth of reporting. Trends from about 2000 on are far more defensible, and the higher thresholds are much less sensitive to reporting practice than “any report”. <b>Derechoes are single storms</b>, taken from the archive of <a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" rel="noopener">Squitieri, Wade and Jirak (2026)</a>, the first comprehensive US derecho archive: 184 events from 1956 to 2025. The biggest-days lists are Storm Events throughout. <b>June and July 1993 are missing from the Storm Events database entirely</b> — the NWS offices' records for those two months were lost when NCEI migrated the archive — so 1993 is dropped from maps and annual plots rather than counted as a quiet year.</div>
+  <div class="guide"><b class="lead">Guidance on interpreting these data:</b> Storm Events records <i>reports</i>, not observations from a fixed network. National counts rose roughly thirtyfold between 1955 and the late 1990s as population, spotter networks, radar and NWS verification practice changed, so trends spanning that era partly measure the growth of reporting. Trends from about 2000 on are far more defensible, and the higher thresholds are much less sensitive to reporting practice than “any report”. <b>Derechos are single storms</b>, taken from the archive of <a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" rel="noopener">Squitieri, Wade and Jirak (2026)</a>, the first comprehensive US derecho archive: 184 events from 1956 to 2025. It is a warm-season archive: all but 4 of the 184 events, and all 96 definitive ones, fall in April&ndash;August, most in June and July, so it says little about cool-season wind storms. The biggest-days lists are Storm Events throughout. <b>June and July 1993 are missing from the Storm Events database entirely</b> — the NWS offices' records for those two months were lost when NCEI migrated the archive — so 1993 is dropped from maps and annual plots rather than counted as a quiet year.</div>
   <div id="msg">Loading&hellip;</div>
   <div id="body" style="display:none">
     <div id="maps">
@@ -363,7 +363,10 @@ const TIERSETS={
 const EVENT_DEFAULT='definitive-069';
 
 /* ------------------------------------------------------------------ state */
-const S={hazard:'derecho',thresh:0,region:'',day:'',view:'cty',theme:'dark',
+/* Opens on Indiana, as the other severe-weather pages do: the ranked lists are
+   Indiana's and Indiana is outlined. 'Full U.S.' (or r= empty in a link) gives
+   the national list. */
+const S={hazard:'derecho',thresh:0,region:'IN',day:'',view:'cty',theme:'dark',
          tier:'firm',ev:EVENT_DEFAULT};
 let INDEX=null, GEO=null, STGEO=null, STTOPO=null, USOUT=null, USGEO=null;
 const HZ={}, PTS={}, STATES=[];
@@ -662,6 +665,22 @@ function syncUSOutline(){
     USGEO=topojson.merge(STTOPO,o.geometries); }
   USOUT=L.geoJSON(USGEO,{interactive:false,
     style:{stroke:true,color:T().sel,weight:3.2,opacity:1,fill:false}}).addTo(map);
+}
+/* A state's bounds for fitting the map. Alaska's Aleutians cross 180 degrees, so
+   its plain bounds run from -179 to +180 and their centre falls at 0 degrees E (an
+   empty map of Europe). When a state spans more than half the globe, take its
+   eastern-hemisphere longitudes as west of -180 instead. */
+function stateBounds(f){
+  const b=L.geoJSON(f).getBounds();
+  if(!(b.getEast()-b.getWest()>180)) return b;   // also returns an empty (invalid) bounds as is
+  let s=90,n=-90,w=Infinity,e=-Infinity;
+  const walk=c=>{
+    if(typeof c[0]==='number'){ const lo=c[0]>0?c[0]-360:c[0];
+      s=Math.min(s,c[1]); n=Math.max(n,c[1]); w=Math.min(w,lo); e=Math.max(e,lo); }
+    else c.forEach(walk);
+  };
+  walk(f.geometry.coordinates);
+  return L.latLngBounds([s,w],[n,e]);
 }
 function focusState(zoom){
   if(stLay) stLay.setStyle(stStyle);
@@ -1124,7 +1143,7 @@ function addTiles(){
 
     map=makeMap('mapEv'); tiles=addTiles();
     STGEO.features.forEach(f=>STATES.push({ab:f.properties.STUSPS,
-      name:f.properties.STATE_NAME,bounds:L.geoJSON(f).getBounds()}));
+      name:f.properties.STATE_NAME,bounds:stateBounds(f)}));
     STATES.sort((a,b)=>a.name.localeCompare(b.name));
     stLay=stateLayer().addTo(map);
 

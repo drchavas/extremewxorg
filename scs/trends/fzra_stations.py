@@ -25,6 +25,9 @@ COLD = ["JAN", "FEB", "MAR", "APR", "MAY", "OCT", "NOV", "DEC"]
 st = pd.read_csv("stl.csv", dtype=str)
 st = st[st.GHCN_ID.str.startswith("USW") & st.STATE.notna() & ~st.STATE.isin(NONCONUS)].copy()
 st["lat"] = st.LATITUDE.astype(float); st["lon"] = st.LONGITUDE.astype(float)
+# the state field is not enough: GHCNh files Aruba (TNCA) and Curacao (TNCC) under
+# "CA" -- keep the lower-48 box as well
+st = st[st.lat.between(24.0, 49.6) & st.lon.between(-125.0, -66.8)].copy()
 inv = pd.read_csv("inv.txt", sep=r"\s+"); inv = inv[inv.GHCNh_ID.str.startswith("USW")]
 s = inv[inv.YEAR >= 2000]
 # share of Oct-May months 2000-2026 with >= 500 reports: a rough "has the record" test;
@@ -33,6 +36,7 @@ f01 = (s[COLD] >= 500).sum(axis=1).groupby(s.GHCNh_ID).sum() / (8 * 27)
 st["f01"] = st.GHCN_ID.map(f01).fillna(0)
 
 asos = pd.read_fwf("asos-stations.txt", skiprows=[1])
+ICAO_FIX = {"USW00024018": "KCYS"}      # Cheyenne airport; GHCNh lists F.E. Warren's KFEW
 asos = set(asos.GHCND.dropna().astype(str))
 ov = pd.read_csv("overnight_best.csv").set_index("id")
 st["night"] = st.GHCN_ID.map(ov.night).fillna(0)
@@ -67,7 +71,12 @@ for k, grp in g:
         continue
     if not (in_asos or h24):
         continue
-    icao = next((x for x in grp.ICAO if isinstance(x, str) and x.strip()), "")
+    # the representative id's ICAO, else any in the group; a few GHCNh entries are
+    # wrong and are corrected by hand (NCEI's ASOS list is no better: it gives KDJT for
+    # West Palm Beach and FAA codes such as 0J4 for Florala)
+    icao = ICAO_FIX.get(rep.GHCN_ID) or \
+        (rep.ICAO if isinstance(rep.ICAO, str) and rep.ICAO.strip() else "") or \
+        next((x for x in grp.ICAO if isinstance(x, str) and x.strip()), "")
     rows.append(dict(id=rep.GHCN_ID, icao=icao, name=rep.NAME.title(), state=rep.STATE,
                      lat=round(rep.lat, 4), lon=round(rep.lon, 4), asos=int(in_asos),
                      night=round(night, 3), dp=int(is_dp), qc=int(h24),

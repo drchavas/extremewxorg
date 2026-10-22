@@ -578,6 +578,10 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
         lw.eval("trendPct(0.0996,1)")==='+9.9%'&&lw.eval("trendPct(0.196,1)")==='+19%'&&lw.eval("trendPct(-0.0999,1)")==='-9.9%',
         [lw.eval("trendPct(0.0996,1)"),lw.eval("trendPct(0.196,1)")].join(' '));
     say('the color key covers days and events',/Days or events per year/.test(lw.document.body.innerHTML));
+    const bodyTxt=lw.document.body.textContent.replace(/\s+/g,' ');
+    say('Methods: freezing rain is national airport stations, not twelve Indiana sites',
+        !/twelve Indiana sites/.test(bodyTxt)&&/about 950 airport weather stations nationwide/.test(bodyTxt)&&
+        /roughly 550 that had an overnight observer/.test(bodyTxt));
     const before=errors.length;
     const X=boot('scsdash.html','#k=nope&t=-2&h=bogus');
     await new Promise(r=>setTimeout(r,6000));
