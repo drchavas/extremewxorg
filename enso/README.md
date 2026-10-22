@@ -49,6 +49,34 @@ against IBTrACS and the Storm Events grids directly, and by a six-reviewer indep
 the whole site on 2026-10-10 (data rebuilt from raw GDEX files, C3S global means, CPC's RONI table,
 per-pixel map geolocation). Fixes from that review are noted below.
 
+## Regression version — `ensoreg.html` (Oct 22, 2026; separate page, not linked from ensogrid yet)
+
+**El Niño and La Niña by Strength.** Built from the *same sources* as ensogrid: `assemble.sh` writes both
+pages, ensoreg with `const REG=true` and the template's `<!--R-->…<!--/R-->` blocks (ensogrid keeps
+`<!--C-->…<!--/C-->`). All `REG` branches are no-ops on ensogrid.
+- **Model (per box):** anomalies r as on ensogrid (detrended by default), then least squares
+  `r = c + b+·max(x,0) + b−·min(x,0)`, x = the year's **unrounded** Dec–Feb RONI (no threshold, no
+  episode rule; all years incl. neutral). Two lines meeting at RONI 0, so El Niño and La Niña have
+  their own slopes (asymmetry allowed). Map at slider v = b+·v (v>0) or b−·v (v<0) = fitted
+  difference from RONI 0; % change divides by the climatology as on ensogrid. Within a side the map is
+  one pattern × v (shape doesn't change with v). Chosen over plain linear (La Niña = mirror) and
+  quadratic (noisy, hard to explain). `regStats`/`regFit` in src_part2.
+- **p / dots:** t of the shown side's slope, df = n − 3 (− 1 detrended). `regClusterTest`: same
+  cluster permutation test, shuffling the RONI values across years; dots are identical for every v on
+  a side (seed key uses the side, not v); RONI 0 → zero map, no dots. Null check (shuffled RONI,
+  200 runs each on TC yr, hail DJF, TC genesis SON): any-patch rate 5.5 / 6.0 / 5.0%. ERA5 ~2–3 s.
+- **UI:** slider −2.5…+2.5 step 0.5 (`#roRange`, ticks clickable), readout "Strong El Niño (RONI
+  +1.5°C)" (weak 0.5, moderate 1.0, strong 1.5, very strong ≥2.0); Show = Difference | Climatology;
+  strength, Compare with and El Niño − La Niña are not offered. Default +1.5. Values beyond the
+  strongest year of the period on that side (1979–2025: +2.40 in 1982–83, −1.73 in 2007–08) are
+  flagged "beyond the record" and in the note under the map. Hash `r=<v>` (`ph=clim` for climatology).
+- **Panels:** RONI panel marks every year in the period by its DJF value (labels beyond ±0.5) with a
+  dashed line at v; the box panel (Other advanced) is a scatter of each year's anomaly vs RONI with
+  the two fitted lines (dashed beyond the strongest year) and a ring at the map's value.
+- **Checked:** box values and p match numpy/scipy OLS for ERA5 T/precip, TC and hail boxes (to
+  float precision); x = roni.json DJF exactly; map = fresh recompute; dots ⊂ p<0.05 boxes;
+  dots same in % and absolute and across v on a side; drag sequence ends in a consistent state.
+
 ## Fields
 
 | Family | Fields | Grid | Source on disk |
@@ -105,7 +133,9 @@ check this page too.**
   aspect-ratio + min-height no longer forced an 874 px-wide map on phones; La Niña subtitle reads
   RONI ≤ −X; footer neutral wording; box panel reports phase − neutral (and draws the neutral mean)
   with Compare with: Neutral; no hover readout while a new state loads (`BUSY`); a pasted link
-  (hashchange) reloads the page. Then (item 8): neutral = truly neutral (above); the note under the
+  (hashchange) reloads the page. Oct 22: `fullView()` right after the map is made (shared links with a
+  box selected opened blank: the outline layers were added to a map with no view); `lastRoniYear()`
+  renamed (it had overridden the data loaders' `lastEnsoYear(last)`; same result today). Then (item 8): neutral = truly neutral (above); the note under the
   map adds "Note: no dotted areas = signal is weak in this domain" when dots are on and none are
   drawn (re-written when the patch test finishes); percent-mode floors raised (below); dots are drawn
   only on boxes the map colors.
