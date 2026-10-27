@@ -913,6 +913,29 @@ async function load(hash) {
       ok('  a global Pmin percentile also warns about basin mix',
          nt.includes('global 10th percentile Pmin mixes basins'), nt.slice(0, 80), 'warns');
     }
+    {
+      // bands resting on fewer than ZONAL_MIN_YRS storm years are faded on the
+      // climatology profile, and only there
+      const gv = await load('v=vmax&s=p50&b=GL&p=1990-2024');
+      const Z = gv.zonalMetrics().filter(r => isFinite(r.mean));
+      const want = Z.filter(r => r.n < 5).length;
+      const svg = gv.document.getElementById('card').innerHTML;
+      const got = (svg.match(/<circle[^>]*class="zthin"/g) || []).length;
+      ok(`  ${want} thin climatology bands drawn faded (< 5 storm years)`, want > 0 && got === want,
+         got, want);
+      ok('  with a legend note and a year count in the tooltip',
+         svg.includes('faded = &lt; 5 yrs with a storm') || svg.includes('faded = < 5 yrs with a storm'),
+         'missing', 'present');
+      ok('  and the tooltip gives the year count', /<title>-47\.5°: [^<]*\(1 yr with a storm — fewer than 5/.test(svg),
+         'missing', 'present');
+      ok('  the trend profile has no thin bands (its rule needs far more years)',
+         gv.zonalMetrics().filter(r => isFinite(r.slope)).every(r => r.n >= 5), 'thin', 'none');
+      const dn = await load('v=density&b=NA&p=1990-2024&t=ts');
+      const zd = dn.zonalMetrics().filter(r => isFinite(r.mean));
+      const td = (dn.document.getElementById('card').innerHTML.match(/<circle[^>]*class="zthin"/g) || []).length;
+      ok('  the same rule applies to every field', td === zd.filter(r => r.n < 5).length, td,
+         zd.filter(r => r.n < 5).length);
+    }
     ok('  and Methods explains it',
        pv.document.body.textContent.includes('The median and percentiles fill in the distribution'),
        'missing', 'explained');

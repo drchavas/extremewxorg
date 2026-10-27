@@ -494,6 +494,14 @@ A year represented by a single 6-hourly position is kept and weighted like any o
 observation of a storm's intensity is still an observation. The regression is over annual
 values, and how many positions produced each one does not enter it.
 
+**Thin bands are faded (2026-10-27).** A band with fewer than `ZONAL_MIN_YRS` = 5 years with a
+storm in the window is drawn on the climatology profile as a small gray marker on a dotted line,
+with a "faded = < 5 yrs with a storm" note; the tooltip gives every band's year count. At the
+edges of the storm belt a band can rest on one or two years and a handful of positions (47.5°S
+at TS+, 1990–2024: one year, three positions), and there the mean, median, upper percentiles and
+maximum collapse onto nearly the same value. The rule is fixed, does not follow Min plot, and
+never touches the trend profile, whose own rule already needs at least 11 years.
+
 ### What has to be true before a cell is drawn, and before it gets a trend
 
 Everything below counts **years that actually carry a storm**, not years used in the fit. That
@@ -866,7 +874,7 @@ to `aggregate()` in the build script.
 ```sh
 npm i jsdom topojson-client
 python3 ref_values.py          # recomputes reference values from the CSV via scipy
-node --max-old-space-size=8192 test_tctrend.js .   # tctrend.html — renders it, checks the numbers  (512)
+node --max-old-space-size=8192 test_tctrend.js .   # tctrend.html — renders it, checks the numbers  (517)
 python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (157)
 ```
 

@@ -1306,6 +1306,13 @@ function mapPanel(x,y,w,h,title,sub,vals,opts){
 /* The profile beside a map.  Coordinates are LOCAL to the map's group, and the
    vertical mapping is the map's own F.Y, which is what keeps the latitudes
    aligned.  `o.key` picks the quantity, `o.band` draws the 95% ribbon. */
+/* A band with fewer storm years than this is drawn faded and left off the solid
+   line.  Fixed, like the trend rule, so it never moves with a display control.
+   At the edges of the storm belt a band can rest on one or two years and a
+   handful of positions -- 47.5S at TS+ is one year, three positions -- and there
+   the median, the upper percentiles and the maximum all collapse onto the same
+   few values.  The number is still the data; it just should not read like it. */
+const ZONAL_MIN_YRS = 5;
 function zonalStrip(F,x0,zw,o){
   const t=T();
   const L=x0+34, R=x0+zw-8, TOP=F.oy, BOT=F.oy+F.h;
@@ -1363,20 +1370,38 @@ function zonalStrip(F,x0,zw,o){
       out+=`<path d="${d}Z" fill="${t.band}" stroke="${t.bandEdge}" stroke-width="1" stroke-dasharray="3 3"/>`;
     }
   }
-  let d='';
-  rows.forEach((r,i)=>{ d+=(i?'L':'M')+X(cl(r[o.key])).toFixed(1)+' '+F.Y(r.lat).toFixed(1); });
-  out+=`<path d="${d}" fill="none" stroke="${t.fit}" stroke-width="2"/>`;
+  /* Segments between two well-sampled bands are solid; any segment touching a
+     thin band is a faint dotted line, so the shape stays visible without the
+     sparse ends reading as well determined.  (Trend rows already need far more
+     years than this, so only the climatology profile ever has thin bands.) */
+  const thin=r=>!o.band && r.n<ZONAL_MIN_YRS;
+  const P=r=>X(cl(r[o.key])).toFixed(1)+' '+F.Y(r.lat).toFixed(1);
+  let d='', dd='';
+  for(let i=1;i<rows.length;i++){
+    const seg='M'+P(rows[i-1])+'L'+P(rows[i]);
+    if(thin(rows[i-1])||thin(rows[i])) dd+=seg; else d+=seg;
+  }
+  if(dd) out+=`<path class="zthin" d="${dd}" fill="none" stroke="${t.fit}" stroke-width="1.2"`+
+              ` stroke-dasharray="2 3" opacity=".5"/>`;
+  if(d) out+=`<path d="${d}" fill="none" stroke="${t.fit}" stroke-width="2"/>`;
+  let nthin=0;
   rows.forEach(r=>{
-    const sig=o.band && r.p<0.05;
+    const sig=o.band && r.p<0.05, th=thin(r);
+    if(th) nthin++;
     out+=`<circle cx="${X(cl(r[o.key])).toFixed(1)}" cy="${F.Y(r.lat).toFixed(1)}"`+
-         ` r="${sig?3.8:2.6}" fill="${sig?t.fit:t.panel}" stroke="${t.fit}" stroke-width="1.4">`+
+         ` r="${sig?3.8:th?2.2:2.6}" fill="${sig?t.fit:t.panel}" stroke="${th?t.mute:t.fit}"`+
+         ` stroke-width="${th?1:1.4}"${th?' opacity=".7" class="zthin"':''}>`+
          `<title>${r.lat}°: ${o.sym?sgn(r[o.key],3):fmt(r[o.key],3)} ${esc(o.unit)}`+
-         `${o.band?` (p = ${fmt(r.p,3)})`:''}</title></circle>`;
+         `${o.band?` (p = ${fmt(r.p,3)})`:` (${r.n} yr${r.n===1?'':'s'} with a storm`+
+           `${th?` — fewer than ${ZONAL_MIN_YRS}, so treat as indicative only`:''})`}`+
+         `</title></circle>`;
   });
   out+=`<line x1="${L}" y1="${BOT}" x2="${R}" y2="${BOT}" stroke="${t.axis}"/>`;
   out+=`<line x1="${L}" y1="${TOP}" x2="${L}" y2="${BOT}" stroke="${t.axis}"/>`;
   out+=txt((L+R)/2,BOT+31,esc(o.title+' ['+o.unit+']'),{size:10.5,fill:t.mute,anchor:'middle'});
   if(o.band) out+=txt(R-2,TOP+11,'filled = p < 0.05',{size:9,fill:t.mute,anchor:'end'});
+  else if(nthin) out+=txt(R-2,TOP+11,`faded = < ${ZONAL_MIN_YRS} yrs with a storm`,
+                          {size:9,fill:t.mute,anchor:'end'});
   return out;
 }
 
@@ -2003,6 +2028,12 @@ function methodsHTML(){
     '<b>The zonal profiles pool every cell in their band</b>, including any the map has grayed '+
       'out, so a profile is not the row-average of the visible boxes. Min plot is a display '+
       'threshold, not a claim that thin boxes had no storms.',
+    '<b>Thin bands are faded on the climatology profile.</b> A band with fewer than '+
+      ZONAL_MIN_YRS+' years with a storm in the window is drawn as a small gray marker on a '+
+      'dotted line. At the edges of the storm belt a band can rest on one or two years and a '+
+      'handful of positions, and there the mean, median, upper percentiles and maximum all '+
+      'collapse onto nearly the same value. The rule is fixed, like the trend rule; hover a '+
+      'marker for its year count.',
     '<b>Neither map is an estimate for a particular place inside a cell.</b> Risk at a point '+
       'depends on landfall geometry a '+GRID+'° grid cannot resolve.'
   ]))+
