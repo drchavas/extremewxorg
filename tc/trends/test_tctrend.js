@@ -276,8 +276,10 @@ async function load(hash) {
       const sc = w.seasonValue(m, i0, i1);
       const col = mref.grid[m].filter(v => v !== null);
       if (!col.length) continue;
-      const want = (mref.field === 'vmax')
-        ? null                                   // pooled, not a mean of means
+      // a mean pools positions, not a mean of means; the maximum and the
+      // percentiles are the mean over years of each year's monthly value
+      const want = (['vmax', 'size', 'pmin'].includes(mref.field) && mref.stat === 'mean')
+        ? null
         : col.reduce((p, q) => p + q, 0) / col.length;
       if (want !== null && !(Math.abs(sc - want) <= 1e-4)) sBad++;
     }
@@ -820,6 +822,89 @@ async function load(hash) {
        dw.document.getElementById('fieldnote').hidden, 'shown', 'hidden');
   }
 
+  // ---- 75th / 90th percentiles of Vmax and R34 -----------------------------
+  console.log('\npercentiles');
+  {
+    const opts = w2 => [...w2.document.getElementById('statSel').options].map(o => o.value).join(',');
+    const pv = await load('v=vmax&s=p90&b=NA&p=1990-2024');
+    ok('Vmax offers mean, median, two upper percentiles and maximum',
+       opts(pv) === 'mean,p50,p75,p90,ext', opts(pv), 'mean,p50,p75,p90,ext');
+    ok('  a p90 link opens on p90', pv.st.S.stat === 'p90' &&
+       pv.document.getElementById('statSel').value === 'p90', pv.st.S.stat, 'p90');
+    ok('  and writes it back to the hash', /(^|[#&])s=p90(&|$)/.test(pv.location.hash),
+       pv.location.hash, 's=p90');
+    const ps = await load('v=size&s=p75&b=EP');
+    ok('Size offers them too', opts(ps) === 'mean,p50,p75,p90,ext', opts(ps), 'mean,p50,p75,p90,ext');
+    const pp = await load('v=pmin&s=p90&b=NA');
+    ok('  Pmin offers the low percentiles instead, and a p90 link falls back to the mean',
+       opts(pp) === 'mean,p50,p25,p10,ext' && pp.st.S.stat === 'mean',
+       `${opts(pp)} / ${pp.st.S.stat}`, 'mean,p50,p25,p10,ext / mean');
+    // the median is shared, so it survives a change of field; p90 does not reach Pmin
+    {
+      const sw = await load('v=vmax&s=p50&b=NA');
+      sw.st.S.v = 'pmin'; sw.syncStats();
+      ok('  the median carries over from Vmax to Pmin', sw.st.S.stat === 'p50', sw.st.S.stat, 'p50');
+    }
+    // Pmin ordering: min <= p10 <= p25 <= median at every cell-year
+    {
+      const Sq = pp.st.S, iq = pp.st.Y0;
+      let bq = 0, nq = 0;
+      for (const c of pp.basinCells()) for (let y = 1990; y <= 2024; y++) {
+        const v = {};
+        for (const k of ['ext', 'p10', 'p25', 'p50']) { Sq.stat = k; v[k] = pp.cellValue(c, y - iq); }
+        if (!isFinite(v.ext)) { if (isFinite(v.p10)) bq++; continue; }
+        nq++;
+        if (!(v.ext <= v.p10 + 1e-9 && v.p10 <= v.p25 + 1e-9 && v.p25 <= v.p50 + 1e-9)) bq++;
+      }
+      Sq.stat = 'mean';
+      ok(`  min <= p10 <= p25 <= median in all ${nq} NA Pmin cell-years`, bq === 0 && nq > 500, bq, 0);
+    }
+
+    // ordering at every cell-year: p75 <= p90 <= max, and p90 >= mean is not
+    // guaranteed, but p90 of one cell equals the region value of that one cell
+    const Sx = pv.st.S, iy = pv.st.Y0;
+    let bad = 0, nchk = 0, one = 0;
+    for (const c of pv.basinCells()) for (let y = 1990; y <= 2024; y++) {
+      Sx.stat = 'p50'; const a50 = pv.cellValue(c, y - iy);
+      Sx.stat = 'p75'; const a75 = pv.cellValue(c, y - iy);
+      Sx.stat = 'p90'; const a90 = pv.cellValue(c, y - iy);
+      const r90 = pv.regionValue([c], y - iy);
+      Sx.stat = 'ext'; const mx = pv.cellValue(c, y - iy);
+      if (!isFinite(mx)) { if (isFinite(a90) || isFinite(a75)) bad++; continue; }
+      nchk++;
+      if (!(a50 <= a75 + 1e-9 && a75 <= a90 + 1e-9 && a90 <= mx + 1e-9)) bad++;
+      if (Math.abs(a90 - r90) > 1e-6) one++;
+    }
+    Sx.stat = 'p90';
+    ok(`  median <= p75 <= p90 <= max in all ${nchk} NA cell-years`, bad === 0 && nchk > 1000, bad, 0);
+    ok('  a cell\'s value is the one-cell region value', one === 0, one, 0);
+    // the map climatology of a percentile is the mean of the annual percentiles
+    const M = pv.cellMetrics();
+    const c0 = pv.basinCells().find(c => isFinite(M.mean[c]));
+    let s = 0, k = 0;
+    for (let y = 1990; y <= 2024; y++) { const v = pv.cellValue(c0, y - iy); if (isFinite(v)) { s += v; k++; } }
+    near('  the climatology map averages the annual percentile', M.mean[c0], s / k, 1e-4);
+    // km conversion applies to R34 percentiles too
+    const pk = await load('v=size&s=p75&b=EP&ru=km');
+    const yy = 2015 - ps.st.Y0;
+    near('  R34 percentiles convert to km', pk.regionValue(pk.basinCells(), yy) /
+         ps.regionValue(ps.basinCells(), yy), 1.852, 1e-9);
+    // a stage or threshold change rebuilds the histograms with the same filter
+    const all = await load('v=vmax&s=p90&b=NA&p=1990-2024&t=all&g=all');
+    const maj = await load('v=vmax&s=p90&b=NA&p=1990-2024&t=maj&g=all');
+    const y5 = 2005 - all.st.Y0;
+    ok('  the threshold is applied before the percentile',
+       maj.regionValue(maj.basinCells(), y5) > all.regionValue(all.basinCells(), y5),
+       maj.regionValue(maj.basinCells(), y5), '> all-positions value');
+    // the seasonal-cycle panel says what it shows
+    ok('  the seasonal panel names the statistic',
+       pv.document.getElementById('card').textContent.includes("mean of each year's monthly 90th percentile"),
+       'missing', 'named');
+    ok('  and Methods explains it',
+       pv.document.body.textContent.includes('The median and percentiles fill in the distribution'),
+       'missing', 'explained');
+  }
+
   // ---- the old filename still resolves ------------------------------------
   console.log('\nlegacy tccard.html redirect');
   {
@@ -1057,6 +1142,12 @@ async function load(hash) {
     ok('band totals are labeled as totals', d.includes('Zonal total [') && !d.includes('Zonal mean ['), 'label', 'Zonal total');
     const v = await card('v=vmax&b=NA&p=1990-2024');
     ok('band means are labeled as means', v.includes('Zonal mean ['), 'label', 'Zonal mean');
+    const v9 = await card('v=vmax&s=p90&b=NA&p=1990-2024');
+    ok('band percentiles are labeled as percentiles', v9.includes('Zonal 90th percentile ['),
+       'label', 'Zonal 90th percentile');
+    const p5 = await card('v=pmin&s=p50&b=NA&p=1990-2024');
+    ok('  and band medians as medians', p5.includes('Zonal median [') &&
+       p5.includes("monthly median (years"), 'label', 'Zonal median');
     const w2 = await load('k=nope&b=XX&t=zz');
     const c2 = w2.document.getElementById('card').innerHTML;
     ok('a malformed link still draws the page', c2.length > 50000 && c2.includes('Climatology'), c2.length, '> 50000');

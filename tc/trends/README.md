@@ -70,9 +70,9 @@ rebuild.)
 | Track density (default) | storm-days: 6-hourly positions ÷ 4 | mean |
 | Storm count | distinct cyclones through the box | mean |
 | ACE | Σ Vmax² over the positions, in 10⁴ kt² | mean |
-| Intensity (Vmax) | 1-min sustained wind at those positions | mean or maximum |
-| Minimum pressure | central pressure at those positions | mean or minimum |
-| Size (R34) | mean radius of 34-kt winds, n mi (2004+) | mean or maximum |
+| Intensity (Vmax) | 1-min sustained wind at those positions | mean, median, 75th or 90th percentile, maximum |
+| Minimum pressure | central pressure at those positions | mean, median, 25th or 10th percentile, minimum |
+| Size (R34) | mean radius of 34-kt winds, n mi (2004+) | mean, median, 75th or 90th percentile, maximum |
 
 **Track density** counts 6-hourly best-track positions ÷ 4, so a storm lingering in a box counts
 for more — a measure of exposure. It is the default because it is the simpler quantity: a
@@ -375,8 +375,8 @@ removed rather than left dormant.
 
 The **seasonal cycle** averages each month over the selected years — the annual total falling in
 that month for the extensive fields, and the position-pooled mean for the intensities, so a
-busy year does not count the same as a quiet one. Under **Maximum / Minimum** it is the mean
-over years of each year's monthly extreme (years with a storm that month) — the same statistic
+busy year does not count the same as a quiet one. Under **Maximum / Minimum** and the
+**percentiles** it is the mean over years of each year's monthly value (years with a storm that month) — the same statistic
 as the climatology map. Until 2026-10-10 it was the single record over the whole period while
 labeled an average (East Pacific October: 185 kt, Patricia, against a typical year's 106 kt).
 Southern Hemisphere months are indexed by IBTrACS `SEASON`, so a December point belongs to the
@@ -631,6 +631,23 @@ of the basin's record at all. The comparison matters: the South Atlantic's Vmax 
 in 2004, but so does its entire record — that is an absence of cyclones, not a reporting gap,
 and it is deliberately not reported as one.
 
+### The median and percentiles (added 2026-10-27)
+
+Vmax and R34 offer the median, 75th and 90th percentiles; minimum pressure the median, 25th and
+10th (its intense end is the low end). Each year contributes that percentile of its qualifying
+6-hourly positions — for a region or latitude band, of every
+qualifying position in it, pooled, exactly as the mean pools them — with linear interpolation
+between order statistics (numpy/R default, Hyndman–Fan type 7). The climatology map is the mean
+of the annual values, as for the Maximum. The median is the typical position; the outer
+percentiles track the strong / large / deep end without resting on one observation, so their
+annual series are less noisy than the extreme. Cautions, also in the page's Methods: a cell-year
+with one position returns that value for every statistic, so in sparse cells they converge; and
+positions are not independent, so one slow storm can carry a cell's outer percentiles for a year.
+
+Percentiles do not add across records, so the build stores each record's **value histogram**
+(see Data) and the page regroups the kept records per cell-year and per basin-month after the
+threshold, Stages and basin filters, then pools them for regions.
+
 ## Aggregation
 
 - **Storm-days** sum across cells — the region total is the sum of its parts. This is one
@@ -820,6 +837,14 @@ that, the 0–360 cell geometry, and each basin's span.
   upward and every threshold stays consistent — plus the three storm-count tables above.
   33,839 + 51,135 records, **0.24 MB gzipped** for the whole globe, which is small enough to hold every cell-year in memory and recompute means,
   trends and regressions on every control change.
+- Since 2026-10-27 every (cell, year, bin, stage, basin) record and every month record also
+  carries sparse value histograms for the percentile statistics: `hvn`/`hvx`/`hvc` for Vmax (kt),
+  `hrn`/`hrx`/`hrc` for R34 (1/12 n mi, exact) and `hpn`/`hpx`/`hpc` for pressure (mb). `*n` is the number of distinct values in
+  each record; `*x` the values, ascending and delta-coded within a record (first absolute);
+  `*c` the position counts. The build is otherwise byte-identical; the file grew from 0.71 to
+  1.29 MB gzipped. Every histogram's counts sum to the record's `nv`/`nr`/`np`, its top (bottom
+  for pressure) value equals `maxv`/`maxr`/`minp`, and Σ value×count equals `sumv`/`sumr`/`sump`
+  exactly.
 
 ## Rebuilding
 
@@ -840,7 +865,7 @@ to `aggregate()` in the build script.
 ```sh
 npm i jsdom topojson-client
 python3 ref_values.py          # recomputes reference values from the CSV via scipy
-node test_tctrend.js .            # tctrend.html — renders it, checks the numbers  (424)
+node test_tctrend.js .            # tctrend.html — renders it, checks the numbers  (508)
 python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (157)
 ```
 

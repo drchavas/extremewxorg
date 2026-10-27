@@ -93,6 +93,18 @@ def region(d, basin):
     return m
 
 
+def stat_of(z, stat, low=False):
+    """One year's statistic over its positions.  Percentiles use numpy's default
+    linear interpolation between order statistics."""
+    if not len(z):
+        return None
+    if stat == 'mean':
+        return float(z.mean())
+    if stat in ('p10', 'p25', 'p50', 'p75', 'p90'):
+        return float(np.percentile(z.to_numpy(dtype=float), int(stat[1:])))
+    return float(z.min() if low else z.max())
+
+
 def series(d, basin, thr, field, stat, y0=1980, y1=2024, band=None, stage='all'):
     """`band`, if given, is the southern edge of a GRID-wide latitude band, which
     scopes the result the way the trend-by-latitude panel does.  `stage` mirrors
@@ -115,19 +127,13 @@ def series(d, basin, thr, field, stat, y0=1980, y1=2024, band=None, stage='all')
             # storms: one cyclone counted once, however long it stayed
             out.append(r.SID.nunique() if stat == 'storms' else len(r) / 4.0)
         elif field == 'size':
-            z = r.r34.dropna()
-            out.append(None if not len(z) else
-                       float(z.mean()) if stat == 'mean' else float(z.max()))
+            out.append(stat_of(r.r34.dropna(), stat))
         elif field == 'vmax':
-            v = r.USA_WIND.dropna()
             # None, not NaN: a year with no qualifying position is missing data,
             # and NaN is not valid JSON
-            out.append(None if not len(v) else
-                       float(v.mean()) if stat == 'mean' else float(v.max()))
+            out.append(stat_of(r.USA_WIND.dropna(), stat))
         else:
-            p = r.USA_PRES.dropna()
-            out.append(None if not len(p) else
-                       float(p.mean()) if stat == 'mean' else float(p.min()))
+            out.append(stat_of(r.USA_PRES.dropna(), stat, low=True))
     return out
 
 
@@ -184,6 +190,18 @@ def main():
         # NA/EP decided per position by the BASIN flag along the isthmus
         ('storms EP ts+ TSET',     'EP', 'ts',  'density', 'storms', None, 'tset'),
         ('pmin NA ts+ min TSET',   'NA', 'ts',  'pmin',    'ext',    None, 'tset'),
+        # upper percentiles of the positions, pooled over the region
+        ('vmax NA ts+ p90 TSET',   'NA', 'ts',  'vmax',    'p90',    None, 'tset'),
+        ('vmax GL hu+ p75',        'GL', 'hu',  'vmax',    'p75',    None),
+        ('vmax WP ts+ p90 15-20N', 'WP', 'ts',  'vmax',    'p90',    15),
+        ('size EP ts+ p90',        'EP', 'ts',  'size',    'p90',    None),
+        ('size WP ts+ p75 TSET',   'WP', 'ts',  'size',    'p75',    None, 'tset'),
+        # medians of all three, and the low (intense) percentiles of pressure
+        ('vmax NA ts+ median',     'NA', 'ts',  'vmax',    'p50',    None),
+        ('size NA ts+ median TSET','NA', 'ts',  'size',    'p50',    None, 'tset'),
+        ('pmin WP ts+ median',     'WP', 'ts',  'pmin',    'p50',    None),
+        ('pmin NA ts+ p10 TSET',   'NA', 'ts',  'pmin',    'p10',    None, 'tset'),
+        ('pmin GL hu+ p25 20-25N', 'GL', 'hu',  'pmin',    'p25',    20),
     ]
     for name, b, t, f, st, band, *rest in spec:
         stage = rest[0] if rest else 'all'
@@ -211,7 +229,11 @@ def main():
     monthly = []
     for name, b, t, f, st in [('ace NA ts+', 'NA', 'ts', 'ace', 'sum'),
                               ('storm-days NA ts+', 'NA', 'ts', 'density', 'days'),
-                              ('vmax WP hu+ mean', 'WP', 'hu', 'vmax', 'mean')]:
+                              ('vmax WP hu+ mean', 'WP', 'hu', 'vmax', 'mean'),
+                              ('vmax NA ts+ p90', 'NA', 'ts', 'vmax', 'p90'),
+                              ('size EP ts+ p75', 'EP', 'ts', 'size', 'p75'),
+                              ('pmin WP ts+ p10', 'WP', 'ts', 'pmin', 'p10'),
+                              ('vmax EP hu+ median', 'EP', 'hu', 'vmax', 'p50')]:
         m = region(d, b)
         if t != 'all':
             m &= d.USA_WIND >= CUT[t]
@@ -226,8 +248,8 @@ def main():
                 elif f == 'density':
                     row.append(len(r) / 4.0)
                 else:
-                    v = r.USA_WIND.dropna()
-                    row.append(None if not len(v) else float(v.mean()))
+                    z = {'vmax': r.USA_WIND, 'size': r.r34, 'pmin': r.USA_PRES}[f]
+                    row.append(stat_of(z.dropna(), st))
             grid.append(row)
         monthly.append({'name': name, 'field': f, 'stat': st, 'thr': t, 'basin': b,
                         'grid': grid})

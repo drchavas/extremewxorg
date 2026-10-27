@@ -260,6 +260,10 @@ def aggregate(d, wind_col, pres_col, nyear):
               maxv=('v', 'max'),
               sump=('p', 'sum'), npr=('np_', 'sum'), minp=('p', 'min'),
               sumr=('r', 'sum'), nr=('nr_', 'sum'), maxr=('r', 'max')).reset_index()
+    rec = g.ngroup().to_numpy()
+    hist = {'hv': value_hist(t, rec, len(a), 'v', 1),
+            'hr': value_hist(t, rec, len(a), 'r', R34S),
+            'hp': value_hist(t, rec, len(a), 'p', 1)}
 
     # NaN sums come back as 0.0 from pandas when every value is missing; max/min
     # come back as NaN.  Store a sentinel the reader can test.
@@ -272,7 +276,40 @@ def aggregate(d, wind_col, pres_col, nyear):
     a['maxr'] = a.maxr.fillna(-1)
 
     print(f'    {len(a):,} (cell,year,bin) records')
-    return a
+    return a, hist
+
+
+def value_hist(t, rec, nrec, col, scale):
+    """Sparse value histogram per aggregate record, for the percentile statistics.
+
+    `rec` is the record index of each row of `t` (groupby.ngroup with the same
+    keys and sort=True, so it runs in the same order as the aggregate table).
+    Values are stored exactly as integers: winds in kt and pressures in mb
+    (USA_WIND and USA_PRES are integers), R34 in 1/12 n mi (it is a mean of 3 or
+    4 integer radii).  Returns per-record
+    entry counts plus, record by record in ascending value order, the distinct
+    values (delta-coded within a record, so the first is absolute) and counts.
+    """
+    x = t[col].to_numpy(dtype=float)
+    ok = np.isfinite(x)
+    h = pd.DataFrame({'rec': rec[ok], 'x': np.rint(x[ok] * scale).astype(np.int64)})
+    h = h.groupby(['rec', 'x'], sort=True).size().reset_index(name='c')
+    nent = np.bincount(h.rec.to_numpy(), minlength=nrec)
+    xv = h.x.to_numpy()
+    d = np.diff(xv, prepend=0)
+    first = np.r_[True, h.rec.to_numpy()[1:] != h.rec.to_numpy()[:-1]]
+    d[first] = xv[first]
+    return nent, d, h.c.to_numpy()
+
+
+def hist_cols(h):
+    """hv/hr/hp -> {hvn, hvx, hvc, hrn, ..., hpc} as plain lists."""
+    out = {}
+    for k, (n, x, c) in h.items():
+        out[k + 'n'] = n.tolist()
+        out[k + 'x'] = x.tolist()
+        out[k + 'c'] = c.tolist()
+    return out
 
 
 def q(x, s=1):
@@ -295,6 +332,7 @@ def month_table(d, wind_col, pres_col, member):
     v = d[wind_col].to_numpy(dtype=float)
     p = d[pres_col].to_numpy(dtype=float)
     out = []
+    hparts = []
     for ti, th in enumerate(THRESH):
         sel = np.ones(len(d), bool) if th['cut'] is None else (v >= th['cut'])
         if not sel.any():
@@ -326,6 +364,10 @@ def month_table(d, wind_col, pres_col, member):
                       minp=('p', 'min'),
                       sumr=('r', 'sum'), nr=('nr_', 'sum'),
                       maxr=('r', 'max')).reset_index()
+            rec = g.ngroup().to_numpy()
+            hparts.append({'hv': value_hist(sb, rec, len(a), 'v', 1),
+                           'hr': value_hist(sb, rec, len(a), 'r', R34S),
+                           'hp': value_hist(sb, rec, len(a), 'p', 1)})
             # distinct storms do not add across the stage dimension, so carry
             # one count per selection on the all-stages key and let the page pick
             cc = None
@@ -352,7 +394,11 @@ def month_table(d, wind_col, pres_col, member):
                  ('sumr', 0.0), ('maxr', -1)):
         r[c] = r[c].fillna(f)
     print(f'    months: {len(r):,} (basin,year,month,threshold) records')
-    return r
+    # the merge above is a left join, which keeps the row order, so the
+    # histogram blocks still line up with the concatenated rows
+    hist = {k: tuple(np.concatenate([hp[k][j] for hp in hparts]) for j in range(3))
+            for k in ('hv', 'hr', 'hp')}
+    return r, hist
 
 
 def storm_counts(d, wind_col, member, nlon, mixed):
@@ -545,9 +591,9 @@ def build(args):
 
     for src, (wc, pc) in {'usa': ('USA_WIND', 'USA_PRES')}.items():
         print(f'aggregating {src} ...')
-        a = aggregate(d, wc, pc, nyear)
+        a, ah = aggregate(d, wc, pc, nyear)
         sc = storm_counts(d, wc, member, nlon, mixed)
-        mt = month_table(d, wc, pc, member)
+        mt, mh = month_table(d, wc, pc, member)
         obj = {
             'ci':   a.ci.tolist(),
             'yi':   a.yi.tolist(),
@@ -576,7 +622,8 @@ def build(args):
                    'sumv': q(mt.sumv), 'sumv2': q(mt.sumv2), 'nv': mt.nv.tolist(),
                    'maxv': q(mt.maxv), 'sump': q(mt.sump), 'np': mt.npr.tolist(),
                    'minp': q(mt.minp), 'sumr': q(mt.sumr, R34S),
-                   'nr': mt.nr.tolist(), 'maxr': q(mt.maxr, R34S)},
+                   'nr': mt.nr.tolist(), 'maxr': q(mt.maxr, R34S),
+                   **hist_cols(mh)},
                   **ns_cols(mt)),
             'sumv': q(a.sumv),
             'nv':   a.nv.tolist(),
@@ -592,6 +639,8 @@ def build(args):
             'sumr': q(a.sumr, R34S),
             'nr':   a.nr.tolist(),
             'maxr': q(a.maxr, R34S),
+            # value histograms for the percentile statistics (see value_hist)
+            **hist_cols(ah),
         }
         path = os.path.join(args.out, f'grid_{src}.json.gz')
         with gzip.open(path, 'wt', compresslevel=9) as f:

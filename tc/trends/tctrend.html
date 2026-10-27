@@ -106,7 +106,7 @@
      Opens on 1990, after which the global record is reasonably homogeneous
      (<a href="https://doi.org/10.1029/2021GL095774">Klotzbach et al. 2022</a>); earlier
      years are available from the period boxes.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-27 13:34 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-10-27 13:48 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)</div>
   <div class="fieldnote" id="fieldnote" hidden></div>
 
@@ -269,11 +269,11 @@ const VARS={
                 'there were and how strong and long-lived each one was.'},
   vmax:   {key:'vmax',label:'Intensity (Vmax)',
            unit:'kt',short:'Vmax',
-           stats:[{k:'mean',label:'Mean'},{k:'ext',label:'Maximum'}],
+           stats:[{k:'mean',label:'Mean'},{k:'p50',label:'Median'},{k:'p75',label:'75th percentile'},{k:'p90',label:'90th percentile'},{k:'ext',label:'Maximum'}],
            desc:'1-minute sustained wind at the best-track positions in the cell.'},
   size:   {key:'size',label:'Size (R34)',
            unit:'n mi',short:'R34',
-           stats:[{k:'mean',label:'Mean'},{k:'ext',label:'Maximum'}],
+           stats:[{k:'mean',label:'Mean'},{k:'p50',label:'Median'},{k:'p75',label:'75th percentile'},{k:'p90',label:'90th percentile'},{k:'ext',label:'Maximum'}],
            /* Wind radii are a much younger record than winds or pressure, and
               their reliability is basin-dependent in a way nothing else here is,
               so the field carries its own start year and its own warning. */
@@ -308,7 +308,7 @@ const VARS={
                 'intensity.'},
   pmin:   {key:'pmin',label:'Minimum pressure',
            unit:'mb',short:'Pmin',
-           stats:[{k:'mean',label:'Mean'},{k:'ext',label:'Minimum'}],
+           stats:[{k:'mean',label:'Mean'},{k:'p50',label:'Median'},{k:'p25',label:'25th percentile'},{k:'p10',label:'10th percentile'},{k:'ext',label:'Minimum'}],
            desc:'Central pressure at the best-track positions in the cell.'}
 };
 
@@ -522,6 +522,7 @@ function rebuild(){
      the hemispheres are unions of basins and keep everything. */
   const BIX=namedBasinIndex();
   const ci=G.ci,yi=G.yi,bi=G.bi,na=G.na,pb=G.pb;
+  const hk=[], hi=[];                       // kept records, for the percentile histograms
   for(let k=0;k<ci.length;k++){
     if(!keep[bi[k]]) continue;
     if(BIX>=0 && pb && pb[k]!==BIX) continue;
@@ -538,8 +539,14 @@ function rebuild(){
     if(G.minp[k]>=0 && G.minp[k]<minp[i]) minp[i]=G.minp[k];
     sumr[i]+=G.sumr[k]; nr[i]+=G.nr[k];
     if(G.maxr[k]>=0 && G.maxr[k]>maxr[i]) maxr[i]=G.maxr[k];
+    hk.push(k); hi.push(i);
   }
   A={n,sumv,sumv2,nv,maxv,sump,np,minp,sumr,nr,maxr};
+  /* Percentiles do not add up across records the way sums do, so the build keeps
+     each record's full value histogram and the kept ones are regrouped here, one
+     histogram per cell-year, with exactly the same threshold/stage/basin filter. */
+  for(const h of ['hv','hr','hp']) if(G[h]) A[h]=histCSR(N,G[h],hk,hi);
+  PCACHE={};
 
   /* Distinct storms cannot be summed from one level to the next — a cyclone
      crossing twenty cells is one storm in each of them and still one storm in
@@ -572,7 +579,8 @@ function rebuild(){
      to two rows per (basin, year, month) at a given threshold, so the sums
      accumulate; the distinct-storm count is assigned from its own column. */
   MOB={};
-  const mo=G.mo, N12=12*NY;
+  const mo=G.mo, N12=12*NY, mk={}, mx={};
+  BKEYS.forEach(k=>{ mk[k]=[]; mx[k]=[]; });
   BKEYS.forEach(k=>{ MOB[k]={
     n:new Float32Array(N12), ns:new Float32Array(N12),
     sumv:new Float32Array(N12), sumv2:new Float32Array(N12), nv:new Float32Array(N12),
@@ -593,7 +601,82 @@ function rebuild(){
     if(mo.minp[k]>=0 && mo.minp[k]<T.minp[i]) T.minp[i]=mo.minp[k];
     T.sumr[i]+=mo.sumr[k]; T.nr[i]+=mo.nr[k];
     if(mo.maxr[k]>T.maxr[i]) T.maxr[i]=mo.maxr[k];
+    mk[BKEYS[mo.bk[k]]].push(k); mx[BKEYS[mo.bk[k]]].push(i);
   }
+  for(const h of ['hv','hr','hp']) if(mo[h])
+    BKEYS.forEach(b=>{ MOB[b][h]=histCSR(N12,mo[h],mk[b],mx[b]); });
+}
+
+/* ------------------------------------------------------------ percentiles
+   The build stores, for every record, the histogram of its positions' values
+   (Vmax in kt, R34 in 1/12 n mi, both exact integers).  histCSR regroups the
+   kept records' histograms by target index (cell-year, or month-year) into one
+   compressed table; pctOf pools any set of those indices and returns the
+   percentile with linear interpolation between order statistics -- the default
+   in numpy and R (Hyndman-Fan type 7) -- so a cell-year with a single position
+   returns that value at every percentile. */
+function histCSR(N,src,recs,idx){
+  const off=new Int32Array(N+1);
+  for(let j=0;j<recs.length;j++){ const k=recs[j]; off[idx[j]+1]+=src.o[k+1]-src.o[k]; }
+  for(let i=0;i<N;i++) off[i+1]+=off[i];
+  const pos=off.slice(0,N), x=new Int32Array(off[N]), c=new Int32Array(off[N]);
+  for(let j=0;j<recs.length;j++){
+    const k=recs[j]; let p=pos[idx[j]];
+    for(let e=src.o[k];e<src.o[k+1];e++){ x[p]=src.x[e]; c[p]=src.c[e]; p++; }
+    pos[idx[j]]=p;
+  }
+  return {off,x,c};
+}
+function prepHist(T){
+  for(const p of ['hv','hr','hp']){
+    if(!T[p+'n']) continue;
+    const n=T[p+'n'], m=n.length, o=new Int32Array(m+1), d=T[p+'x'];
+    for(let k=0;k<m;k++) o[k+1]=o[k]+n[k];
+    const x=new Int32Array(d.length);
+    for(let k=0;k<m;k++){ let a=0; for(let e=o[k];e<o[k+1];e++){ a+=d[e]; x[e]=a; } }
+    T[p]={o,x,c:Int32Array.from(T[p+'c'])};
+    delete T[p+'n']; delete T[p+'x']; delete T[p+'c'];
+  }
+}
+const PQ={cnt:new Float64Array(1<<16), seen:[]};
+function pctOf(H,list,p){
+  if(!H) return NaN;
+  const cnt=PQ.cnt, seen=PQ.seen; seen.length=0;
+  let tot=0;
+  for(const i of list) for(let e=H.off[i];e<H.off[i+1];e++){
+    const x=H.x[e]; if(!cnt[x]) seen.push(x); cnt[x]+=H.c[e]; tot+=H.c[e];
+  }
+  if(!tot) return NaN;
+  seen.sort((a,b)=>a-b);
+  const h=(tot-1)*p, lo=Math.floor(h), fr=h-lo;
+  let cum=0, xlo=NaN, xhi=NaN;
+  for(let j=0;j<seen.length;j++){
+    const x=seen[j]; cum+=cnt[x];
+    if(xlo!==xlo && cum>lo) xlo=x;
+    if(cum>lo+1){ xhi=x; break; }
+  }
+  if(xhi!==xhi) xhi=xlo;
+  for(const x of seen) cnt[x]=0;
+  return xlo+fr*(xhi-xlo);
+}
+/* p50 = median; Vmax and R34 also offer p75/p90, pressure p25/p10 (its intense
+   end is the low end).  Only fields with a histogram ever take this path. */
+function isPct(){ return /^p\d\d$/.test(S.stat) && (S.v==='vmax'||S.v==='size'||S.v==='pmin'); }
+function pctP(){ return +S.stat.slice(1)/100; }
+/* "median" / "90th percentile", for running text */
+function pctWord(){ return S.stat==='p50'?'median':S.stat.slice(1)+'th percentile'; }
+/* the histogram table for the selected field, and its storage scale */
+function pctH(T){ return S.v==='size'?T.hr:S.v==='pmin'?T.hp:T.hv; }
+function pctS(){ return S.v==='size'?R34S:1; }
+/* cell-year percentiles are asked for thousands of times per render (both maps,
+   the hover), so they are memoized per field and statistic until the next rebuild */
+let PCACHE={};
+function cellPct(i){
+  const key=S.v+S.stat;
+  let C=PCACHE[key];
+  if(!C){ C=PCACHE[key]=new Float32Array(NCELL*NY).fill(-1); }
+  if(C[i]===-1) C[i]=pctOf(pctH(A),[i],pctP())/pctS();
+  return C[i];
 }
 /* One month of the selected basin in one year.  Same field semantics as
    cellValue: extensive fields are sums and a quiet month is a real zero;
@@ -603,6 +686,7 @@ function monthValue(mi,y){
   const i=mi*NY+y;
   if(S.v==='ace') return T.sumv2[i]*1e-4;
   if(isCount()) return storms()? T.ns[i] : T.n[i]/4;
+  if(isPct()) return cv(pctOf(pctH(T),[i],pctP())/pctS());
   if(S.v==='vmax'){
     if(S.stat==='ext') return T.maxv[i]>=0?cv(T.maxv[i]):NaN;
     return T.nv[i]>0?cv(T.sumv[i]/T.nv[i]):NaN;
@@ -628,8 +712,9 @@ function seasonValue(mi,i0,i1){
      statistic the climatology map shows. It used to take the single record extreme
      over the whole period, labeled as an average: the East Pacific October read
      185 kt (Patricia) against a typical year's 106 kt, and a record also grows with
-     sample size, so busy months were inflated twice over. */
-  if(S.stat==='ext'){
+     sample size, so busy months were inflated twice over.  The percentiles are
+     treated the same way, so the panel matches the map for every statistic. */
+  if(S.stat!=='mean'){
     let s=0,k=0;
     for(let y=i0;y<=i1;y++){ const v=monthValue(mi,y); if(isFinite(v)){ s+=v; k++; } }
     return k?s/k:NaN;
@@ -678,6 +763,7 @@ function cellValue(c,y){
   const i=c*NY+y;
   if(S.v==='ace') return A.sumv2[i]*1e-4;
   if(isCount()) return storms() ? SCELL[i] : A.n[i]/4;
+  if(isPct()) return cv(cellPct(i));
   if(S.v==='vmax'){
     if(S.stat==='ext') return A.maxv[i]>=0?cv(A.maxv[i]):NaN;
     return A.nv[i]>0?cv(A.sumv[i]/A.nv[i]):NaN;
@@ -713,6 +799,9 @@ function regionValue(cells,y){
   // ACE is extensive like storm-days: the region total is the sum of its cells
   if(S.v==='ace'){ let s=0; for(const c of cells) s+=A.sumv2[c*NY+y]; return s*1e-4; }
   if(isCount()){ let s=0; for(const c of cells) s+=A.n[c*NY+y]; return s/4; }  // days; storms() short-circuits upstream
+  // percentiles pool every qualifying position in the region, like the mean
+  if(isPct())
+    return cv(pctOf(pctH(A),cells.map(c=>c*NY+y),pctP())/pctS());
   if(S.v==='vmax'){
     if(S.stat==='ext'){ let m=-1; for(const c of cells){const v=A.maxv[c*NY+y]; if(v>m)m=v;} return m>=0?cv(m):NaN; }
     let s=0,k=0; for(const c of cells){const i=c*NY+y; s+=A.sumv[i]; k+=A.nv[i];}
@@ -1382,6 +1471,8 @@ function seasonalPanel(x,y,w,h){
       `${VARS[S.v].label}${isExtensive()?' per month':''}, averaged over ${a}–${b}`+
       (isExtensive()?'':S.stat==='ext'
         ? ` · mean of each year's monthly ${S.v==='pmin'?'minimum':'maximum'} (years with a storm that month)`
+        : isPct()
+        ? ` · mean of each year's monthly ${pctWord()} (years with a storm that month)`
         : ' · pooled over all positions in that month'));
   if(!fin.length){
     out+=txt(x+w/2,y+h/2,'no data',{size:12,fill:t.mute,anchor:'middle'});
@@ -1596,7 +1687,7 @@ function render(){
                  gateLabel:'gray - fewer than '+S.minPlot+' years with a storm',
                  zonal:{rows:Z,key:'mean',band:false,sym:false,
                         zero:!(S.v==='pmin'||S.v==='vmax'),
-                        title:isExtensive()?'Zonal total':'Zonal mean',unit:uL}});
+                        title:isExtensive()?'Zonal total':S.stat==='mean'?'Zonal mean':'Zonal '+statLabel().toLowerCase(),unit:uL}});
   svg+=mapPanel(40,538,1440,430,'Trend',
         /* Three separate conditions, and the wording has to keep them separate:
            "11 yrs spanning 70%" reads as one clause about one quantity, and a
@@ -1820,6 +1911,20 @@ function methodsHTML(){
       'all, its maximum is the same at every threshold in 100% of cases — if the peak is ≥ 96 kt '+
       'then restricting to ≥ 96 kt positions cannot change it — so on this statistic the '+
       'threshold decides which cells appear, not what they show.',
+    '<b>The median and percentiles fill in the distribution between the mean and the extreme.</b> '+
+      'Vmax and R34 offer the median, 75th and 90th percentiles; minimum pressure the median, 25th '+
+      'and 10th, since its intense end is the low end. Each year contributes that percentile of its '+
+      'qualifying 6-hourly positions — for a region or latitude band, of every qualifying position '+
+      'in it, pooled, as for the mean — interpolated linearly between the ranked values (the numpy '+
+      'and R default). The median is the typical position, unmoved by a few extreme ones; the outer '+
+      'percentiles track the strong (or large, or deep) end without resting on a single observation '+
+      'as the maximum does, so their annual series are less noisy. Two cautions. A cell-year with '+
+      'few positions gives an outer percentile close to its extreme, and with one position every '+
+      'statistic is that value, so in sparsely visited cells they converge. And positions are '+
+      'not independent: a slow, long-lived storm supplies many similar positions and can carry a '+
+      'cell\'s outer percentiles for that year by itself. The climatology map and the '+
+      'seasonal-cycle panel show the mean over years of each year\'s value, the same treatment '+
+      'as the maximum.',
     '<b>One artifact of the synoptic-only rule falls on the maximum.</b> Agencies sometimes '+
       'insert an off-synoptic position specifically to capture peak intensity, and those rows '+
       'are dropped here. Measured across 1980–2025 it lowers the recorded peak for 1.3% of '+
@@ -2127,6 +2232,10 @@ function wire(){
     ['n','sumv','sumv2','nv','maxv','sump','np','minp','sumr','nr','maxr','na']
       .forEach(k=>G[k]=Float32Array.from(G[k]));
     G.pb = G.pb ? Int8Array.from(G.pb) : null;
+    prepHist(G); if(G.mo) prepHist(G.mo);
+    /* an older data file without histograms simply does not offer percentiles */
+    [['vmax','hv'],['size','hr'],['pmin','hp']].forEach(([v,h])=>{
+      if(!G[h]) VARS[v].stats=VARS[v].stats.filter(s=>!/^p\d/.test(s.k)); });
 
     readHash();
     Y0REQ=S.y0;
