@@ -229,6 +229,14 @@
   .roval .rofar{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:6px}
   .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:#111;font-weight:650}
   #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
+  /* the forecast page: months instead of the averaging bar */
+  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
+  .fcst #monthbar{display:none}
+  .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
+  .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:#ffb14e;font-weight:650}
+  .seg button.on[data-fm]{background:var(--accent2);color:#111;font-weight:650}
+  #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
+  #fmSeg{flex-wrap:wrap;max-width:100%} #fmbar .fld{max-width:100%}
   #robar .rofld{flex:1 1 auto;max-width:900px}
   .leaflet-control-attribution{background:rgba(15,23,32,.75)!important;color:#7f909f!important;font-size:10px!important}
   .leaflet-control-attribution a{color:#9fb0c0!important}
@@ -250,7 +258,7 @@
      <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
      and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-11 02:06 UTC</span></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-23 00:44 UTC</span></div>
 
 </header>
 
@@ -375,6 +383,7 @@
    the Dec-Feb RONI of every year, with separate slopes for RONI > 0 and RONI < 0, and
    maps the fitted difference from RONI 0 at the value on the slider. */
 const REG=false;
+const FCST=false;   // the forecast page (ensofcst.html): the regression read at CPC's forecast
 const MSEQ=[6,7,8,9,10,11,12,1,2,3,4,5];          // the slider: Jun (year 0) .. May (year +1)
 const NM=MSEQ.length;
 /* What the maps average over. The default is the whole ENSO year: June of year 0 to May
@@ -907,6 +916,41 @@ function regStats(xs,ys,rx,detrend){
   const p = side==='p' ? fit.pp : side==='n' ? fit.pn : NaN;
   return {mean:my,slope:a,mx,r:rp,...fit,d,p,n};
 }
+/* ----- the forecast page -----
+   CPC's official RONI outlook (data/roni_fcst.json, from build_enso_fcst.py) gives, for nine
+   coming 3-month seasons, percentiles of the forecast RONI. Each month is mapped with the
+   regression above at the Dec-Feb RONI of its ENSO year (Jun-May), as on the strength page:
+   the observed value once that winter is in the record, otherwise CPC's median (the 50th
+   percentile, its "most likely" value). The months offered run from this month to the center
+   of CPC's last season, and only within ENSO years whose Dec-Feb is known or forecast. */
+let RFC=null, FCO=null;            // the outlook; the month on screen
+function ymStr(y,m){ return y+'-'+String(m).padStart(2,'0'); }
+function fcDJF(Y){
+  if(RONI){ const v=roniAt(Y+1,0); if(v!=null) return {x:v,obs:true}; }
+  const s=RFC&&RFC.seasons.find(q=>q.code==='DJF'&&q.center===ymStr(Y+1,1));
+  return s?{x:s.q['50'],obs:false,q:s.q}:null;
+}
+function fcMonths(){
+  if(!RFC||!RFC.seasons.length) return [];
+  const now=new Date(), out=[]; let y=now.getFullYear(), m=now.getMonth()+1;
+  const [ly,lm]=RFC.seasons[RFC.seasons.length-1].center.split('-').map(Number);
+  while(y*12+m<=ly*12+lm){ const Y=m>=6?y:y-1, d=fcDJF(Y); if(d) out.push({y,m,Y,...d}); if(++m>12){ m=1; y++; } }
+  return out;
+}
+/* the month on screen: the one asked for, else next month (or this one, if it is the last) */
+function fcPick(){
+  const L=fcMonths(); if(!L.length) return null;
+  let o=L.find(q=>ymStr(q.y,q.m)===S.fm);
+  if(!o){ o=L[Math.min(1,L.length-1)]; S.fm=ymStr(o.y,o.m); }
+  return o;
+}
+/* CPC updates on the 2nd Thursday of each month: an outlook from two months back, or from
+   last month after mid-month, may have been replaced */
+function fcStale(){
+  if(!RFC) return true; const [iy,im]=RFC.issued.split('-').map(Number), now=new Date();
+  const k=(now.getFullYear()*12+now.getMonth()+1)-(iy*12+im);
+  return k>=2||(k===1&&now.getDate()>=16);
+}
 /* The whole map for one month. */
 function mapStats(X,win){
   const NC=DS.NC, n=win.length, clim=new Float32Array(NC).fill(NaN),
@@ -1199,10 +1243,12 @@ function minFlux(){ return isSnow()?0.05:0.1; }
 function perWord(){ return S.av==='mon'?'mo':S.av==='yr'?'yr':'season'; }
 function phaseName(ph){ if(REG&&!ph) return roName(S.ro); return {en:'El Niño',ln:'La Niña',enln:'El Niño − La Niña'}[ph||S.ph]; }
 /* the regression page's slider value in words */
-function roTxt(v){ return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)+'°C'; }
+function roTxt(v){ return (v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(FCST?2:1)+'°C'; }
 function roWord(v){ const a=Math.abs(v); return a<0.75?'weak':a<1.25?'moderate':a<1.75?'strong':'very strong'; }
-function roName(v){ if(!v) return 'Neutral (RONI 0)'; const w=roWord(v);
+function roName(v){ if(!v) return 'Neutral (RONI 0)';
+  if(Math.abs(v)<0.5-1e-9) return `Near-neutral (RONI ${roTxt(v)})`; const w=roWord(v);
   return `${w[0].toUpperCase()+w.slice(1)} ${v>0?'El Niño':'La Niña'} (RONI ${roTxt(v)})`; }
+function roPhrase(v){ if(Math.abs(v)<0.5-1e-9) return 'a near-neutral year'; return `a ${roWord(v)} ${v>0?'El Niño':'La Niña'}`; }
 function roSpan(v){ return v ? `<span class="ph-${v>0?'en':'ln'}">${esc(roName(v))}</span>` : esc(roName(0)); }
 /* the strongest Dec-Feb RONI on each side among the years in the fit */
 function roExtremes(win){ let hi=null, lo=null;
@@ -1688,6 +1734,11 @@ function runSig(st,sk){
 }
 async function refresh(){
   const tok=++TOKEN;
+  if(FCST){                                                        // the forecast page: the month picks the strength
+    FCO=fcPick();
+    if(!FCO){ const m=document.getElementById('msg'); m.style.display='block';
+      m.textContent='The El Niño / La Niña forecast on this page is out of date or missing: see NOAA CPC\'s ENSO outlook for the latest.'; return; }
+    S.av='mon'; S.mi=MSEQ.indexOf(FCO.m); S.ro=FCO.x; }
   if(REG){ S.ph=S.ro<0?'ln':'en'; S.str=0.5; S.base='all'; }      // the slider stands in for phase and strength
   BUSY=true; document.querySelectorAll('.tip').forEach(e=>e.style.display='none');
   const msg=document.getElementById('msg');
@@ -1811,7 +1862,7 @@ function monthLabel(mi,long){
   return nm+(m<6?' (+1)':' (0)');
 }
 /* labels for whatever the maps average over */
-function tkLong(){ return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : AV().long; }
+function tkLong(){ if(FCST&&FCO) return `${MFULL[FCO.m-1]} ${FCO.y}`; return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : AV().long; }
 function tkShort(){ return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO-year' : AV().label; }
 function writeTitles(domD){
   const [a,b]=yearsSel(), f=F(), win=windowYears();
@@ -1841,7 +1892,7 @@ function writeTitles(domD){
   } else if(REG){
     const side=sideOf(S.ro), nP=win.filter(w=>w.x>0).length, nM=win.filter(w=>w.x<0).length, ex=roExtremes(win);
     const fitOK=Math.min(nP,nM)>=3, testable=fitOK&&!!S.ro;
-    title.innerHTML=`${roSpan(S.ro)} minus climatology · ${esc(tkLong())}`;
+    title.innerHTML=FCST ? `${esc(tkLong())}: ${roSpan(S.ro)} minus climatology` : `${roSpan(S.ro)} minus climatology · ${esc(tkLong())}`;
     sub.innerHTML=esc(`${per} · fitted to the Dec–Feb RONI of all ${win.length} years, ${range}, one line each for El Niño and La Niña · `+
       (pctOn()?'% change from climatology':unitAbs())+` · `+
       (S.dt==='on'?'linear trend removed':'trend kept')+
@@ -1852,7 +1903,11 @@ function writeTitles(domD){
     const lev = side==='p'&&big.length>=2 ? ` The El Niño line leans on the ${big.length===4?'four':big.length} strongest events (${big.join(', ')})`+
       (big.includes('1991–1992')?', and 1991–92 also carries the cooling from the Pinatubo eruption':'')+'.' : '';
     const weak = Math.abs(S.ro)<0.75 && S.ro ? ` At this weak strength the map is largely the stronger events' pattern scaled down, so it can overstate a weak ${side==='p'?'El Niño':'La Niña'}, especially for rain.` : '';
-    warn.textContent = !fitOK
+    const fcPre = FCST&&FCO ? `What the past ${win.length} years suggest for ${MFULL[FCO.m-1]} in ${roPhrase(S.ro)} `+
+      `(${FCO.obs?'the observed':'CPC’s most likely'} Dec–Feb RONI, ${roTxt(S.ro)}), from the strength page’s fit. A guide from history, not NOAA’s forecast for that month.` : '';
+    warn.textContent = FCST&&fitOK&&S.ro ? fcPre+lev+(far?` No year in ${a}–${b} reached ${roTxt(S.ro)} (strongest: ${ensoLabel(far.Y)}, ${sgn(far.x,2)}°C), so this map extends the line beyond the record.`:'')+
+        ` Read coherent patterns (dotted = stronger signal), not the value in any single box.`+(noDots?' Note: no dotted areas = signal is weak in this domain.':'')
+      : !fitOK
       ? `Only ${Math.min(nP,nM)} year${Math.min(nP,nM)===1?'':'s'} in ${a}–${b} had a Dec–Feb RONI ${nP<nM?'above':'below'} 0: too few to fit both lines, so nothing is drawn. Widen the period.`
       : !S.ro
       ? `RONI 0, where the two lines meet, compared with the average year: a neutral year is not quite an average one, since El Niño and La Niña years pull the average their way. No dots here: the dots test the El Niño or La Niña slope.`
@@ -1916,7 +1971,7 @@ function varName(){
   const t=thrShort(); return t?`${base} · ${t}`:base;
 }
 function writeBubbles(){
-  const when = S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO year (Jun–May)' : AV().label;
+  const when = FCST&&FCO ? tkLong() : S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO year (Jun–May)' : AV().label;
   const base = S.base==='neu' ? ' minus neutral years' : ' minus climatology';
   const ph = S.ph==='en'?'<span class="ph-en">El Niño</span>'+base
            : S.ph==='ln'?'<span class="ph-ln">La Niña</span>'+base
@@ -2135,6 +2190,60 @@ function regBoxPanel(x,y,w,h,bs){
      :`Dec–Feb RONI (°C) · lines: the fit, dashed beyond the strongest year · ring: the map's value · click the map to pick a box, again for the ${aggLabel()}`,{size:11,fill:t.mute,anchor:'middle'});
   return o+'</g>';
 }
+/* the forecast page's RONI panel: the last two years observed, then CPC's outlook */
+function fcRoniPanel(x,y,w,h){
+  const t=T(), v=RONI.v, n=v.length;
+  const [iy,im]=RFC.issued.split('-').map(Number);
+  const fcs=RFC.seasons.map(q=>{ const [cy,cm]=q.center.split('-').map(Number); return {i:roniIdx(cy,cm-1),q:q.q,code:q.code,cy,cm}; });
+  const i0=roniIdx(iy-2,im-1), i1=fcs[fcs.length-1].i;
+  const L=x+58,R=x+w-18,TOP=y+70,BOT=y+h-46;
+  let lo=-1,hi=1; for(let i=i0;i<n;i++){ const u=v[i]; if(u!=null){ lo=Math.min(lo,u); hi=Math.max(hi,u); } }
+  fcs.forEach(f=>{ lo=Math.min(lo,f.q['5']); hi=Math.max(hi,f.q['95']); });
+  const ex=roExtremes(windowYears());
+  if(S.ro>0&&ex.hi) hi=Math.max(hi,ex.hi.x); if(S.ro<0&&ex.lo) lo=Math.min(lo,ex.lo.x);
+  const AX=niceAxis(lo-0.3,hi+0.3,6);
+  const X=i=>L+(R-L)*(i-i0+0.5)/(i1-i0+1), Y=u=>BOT-(BOT-TOP)*(u-AX.lo)/(AX.hi-AX.lo), bw=(R-L)/(i1-i0+1)*0.8;
+  const iss=`${MFULL[im-1]} ${iy}`;
+  let o=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
+  o+=txt(x+14,y+22,'Relative Oceanic Niño Index (RONI): recent seasons and NOAA CPC\'s outlook',{size:14.5,weight:650});
+  o+=txt(x+14,y+38,w<1000?`Observed to ${SEAS[(n-1)%12]} ${RONI.year0+Math.floor((n-1)/12)} · CPC outlook issued ${iss}`
+    :`Observed 3-month seasons to ${SEAS[(n-1)%12]} ${RONI.year0+Math.floor((n-1)/12)} · CPC outlook issued ${iss}: dot = median (most likely), dark = middle 50%, light = middle 90%`,{size:11,fill:t.mute});
+  for(let u=AX.lo;u<=AX.hi+1e-9;u+=AX.step){ const yy=Y(u);
+    o+=`<line x1="${L}" y1="${yy.toFixed(1)}" x2="${R}" y2="${yy.toFixed(1)}" stroke="${Math.abs(u)<1e-9?t.axis:t.grid}"/>`;
+    o+=txt(L-8,yy+4,(u>0?'+':'')+fmt(u,decFor(AX.step)),{size:11,fill:t.mute,anchor:'end'}); }
+  [[0.5,t.en],[-0.5,t.ln]].forEach(([u,c])=>{ if(u>=AX.lo&&u<=AX.hi) o+=`<line x1="${L}" y1="${Y(u).toFixed(1)}" x2="${R}" y2="${Y(u).toFixed(1)}" stroke="${c}" stroke-dasharray="2 4" opacity=".6"/>`; });
+  /* the forecast region */
+  const fx=X(fcs[0].i)-(R-L)/(i1-i0+1)/2;
+  o+=`<rect x="${fx.toFixed(1)}" y="${TOP}" width="${(R-fx).toFixed(1)}" height="${BOT-TOP}" fill="${t.mute}" opacity=".08"/>`;
+  o+=txt(fx+6,TOP+14,'forecast',{size:11,fill:t.mute,weight:650});
+  /* observed */
+  for(let i=i0;i<n;i++){ const u=v[i]; if(u==null) continue; const col=u>=0.5?t.en:u<=-0.5?t.ln:t.neu;
+    o+=`<rect x="${(X(i)-bw/2).toFixed(1)}" y="${Math.min(Y(u),Y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(.6,Math.abs(Y(u)-Y(0))).toFixed(1)}" fill="${col}" opacity=".75"><title>${SEAS[i%12]} ${RONI.year0+Math.floor(i/12)}: RONI ${sgn(u,2)}°C (observed)</title></rect>`; }
+  /* forecast */
+  let path='';
+  fcs.forEach((f,k)=>{ const xx=X(f.i), q=f.q, col=q['50']>=0.5?t.en:q['50']<=-0.5?t.ln:t.neu;
+    o+=`<rect x="${(xx-bw/2).toFixed(1)}" y="${Y(q['95']).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(q['5'])-Y(q['95'])).toFixed(1)}" fill="${col}" opacity=".22"/>`;
+    o+=`<rect x="${(xx-bw/2).toFixed(1)}" y="${Y(q['75']).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(q['25'])-Y(q['75'])).toFixed(1)}" fill="${col}" opacity=".5"/>`;
+    path+=(k?'L':'M')+xx.toFixed(1)+','+Y(q['50']).toFixed(1);
+    const yr=f.cm===1?`${f.cy-1}–${String(f.cy).slice(2)}`:f.cy;
+    o+=`<circle cx="${xx.toFixed(1)}" cy="${Y(q['50']).toFixed(1)}" r="${f.code==='DJF'?5:3.4}" fill="${col}" stroke="${t.panel}" stroke-width="1.2"><title>${f.code} ${yr}: CPC median ${sgn(q['50'],2)}°C; 50% chance between ${sgn(q['25'],2)} and ${sgn(q['75'],2)}; 90% between ${sgn(q['5'],2)} and ${sgn(q['95'],2)}</title></circle>`;
+    if(f.code==='DJF') o+=txt(xx+9,Y(q['50'])-8,`Dec–Feb ${sgn(q['50'],2)}`,{size:11,fill:col,weight:650});
+  });
+  o+=`<path d="${path}" fill="none" stroke="${t.ink}" stroke-width="1.2" opacity=".5"/>`;
+  /* the strongest Dec-Feb of the fit's period on the forecast side, and the maps' value */
+  const rec = S.ro>0?ex.hi:S.ro<0?ex.lo:null;
+  if(rec){ const yy=Y(rec.x).toFixed(1);
+    o+=`<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="${t.mute}" stroke-dasharray="6 4"/>`;
+    o+=txt(L+6,rec.x>0?+yy-5:+yy+13,`strongest Dec–Feb in ${yearsSel().join('–')}: ${sgn(rec.x,2)} (${ensoLabel(rec.Y)})`,{size:10.5,fill:t.mute}); }
+  /* season labels: every third month */
+  for(let i=i0;i<=i1;i++){ if(i%3) continue; const xx=X(i).toFixed(1), yr=RONI.year0+Math.floor(i/12);
+    o+=`<line x1="${xx}" y1="${BOT}" x2="${xx}" y2="${BOT+4}" stroke="${t.axis}"/>`;
+    o+=txt(xx,BOT+17,SEAS[i%12],{size:10.5,fill:t.mute,anchor:'middle'});
+    if(i%12===0) o+=txt(xx,BOT+31,String(yr),{size:10.5,fill:t.mute,anchor:'middle'}); }
+  o+=`<line x1="${L}" y1="${BOT}" x2="${R}" y2="${BOT}" stroke="${t.axis}"/><line x1="${L}" y1="${TOP}" x2="${L}" y2="${BOT}" stroke="${t.axis}"/>`;
+  o+=`<text x="${x+18}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+18} ${(TOP+BOT)/2})" font-family="${FF}" font-size="12" fill="${t.mute}" text-anchor="middle">RONI (°C)</text>`;
+  return o+'</g>';
+}
 function boxPanel(x,y,w,h,bs){
   if(REG) return regBoxPanel(x,y,w,h,bs);
   const t=T(), [a,b]=yearsSel(), m=MSEQ[S.mi], st=bs.st, mon=S.av==='mon';
@@ -2214,7 +2323,7 @@ async function drawPanels(){
   const put=(id,h,body)=>{ const el=document.getElementById(id);
     el.setAttribute('viewBox','0 0 '+LO.W+' '+h);
     el.innerHTML=`<rect x="0" y="0" width="${LO.W}" height="${h}" fill="${t.bg}"/>`+body; };
-  put('cardRoni',LO.roni[3],roniPanel(...LO.roni));
+  put('cardRoni',LO.roni[3],FCST&&RFC?fcRoniPanel(...LO.roni):roniPanel(...LO.roni));
   put('cardBox',LO.box[3],boxPanel(...LO.box,bs));
   writeFoot(bs);
 }
@@ -2265,7 +2374,13 @@ const REGWORDS=[['so these monthly composites are noisy','so these monthly maps 
   ['before the composite is formed','before the fit'],['before compositing','before the fit'],
   ['in proportion to when each phase happened','in proportion to when El Niño and La Niña happened']];
 function regWords(s){ if(!REG) return s; for(const [a,b] of REGWORDS) s=s.split(a).join(b); return s; }
-function guideHtml(){ return regWords(guideHtml0()); }
+function guideHtml(){
+  const fc = FCST ? '<b>This page is a guide from history, not a forecast of the weather.</b> NOAA forecasts the strength of '+
+    'El Niño or La Niña; the maps show what past events of that strength looked like in the month you pick, using the fit '+
+    'of the <a href="ensoreg.html">strength page</a>. Any one event, this one included, can differ from that history, and '+
+    'NOAA\'s own <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">seasonal outlooks</a> '+
+    'also use computer forecasts of this season and the warming trend, so they can differ from these maps. ' : '';
+  return fc+regWords(guideHtml0()); }
 function guideHtml0(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
   const common=REG ? ' These maps are <b>regressions</b>: each box\'s values over the years are fitted to the Dec–Feb RONI '+
@@ -2453,6 +2568,17 @@ function methodsHtml(){
     the 98th percentile of climatology and the 95th of the size of the difference (percent or absolute), over the boxes drawn — so check the
     color bar when you change month.`);
   if(REG){ regMethods(li); for(let i=0;i<li.length;i++) li[i]=regWords(li[i]); }
+  if(FCST&&RFC) li.unshift(`<b>The forecast.</b> NOAA CPC's
+    <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/outlook/" target="_blank" rel="noopener">official RONI outlook</a>
+    (issued ${MFULL[+RFC.issued.slice(5)-1]} ${RFC.issued.slice(0,4)}; read ${RFC.fetched.slice(0,10)}) gives, for nine coming overlapping
+    3-month seasons, the 5th–95th percentiles of the forecast RONI, set by a team of about ten forecasters from multi-model ensembles and
+    the latest observations. This page takes the <b>median</b> (the 50th percentile, the most likely value) for the Dec–Feb that
+    classifies each ENSO year, or the observed Dec–Feb once it is in the record, and maps every month of that ENSO year (June–May)
+    with the strength page's regression at that value: the fitted value at that RONI minus the climatology of ${yearsSel().join('–')}.
+    The months offered run from the current month to the center of CPC's last forecast season. The forecast's spread is shown in the
+    RONI panel and quoted above the map, but the maps use the median only; to see a weaker or stronger outcome, use the
+    <a href="ensoreg.html">strength page</a>. CPC updates the outlook on the second Thursday of each month (refetched by
+    <code>build_enso_fcst.py</code>).`);
   return '<ol>'+li.map(x=>'<li>'+x+'</li>').join('')+'</ol>';
 }
 /* the regression page's Methods: the same list with the composite items rewritten */
@@ -2529,7 +2655,24 @@ function syncControls(){
   if(!REG) document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
   document.getElementById('ctChk').checked=!!S.ct;
-  if(REG){
+  if(FCST){
+    /* the month buttons and the forecast line */
+    const L=fcMonths(), seg=document.getElementById('fmSeg');
+    seg.innerHTML=L.map(q=>`<button data-fm="${ymStr(q.y,q.m)}" title="${MFULL[q.m-1]} ${q.y}">${MONTHS[q.m-1]}<span class="yr">${q.y}</span></button>`).join('');
+    seg.querySelectorAll('button').forEach(b=>{ const on=b.dataset.fm===S.fm; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on);
+      b.onclick=()=>{ S.fm=b.dataset.fm; refresh(); }; });
+    const o=FCO, nt=document.getElementById('fcNote');
+    if(o){ const ph=o.x>=0.5?'El Niño':o.x<=-0.5?'La Niña':'', cls=o.x>0?'ph-en':'ph-ln';
+      const yy=`${o.Y}–${String(o.Y+1).slice(2)}`, iss=`${MFULL[+RFC.issued.slice(5)-1]} ${RFC.issued.slice(0,4)}`;
+      nt.innerHTML = (o.obs
+        ? `Dec–Feb ${yy}: RONI was <b class="${cls}">${roTxt(o.x)}</b> (observed), ${esc(roPhrase(o.x))}.`
+        : `NOAA CPC's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/outlook/" target="_blank" rel="noopener">RONI outlook</a>, issued ${iss}: `+
+          `Dec–Feb ${yy} most likely <b class="${cls}">${roTxt(o.x)}</b>, ${esc(roPhrase(o.x))} (50% chance between ${sgn(o.q['25'],2)} and ${sgn(o.q['75'],2)}; 90% between ${sgn(o.q['5'],2)} and ${sgn(o.q['95'],2)}).`)+
+        ` Every month of the ${yy} ENSO year (June–May) is mapped at that value.`+
+        (fcStale()?' <span class="stale">CPC issues a new outlook on the second Thursday of each month; this one may have been replaced.</span>':''); }
+    document.querySelectorAll('#phSeg button').forEach(b=>{ const on=b.dataset.ph===(S.mode==='clim'?'clim':'reg');
+      b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
+  } else if(REG){
     /* the RONI slider and its readout; Difference / Climatology */
     document.getElementById('roRange').value=String(S.ro);
     const rv=document.getElementById('roVal'), ex=roExtremes(windowYears());
@@ -2574,9 +2717,10 @@ function syncControls(){
 function writeHash(){
   const p=new URLSearchParams();
   p.set('f',S.f); if(S.thr) p.set('t',S.thr);
-  if(REG){ if(S.mode==='clim') p.set('ph','clim'); p.set('r',S.ro); }
+  if(FCST){ if(S.mode==='clim') p.set('ph','clim'); if(S.fm) p.set('mo',S.fm); }
+  else if(REG){ if(S.mode==='clim') p.set('ph','clim'); p.set('r',S.ro); }
   else { p.set('ph',S.mode==='clim'?'clim':S.ph); p.set('s',S.str); }
-  p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
+  if(!FCST) p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
   if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
   else if(S.per!==defaultPer()) p.set('p',S.per);
   if(S.dt!=='on') p.set('dt',S.dt);
@@ -2597,7 +2741,8 @@ function readHash(){
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
   if(p.get('t')) S.thr=Math.max(0,+p.get('t')||0);
   S.thr=menuItem()[1];                                  // only menu combinations exist
-  if(REG){ if(p.get('ph')==='clim') S.mode='clim';
+  if(FCST){ if(p.get('ph')==='clim') S.mode='clim'; if(/^\d{4}-\d{2}$/.test(p.get('mo')||'')) S.fm=p.get('mo'); }
+  else if(REG){ if(p.get('ph')==='clim') S.mode='clim';
     const rq=p.get('r'), r=parseFloat(rq);
     if(rq&&isFinite(r)) S.ro=Math.max(-2.5,Math.min(2.5,Math.sign(r)*Math.round(Math.abs(r)*2)/2)); }
   else {
@@ -2627,7 +2772,7 @@ function readHash(){
   return p.get('v');
 }
 function fileStem(){
-  return ((REG?'ensoreg_':'ensogrid_')+S.f+'_'+(REG?'r'+S.ro:S.ph)+'_'+(S.av==='mon'?MONTHS[MSEQ[S.mi]-1]:S.av)+'_'+yearsSel().join('-')).toLowerCase();
+  return ((FCST?'ensofcst_':REG?'ensoreg_':'ensogrid_')+S.f+'_'+(FCST?S.fm:REG?'r'+S.ro:S.ph)+'_'+(S.av==='mon'?MONTHS[MSEQ[S.mi]-1]:S.av)+'_'+yearsSel().join('-')).toLowerCase();
 }
 function dl(blob,name){
   const u=URL.createObjectURL(blob), a=document.createElement('a');
@@ -2667,7 +2812,8 @@ function wire(){
   document.querySelectorAll('#phSeg button').forEach(b=>b.onclick=()=>{
     if(b.dataset.ph==='clim') S.mode='clim'; else { S.mode='diff'; if(!REG) S.ph=b.dataset.ph; }
     refresh(); });
-  if(REG){
+  if(FCST){ /* month buttons are wired as they are drawn (syncControls) */ }
+  else if(REG){
     /* the RONI slider: dragging it shows the difference map, from Climatology too */
     const rr=document.getElementById('roRange');
     rr.oninput=e=>{ const v=Math.round(+e.target.value*2)/2; if(v===S.ro&&S.mode!=='clim') return; S.ro=v; S.mode='diff'; refresh(); };
@@ -2726,6 +2872,9 @@ async function init(){
       'or try again in a few minutes.';
     return;
   }
+  if(FCST){ document.body.classList.add('fcst');
+    const b=document.querySelector('#phSeg button[data-ph="reg"]'); if(b){ b.textContent='Expected change';
+      b.title='What past years at the forecast strength suggest for this month, minus the average year (the climatology)'; } }
   if(REG){ document.body.classList.add('reg');
     const tt=(sel,s)=>{ const e=document.querySelector(sel); if(e) e.title=s; };
     tt('#sigChk',''); tt('label.chk:has(#sigChk)','Dot the patches of boxes where the fitted El Niño (or La Niña) slope is significant: each box at p < 0.05 (t-test on the slope), and the patch as a whole stronger than chance (permutation test; see Methods)');
@@ -2740,6 +2889,7 @@ async function init(){
       fetch('data/roni.json').then(r=>{ if(!r.ok) throw new Error('could not fetch data/roni.json'); return r.json(); }),
       fetch('geo/countries-110m.json').then(r=>{ if(!r.ok) throw new Error('could not fetch the coastlines'); return r.json(); })]);
     RONI=roni; WORLD=world;
+    if(FCST) RFC=await fetch('data/roni_fcst.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error('could not fetch the CPC forecast (data/roni_fcst.json)'); return r.json(); });
   } catch(err){ document.getElementById('msg').textContent='Could not load: '+err.message; return; }
   document.getElementById('body').style.display='';
   mapA=makeMap('mapMain',true);

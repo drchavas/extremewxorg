@@ -100,6 +100,32 @@ pages, ensoreg with `const REG=true` and the template's `<!--R-->…<!--/R-->` b
   float precision); x = roni.json DJF exactly; map = fresh recompute; dots ⊂ p<0.05 boxes;
   dots same in % and absolute and across v on a side; drag sequence ends in a consistent state.
 
+## Forecast version — `ensofcst.html` (Oct 22, 2026; separate page, linked only from itself)
+
+**El Niño and La Niña Outlook: What to Expect, Month by Month.** Third build of the same sources
+(`FCST=true`, template blocks `<!--F-->`; `REG` is also true, so it is the regression page without
+the slider). Dan's choices: tie every month to the **Dec–Feb RONI of its ENSO year** (as on the
+other pages), and use CPC's **median** as "most likely".
+- **Forecast data:** `build_enso_fcst.py data` parses NOAA CPC's *Official RONI Outlook*
+  (https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/outlook/): 5/15/25/50/75/85/95th
+  percentiles for 9 overlapping seasons, HTML table only. It writes `data/roni_fcst.json`
+  (`issued`, `fetched`, `seasons[{code, center 'YYYY-MM', q}]`). First season's center month = issue
+  month. Hard checks (9 consecutive seasons, increasing percentiles, plausible values); on any
+  failure it exits without touching the file. **Run monthly after CPC's update (2nd Thursday)**,
+  together with `build_enso_roni.py`.
+- **Months offered:** from the current month (browser clock) to the center of CPC's last season,
+  only in ENSO years whose Dec–Feb is observed or forecast (October 2026 issue: Oct 2026 – May 2027;
+  the last season, MJJ 2027, belongs to the next ENSO year, whose Dec–Feb is not yet forecast).
+  Default: next month. Each month: regression of the strength page at x = observed DJF RONI if in
+  `roni.json`, else CPC's DJF median (Oct 2026: +2.36, 50% range +2.04…+2.68, 90% +1.58…+3.14 —
+  just below the 1982–83 record +2.40). Map identical to ensoreg at that RONI and month (checked).
+- **UI:** Show = Expected change | Climatology; Variable; Show difference as; month buttons with the
+  forecast line (issue date, median, 50/90% ranges, stale warning from the month after the issue,
+  after the 16th); no averaging bar. RONI panel = last two years observed + CPC outlook fan
+  (`fcRoniPanel`) with the strongest Dec–Feb of the period. Note under the map says "a guide from
+  history, not NOAA's forecast". Hash `mo=YYYY-MM` (`ph=clim`). If the forecast file is past its
+  horizon the page says it is out of date.
+
 ## Fields
 
 | Family | Fields | Grid | Source on disk |
@@ -212,6 +238,7 @@ check this page too.**
 ```sh
 cd enso
 python3 build_enso_roni.py data                                   # RONI (seconds)
+python3 build_enso_fcst.py data                                   # CPC RONI outlook for ensofcst.html (seconds; monthly)
 python3 build_enso_tc.py /path/to/ibtracs.ALL.list.v04r01.csv data # TC (~10 s)
 # ERA5: 1 deg box means into a scratch dir, then the 2 deg per-month files
 python3 fetch_era5_gdex.py /tmp/coarse 1979 2022 [t2m,mtpr,msr]   # ~3 GB streamed, ~8 min

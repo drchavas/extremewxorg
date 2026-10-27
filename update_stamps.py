@@ -22,6 +22,8 @@ PAGES = {
                            'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
     'enso/ensoreg.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
                           'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
+    'enso/ensofcst.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
+                           'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
     'climate/earthvis.html': ['climate/data', 'enso/data/tc_month.json.gz', 'scs/trends/data/grid_hail.json.gz',
                               'scs/trends/data/grid_tornado.json.gz', 'scs/trends/data/grid_wind.json.gz',
                               'scs/trends/data/grid_derechoday.json.gz'],
