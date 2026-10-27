@@ -1235,7 +1235,9 @@ function mapPanel(x,y,w,h,title,sub,vals,opts){
     const tip=has
       ? fmt(v,opts.dec)+' '+esc(opts.unit)+
         (isFinite(rv)&&Math.abs(rv-v)>Math.pow(10,-(opts.dec||2))/2
-           ? ' (smoothed; this box '+fmt(rv,opts.dec)+')' : '')
+           ? ' (smoothed; this box '+fmt(rv,opts.dec)+')' : '')+
+        // name the statistic, after the number so the value still leads
+        (VARS[S.v].stats.length>1 ? ' · '+esc(qtyLabel()) : '')
       : esc(opts.gateLabel||'too few years');
     out+=`<rect class="cellhit" x="${px.toFixed(1)}" y="${py.toFixed(1)}"`+
          ` width="${(cw+0.6).toFixed(1)}" height="${(ch+0.6).toFixed(1)}" fill="${col}">`+
@@ -1404,7 +1406,7 @@ function annualPanel(x,y,w,h){
   const where=(S.basin==='GL')?'the globe':bs.name;
   let out=`<g>`+panelBox(x,y,w,h,
       bs.name+' · '+qtyLabel(),
-      `${VARS[S.v].label} over ${where}, ${a}–${b}`+(storms()?', each storm counted once':'')+` · `+
+      `${subjLabel()} over ${where}, ${a}–${b}`+(storms()?', each storm counted once':'')+` · `+
       'least-squares fit with 95% band');
   if(years.length<3){
     out+=txt(x+w/2,y+h/2,'not enough years',{size:12,fill:t.mute,anchor:'middle'});
@@ -1460,7 +1462,7 @@ function annualPanel(x,y,w,h){
     out+=txt(L+8,TOP+16,stat,{size:11.5,fill:r.p<0.05?t.fit:t.mute,weight:r.p<0.05?650:400});
   }
   out+=txt((L+R)/2,BOT+39,'Year',{size:12,fill:t.mute,anchor:'middle'});
-  out+=vtxt(x+18,(TOP+BOT)/2,esc(VARS[S.v].short+' ['+unitLabel()+']'),{size:12});
+  out+=vtxt(x+18,(TOP+BOT)/2,esc(subjLabel(true)+' ['+unitLabel()+']'),{size:12});
   return out+`</g>`;
 }
 
@@ -1525,7 +1527,7 @@ function seasonalPanel(x,y,w,h){
     out+=txt(L+8,TOP+15,`peak ${MONTHS[pk]} · half the annual total by ${MONTHS[lo3]}`,
              {size:11.5,fill:t.mute});
   }
-  out+=vtxt(x+18,(TOP+BOT)/2,esc(VARS[S.v].short+' ['+unitLabel()+']'),{size:12});
+  out+=vtxt(x+18,(TOP+BOT)/2,esc(subjLabel(true)+' ['+unitLabel()+']'),{size:12});
   return out+`</g>`;
 }
 
@@ -1533,7 +1535,7 @@ function seasonalPanel(x,y,w,h){
 function monthlyPanel(x,y,w,h){
   const t=T(), [a,b]=yearsSel(), i0=a-Y0, i1=b-Y0, nwin=i1-i0+1;
   let out=`<g>`+panelBox(x,y,w,h,'Month by month',
-      `${VARS[S.v].label} each year, ${a}–${b} · least-squares fit `+
+      `${subjLabel()} each year, ${a}–${b} · least-squares fit `+
       `with 95% band · slope per decade, bold where p < 0.05`);
   const cols=4,rows=3,gx=10,gy=10;
   const cw=(w-28-(cols-1)*gx)/cols, ch=(h-58-(rows-1)*gy)/rows;
@@ -1619,6 +1621,13 @@ function syncZoomOut(){
 function qtyLabel(){
   const V=VARS[S.v];
   return V.stats.length>1 ? statLabel().toLowerCase()+' '+V.short : V.qty;
+}
+/* Subject of a panel subtitle or axis: names the statistic whenever the field
+   has a choice of them ("90th percentile Vmax"), else the field itself. */
+function subjLabel(axis){
+  const V=VARS[S.v];
+  if(V.stats.length<2) return axis ? V.short : V.label;
+  const q=qtyLabel(); return q.charAt(0).toUpperCase()+q.slice(1);
 }
 function render(){
   const t=T(), bs=basinSpec(), [a,b]=yearsSel();
@@ -1752,12 +1761,13 @@ function contextNotes(){
       'current Stages selection (over half at 40–50°, nearly all beyond 50°), so the deep '+
       'pressures and large radii there describe post-transition lows, not tropical cyclones. '+
       'Choose Stages → <i>Tropical</i> to leave them out.');
-  if(S.v==='vmax' && ['GL','NH','SH'].includes(S.basin))
-    out.push('<b>A hemispheric or global mean Vmax mixes basins.</b> If the share of positions '+
-      'shifts between basins with different typical intensities, the mean moves even when no '+
-      'basin changes: at TS+ over 1990–2024, holding the basin mix fixed shrinks the global '+
-      'trend by about a quarter and the Northern Hemisphere one by about half. Compare '+
-      'basins individually before reading an intensity trend.');
+  if(['vmax','pmin','size'].includes(S.v) && ['GL','NH','SH'].includes(S.basin))
+    out.push('<b>A hemispheric or global '+esc(qtyLabel())+' mixes basins.</b> If the share of '+
+      'positions shifts between basins with different typical '+
+      (S.v==='size'?'sizes':'intensities')+', it moves even when no basin changes. For mean '+
+      'Vmax at TS+ over 1990–2024, holding the basin mix fixed shrinks the global trend by '+
+      'about a quarter and the Northern Hemisphere one by about half. Compare basins '+
+      'individually before reading a trend.');
   if(S.basin==='WP' && (S.v==='vmax'||S.v==='pmin'||S.v==='ace'))
     out.push('<b>West Pacific intensity depends on the agency.</b> These are JTWC winds; '+
       'JMA\'s best track for the same storms gives different intensity trends ('+REF.kos13+').');
@@ -2219,7 +2229,7 @@ function wire(){
   try{
     msg.textContent='Loading grid…';
     const [ix,land]=await Promise.all([
-      fetch('data/index.json').then(r=>r.json()),
+      fetch('data/index.json',{cache:'no-cache'}).then(r=>r.json()),
       fetch('geo/land-110m.json').then(r=>r.json())
     ]);
     IX=ix;

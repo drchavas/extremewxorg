@@ -164,10 +164,10 @@ best-tracked throughout" in the Atlantic and East Pacific, and in a JTWC basin w
 start it names the region and suggests setting the start year to 2016. Saying "some basins are
 worse" in the abstract is easy to read past; naming the one on screen is not.
 
-**Storage note.** R34 is a mean of four integer quadrants, so it lands on quarter-nautical-miles.
-The build's `q()` rounds to integers — exact for winds and pressures, which are integers in kt
-and mb — so the R34 sums are stored as **quarter-nmi fixed point** (`×4`) and divided once on
-load. Without that, `ref_values.py` caught 23 of 45 annual values disagreeing in the fourth
+**Storage note.** R34 is a mean of three or four integer quadrants, so it lands on thirds or
+quarters of a nautical mile. The build's `q()` rounds to integers — exact for winds and
+pressures, which are integers in kt and mb — so the R34 sums are stored as **1/12-nmi fixed
+point** (`×12`, `R34S`, the lcm of 3 and 4) and divided once on load. Without that, `ref_values.py` caught 23 of 45 annual values disagreeing in the fourth
 significant figure. It is a good example of why the reference re-derivation is worth keeping.
 
 Each field is available at four cumulative intensity thresholds — all positions, ≥34 kt (TS+),
@@ -832,11 +832,12 @@ that, the 0–360 cell geometry, and each basin's span.
   2026-10-20. 153,119 synoptic positions from 4,858 storms.
 - `spur` tracks — duplicate representations of a storm already present as `main` — are
   dropped.
-- Output is sparse and columnar: one record per (cell, year, intensity bin) with counts and
-  sums for wind and pressure — bins rather than cumulative thresholds, so the browser sums
-  upward and every threshold stays consistent — plus the three storm-count tables above.
-  33,839 + 51,135 records, **0.24 MB gzipped** for the whole globe, which is small enough to hold every cell-year in memory and recompute means,
-  trends and regressions on every control change.
+- Output is sparse and columnar: one record per (cell, year, intensity bin, stage, basin) with
+  counts, sums and extremes for wind, pressure and R34 — bins rather than cumulative thresholds,
+  so the browser sums upward and every threshold stays consistent — plus the storm-count tables
+  above and the basin × month table. 40,388 main and 20,913 month records (1980–2025), **1.29 MB
+  gzipped** for the whole globe including the histograms below, small enough to hold every
+  cell-year in memory and recompute everything on each control change.
 - Since 2026-10-27 every (cell, year, bin, stage, basin) record and every month record also
   carries sparse value histograms for the percentile statistics: `hvn`/`hvx`/`hvc` for Vmax (kt),
   `hrn`/`hrx`/`hrc` for R34 (1/12 n mi, exact) and `hpn`/`hpx`/`hpc` for pressure (mb). `*n` is the number of distinct values in
@@ -865,7 +866,7 @@ to `aggregate()` in the build script.
 ```sh
 npm i jsdom topojson-client
 python3 ref_values.py          # recomputes reference values from the CSV via scipy
-node test_tctrend.js .            # tctrend.html — renders it, checks the numbers  (508)
+node --max-old-space-size=8192 test_tctrend.js .   # tctrend.html — renders it, checks the numbers  (512)
 python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (157)
 ```
 

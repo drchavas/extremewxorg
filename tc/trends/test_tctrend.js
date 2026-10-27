@@ -900,6 +900,19 @@ async function load(hash) {
     ok('  the seasonal panel names the statistic',
        pv.document.getElementById('card').textContent.includes("mean of each year's monthly 90th percentile"),
        'missing', 'named');
+    {
+      const card = pv.document.getElementById('card').innerHTML;
+      ok('  the series and month-by-month subtitles name the statistic',
+         card.includes('90th percentile Vmax over North Atlantic') &&
+         card.includes('90th percentile Vmax each year'), 'missing', 'named');
+      ok('  the series axes name it too', card.includes('90th percentile Vmax [kt]'), 'missing', 'named');
+      ok('  and so do the map tooltips', /<title>[^<]*°E: [0-9.]+ kt[^<]* · 90th percentile Vmax<\/title>/.test(card),
+         'missing', 'named');
+      const gp = await load('v=pmin&s=p10&b=GL');
+      const nt = gp.document.getElementById('fieldnote').textContent;
+      ok('  a global Pmin percentile also warns about basin mix',
+         nt.includes('global 10th percentile Pmin mixes basins'), nt.slice(0, 80), 'warns');
+    }
     ok('  and Methods explains it',
        pv.document.body.textContent.includes('The median and percentiles fill in the distribution'),
        'missing', 'explained');
