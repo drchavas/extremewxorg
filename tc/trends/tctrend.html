@@ -175,6 +175,10 @@ const R34S = 12;
    and Dvorak practice had settled by then.  Earlier years remain available from
    the period control; they are just not the default. */
 const DEFAULT_Y0 = 1990;
+/* The start year the reader asked for (or the default). A field with a later earliest
+   year (size: 2004) clamps the period while it is shown, but leaving it goes back to
+   this, rather than keeping the clamped 2004. */
+let Y0REQ = null;
 /* References for the "what drives these trends" framing, each checked to resolve
    at doi.org. */
 const REF={
@@ -1979,7 +1983,8 @@ function exportPNG(){
 function writeHash(){
   const p=new URLSearchParams();
   p.set('v',S.v); p.set('s',S.stat); p.set('t',S.thr); p.set('b',S.basin);
-  p.set('p',S.y0+'-'+S.y1); p.set('q',S.minPlot);
+  // the requested start year: a field with a later earliest year clamps it on load
+  p.set('p',(Y0REQ!=null?Y0REQ:S.y0)+'-'+S.y1); p.set('q',S.minPlot);
   if(S.units!=='kt') p.set('u',S.units);
   if(S.runits!=='nmi') p.set('ru',S.runits);
   if(S.stage!=='tset') p.set('g',S.stage);
@@ -2043,7 +2048,7 @@ function syncYears(){
   const i0=document.getElementById('y0In'), i1=document.getElementById('y1In');
   const lo=fieldY0();
   i0.min=lo; i0.max=IX.y1; i1.min=lo; i1.max=IX.y1;
-  S.y0=Math.max(lo,Math.min(S.y0,IX.y1-2));
+  S.y0=Math.max(lo,Math.min(Y0REQ!=null?Y0REQ:S.y0,IX.y1-2));
   S.y1=Math.max(S.y0+2,Math.min(S.y1,IX.y1));
   i0.value=S.y0; i1.value=S.y1;
   const nwin=S.y1-S.y0+1;
@@ -2076,7 +2081,7 @@ function wire(){
     location.reload();
   };
 
-  document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; syncYears(); render(); };
+  document.getElementById('y0In').onchange=e=>{ S.y0=+e.target.value; Y0REQ=S.y0; syncYears(); render(); };
   document.getElementById('y1In').onchange=e=>{ S.y1=+e.target.value; syncYears(); render(); };
   document.getElementById('minPIn').onchange=e=>{ S.minPlot=Math.max(1,+e.target.value||1); syncYears(); render(); };
 
@@ -2124,6 +2129,7 @@ function wire(){
     G.pb = G.pb ? Int8Array.from(G.pb) : null;
 
     readHash();
+    Y0REQ=S.y0;
     /* Old or hand-edited links must not blank or crash the page. */
     if(!THEME[S.theme]) S.theme='dark';
     if(!IX.basin_cells[S.basin]) S.basin='GL';
