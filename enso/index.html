@@ -2,11 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>El Ni&ntilde;o &amp; La Ni&ntilde;a around the world</title>
+<title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World</title>
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://elninolanina.org/">
-<meta http-equiv="refresh" content="0; url=/enso/ensogrid.html">
-<script>location.replace('/enso/ensogrid.html'+location.search+location.hash);</script>
+<script>
+/* /enso/ is not a page: on elninolanina.org the maps page lives at the root, elsewhere at /enso/ensogrid.html */
+location.replace((/(^|\.)elninolanina\.org$/.test(location.hostname)?'/':'/enso/ensogrid.html')+location.search+location.hash);
+</script>
+<meta http-equiv="refresh" content="1; url=/enso/ensogrid.html">
 </head>
-<body><p><a href="/enso/ensogrid.html">El Ni&ntilde;o &amp; La Ni&ntilde;a around the world</a></p></body>
+<body><p><a href="/enso/ensogrid.html">El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World</a></p></body>
 </html>

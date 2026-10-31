@@ -49,24 +49,19 @@ against IBTrACS and the Storm Events grids directly, and by a six-reviewer indep
 the whole site on 2026-10-10 (data rebuilt from raw GDEX files, C3S global means, CPC's RONI table,
 per-pixel map geolocation). Fixes from that review are noted below.
 
-## elninolanina.org and the home page (Oct 31, 2026)
+## elninolanina.org: the maps page at the root (Oct 31, 2026)
 
-- **Domain:** `elninolanina.org` and `www.` are custom domains on this same Pages project. Three Cloudflare redirect rules:
-  - `www` → the bare domain;
-  - `/` → `/enso/` (the home page);
-  - everything outside `/enso/`, `/scs/trends/data/` and `/assets/` → extremewx.org.
-
-  Details are in the project doc `elninolanina-domain.md`.
-- **`enso/index.html`:** a small hand-written home page in the style of the extremewx.org home page, served at `/enso/`.
-  - It has two cards: **Simple maps** (`ensogrid.html`) and **Correlations** (`ensoreg.html`).
-  - The forecast page (`ensofcst.html`) is deliberately not linked yet.
-  - Thumbnails are `assets/thumbs/ensogrid.webp` and `ensoreg.webp`. The latter is DJF precipitation at RONI +2.0, absolute, light theme.
-- **All three pages:**
-  - The banner reads "Work in progress, site evolving rapidly! Check in regularly for updates/fixes.".
-  - The header links back to the ENSO home (`./`) and to extremewx.org.
-  - Links to other extremewx pages are absolute.
-  - Each page has a canonical URL, Open Graph tags and a Twitter card pointing at `https://elninolanina.org/enso/<page>`.
-- **Search engines:** `ensogrid` and `ensoreg` are now indexable. `ensofcst` keeps its `noindex` tags (template block `<!--F-->`) until it goes public.
+- **What the public sees:** one page, the composite maps (`ensogrid.html`), served directly at `https://elninolanina.org/`, with no front page and no `/enso/` in the address (like tcviewer.org).
+  - Title: "El Niño & La Niña: Impacts Around the World". Light theme by default (pale-blue `#eaf2fa` background); `#k=dark` opts into dark.
+  - `ensoreg.html` and `ensofcst.html` are unlinked and carry `noindex` (template block `<!--RF-->`); they still load at `/enso/ensoreg` and `/enso/ensofcst`.
+- **How the root works (Cloudflare, elninolanina.org zone):**
+  - URL Rewrite rule "serve maps page at root": `http.host eq "elninolanina.org" and path eq "/"` → static path `/enso/ensogrid`, query preserved. The target is extensionless because Pages 308-redirects `*.html` to the bare path.
+  - Redirect rules: `www` → bare domain (301); "front page" (`/` → `/enso/`) is **disabled**; everything outside `/`, `/enso/`, `/scs/trends/data/` and `/assets/` → extremewx.org (302).
+  - Details are in the project doc `elninolanina-domain.md`.
+- **Paths:** every data, geo and script URL is root-absolute (`ENSO_BASE='/enso/'`, `SCS_BASE='/scs/trends/'`, `/assets/feedback.js`), so the same file works at `/` and at `/enso/ensogrid`. Keep it that way: a relative path breaks the root page.
+- **`enso/index.html`:** not a page any more, just a forwarder. On elninolanina.org it goes to `/`; on extremewx.org to `/enso/ensogrid.html`. Query and hash are kept.
+- **Head tags:** ensogrid's canonical, `og:url` and `og:image` point at `https://elninolanina.org/` and `/assets/thumbs/ensogrid.webp`.
+- **Banner:** "Work in progress, site evolving rapidly! Check in regularly for updates/fixes." The header has no home link; the footer line says "part of extremewx.org".
 
 ## Regression version — `ensoreg.html` (Oct 22, 2026; separate page, not linked from ensogrid yet)
 
