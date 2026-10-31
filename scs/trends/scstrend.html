@@ -182,7 +182,7 @@
     <div class="fld"><label for="ctySel">County</label><select id="ctySel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" id="smWrap" title="A light Gaussian blur (the 2&deg; option, as described under Methods) over the two maps, area-weighted and normalized. Counties with no value are excluded and stay gray; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+    <div class="fld" id="smWrap" title="A light Gaussian blur (the 2&deg; option, as described under Methods) over the two maps, area-weighted and normalized. The trend map shows the trend of the smoothed field, so a county too sparse for its own trend still gets its neighbourhood&rsquo;s; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="2">2&deg;</option><option value="off">Raw</option></select></div>
     <div class="fld" id="tierWrap" style="display:none"><label for="tierSel">Confidence</label>
       <select id="tierSel"></select></div>
@@ -351,8 +351,13 @@
               2&deg; grid page uses the same sigma. It is <i>area-weighted</i> &mdash; without that, Georgia's 159 small counties
               would outvote a single large western one covering the same ground &mdash; and
               <i>normalized</i>, so only counties that have a value contribute and coastal counties
-              are not dragged towards zero by the empty space beyond them. It never fills gaps or
-              changes which counties are drawn, and it never touches the annual or monthly panels.
+              are not dragged towards zero by the empty space beyond them. The smoothed <b>trend</b>
+              map is the trend of the smoothed field: every county's own slope is blurred, gated or
+              not (an ordinary least-squares slope is linear in the data, so this equals the slope of
+              the smoothed annual series), and the trend gates are then applied to that smoothed
+              series. A county too sparse for a trend of its own therefore shows its neighbourhood's,
+              and goes gray only when the whole neighbourhood is too sparse; hover gives the county's
+              own trend, or says it has none. It never touches the annual or monthly panels.
               Because it is a neighborhood average, <b>the drawn value is not the county's own</b>
               &mdash; hover reports both when they differ. Station hazards and derecho events are
               not smoothed: those are points and single storms, not fields. Extreme heat is never
@@ -1524,6 +1529,35 @@ function smOptions(){
 }
 function smoothable(){ return !isStation() && !isEvent() && !(isField() && S.hazard!=='rain'); }
 function smoothOn(){ return S.smooth!=='off' && smoothable(); }
+/* The smoothed TREND map is the trend of the smoothed field, not a blur of only
+   the counties that cleared the trend gates.  Blurring just the survivors left
+   every gated-out county gray inside a smooth field -- Indiana >= 1 in hail,
+   2000-2025, had a dozen gray holes surrounded by counties whose neighbourhoods
+   overlap almost entirely.  An OLS slope is linear in the data, so smoothing
+   every county's own (ungated) slope gives exactly the slope of the smoothed
+   annual series; the gates are then applied to that smoothed series, so a
+   county goes gray only when its whole neighbourhood is too sparse.  The
+   county's own gated trend is still on hover (RAWT). */
+function smoothedTrend(){
+  const u=countyMetrics(false), tr=smoothField(u.trend);
+  const d=HZ[S.hazard], M=d.M, nY=d.nY, y0=d.meta.year0;
+  const [a,b]=yearsSel(), gm=gapMask(d), keep=[];
+  for(let y=a-y0;y<=b-y0;y++) if(gm.yr[y]) keep.push(y);
+  const nk=keep.length, ys=new Array(nk);
+  const {idx,wt}=smoothNeighbours();
+  for(let c=0;c<tr.length;c++){
+    if(!isFinite(tr[c])) continue;
+    ys.fill(0);
+    const I=idx[c], W=wt[c];
+    for(let k=0;k<I.length;k++){
+      const j=I[k]; if(!isFinite(u.trend[j])) continue;   // the same pool smoothField used
+      const base=j*nY, w=W[k];
+      for(let t=0;t<nk;t++) ys[t]+=w*M[base+keep[t]];
+    }
+    if(!gateOf(ys,nk).ok) tr[c]=NaN;     // only "> 0" matters to the gate, so no normalising
+  }
+  return tr;
+}
 function smoothField(v){
   if(!smoothOn()) return v;
   const {idx,wt}=smoothNeighbours();
@@ -1635,7 +1669,8 @@ function countyTip(c){
   const nt=(x,r)=>(sm&&isFinite(r)&&Math.abs(r-x)>0.005)?` (this county ${fmt(r,2)})`:'';
   /* the trend line used to omit the county's own number, so a smoothed −1.11 could
      sit over a county whose own trend was +0.79 */
-  const ntS=(x,r)=>(sm&&isFinite(r)&&Math.abs(r-x)>0.005)?` (this county ${sgn(r,2)})`:'';
+  const ntS=(x,r)=>(sm&&isFinite(r)&&Math.abs(r-x)>0.005)?` (this county ${sgn(r,2)})`:
+                   (sm&&!isFinite(r))?' (this county alone is too sparse for its own trend)':'';
   const tl = isFinite(t) ? `${sgn(t,2)} per decade${ntS(t,rt)}`
            : 'no trend: too few years with a day here';
   return `<b>${esc(NAME[c])}, ${esc(STUSPS[c])}</b><br>${fmt(v,2)} ${countUnit()}${nt(v,rv)}<br>`+tl;
@@ -1923,7 +1958,7 @@ function refresh(){
      on hover. */
   RAWM=cm.mean; RAWT=cm.trend;
   if(smClim()) cm.mean=smoothField(cm.mean);
-  cm.trend=smoothField(cm.trend);
+  cm.trend = (!stn && smoothOn()) ? smoothedTrend() : smoothField(cm.trend);
 
   // robust, shared-with-nothing domains: each map gets its own
   const pool = stn ? stationsShown() : GEO.features.map(f=>gidxOf[f.properties.GEOID]);
@@ -1989,7 +2024,8 @@ function refresh(){
     ? esc(`No ${unitW} clears the trend gates at ${thrSpec().short} for ${periodLabel()}: too few years carry a`+
           `${countWord()==='event'?'n':''} ${countWord()}. Try a lower threshold or a longer period`+(stn?'.':', or the 2° grid page.'))
     : esc(stn?'Change per decade · ringed where p < 0.05 · hollow = too sparse to fit a trend'
-             :'Change per decade · gray counties are too sparse to fit a trend')+smTag('trend');
+             :smoothOn()?'Change per decade of the smoothed field · gray where even the neighbourhood is too sparse'
+                         :'Change per decade · gray counties are too sparse to fit a trend')+smTag('trend');
   const tw=document.getElementById('trendWarn');
   if(tw) tw.textContent='Trends are inherently far noisier: focus on coherent spatial patterns, not the value at any single '+unitW+'.';
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());

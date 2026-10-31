@@ -219,6 +219,15 @@ Further caveats now shown on the pages (2026-10-22 review):
   (`geo/grid_landfrac.json`), so mostly-water and border boxes no longer drag inland boxes down.
 - **Peak wind** (Indiana, ISD) shows no trends: every full-record station roughly doubles its
   ≥ 40 kt days at 2008, a reporting change.
+- **Smoothed trend maps are the trend of the smoothed field** (2026-10-31). Both map pages used to
+  blur only the counties/boxes that cleared the trend gates, which left gated-out units as gray
+  holes inside a smooth field (Indiana, ≥ 1″ hail, 2000–2025: 6 of 92 counties). Now every unit's
+  own *ungated* OLS slope is blurred — OLS is linear, so this is exactly the slope of the
+  smoothed annual series — and the gates are applied to the smoothed series (`smoothedTrend()`
+  on both pages). A unit goes gray only when its whole neighbourhood is too sparse; hover still
+  gives its own gated trend or says it has none. U.S. counties gray at the default view: 671 → 113
+  (the remainder are Alaska, Hawaii and Puerto Rico); EF0+ tornado 2062 → 113. Smoothing off is
+  unchanged.
 
 Not changed: wind reports ≥ 100 kt (~350) are not screened as errors, and
 `update_storm_events.py` re-checks only the last three years, so NCEI re-issues of older years

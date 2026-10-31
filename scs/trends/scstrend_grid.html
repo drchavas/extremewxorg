@@ -172,7 +172,7 @@
     <div class="fld"><label for="ctySel">Box</label><select id="ctySel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
-    <div class="fld" id="smWrap" title="A Gaussian blur over the two maps, sigma selectable in degrees to match the county page. Boxes with no value are excluded and stay gray; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+    <div class="fld" id="smWrap" title="A Gaussian blur over the two maps, sigma selectable in degrees to match the county page. The trend map shows the trend of the smoothed field, so a box too sparse for its own trend still gets its neighbourhood&rsquo;s; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="2">2&deg;</option><option value="off">Raw</option></select></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole country">&#8592; Full U.S.</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
@@ -274,9 +274,13 @@
               stray box towards its neighbors without moving a coherent pattern. Three things it
               deliberately does not do: it does not fill gaps &mdash; only boxes that have a value
               contribute and the weights are renormalized by what was found, so edge boxes are not
-              dragged towards zero by the empty ocean; it does not change which boxes are drawn,
-              since a box the trend gates declined to fit stays gray either way; and it never
-              touches the annual or monthly panels, which always show the unsmoothed series.
+              dragged towards zero by the empty ocean; and it never touches the annual or monthly
+              panels, which always show the unsmoothed series. The smoothed <b>trend</b> map is the
+              trend of the smoothed field: every box's own slope is blurred, gated or not (a
+              least-squares slope is linear in the data, so this equals the slope of the smoothed
+              annual series), and the trend gates are then applied to that smoothed series. A box
+              too sparse for a trend of its own therefore shows its neighbourhood's, and goes gray
+              only when the whole neighbourhood is too sparse; hover gives the box's own trend.
               Because it is a neighborhood average, <b>the drawn value is not the box's own</b>
               &mdash; hover reports both when they differ. Totals are not conserved. It also
               interacts with the white &ldquo;exactly 0&rdquo; shading: with smoothing on, a box is
@@ -759,7 +763,7 @@ function gapYears(){
   return out;
 }
 
-function cellMetrics(){
+function cellMetrics(gated=true){
   const [a,b]=yearsSel(), i0=a-Y0, i1=b-Y0, nwin=i1-i0+1, n=CELLS.length;
   const mean=new Float32Array(n).fill(NaN), trend=new Float32Array(n).fill(NaN),
         pv=new Float32Array(n).fill(1);
@@ -781,8 +785,8 @@ function cellMetrics(){
        Bailing out here left mean=NaN, which the map painted as no-data — at
        tornado EF3+ that grayed 140 of 257 boxes whose true value is 0.00. */
     mean[c]=sum/xs.length;
-    if(!ne) continue;                 // no active year: nothing to fit a trend to
-    if(ne>=yearsNeeded(nwin) && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN){
+    if(gated && !ne) continue;        // no active year: nothing to fit a trend to
+    if(!gated || (ne>=yearsNeeded(nwin) && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN)){
       const r=fit(xs,ys); if(r){ trend[c]=r.slope*10; pv[c]=r.p; }
     }
   }
@@ -1004,9 +1008,11 @@ function bindCell(f,l){
     const sm=smoothOn();
     const rv=RAWM?RAWM[c]:NaN, rt=RAWT?RAWT[c]:NaN;
     const note=(x,r)=>(sm&&isFinite(r)&&Math.abs(r-x)>0.005)?` (this box ${fmt(r,2)})`:'';
+    const tl=isFinite(t)
+      ? `${sgn(t,2)} per decade${note(t,rt)}${sm&&!isFinite(rt)?' (this box alone is too sparse for its own trend)':''}`
+      : 'no trend: too few years with a day here';
     return `<b>${cc.lat.toFixed(0)}°N ${Math.abs(cc.lon).toFixed(0)}°W</b>`+
-           `${cc.state?' · '+cc.state:''}<br>${fmt(v,2)} ${countUnit()}${note(v,rv)}<br>`+
-           `${sgn(t,2)} per decade${note(t,rt)}`;
+           `${cc.state?' · '+cc.state:''}<br>${fmt(v,2)} ${countUnit()}${note(v,rv)}<br>`+tl;
   },{sticky:true,className:'ctytip'});
 }
 function drawColorbar(el,C,title){
@@ -1084,6 +1090,41 @@ function smTag(which){
 /* the cell -> grid-index list, exposed so tests and offline checks can place
    the metrics arrays on the grid without reaching into page-level state */
 function cellIdList(){ return CELLS.map(c=>c.ci); }
+/* The smoothed TREND map is the trend of the smoothed field, not a blur of only
+   the boxes that cleared the trend gates (which left gray holes inside a smooth
+   field).  OLS is linear, so smoothing every box's own ungated slope gives the
+   slope of the smoothed annual series; the gates are then applied to that
+   smoothed series with the same kernel and land weights, so a box goes gray
+   only when its whole neighbourhood is too sparse.  Same rule as the county page. */
+function smoothedTrend(){
+  const u=cellMetrics(false), tr=smoothField(u.trend);
+  const [a,b]=yearsSel(), i0=a-Y0, i1=b-Y0, nwin=i1-i0+1, gm=gapMask(), mid=i0+nwin/2;
+  const sig=sigDeg()/GRID, R=Math.max(1,Math.ceil(2*sig)), w=[];
+  for(let d=-R;d<=R;d++) w.push(Math.exp(-0.5*(d/sig)*(d/sig)));
+  const ys=new Float64Array(NY);
+  for(let c=0;c<CELLS.length;c++){
+    if(!isFinite(tr[c])) continue;
+    ys.fill(0);
+    const gi=CELLS[c].ci, li=Math.floor(gi/NLON), ki=gi%NLON;
+    for(let dy=-R;dy<=R;dy++){
+      const lj=li+dy; if(lj<0||lj>=NLAT) continue;
+      for(let dx=-R;dx<=R;dx++){
+        const kj=ki+dx; if(kj<0||kj>=NLON) continue;
+        const n=cidx[lj*NLON+kj];
+        if(n===undefined || !isFinite(u.trend[n])) continue;
+        const g=w[dy+R]*w[dx+R]*landW(lj*NLON+kj), base=n*NY;
+        for(let y=i0;y<=i1;y++) ys[y]+=g*M[base+y];
+      }
+    }
+    let ne=0,e0=-1,e1=-1,nfh=0,nsh=0;
+    for(let y=i0;y<=i1;y++){
+      if(!gm.yr[y]) continue;
+      if(ys[y]>0){ ne++; if(e0<0)e0=y; e1=y; if(y<mid) nfh++; else nsh++; }
+    }
+    if(!(ne>=yearsNeeded(nwin) && (e1-e0+1)>=SPAN_MIN*nwin && nfh>=HALF_MIN && nsh>=HALF_MIN)) tr[c]=NaN;
+  }
+  return tr;
+}
 function smoothField(v){
   if(!smoothOn()) return v;
   const sig=sigDeg()/GRID;                       // sigma in boxes
@@ -1178,7 +1219,7 @@ function refresh(){
      number on hover. */
   RAWM=cm.mean; RAWT=cm.trend;
   if(smClim()) cm.mean=smoothField(cm.mean);
-  cm.trend=smoothField(cm.trend);
+  cm.trend = smoothOn() ? smoothedTrend() : cm.trend;
   const mv=cm.mean.length?[...cm.mean].filter(isFinite).sort((p,q)=>p-q):[];
   const tv=[...cm.trend].map(Math.abs).filter(isFinite).sort((p,q)=>p-q);
   const hiM=niceUp(quantile(mv,0.98))||1;
@@ -1207,7 +1248,8 @@ function refresh(){
   document.getElementById('trendSub').innerHTML = nwin<need
     ? esc(`No trends shown: ${periodLabel()} gives ${nwin} usable year${nwin===1?'':'s'} and a fit needs at `+
           `least ${need} years carrying a hazard ${countWord()}`)
-    : esc(`Change per decade · gray boxes are too sparse to fit a trend`)+smTag('trend');
+    : esc(smoothOn()?'Change per decade of the smoothed field · gray where even the neighbourhood is too sparse'
+                    :'Change per decade · gray boxes are too sparse to fit a trend')+smTag('trend');
   drawColorbar(document.getElementById('cbClim'),CUR,countUnit());
   drawColorbar(document.getElementById('cbTrend'),CURT,'per decade');
 

@@ -206,6 +206,23 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   say('the smoothed field keeps a distinct maximum',pk>2*mn,
       'peak '+pk.toFixed(2)+' vs field mean '+mn.toFixed(2)+
       '  (raw peak '+Math.max(...fin(raw)).toFixed(2)+')');
+  /* The smoothed trend map is the trend of the smoothed field: gated-out counties
+     take their neighbourhood's trend instead of staying gray holes (Indiana >= 1 in
+     hail, 2000-2025, had 6), and it equals the blur of every county's own slope. */
+  const tg=JSON.parse(w.eval(`JSON.stringify((function(){
+    const raw=countyMetrics(), neu=smoothedTrend(), ung=smoothField(countyMetrics(false).trend);
+    let inRaw=0,inNew=0,usRaw=0,usNew=0,d=0;
+    for(let c=0;c<neu.length;c++){ if(!isFinite(raw.mean[c])) continue;
+      const IN=/, IN<\\/b>/.test(countyTip(c));
+      if(!isFinite(raw.trend[c])){ usRaw++; if(IN) inRaw++; }
+      if(!isFinite(neu[c])){ usNew++; if(IN) inNew++; } else d=Math.max(d,Math.abs(neu[c]-ung[c])); }
+    return {inRaw,inNew,usRaw,usNew,d};})())`));
+  say('smoothed trend fills counties too sparse for their own trend',
+      tg.inRaw>0 && tg.inNew===0 && tg.usNew<tg.usRaw/3,
+      `Indiana gray ${tg.inRaw} -> ${tg.inNew}; U.S. ${tg.usRaw} -> ${tg.usNew}`);
+  say('  and equals the blur of every county\'s own slope', tg.d<1e-6, 'max diff '+tg.d);
+  say('  the trend subtitle says so', /trend of the smoothed field|smoothed field/.test($('trendSub').innerHTML),
+      $('trendSub').textContent.slice(0,80));
   $('smSel').value='off'; fire('smSel','change');
   await new Promise(r=>setTimeout(r,200));
   say('raw is a pass-through',
