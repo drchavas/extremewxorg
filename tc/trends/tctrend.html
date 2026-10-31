@@ -88,6 +88,11 @@
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
   .alertbar b{color:#fff}
   @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} }
+  /* every control in one box, the width of the maps below it (as on the ENSO pages) */
+  #controls{max-width:none;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);
+            border-radius:10px;padding:10px 16px 0}
+  #controls .bar{padding:0 0 10px}
+  header{padding-bottom:10px}
 </style>
 </head>
 <body>
@@ -110,13 +115,17 @@
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)</div>
   <div class="fieldnote" id="fieldnote" hidden></div>
 
+</header>
+
+<div id="wrap">
+  <div id="controls">
   <div class="bar">
     <div class="fld"><label for="varSel">Field</label><select id="varSel"></select></div>
     <div class="fld"><label for="statSel">Statistic</label><select id="statSel"></select></div>
     <div class="fld"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
     <div class="fld"><label for="basSel">Region</label><select id="basSel"></select></div>
     <div class="fld" title="Which IBTrACS lifecycle stages are counted. The default keeps everything but disturbances, including positions whose stage is not reported (NR) or contested (MX) &mdash; a large share of the early North Indian record."><label for="stgSel">Stages</label><select id="stgSel"></select></div>
-    <div class="fld" title="A Gaussian blur over the two maps, sigma = 5 degrees. Gaps and grayed cells are excluded and stay gray; the zonal profiles and the series panels are unaffected."><label for="smSel">Smoothing</label><select id="smSel"></select></div>
+    <div class="fld" title="A Gaussian blur over the two maps, sigma = 5 degrees. Gaps are excluded; the trend map is the trend of the smoothed field, so a cell too sparse for its own trend takes its neighbourhood&rsquo;s; the zonal profiles and the series panels are unaffected."><label for="smSel">Smoothing</label><select id="smSel"></select></div>
     <div class="fld"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
     <div class="fld"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
     <div class="fld" title="A cell is grayed out unless at least this many years actually contain a storm."><label for="minPIn">Min plot</label><input type="number" id="minPIn" step="1" min="1"></div>
@@ -128,9 +137,7 @@
     <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Reload the page with every control back at its default">Restore defaults</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
   </div>
-</header>
-
-<div id="wrap">
+  </div>
   <div id="msg">Loading…</div>
   <div id="figscroll"><svg id="card" style="display:none"></svg></div>
   <div class="foot" id="foot"></div>
@@ -852,8 +859,9 @@ function namedBasinIndex(){
        convolution treating gaps as zero would drag every coastal and basin-edge
        cell towards nothing.
      - It never invents data.  Output stays NaN wherever the input was NaN, so a
-       cell grayed out by Min plot or by the trend rule stays gray; smoothing
-       changes colors, not which boxes are drawn.
+       cell grayed out by Min plot stays gray.  The trend map is the exception by
+       design: it is the trend of the smoothed field (smoothedTrend), so a cell
+       too sparse for a trend of its own takes its neighbourhood's.
      - Longitude wraps, latitude does not.  The grid is global in longitude, so
        the dateline and the prime meridian are not edges.
 
@@ -891,6 +899,44 @@ function smoothField(v,cells){
       }
     }
     out[c]= ww>0 ? s/ww : v[c];
+  }
+  return out;
+}
+
+/* The smoothed TREND map is the trend of the smoothed field, not a blur of only
+   the cells that cleared the trend rule (that left gray holes inside a smooth
+   field).  Each year of each drawn cell's series is replaced by the normalized
+   kernel average of that year's values over the drawn cells around it -- the
+   same 5x5 kernel and the same pool as the smoothed climatology -- and the trend
+   rule and the fit are then applied to that smoothed series.  For the count
+   fields every drawn cell has a value every year (a quiet year is a zero), so
+   this is exactly the blur of every cell's own ungated slope; for the intensive
+   fields a year counts only where a neighbour had a storm that year.  A cell is
+   gray only when its whole neighbourhood is too sparse.  Its own trend, from the
+   rule applied to its own series, is still given on hover. */
+function smoothedTrend(cm){
+  const [a,b]=yearsSel(), i0=a-Y0, i1=b-Y0, nwin=i1-i0+1;
+  const out=new Float32Array(NCELL).fill(NaN);
+  const cells=basinCells(), pool=cells.filter(c=>isFinite(cm.mean[c]));
+  const V=new Map();                                  // drawn cell -> its annual values
+  for(const c of pool){ const v=new Float64Array(nwin); for(let y=i0;y<=i1;y++) v[y-i0]=cellValue(c,y); V.set(c,v); }
+  const R=Math.ceil(2*SMOOTH_SIGMA), w=[];
+  for(let d=-R;d<=R;d++) w.push(Math.exp(-0.5*(d/SMOOTH_SIGMA)*(d/SMOOTH_SIGMA)));
+  const s=new Float64Array(nwin), ww=new Float64Array(nwin);
+  for(const c of pool){
+    s.fill(0); ww.fill(0);
+    const li=Math.floor(c/NLON), ki=c%NLON;
+    for(let dy=-R;dy<=R;dy++){
+      const lj=li+dy; if(lj<0||lj>=NLAT) continue;
+      for(let dx=-R;dx<=R;dx++){
+        const v=V.get(lj*NLON+(((ki+dx)%NLON)+NLON)%NLON); if(!v) continue;
+        const g=w[dy+R]*w[dx+R];
+        for(let t=0;t<nwin;t++) if(isFinite(v[t])){ s[t]+=g*v[t]; ww[t]+=g; }
+      }
+    }
+    const g=collect(y=>ww[y-i0]>0?s[y-i0]/ww[y-i0]:NaN,i0,i1);
+    if(!canTrend(g,nwin)) continue;
+    const r=fit(g.xs,g.ys); if(r) out[c]=r.slope*10;
   }
   return out;
 }
@@ -1235,7 +1281,8 @@ function mapPanel(x,y,w,h,title,sub,vals,opts){
     const tip=has
       ? fmt(v,opts.dec)+' '+esc(opts.unit)+
         (isFinite(rv)&&Math.abs(rv-v)>Math.pow(10,-(opts.dec||2))/2
-           ? ' (smoothed; this box '+fmt(rv,opts.dec)+')' : '')+
+           ? ' (smoothed; this box '+fmt(rv,opts.dec)+')'
+           : opts.raw&&!isFinite(rv)&&S.smooth==='on' ? ' (smoothed; this box alone is too sparse for a trend)' : '')+
         // name the statistic, after the number so the value still leads
         (VARS[S.v].stats.length>1 ? ' · '+esc(qtyLabel()) : '')
       : esc(opts.gateLabel||'too few years');
@@ -1663,7 +1710,7 @@ function render(){
      raw positions, which is the whole point of having them beside the map. */
   const rawMean=cm.mean, rawTrend=cm.trend;
   cm.mean =smoothField(rawMean, basinCells());
-  cm.trend=smoothField(rawTrend,basinCells());
+  cm.trend=S.smooth==='on' ? smoothedTrend(cm) : rawTrend;
 
   // Robust color domains, weighted by how many storm positions a cell actually
   // carries so the scale is set by the basins and not by their fringes.
@@ -1732,7 +1779,8 @@ function render(){
            second half as a restatement of the first. */
         `Change per decade · ≥ ${yearsNeeded(b-a+1)} yrs with a storm, first and last `+
         `≥ ${Math.round(SPAN_MIN*100)}% of the period apart, ≥ ${HALF_MIN} per half`+
-        ` · gray falls short`+
+        (S.smooth==='on'?' · applied to the smoothed series; gray where even the neighbourhood falls short'
+                        :' · gray falls short')+
         ` · `+smoothTag()+
         ` · profile bins by latitude, ignoring longitude`,
         cm.trend,{lo:-hiT,hi:hiT,div:true,dec:hiT<1?3:(hiT<10?2:1),pow:powT,
@@ -2000,8 +2048,15 @@ function methodsHTML(){
     'single 5° box is a small sample and the eye is drawn to isolated extremes; blurring makes '+
     'the coherent basin-scale pattern the thing you see first, which is how these maps are meant '+
     'to be read.</p>'+
-    ul(['<b>It never invents data.</b> Cells with no value stay empty and grayed cells stay gray, '+
-        'so smoothing changes colors, not which boxes are drawn.',
+    ul(['<b>It never invents data.</b> Cells with no value stay empty, and cells grayed by Min '+
+        'plot stay gray, so on the climatology map smoothing changes colors, not which boxes are drawn.',
+        '<b>The smoothed trend map is the trend of the smoothed field.</b> Each year of a cell\'s '+
+        'series is replaced by the same kernel average over the drawn cells around it, and the '+
+        'trend rule and the fit are applied to that smoothed series. For storm-days, storm '+
+        'counts and ACE this is exactly the blur of every cell\'s own slope; for Vmax, pressure '+
+        'and size a year counts wherever a neighbour had a storm. So a cell with too few storm '+
+        'years for a trend of its own shows its neighbourhood\'s, and is gray only when the whole '+
+        'neighbourhood is too sparse; hovering gives the cell\'s own trend or says it has none.',
         '<b>Gaps are excluded, not treated as zero.</b> The kernel is renormalized by the '+
         'neighbors it actually found, so a coastal or basin-edge cell is not dragged towards '+
         'nothing. The cost is that totals are not conserved: summing the smoothed map comes out '+

@@ -167,6 +167,11 @@
   /* the derecho event menu holds long labels; never wider than the screen */
   #evSel{max-width:100%}
   @media (max-width:640px){ #evSel{max-width:calc(100vw - 40px)} }
+  /* every control in one box, the width of the maps below it (as on the ENSO pages) */
+  #controls{max-width:1100px;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);
+            border-radius:10px;padding:10px 16px 0}
+  #controls .bar{padding:0 0 10px}
+  header{padding-bottom:10px}
 </style>
 </head>
 <body>
@@ -186,6 +191,10 @@
   <div class="hmeta dataupd">Data last updated 2026-10-27 13:42 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
+</header>
+
+<div id="wrap">
+  <div id="controls">
   <div class="bar">
     <div class="fld"><label for="hazSel">Hazard</label><select id="hazSel"></select></div>
     <div class="fld"><label for="thrSel">Threshold</label><select id="thrSel"></select></div>
@@ -203,9 +212,7 @@
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
   </div>
-</header>
-
-<div id="wrap">
+  </div>
   <div id="msg">Loading&hellip;</div>
   <div id="body" style="display:none">
     <div id="maps">

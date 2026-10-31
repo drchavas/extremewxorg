@@ -941,6 +941,32 @@ async function load(hash) {
        'missing', 'explained');
   }
 
+  // ---- smoothed trend map = trend of the smoothed field ---------------------
+  console.log('\nsmoothed trend map');
+  for (const h of ['v=density&b=GL&p=1990-2024', 'v=vmax&s=mean&b=GL&p=1990-2024', 'v=density&t=maj&b=GL&p=1990-2024']) {
+    const sw = await load(h + '&sm=on');
+    const cm = sw.cellMetrics(), cells = sw.basinCells(), st = sw.smoothedTrend(cm);
+    const drawn = cells.filter(c => isFinite(cm.mean[c]));
+    const grayRaw = drawn.filter(c => !isFinite(cm.trend[c])).length;
+    const grayNew = drawn.filter(c => !isFinite(st[c])).length;
+    ok(`  ${h.split('&')[0].slice(2)}${h.includes('maj') ? ' Cat3+' : ''}: gray cells ${grayRaw} -> ${grayNew}`,
+       grayNew < grayRaw && grayNew < 0.5 * grayRaw + 1, grayNew, `< ${grayRaw}`);
+    ok('    never fills a cell the climatology map does not draw',
+       cells.every(c => isFinite(cm.mean[c]) || !isFinite(st[c])), 'filled', 'none');
+    if (h.startsWith('v=density')) {
+      // counts: every drawn cell has every year, so this is the blur of every own slope
+      const iy = sw.st.Y0, slope = new Float32Array(sw.st.NCELL).fill(NaN);
+      for (const c of drawn) {
+        const xs = [], ys = [];
+        for (let y = 1990; y <= 2024; y++) { xs.push(y); ys.push(sw.cellValue(c, y - iy)); }
+        const r = sw.fit(xs, ys); if (r) slope[c] = r.slope * 10;
+      }
+      const bl = sw.smoothField(slope, cells);
+      let d = 0; for (const c of drawn) if (isFinite(st[c])) d = Math.max(d, Math.abs(st[c] - bl[c]));
+      near('    equals the blur of every drawn cell\'s own slope', d, 0, 1e-4);
+    }
+  }
+
   // ---- the old filename still resolves ------------------------------------
   console.log('\nlegacy tccard.html redirect');
   {

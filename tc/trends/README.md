@@ -481,6 +481,16 @@ less far zonally than meridionally, by cos(lat). Below 40°, where nearly all th
 that distortion is under 25%. Making it distance-isotropic would mean a latitude-dependent
 zonal sigma — easy, but it was not worth the complexity for a display filter.
 
+**The smoothed trend map is the trend of the smoothed field (2026-10-31).** It used to blur only
+the cells that passed the trend rule, so cells with storms but too few storm years stayed gray
+inside a smooth field. Now each year of each drawn cell's series is replaced by the same 5×5
+normalized kernel average over the drawn cells around it, and the rule and the fit are applied to
+that smoothed series (`smoothedTrend()`). For storm-days, storm counts and ACE this is exactly the
+blur of every drawn cell's own ungated slope (tested); for Vmax, Pmin and R34 a year counts where
+any neighbour had a storm. Global, TS+, 1990–2024: gray cells 409 → 26 (Cat 3+ density 267 → 22).
+Hover still gives the cell's own trend, or says it is too sparse for one. The climatology map and
+Min plot are unchanged, and nothing outside the drawn climatology cells is ever filled.
+
 ### Zonal profiles bin by latitude directly
 
 The profiles are the same pooling operation as a basin aggregate with longitude ignored:
@@ -879,7 +889,7 @@ to `aggregate()` in the build script.
 ```sh
 npm i jsdom topojson-client
 python3 ref_values.py          # recomputes reference values from the CSV via scipy
-node --max-old-space-size=8192 test_tctrend.js .   # tctrend.html — renders it, checks the numbers  (517)
+node --max-old-space-size=8192 test_tctrend.js .   # tctrend.html — renders it, checks the numbers  (525)
 python3 audit.py ../ibtracs.ALL.list.v04r01.csv && node audit.js .   # independent audit (157)
 ```
 

@@ -133,7 +133,7 @@ const say=(l,ok,x)=>console.log((ok?'  ok   ':'  FAIL ')+l+(x?'  — '+x:''));
   console.log('\n--- no expert controls, one fixed window');
   ['y0In','y1In','smSel'].forEach(id=>
     say(`the ${id} control is gone`,$(id)==null));
-  const btns=[...w.document.querySelectorAll('header .bar button')].map(b=>b.id);
+  const btns=[...w.document.querySelectorAll('#controls .bar button')].map(b=>b.id);
   say('four buttons and nothing else',
       btns.join(',')==='usBtn,resetBtn,themeBtn,linkBtn',btns.join(', '));
   const meth=w.document.querySelector('.methods').innerHTML;
