@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World &mdash; elninolanina.org</title>
 <meta name="description" content="How El Niño and La Niña years differ from normal around the world: temperature, rain and snow (ERA5), tropical cyclones (IBTrACS) and U.S. hail, tornadoes, wind and derechos (NOAA Storm Events), by year, season or month, with the NOAA RONI years used.">
-<link rel="canonical" href="https://elninolanina.org/enso/ensogrid">
+<link rel="canonical" href="https://elninolanina.org/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="elninolanina.org">
 <meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World">
 <meta property="og:description" content="How El Niño and La Niña years differ from normal around the world: temperature, rain and snow (ERA5), tropical cyclones (IBTrACS) and U.S. hail, tornadoes, wind and derechos (NOAA Storm Events), by year, season or month, with the NOAA RONI years used.">
-<meta property="og:url" content="https://elninolanina.org/enso/ensogrid">
+<meta property="og:url" content="https://elninolanina.org/">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -464,7 +464,11 @@ const MENU=[
     ['derechoday',0,'Derechos — all'],['derechoday',1,'Derechos — gusts ≥ 74 mph'],['derechoday',2,'Derechos — gusts ≥ 85 mph']]}];
 function menuItem(){ for(const g of MENU) for(const it of g.items) if(it[0]===S.f&&it[1]===S.thr) return it;
   for(const g of MENU) for(const it of g.items) if(it[0]===S.f) return it; return MENU[0].items[0]; }
-const SCS_BASE='../scs/trends/';
+/* Paths from the site root, not relative to the page: the maps page is also served at
+   elninolanina.org/ itself (a Cloudflare rewrite to /enso/ensogrid), where relative paths would
+   point at the root. ENSO_BASE holds this folder's data and outlines. */
+const ENSO_BASE='/enso/';
+const SCS_BASE='/scs/trends/';
 function F(){ return FIELDS.find(f=>f.k===S.f)||FIELDS[0]; }
 function isCount(){ return F().src!=='era5'; }
 function isTemp(){ return F().k==='t2m'; }
@@ -652,13 +656,13 @@ async function loadDS(){
   if(DSCACHE[key]) return DSCACHE[key];
   let ds;
   if(f.src==='era5'){
-    if(!ERA5IX){ const r=await fetch('data/era5_index.json');
+    if(!ERA5IX){ const r=await fetch(ENSO_BASE+'data/era5_index.json');
       if(!r.ok) throw new Error('could not fetch data/era5_index.json ('+r.status+')');
       ERA5IX=await r.json(); }
     const ix=ERA5IX, g=gridOf(ix,true), NCg=g.nlat*g.nlon;
     ds={key,f,grid:g,cells:Int32Array.from({length:NCg},(_,i)=>i),
         years:ix.years.slice(), ey0:ix.years[0], ey1:ix.years[ix.years.length-1], agg:'wmean'};
-    const era5File=key=>`data/era5_${f.v}_${typeof key==='number'?String(MSEQ[key]).padStart(2,'0'):key}.bin.gz`;
+    const era5File=key=>`${ENSO_BASE}data/era5_${f.v}_${typeof key==='number'?String(MSEQ[key]).padStart(2,'0'):key}.bin.gz`;
     ds.XA=key=>ds.X(key);
     ds.X=async mi=>{
       if(ds.Xcache[mi]) return ds.Xcache[mi];
@@ -676,7 +680,7 @@ async function loadDS(){
       return p;
     };
   } else if(f.src==='tc'){
-    if(!TCRAW) TCRAW=await gzFetch('data/tc_month.json.gz');
+    if(!TCRAW) TCRAW=await gzFetch(ENSO_BASE+'data/tc_month.json.gz');
     const d=TCRAW, m=d.meta, g=gridOf(m,true);
     const NCg=g.nlat*g.nlon, ny=m.year1-m.year0+1;
     const [ty,tm]=m.through.split('-').map(Number);
@@ -2893,10 +2897,10 @@ async function init(){
   wire();
   try{
     const [roni,world]=await Promise.all([
-      fetch('data/roni.json').then(r=>{ if(!r.ok) throw new Error('could not fetch data/roni.json'); return r.json(); }),
-      fetch('geo/countries-110m.json').then(r=>{ if(!r.ok) throw new Error('could not fetch the coastlines'); return r.json(); })]);
+      fetch(ENSO_BASE+'data/roni.json').then(r=>{ if(!r.ok) throw new Error('could not fetch data/roni.json'); return r.json(); }),
+      fetch(ENSO_BASE+'geo/countries-110m.json').then(r=>{ if(!r.ok) throw new Error('could not fetch the coastlines'); return r.json(); })]);
     RONI=roni; WORLD=world;
-    if(FCST) RFC=await fetch('data/roni_fcst.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error('could not fetch the CPC forecast (data/roni_fcst.json)'); return r.json(); });
+    if(FCST) RFC=await fetch(ENSO_BASE+'data/roni_fcst.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error('could not fetch the CPC forecast (data/roni_fcst.json)'); return r.json(); });
   } catch(err){ document.getElementById('msg').textContent='Could not load: '+err.message; return; }
   document.getElementById('body').style.display='';
   mapA=makeMap('mapMain',true);
@@ -2913,7 +2917,7 @@ async function init(){
   wireHover(mapA,'tipA');
   addRefLayers();
   /* state / province lines worldwide, fetched once the maps are up */
-  gzFetch('geo/admin1-10m.json.gz').then(t=>{ setAdmin1(t); addRefLayers(); if(DS) drawSelection(); drawPanels(); }).catch(()=>{});
+  gzFetch(ENSO_BASE+'geo/admin1-10m.json.gz').then(t=>{ setAdmin1(t); addRefLayers(); if(DS) drawSelection(); drawPanels(); }).catch(()=>{});
   await refresh();
   if(v){ const [la,lo,z]=v.split(',').map(Number);
     if(isFinite(la)&&isFinite(lo)&&isFinite(z)){ syncing=true; mapA.setView([la,lo],z,{animate:false});
@@ -2933,6 +2937,6 @@ window.__enso={S,get DS(){return DS;},get CUR(){return CUR;},classify,seriesStat
 init();
 
 </script>
-<script src="../assets/feedback.js" defer></script>
+<script src="/assets/feedback.js" defer></script>
 </body>
 </html>
