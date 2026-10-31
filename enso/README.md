@@ -49,6 +49,25 @@ against IBTrACS and the Storm Events grids directly, and by a six-reviewer indep
 the whole site on 2026-10-10 (data rebuilt from raw GDEX files, C3S global means, CPC's RONI table,
 per-pixel map geolocation). Fixes from that review are noted below.
 
+## elninolanina.org and the home page (Oct 31, 2026)
+
+- **Domain:** `elninolanina.org` and `www.` are custom domains on this same Pages project. Three Cloudflare redirect rules:
+  - `www` → the bare domain;
+  - `/` → `/enso/` (the home page);
+  - everything outside `/enso/`, `/scs/trends/data/` and `/assets/` → extremewx.org.
+
+  Details are in the project doc `elninolanina-domain.md`.
+- **`enso/index.html`:** a small hand-written home page in the style of the extremewx.org home page, served at `/enso/`.
+  - It has two cards: **Simple maps** (`ensogrid.html`) and **Correlations** (`ensoreg.html`).
+  - The forecast page (`ensofcst.html`) is deliberately not linked yet.
+  - Thumbnails are `assets/thumbs/ensogrid.webp` and `ensoreg.webp`. The latter is DJF precipitation at RONI +2.0, absolute, light theme.
+- **All three pages:**
+  - The banner reads "Work in progress, site evolving rapidly! Check in regularly for updates/fixes.".
+  - The header links back to the ENSO home (`./`) and to extremewx.org.
+  - Links to other extremewx pages are absolute.
+  - Each page has a canonical URL, Open Graph tags and a Twitter card pointing at `https://elninolanina.org/enso/<page>`.
+- **Search engines:** `ensogrid` and `ensoreg` are now indexable. `ensofcst` keeps its `noindex` tags (template block `<!--F-->`) until it goes public.
+
 ## Regression version — `ensoreg.html` (Oct 22, 2026; separate page, not linked from ensogrid yet)
 
 **El Niño and La Niña by Strength.** Built from the *same sources* as ensogrid: `assemble.sh` writes both

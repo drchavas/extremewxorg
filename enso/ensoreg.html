@@ -3,10 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>El Ni&ntilde;o and La Ni&ntilde;a by Strength &mdash; global grid</title>
-<meta name="description" content="El Nino and La Nina impacts at any strength, from a two-sided regression on the Dec-Feb RONI, by ENSO year, season or month, of ERA5 temperature, precipitation and snowfall, global tropical cyclone activity and U.S. severe weather.">
-<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<title>El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org</title>
+<meta name="description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
+<link rel="canonical" href="https://elninolanina.org/enso/ensoreg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="elninolanina.org">
+<meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org">
+<meta property="og:description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
+<meta property="og:url" content="https://elninolanina.org/enso/ensoreg">
+<meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensoreg.webp">
+<meta name="twitter:card" content="summary_large_image">
+
 <meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -244,11 +251,11 @@
 </head>
 <body>
 
-<div class="alertbar">&#9888; <b>EXPERIMENTAL: beta version, in testing</b></div>
+<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 
 <header>
   <h1>El Ni&ntilde;o and La Ni&ntilde;a by Strength: Climatology and Impacts &mdash; global grid</h1>
-  <p><a class="home" href="../">&larr; extremewx.org</a> &middot;
+  <p><a class="home" href="./">&larr; El Ni&ntilde;o &amp; La Ni&ntilde;a home</a> &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot;
      What happens around the world in an El Ni&ntilde;o or La Ni&ntilde;a of a given strength, compared with the average year.
      <b>Drag the slider</b> right for El Ni&ntilde;o, left for La Ni&ntilde;a (the Dec&ndash;Feb, northern-winter value of NOAA's ocean index, RONI), pick a
      <b>variable</b>, or switch to the normal <b>Climatology</b>; choose the
@@ -2540,7 +2547,7 @@ function methodsHtml(){
       an extratropical remnant is not counted. Positions whose stage is "not reported" are kept: IBTrACS labels the
       whole North Indian Ocean that way in 1990–95, and every provisional (most recent) track. Each position is binned into a <b>5° box</b> by the calendar month it falls in.
       <i>Track density</i> is storm-days (positions ÷ 4) at or above the threshold; <i>ACE</i> is the sum of Vmax² over
-      those positions in 10⁴ kt²; <i>genesis</i> counts each storm once, in the box and month of its first such position. Conventions follow the <a href="../tc/trends/tctrend.html">TC climatology page</a>, except that page's
+      those positions in 10⁴ kt²; <i>genesis</i> counts each storm once, in the box and month of its first such position. Conventions follow the <a href="https://extremewx.org/tc/trends/tctrend.html">TC climatology page</a>, except that page's
       default also keeps extratropical positions. Recent seasons are provisional.`);
     li.push(`<b>Smoothing.</b> The maps (not the panels) use a Gaussian of sigma one box (5°), cut off at two boxes,
       normalized over the boxes present and wrapping in longitude — the same smoother as the TC page — applied to each
@@ -2550,7 +2557,7 @@ function methodsHtml(){
       a coastal box.`);
   } else {
     li.push(`<b>U.S. severe weather data.</b> The same 2° hazard-day grid as
-      <a href="../scs/trends/scstrend_grid.html">the 2° climatology page</a>, from NOAA/NCEI Storm Events: for each box,
+      <a href="https://extremewx.org/scs/trends/scstrend_grid.html">the 2° climatology page</a>, from NOAA/NCEI Storm Events: for each box,
       the number of distinct days in the month with at least one qualifying report (summed over the months for a season
       or the ENSO year) (for derechos, the number of
       events from the Squitieri, Wade &amp; Jirak 2026 archive). June and July 1993, missing from the database itself,

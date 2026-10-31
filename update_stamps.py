@@ -18,6 +18,8 @@ import os, re, subprocess, sys, datetime as dt
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PAGES = {
     'index.html': ['scs/trends/data', 'tc/trends/data', 'enso/data', 'climate/data'],
+    'enso/index.html':   ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
+                           'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
     'enso/ensogrid.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
                            'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
     'enso/ensoreg.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',

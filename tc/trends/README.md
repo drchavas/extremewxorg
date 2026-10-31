@@ -1,5 +1,10 @@
 # Tropical Cyclone Trends
 
+> **How to cite.** Chavas, D. R., 2026: extremewx.org: Climatologies and trends of weather and
+> climate extremes — data and code. Zenodo, https://doi.org/10.5281/zenodo.23839256 (concept DOI,
+> always the latest version). To pin exact numbers cite the version DOI; v2026.10 is
+> https://doi.org/10.5281/zenodo.23839257.
+
 **`tctrend.html`** is the page. The whole story of one field in one frame:
 
 1. a gridded **climatology**, with its **zonal mean** beside it

@@ -1,5 +1,10 @@
 # U.S. Severe Convective Storm Climatology, Trends and Events
 
+> **How to cite.** Chavas, D. R., 2026: extremewx.org: Climatologies and trends of weather and
+> climate extremes — data and code. Zenodo, https://doi.org/10.5281/zenodo.23839256 (concept DOI,
+> always the latest version). To pin exact numbers cite the version DOI; v2026.10 is
+> https://doi.org/10.5281/zenodo.23839257.
+
 Three live pages over the same NOAA/NCEI Storm Events record, plus the SPC derecho archive.
 
 **`scstrend.html`** — climatology and trend side by side on one shared, pannable map: drag
