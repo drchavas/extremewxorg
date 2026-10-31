@@ -128,7 +128,7 @@
   .methods li b{color:var(--text);font-weight:650}
   .methods code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
                 background:var(--panel2);border-radius:3px;padding:1px 4px}
-  .guide{max-width:1100px;margin:0 auto 16px;border:1px solid var(--line);
+  .guide{max-width:1100px;margin:16px auto;border:1px solid var(--line);
          border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
          padding:11px 16px;font-size:11.5px;color:var(--muted);line-height:1.6}
   .guide b.lead{color:var(--text)}
@@ -198,7 +198,6 @@
 
 <div id="wrap">
   <div class="hazwarn" id="hazwarn" style="display:none"></div>
-  <div class="guide" id="guide"></div>
   <div id="msg">Loading&hellip;</div>
   <div id="body" style="display:none">
     <div id="maps">
@@ -217,6 +216,7 @@
     </div>
     <div id="panels"><svg id="card"></svg></div>
     <div class="foot" id="foot"></div>
+    <div class="guide" id="guide"></div>
     <details class="methods">
       <summary>Methods</summary>
       <div class="body">
