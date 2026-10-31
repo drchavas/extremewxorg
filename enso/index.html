@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Climatology and Impacts &mdash; elninolanina.org</title>
+  <title>El Ni&ntilde;o &amp; La Ni&ntilde;a around the world &mdash; elninolanina.org</title>
   <meta name="description" content="Interactive maps of how El Niño and La Niña change weather around the world: temperature, rain and snow, tropical cyclones and U.S. severe weather, from decades of observations." />
   <link rel="canonical" href="https://elninolanina.org/enso/" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="elninolanina.org" />
-  <meta property="og:title" content="El Niño &amp; La Niña: Climatology and Impacts" />
+  <meta property="og:title" content="El Niño &amp; La Niña around the world" />
   <meta property="og:description" content="Interactive maps of how El Niño and La Niña change weather around the world: temperature, rain and snow, tropical cyclones and U.S. severe weather, from decades of observations." />
   <meta property="og:url" content="https://elninolanina.org/enso/" />
   <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp" />
@@ -126,45 +126,28 @@
       padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
     .alertbar b{color:#fff}
     @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} }
-    .hero .subtitle + .subtitle{margin-top:10px}
+    footer .credits{margin:0 0 4px} footer .credits:nth-of-type(2){margin-bottom:16px}
+    .subtitle.about{font-size:15px;line-height:1.6}
+    .subtitle.about + .subtitle.about{margin-top:10px}
   </style>
 </head>
 <body>
   <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
   <main class="container" id="top">
     <section class="hero">
-      <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a: Climatology and Impacts</h1>
-      <p class="byline funding">Supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a> funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a>, and <a href="https://mrcc.purdue.edu/" target="_blank" rel="noopener">Midwestern Regional Climate Center</a>, in partnership with the <a href="https://circs.niu.edu/" target="_blank" rel="noopener">NSF Center for Interdisciplinary Research on Convective Storms</a></p>
-      <p class="byline">Lead: <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Professor · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a></p>
-
-      <h2 class="about-title">What is this site?</h2>
-      <p class="subtitle">Interactive maps of how El Ni&ntilde;o and La Ni&ntilde;a change weather and climate around the world, built from decades of observations: temperature, rain and snow worldwide, global tropical cyclones, and U.S. hail, tornadoes, damaging winds and derechos. Part of the <a href="https://extremewx.org/">Extreme Weather Data and Visualization Hub</a>. Site development is ongoing, new updates expected regularly. <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-
-      <h2 class="about-title">What are El Ni&ntilde;o and La Ni&ntilde;a?</h2>
-      <p class="subtitle">They are the warm and cool phases of a natural cycle in the tropical Pacific Ocean, the El Ni&ntilde;o&ndash;Southern Oscillation (ENSO). Every two to seven years the surface waters of the central and eastern equatorial Pacific warm (El Ni&ntilde;o) or cool (La Ni&ntilde;a) by a degree or more for several months, usually peaking in the northern winter. That moves the heaviest tropical rain, and with it the jet streams, so the effects reach far beyond the Pacific. NOAA measures the cycle with its Relative Oceanic Ni&ntilde;o Index (RONI).</p>
-      <p class="subtitle">These maps show what past events did. For the event under way now, see NOAA&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>; for the official U.S. outlook for the coming months, NOAA&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">seasonal outlooks</a>.</p>
-      <hr class="rule" />
+      <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a around the world</h1>
+      <hr class="rule" style="margin-top:30px" />
     </section>
 
     <section id="maps">
-      <h2 class="sec-title">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M3.6 9h16.8M3.6 15h16.8"/>
-          <path d="M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/>
-        </svg>
-        <span>Explore the impacts
-          <span class="qual">ERA5 reanalysis, IBTrACS tropical cyclones and NOAA Storm Events, 1979&ndash;2025</span>
-        </span>
-      </h2>
 
-      <div class="cat">Simple maps</div>
+      <div class="cat" style="margin-top:4px">Simple maps</div>
       <div class="cards">
         <a class="card" href="ensogrid.html">
           <div class="shot"><img src="../assets/thumbs/ensogrid.webp" width="720" height="360" alt="Global map of temperature in El Ni&ntilde;o years minus climatology: warm along the equatorial eastern Pacific and over Alaska and western Canada, dotted where significant" /></div>
           <div class="txt">
             <h3>El Ni&ntilde;o &amp; La Ni&ntilde;a Years vs. Normal</h3>
-            <p class="desc">How a typical year, season or month differs in El Ni&ntilde;o or La Ni&ntilde;a years, beside its climatology: temperature, rain and snow worldwide, global tropical cyclone activity, and U.S. hail, tornado and wind days and derechos. The years used come from NOAA&rsquo;s Relative Oceanic Ni&ntilde;o Index, shown with every event marked.</p>
+            <p class="desc">How a typical year, season or month differs in El Ni&ntilde;o or La Ni&ntilde;a years: temperature, rain and snow worldwide, tropical cyclones, and U.S. severe weather.</p>
           </div>
         </a>
       </div>
@@ -175,15 +158,23 @@
           <div class="shot"><img src="../assets/thumbs/ensoreg.webp" width="720" height="360" loading="lazy" alt="Global map of December&ndash;February precipitation fitted for a very strong El Ni&ntilde;o: much wetter over the central and eastern equatorial Pacific, drier over Indonesia, northern Australia and the western Pacific" /></div>
           <div class="txt">
             <h3>Impacts by El Ni&ntilde;o or La Ni&ntilde;a Strength</h3>
-            <p class="desc">Drag a slider from strong La Ni&ntilde;a to strong El Ni&ntilde;o and watch the same maps change with the strength of the event, from a fit to every year since 1979, with El Ni&ntilde;o and La Ni&ntilde;a allowed to differ. Click any place for its year-by-year record against the index.</p>
+            <p class="desc">Drag a slider from strong La Ni&ntilde;a to strong El Ni&ntilde;o and watch the same maps change with the strength of the event.</p>
           </div>
         </a>
       </div>
     </section>
 
+    <section id="about">
+      <h2 class="about-title" style="margin-top:6px">What are El Ni&ntilde;o and La Ni&ntilde;a?</h2>
+      <p class="subtitle about">The warm and cool phases of a natural cycle in the tropical Pacific Ocean, the El Ni&ntilde;o&ndash;Southern Oscillation (ENSO). Every two to seven years the central and eastern equatorial Pacific warms (El Ni&ntilde;o) or cools (La Ni&ntilde;a) by a degree or more for several months, usually peaking in the northern winter. That shifts the heaviest tropical rain, and with it the jet streams, so the effects reach far beyond the Pacific.</p>
+      <p class="subtitle about">These maps show what past events did. For the event under way now, see NOAA&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a> and <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">seasonal outlooks</a>.</p>
+    </section>
+
     <footer>
+      <p class="credits">Supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a> funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a>, and <a href="https://mrcc.purdue.edu/" target="_blank" rel="noopener">Midwestern Regional Climate Center</a>, in partnership with the <a href="https://circs.niu.edu/" target="_blank" rel="noopener">NSF Center for Interdisciplinary Research on Convective Storms</a></p>
+      <p class="credits">Lead: <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> · Professor · Purdue University, <a href="https://www.eaps.purdue.edu/" target="_blank" rel="noopener">Department of Earth, Atmospheric, and Planetary Sciences</a></p>
       <p class="dataupd">Data last updated 2026-10-27 13:42 UTC</p>
-      <p>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a></p>
+      <p>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; <a href="#feedback" data-feedback>Send feedback</a></p>
     </footer>
   </main>
 <script src="../assets/feedback.js" defer></script>
