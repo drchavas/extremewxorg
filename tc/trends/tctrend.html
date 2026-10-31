@@ -53,6 +53,13 @@
   .btn-back:hover:not(:disabled){border-color:var(--accent2)}
 
   #wrap{padding:14px 18px 28px}
+  /* The controls, the figure and the text below share one fixed width in CSS
+     pixels, as on the other pages, so browser zoom (Cmd +/-) scales them together
+     instead of the figure always stretching to the window.  1400 px keeps the
+     1520-unit figure's text readable; a narrower window still shrinks it to fit. */
+  :root{--span:1400px}
+  #figscroll,.foot{max-width:var(--span);margin-left:auto;margin-right:auto}
+  .foot > *{max-width:900px}
   #card{width:100%;height:auto;display:block;border-radius:10px;overflow:hidden}
   /* On a phone the 1520-unit figure scaled to ~350 px put its text at 2-3 px. Below
      760 px it keeps a readable minimum width and the wrapper scrolls sideways. */
@@ -71,7 +78,7 @@
   .basinhit.on rect.hit{fill:currentColor;fill-opacity:.10}
   .basinhit.on path.edge{stroke-width:2.2;opacity:1}
   .basinhit.on g{opacity:1}
-  .foot{margin-top:18px;font-size:12.5px;color:var(--muted);line-height:1.62;max-width:900px;
+  .foot{margin-top:18px;font-size:12.5px;color:var(--muted);line-height:1.62;
         border-top:1px solid var(--line);padding-top:16px}
   .foot b{color:var(--text)}
   .foot h2{font-size:15px;margin:0 0 3px;color:var(--text);font-weight:650}
@@ -89,7 +96,7 @@
   .alertbar b{color:#fff}
   @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} }
   /* every control in one box, the width of the maps below it (as on the ENSO pages) */
-  #controls{max-width:none;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);
+  #controls{max-width:var(--span);margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);
             border-radius:10px;padding:10px 16px 0}
   #controls .bar{padding:0 0 10px}
   header{padding-bottom:10px}
