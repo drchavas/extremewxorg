@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>El Ni&ntilde;o &amp; La Ni&ntilde;a Impact Maps &mdash; elninolanina.org</title>
+<title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World &mdash; elninolanina.org</title>
 <meta name="description" content="How El Niño and La Niña years differ from normal around the world: temperature, rain and snow (ERA5), tropical cyclones (IBTrACS) and U.S. hail, tornadoes, wind and derechos (NOAA Storm Events), by year, season or month, with the NOAA RONI years used.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensogrid">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="elninolanina.org">
-<meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Impact Maps &mdash; elninolanina.org">
+<meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World">
 <meta property="og:description" content="How El Niño and La Niña years differ from normal around the world: temperature, rain and snow (ERA5), tropical cyclones (IBTrACS) and U.S. hail, tornadoes, wind and derechos (NOAA Storm Events), by year, season or month, with the NOAA RONI years used.">
 <meta property="og:url" content="https://elninolanina.org/enso/ensogrid">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp">
@@ -27,7 +27,7 @@
   /* Light theme: the same values the JS THEME.light uses, so the chrome, the
      maps and the SVG panels agree (as on scstrend_grid.html). */
   html[data-theme="light"]{
-    --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5f8; --line:#c9d4de;
+    --bg:#eaf2fa; --panel:#ffffff; --panel2:#f2f6fa; --line:#cfdbe7;
     --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
     --en:#c8321f; --ln:#1f63b8; --sea:#eef2f6;
   }
@@ -254,8 +254,8 @@
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 
 <header>
-  <h1>El Ni&ntilde;o and La Ni&ntilde;a: Climatology and Impacts &mdash; global grid</h1>
-  <p><a class="home" href="./">&larr; El Ni&ntilde;o &amp; La Ni&ntilde;a home</a> &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot;
+  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a: Impacts Around the World</h1>
+  <p>
      What happens around the world in El Ni&ntilde;o and La Ni&ntilde;a years, compared with a normal year.
      Pick <b>El Ni&ntilde;o</b>, <b>La Ni&ntilde;a</b> or the normal <b>Climatology</b>, and a <b>variable</b>; choose the
      whole year, a season or a single month with the bar above the map. An <b>ENSO year</b> runs from June to May
@@ -265,7 +265,7 @@
      <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
      and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
 
 </header>
 
@@ -423,7 +423,7 @@ const THEME={
          grid:'#22303f',axis:'#6d8299',pt:'#6cb6ff',fit:'#ffb14e',neu:'#5d6f82',
          en:'#ff6b5a',ln:'#5aa9ff',coast:'rgba(128,140,152,.95)',border:'rgba(128,140,152,.85)',admin1:'rgba(150,162,174,.6)',
          sea:'#0b1119',sel:'#ff3ecb',dot:'rgba(0,0,0,.62)',enFill:'rgba(255,107,90,.85)',lnFill:'rgba(90,169,255,.85)'},
-  light:{bg:'#ffffff',panel:'#ffffff',ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',
+  light:{bg:'#eaf2fa',panel:'#ffffff',ink:'#16212e',mute:'#5b6b7c',line:'#c9d4de',
          grid:'#e6ecf2',axis:'#8494a4',pt:'#2b7bd4',fit:'#d4770f',neu:'#b3bec9',
          en:'#c8321f',ln:'#1f63b8',coast:'rgba(12,18,26,.78)',border:'rgba(12,18,26,.6)',admin1:'rgba(12,18,26,.34)',
          sea:'#eef2f6',sel:'#c2007a',dot:'rgba(0,0,0,.62)',enFill:'rgba(200,50,31,.85)',lnFill:'rgba(31,99,184,.85)'}
@@ -602,7 +602,7 @@ function classify(thr){
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
 const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
-         sm:'on',sig:1,ct:0,base:'all',pt:null,theme:'dark',ro:1.5};
+         sm:'on',sig:1,ct:0,base:'all',pt:null,theme:'light',ro:1.5};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
 let ERA5IX=null, TCRAW=null; const SCSRAW={};
@@ -2738,7 +2738,7 @@ function writeHash(){
   if(S.ct) p.set('ct','1');
   if(S.base==='neu'&&!REG) p.set('b','neu');
   if(S.pt) p.set('c',S.pt[0].toFixed(2)+','+S.pt[1].toFixed(2));
-  if(S.theme!=='dark') p.set('k',S.theme);
+  if(S.theme!=='light') p.set('k',S.theme);
   if(mapA){ const c=mapA.getCenter(); p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
   try{ history.replaceState(null,'','#'+p.toString()); }catch(e){}
 }
@@ -2775,7 +2775,7 @@ function readHash(){
   if(p.get('ct')==='1') S.ct=1;
   if(p.get('b')==='neu'&&!REG) S.base='neu';
   if(p.get('c')){ const [la,lo]=p.get('c').split(',').map(Number); if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90&&Math.abs(lo)<=540) S.pt=[la,lo]; }
-  if(p.get('k')==='light') S.theme='light';
+  if(p.get('k')==='light'||p.get('k')==='dark') S.theme=p.get('k');
   return p.get('v');
 }
 function fileStem(){
