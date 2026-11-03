@@ -24,14 +24,14 @@
 <style>
   :root{
     --bg:#0f1720; --panel:#16212e; --panel2:#1d2a3a; --line:#2a3a4d;
-    --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e;
+    --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e; --onaccent2:#111;
     --en:#ff6b5a; --ln:#5aa9ff; --sea:#0b1119;
   }
   /* Light theme: the same values the JS THEME.light uses, so the chrome, the
      maps and the SVG panels agree (as on scstrend_grid.html). */
   html[data-theme="light"]{
     --bg:#eaf2fa; --panel:#ffffff; --panel2:#f2f6fa; --line:#cfdbe7;
-    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#b3640a;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#9c5607; --onaccent2:#ffffff;
     --en:#c8321f; --ln:#1f63b8; --sea:#eef2f6;
   }
   html[data-theme="light"] body{
@@ -98,7 +98,7 @@
   #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
   #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext{opacity:.35}
   #monthbar .btn:disabled{cursor:not-allowed}
-  .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc],.seg button.on[data-base]{background:var(--accent2);color:#111;font-weight:650}
+  .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc],.seg button.on[data-base]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   .srctag{color:var(--text);opacity:.85}
   .mapbubble{background:rgba(22,33,46,.94);color:var(--text);border:1px solid var(--line);border-radius:8px;
              padding:7px 12px 8px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;max-width:min(460px,62vw);
@@ -127,6 +127,8 @@
   .mticks span{cursor:pointer;width:2.4em;text-align:center}
   .mticks span.on{color:var(--accent2);font-weight:700}
   .mticks .yr{display:block;font-size:9px;opacity:.75}
+  .mticks .mi{display:none}
+  @media (max-width:420px){ .mticks .mf,.mticks .yr{display:none} .mticks .mi{display:inline} }
 
   #wrap{padding:14px 18px 28px}
   #msg{padding:60px 18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
@@ -152,7 +154,7 @@
   .mainbar{gap:14px 22px}
   .mainbar .fld label{font-size:11px}
   .seg.big button{font-size:14px;padding:7px 15px}
-  .seg button.on[data-ph="clim"]{background:var(--accent2);color:#111;font-weight:650}
+  .seg button.on[data-ph="clim"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #enlnBtn{display:none} body.cmp #enlnBtn{display:inline-block}
   select.big{font-size:14px;padding:7px 9px;width:340px;max-width:100%}
   .mainbar .fld{max-width:100%}
@@ -220,8 +222,38 @@
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
   .alertbar b{color:#fff}
-  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} .lmap{min-height:300px}
-    .cbar{transform:scale(.78);transform-origin:top right} .lmap .hint{display:none} .mapbubble .bs{display:none}
+  /* the month step buttons stay with the slider when the bar wraps */
+  .mgroup{display:flex;align-items:center;gap:10px;flex:1 1 440px;min-width:0}
+  .mgroup .mtrack{flex:1 1 auto;min-width:0}
+  /* colorbar ticks sit exactly at their quarter of the strip */
+  .cbar .ticks{position:relative}
+  .cbar .ticks span{position:absolute;left:0;white-space:nowrap;transform:translateY(-50%)}
+  /* boxes too rare to show as a % change: hatched, with a legend swatch */
+  .cbar .zchip i.hatch{background:repeating-linear-gradient(45deg,var(--hatchA) 0 2px,var(--hatchB) 2px 5px)}
+  :root{--hatchA:#3d4a5a;--hatchB:#1c2633} html[data-theme="light"]{--hatchA:#aab3bd;--hatchB:#e1e6eb}
+  #cbHost{display:none}
+  @media (max-width:640px){
+    .lmap{min-height:0!important;aspect-ratio:2.05/1}
+    .mapbubble .bs{display:none} .lmap .leaflet-control-attribution{font-size:8px;line-height:1.3;max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #cbHost{display:block;padding:6px 12px 2px}
+    .cbar.h{position:static;transform:none!important;background:none;border:none;padding:0;backdrop-filter:none;
+            display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
+    .cbar.h .cap{max-width:none;margin:0;flex:0 0 100%;text-align:left}
+    .cbar.h .row{flex-direction:column;flex:1 1 220px}
+    .cbar.h .strip{width:100%;height:10px;margin:0}
+    .cbar.h .ticks{height:1.4em;margin:3px 0 0}
+    .cbar.h .ticks span{top:0;transform:translateX(-50%)}
+    .cbar.h .ticks span:first-child{transform:none} .cbar.h .ticks span:last-child{transform:translateX(-100%)}
+    .cbar.h .zchip{margin:0}
+    #avSeg{display:flex;flex-wrap:wrap}
+    .mticks{font-size:9px;padding:0} .mticks span{width:auto;flex:1 1 0;min-width:0} .mticks .yr{font-size:8px}
+    #panels,.panels2{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #panels svg,.panels2 svg{width:760px;max-width:none}
+    .panelscroll{display:block!important}
+  }
+  .panelscroll{display:none;font-size:11px;color:var(--muted);margin:4px 2px 0}
+  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px}
+    .lmap .hint{display:none}
     .mainbar .fld:nth-child(2){width:100%} select.big{width:100%}
                             #monthbar .mnow{min-width:0} }
   /* overlap the canvas tiles by a pixel: at fractional zoom the browser
@@ -243,14 +275,14 @@
   .roticks span{cursor:pointer;width:2.2em;text-align:center;margin:0 -0.6em}
   .roval{font-size:14px;font-weight:650;margin-top:3px;min-height:1.3em} .roval.dim{opacity:.55}
   .roval .rofar{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:6px}
-  .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:#111;font-weight:650}
+  .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
   /* the forecast page: months instead of the averaging bar */
   #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
   .fcst #monthbar{display:none}
   .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
-  .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:#ffb14e;font-weight:650}
-  .seg button.on[data-fm]{background:var(--accent2);color:#111;font-weight:650}
+  .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
+  .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
   #fmSeg{flex-wrap:wrap;max-width:100%} #fmbar .fld{max-width:100%}
   #robar .rofld{flex:1 1 auto;max-width:900px}
@@ -308,23 +340,26 @@
         <button data-av="yr" title="The whole ENSO year, June (year 0) to May (year +1)">ENSO year (Jun&ndash;May)</button><button data-av="jja" title="June–August of year 0">Jun–Aug</button><button data-av="son" title="September–November of year 0">Sep–Nov</button><button data-av="djf" title="December (year 0) – February (year +1)">Dec–Feb</button><button data-av="mam" title="March–May of year +1">Mar–May</button><button data-av="mon" title="One month at a time, with the slider">Month</button>
       </div>
       <div class="mnote">ENSO year is Jun&ndash;May (ex: 1997&ndash;1998 = June 1997 &ndash; May 1998)</div></div>
+    <div class="mgroup">
     <button class="btn" id="mPrev" title="Previous month" aria-label="Previous month">&#9664;</button>
     <div class="mtrack">
       <input type="range" id="mRange" min="0" max="11" step="1" value="6" aria-label="Month">
       <div class="mticks" id="mTicks"></div>
     </div>
     <button class="btn" id="mNext" title="Next month" aria-label="Next month">&#9654;</button>
+    </div>
   </div>
   </div>
-  <div id="msg">Loading&hellip;</div>
+  <div id="msg" role="status">Loading&hellip;</div>
   <div id="body" style="display:none">
     <div id="maps">
       <div class="mapcol">
-        <div class="maphead hastog"><div class="mhtext"><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p>
+        <div class="maphead hastog"><div class="mhtext" aria-live="polite"><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p>
           <p class="warn" id="mapWarn"></p></div>
 </div>
-        <div class="lmap" id="mapMain"><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
+        <div class="lmap" id="mapMain" role="region" aria-label="Map. Hover or tap to read a box; click a box to select it for the panels below."><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
           <div class="hint">drag &middot; scroll to zoom &middot; hover for values</div></div>
+        <div id="cbHost"></div>
       </div>
     </div>
     <details class="methods advanced" id="advanced">
@@ -348,7 +383,7 @@
     <div class="fld"><label>&nbsp;</label><label class="chk" title="Draw contour lines of the climatology (the normal for this month, season or year) over the map, with their values"><input type="checkbox" id="ctChk"> Climatology contours</label></div>
     <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole field">&#8592; Full view</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
-    <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn" title="Export the lower panels">PNG</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn" title="Export the lower panels (RONI and box/global panels) as a PNG image">Panels PNG</button></div>
     <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
   </div>
       </div>
@@ -357,13 +392,13 @@
       <div class="secthead"><h2>Measuring El Ni&ntilde;o and La Ni&ntilde;a</h2>
         <p>Every year enters the maps at its winter (Dec&ndash;Feb) value of NOAA's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/" target="_blank" rel="noopener">Relative Oceanic Ni&ntilde;o Index</a>, marked below.
            For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="ensogrid.html">composite version</a> of this page.</p></div>
-      <div id="panels"><svg id="cardRoni" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div id="panels"><svg id="cardRoni" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div>
       <div class="foot" id="foot"></div>
     </section>
     <details class="methods" id="otherAdv">
       <summary>Other advanced</summary>
       <div class="body">
-        <div class="panels2"><svg id="cardBox" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
+        <div class="panels2"><svg id="cardBox" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div></div>
     </details>
     <details class="methods" id="methods">
       <summary>Methods</summary>
@@ -501,9 +536,12 @@ function defaultPeriod(){
 }
 
 /* --------------------------------------------------------------- numerics */
-function fmt(v,d){ return (v==null||!isFinite(v))?'—':v.toFixed(d==null?2:d); }
+/* display numbers: a typographic minus, and no "−0.00" for a value that rounds to zero */
+function fmt(v,d){ if(v==null||!isFinite(v)) return '—'; const s=v.toFixed(d==null?2:d);
+  return /^-0(\.0+)?$/.test(s)?s.slice(1):s.replace(/^-/,'−'); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function sgn(v,d){ return (!isFinite(v)?'':(v>=0?'+':'−'))+fmt(Math.abs(v),d); }
+function sgn(v,d){ if(!isFinite(v)) return fmt(v,d); const a=fmt(Math.abs(v),d);
+  return /^0(\.0+)?$/.test(a)?a:(v>=0?'+':'−')+a; }
 function betacf(a,b,x){
   const FP=1e-300,E=3e-12; let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;
   if(Math.abs(d)<FP)d=FP; d=1/d; let h=d;
@@ -811,7 +849,9 @@ function windowYears(){
   return out;
 }
 /* truly neutral years (no event even at the 0.5 level) from ENSO year a on, and the last classified year */
-function nNeutral(a){ let k=0; classify(0.5).forEach((c,Y)=>{ if(c==='N'&&Y>=a) k++; }); return k; }
+/* neutral years from `a` to the end of the data on screen (RONI can run a year past it) */
+function nNeutral(a){ const e=lastDataYear(); let k=0; classify(0.5).forEach((c,Y)=>{ if(c==='N'&&Y>=a&&Y<=e) k++; }); return k; }
+function lastDataYear(){ return DS?Math.min(lastRoniYear(),DS.ey1):lastRoniYear(); }
 function lastRoniYear(){ let m=0; classify(0.5).forEach((c,Y)=>{ if(Y>m) m=Y; }); return m; }
 function yearsSel(){
   if(S.per!=='custom') return defaultPeriod();
@@ -950,7 +990,7 @@ function ymStr(y,m){ return y+'-'+String(m).padStart(2,'0'); }
 function fcDJF(Y){
   if(RONI){ const v=roniAt(Y+1,0); if(v!=null) return {x:v,obs:true}; }
   const s=RFC&&RFC.seasons.find(q=>q.code==='DJF'&&q.center===ymStr(Y+1,1));
-  return s?{x:s.q['50'],obs:false,q:s.q}:null;
+  return s?{x:s.q['50'],obs:false,q:s.q,from:s.carried_from||null}:null;
 }
 function fcMonths(){
   if(!RFC||!RFC.seasons.length) return [];
@@ -1377,7 +1417,11 @@ function repaintTiles(lay,which){
   if(!lay||!lay._tiles) return;
   for(const k in lay._tiles){ const t=lay._tiles[k]; if(t&&t.el) paintTile(t.el,t.coords,which); }
 }
+let HATCHN=0;
+const HATCHC={dark:[[61,74,90],[28,38,51]],light:[[170,179,189],[225,230,235]]};
+let HATCH=HATCHC.light;
 function paintTile(cv,coords,which){
+  HATCH=HATCHC[S.theme==='dark'?'dark':'light'];
   const R=REND[which]; if(!R) return;
   const crs=L.CRS.EPSG4326, z=coords.z;
   const nw=crs.pointToLatLng(L.point(coords.x*256,coords.y*256),z),
@@ -1397,23 +1441,33 @@ function paintTile(cv,coords,which){
       const k=colI[i]; if(k<0) continue;
       const o=(r*g.nlon+k)*4; if(!R.rgba[o+3]) continue;
       const q=(j*256+i)*4;
+      if(R.rgba[o+3]===254){ const hc=((coords.x*256+i+coords.y*256+j)%5<2)?HATCH[0]:HATCH[1];   // too rare for %
+        px[q]=hc[0]; px[q+1]=hc[1]; px[q+2]=hc[2]; px[q+3]=255; continue; }
       px[q]=R.rgba[o]; px[q+1]=R.rgba[o+1]; px[q+2]=R.rgba[o+2]; px[q+3]=R.rgba[o+3];
     }
   }
   ctx.putImageData(img,0,0);
   /* significance dots, once a box is big enough on screen to carry one */
   const cellPx=g.g/dLon;
-  if(R.sig && cellPx>=3.2){
+  if(R.sig){
+    /* zoomed far out (phones), one dot per block of 2x2 or 3x3 boxes, set if any box
+       in the block is significant, so dots never silently vanish */
+    const B=cellPx>=3.2?1:Math.min(4,Math.ceil(3.2/cellPx));
     ctx.fillStyle=T().dot;
-    const rad=Math.max(0.8,Math.min(2.4,cellPx*0.12));
+    const rad=Math.max(0.8,Math.min(2.4,cellPx*B*0.12));
     const r0=Math.max(0,Math.floor((se.lat-g.lat0)/g.g)), r1=Math.min(g.nlat-1,Math.floor((nw.lat-g.lat0)/g.g));
     const k0=Math.floor((nw.lng-g.lon0)/g.g)-1, k1=Math.ceil((se.lng-g.lon0)/g.g)+1;
-    for(let r=r0;r<=r1;r++){
-      const y=(nw.lat-(g.lat0+(r+0.5)*g.g))/dLat;
-      for(let kk=k0;kk<=k1;kk++){
-        const lonC=g.lon0+(kk+0.5)*g.g, lonN=(((lonC-g.lon0)%360)+360)%360, k=Math.floor(lonN/g.g);
-        if(k>=g.nlon || !R.sig[r*g.nlon+k]) continue;
-        const x=(lonC-nw.lng)/dLon;
+    const rb0=Math.floor(r0/B)*B, kb0=Math.floor(k0/B)*B;
+    for(let rb=rb0;rb<=r1;rb+=B){
+      const y=(nw.lat-(g.lat0+(rb+B/2)*g.g))/dLat;
+      for(let kb=kb0;kb<=k1;kb+=B){
+        let on=false;
+        for(let r=rb;r<rb+B&&!on;r++){ if(r<0||r>=g.nlat) continue;
+          for(let kk=kb;kk<kb+B;kk++){
+            const lonC=g.lon0+(kk+0.5)*g.g, lonN=(((lonC-g.lon0)%360)+360)%360, k=Math.floor(lonN/g.g);
+            if(k<g.nlon && R.sig[r*g.nlon+k]){ on=true; break; } } }
+        if(!on) continue;
+        const x=(g.lon0+(kb+B/2)*g.g-nw.lng)/dLon;
         ctx.beginPath(); ctx.arc(x,y,rad,0,6.2832); ctx.fill();
       }
     }
@@ -1543,7 +1597,7 @@ function fullView(){
   /* not animated: a second fit during a zoom animation is undone when the first
      animation ends (Leaflet re-applies its target), which could leave a global
      field on the U.S. view after quick field switches */
-  if(f.src==='scs') mapA.fitBounds([[24,-126],[50,-66]],{padding:[8,8],animate:false});
+  if(f.src==='scs') mapA.fitBounds([[24,-126],[50,-66]],{paddingTopLeft:[8,cbNarrow()?8:52],paddingBottomRight:[8,8],animate:false});   // room for the title bubble
   else if(f.src==='tc') mapA.fitBounds([[-50,25],[55,385]],{padding:[4,4],animate:false});
   else mapA.fitBounds([[-75,20],[82,380]],{padding:[0,0],animate:false});
   syncing=false;
@@ -1605,7 +1659,7 @@ function drawContours(vals){
   const rend=mapA._ctr||(mapA._ctr=L.canvas({padding:0.5}));
   /* labels: in each block, the segment nearest the block's centre, and only where the
      contour has some length there (no labels on specks) */
-  const bl=g.global?[45,60]:[8,12];
+  const bl=g.global?[45,60]:[8,12], placed=[], near=g.global?[7,14]:[1.2,2.4];   // no two labels on top of each other
   for(const lev of levs){
     const segs=contourSegs(vals,lev); if(!segs.length) continue;
     const lab=String(+lev.toFixed(4)).replace('-','−'), best=new Map();
@@ -1620,6 +1674,8 @@ function drawContours(vals){
       else { cur.n++; if(dc<cur.dc){ cur.la=la; cur.lo=lo; cur.dc=dc; } }
     }
     for(const b of best.values()){ if(b.n<4) continue;
+      if(placed.some(q=>Math.abs(q[0]-b.la)<near[0]&&Math.abs(q[1]-b.lo)<near[1])) continue;
+      placed.push([b.la,b.lo]);
       for(const dx of shifts) grp.addLayer(L.marker([b.la,b.lo+dx],{interactive:false,keyboard:false,
         icon:L.divIcon({className:'clab',html:lab,iconSize:null})})); }
   }
@@ -1644,21 +1700,31 @@ function drawSelection(){
   shifts.forEach(dx=>selA.push(L.rectangle([[la,lo+dx],[la+g.g,lo+g.g+dx]],
     {interactive:false,color:t.sel,weight:2.6,fill:false}).addTo(mapA)));
 }
+/* phones: the colorbar goes under the map as a horizontal strip, so it covers no data */
+function cbNarrow(){ return typeof window!=='undefined'&&window.innerWidth<=640; }
 function drawColorbar(el,dom,title,isDiff){
-  const grad='linear-gradient(to top,'+dom.st.join(',')+')';
+  const h=cbNarrow();
+  const host=h?document.getElementById('cbHost'):document.getElementById('mapMain');
+  if(host&&el.parentElement!==host) host.appendChild(el);
+  el.classList.toggle('h',h);
+  const grad='linear-gradient(to '+(h?'right':'top')+','+dom.st.join(',')+')';
   const ticks=[];
-  let d=0; for(;d<3;d++){ let ok=true; for(let i=0;i<=4;i++){ const v=(dom.lo+(dom.hi-dom.lo)*i/4)*Math.pow(10,d);
+  let d=0; for(;d<4;d++){ let ok=true; for(let i=0;i<=4;i++){ const v=(dom.lo+(dom.hi-dom.lo)*i/4)*Math.pow(10,d);
     if(Math.abs(v-Math.round(v))>1e-6) ok=false; } if(ok) break; }
-  for(let i=4;i>=0;i--){ const v=dom.lo+(dom.hi-dom.lo)*i/4;
-    let s=isDiff?sgn(v,d):fmt(v,d).replace(/^-/,'−'); if(isDiff&&Math.abs(v)<1e-9) s='0';
+  for(let i=0;i<=4;i++){ const v=dom.lo+(dom.hi-dom.lo)*i/4;
+    let s=isDiff?sgn(v,d):fmt(v,d); if(isDiff&&Math.abs(v)<1e-9) s='0';
     if(i===4) s='≥ '+s; if(i===0 && (isDiff||dom.lo!==0)) s='≤ '+s;
     ticks.push(s); }
+  /* each label at its own quarter of the strip (top = highest on the vertical bar) */
+  const wEm=Math.max(...ticks.map(t=>t.length))*0.6+0.4;
+  const spans=ticks.map((t,i)=>h?`<span style="left:${i*25}%">${t}</span>`:`<span style="top:${100-i*25}%">${t}</span>`).join('');
+  const hatch=isDiff&&S.mode!=='clim'&&HATCHN>0;
   el.innerHTML=`<div class="cap">${esc(title)}</div><div class="row">`+
     `<div class="strip" style="background:${grad}"></div>`+
-    `<div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div></div>`+
-    (isDiff&&S.sig&&SIGNOW!==null?`<div class="zchip"><i></i><span>${sigChipText()}</span></div>`:'');
+    `<div class="ticks" style="${h?'':'width:'+wEm.toFixed(1)+'em'}">${spans}</div></div>`+
+    (isDiff&&S.sig&&SIGNOW!==null?`<div class="zchip"><i></i><span>${sigChipText()}</span></div>`:'')+
+    (hatch?`<div class="zchip" title="These boxes see too little of this on average for a % change to mean much; switch Show as to Absolute to see them"><i class="hatch"></i><span>too rare for %</span></div>`:'');
 }
-
 /* --------------------------------------------------------- hover readout */
 function placeName(c){
   if(c<0) return aggLabel();
@@ -1684,7 +1750,8 @@ function tipHtml(c,lat,lon){
   if(smoothOn()&&isFinite(raw.clim[c])&&Math.abs(raw.clim[c]-cl)>1e-3) h+=` (this box ${fmt(raw.clim[c],d.c)})`;
   h+='<br>';
   if(isFinite(df)){
-    h+=`${esc(phaseName())}: <b>${sgn(df,d.d)}</b> ${pctOn()?'%':esc(unitAbs())}`;
+    const pn=phaseName()+(!REG&&S.base==='neu'&&S.ph!=='enln'?' − neutral':'');
+    h+=`${esc(pn)}: <b>${sgn(df,d.d)}</b> ${pctOn()?'%':esc(unitAbs())}`;
     if(smoothOn()&&isFinite(raw.disp[c])&&Math.abs(raw.disp[c]-df)>1e-3) h+=` (this box ${sgn(raw.disp[c],d.d)})`;
     const p=s.p[c]; if(isFinite(p)) h+=` · p ${p<0.001?'< 0.001':'= '+fmt(p,3)}`;
     if(SIGNOW&&SIGNOW!=='pending'&&SIGNOW.sig[c]) h+=' · in a significant patch';
@@ -1754,6 +1821,28 @@ function runSig(st,sk){
   }).catch(err=>console.error(err)).finally(()=>SIGRUN.delete(sk));
   SIGRUN.set(sk,job);
 }
+/* the last state that drew successfully, so a failed download can fall back to it
+   (and the controls never sit on a state the map is not showing) */
+let LASTGOOD=null, ERRNOTE=null;
+function failRefresh(text){
+  loading(false); BUSY=false;
+  const msg=document.getElementById('msg'), want=JSON.stringify(S);
+  if(LASTGOOD && want!==LASTGOOD){
+    ERRNOTE={text,want}; Object.assign(S,JSON.parse(LASTGOOD)); refresh();   // redraw what was on screen, then say what failed
+  } else {
+    msg.style.display='block'; msg.textContent=text+' ';
+    const a=document.createElement('a'); a.href='#'; a.textContent='Try again';
+    a.onclick=e=>{ e.preventDefault(); msg.style.display='none'; refresh(); }; msg.appendChild(a);
+  }
+}
+function showErrNote(){
+  const msg=document.getElementById('msg');
+  if(!ERRNOTE){ msg.style.display='none'; return; }
+  const {text,want}=ERRNOTE; ERRNOTE=null;
+  msg.style.display='block'; msg.textContent=text+' The map still shows the previous selection. ';
+  const a=document.createElement('a'); a.href='#'; a.textContent='Try again';
+  a.onclick=e=>{ e.preventDefault(); msg.style.display='none'; Object.assign(S,JSON.parse(want)); refresh(); }; msg.appendChild(a);
+}
 async function refresh(){
   const tok=++TOKEN;
   if(FCST){                                                        // the forecast page: the month picks the strength
@@ -1766,8 +1855,7 @@ async function refresh(){
   const msg=document.getElementById('msg');
   let ds;
   try{ ds=await loadDS(); }
-  catch(err){ console.error(err); msg.style.display='block';
-    msg.textContent='Could not load '+F().label.toLowerCase()+': '+err.message; return; }
+  catch(err){ console.error(err); if(tok===TOKEN) failRefresh('Could not load '+F().label.toLowerCase()+' ('+err.message+').'); return; }
   if(tok!==TOKEN) return;
   DS=ds;
   syncControls();
@@ -1807,12 +1895,10 @@ async function refresh(){
     if(need<(REG?3:2)){ st={...st,disp:new Float32Array(st.disp.length).fill(NaN),p:new Float32Array(st.p.length).fill(NaN)}; }
     loading(false);
   } catch(err){
-    loading(false);
-    console.error(err); msg.style.display='block';
-    msg.textContent='Could not load this month: '+err.message; return;
+    console.error(err); if(tok===TOKEN) failRefresh('Could not load these data ('+err.message+').'); return;
   }
   if(tok!==TOKEN) return;
-  msg.style.display='none';
+  showErrNote();
   CUR=st; CURRAW=raw; BUSY=false;
   const climDisp=Float32Array.from(st.clim,v=>isFinite(v)?cvC(v):NaN);
   let domD=CURDOM.diff;
@@ -1825,11 +1911,16 @@ async function refresh(){
      grid: draw the map at once, and add the dots when the test is done */
   /* the test depends only on the data being tested: not on % vs absolute or °C/°F (or
      smoothing for ERA5), so those must not change the shuffles or the dots */
-  const sk=[S.f,S.thr,S.ph,REG?'reg'+sideOf(S.ro):S.str,yearsSel().join('-'),S.dt,smoothOn()?'sm':'raw',S.base,tk].join('|');
+  const sk=[S.f,S.thr,S.ph,REG?'reg'+sideOf(S.ro):S.str,yearsSel().join('-'),S.dt,smoothOn()?'sm':'raw',S.ph==='enln'?'all':S.base,tk].join('|');   // the baseline does not enter El Niño − La Niña
   CURSK=sk;
   const testable = REG ? (need>=3&&S.ro!==0) : need>=2;     // regression: RONI 0 has no slope to test
   SIGNOW = (S.sig && testable && S.mode!=='clim') ? (SIGCACHE.get(sk)||'pending') : null;
   REND.D={grid:DS.grid,rgba:rgbaFor(st.disp,domD),sig:(SIGNOW&&SIGNOW!=='pending')?sigMask(SIGNOW,st.disp):null};
+  /* boxes with a climatology and a change, but too little of either for a % change: hatched
+     (alpha 254 marks them for paintTile), so a blank is never read as "no change" */
+  HATCHN=0;
+  if(pctOn()&&need>=(REG?3:2)) for(let c=0;c<DS.NC;c++)
+    if(isFinite(st.clim[c])&&isFinite(st.diff[c])&&!isFinite(st.disp[c])){ REND.D.rgba[DS.cells[c]*4+3]=254; HATCHN++; }
   REND.A=new Proxy({},{get:(o,k)=>(S.mode==='clim'?REND.C:REND.D)[k]});
   if(!layA){
     layA=new FieldLayer({which:'A',className:'fieldlayer',tileSize:256,updateWhenZooming:false,keepBuffer:4}).addTo(mapA);
@@ -1843,6 +1934,7 @@ async function refresh(){
   document.getElementById('methodsBody').innerHTML=methodsHtml();
   await drawPanels();
   writeHash();
+  if(tok===TOKEN) LASTGOOD=JSON.stringify(S);
   if(!isCount()) prefetch();
 }
 /* Count fields: a box that sees this hazard in only one or two years of the
@@ -1877,7 +1969,8 @@ function loading(on){
 /* ERA5 snowfall: boxes that essentially never see snow (< 0.01 mm/day water
    equivalent in this month or average) are left uncolored on both maps. */
 function snowMask(s){
-  for(let c=0;c<s.clim.length;c++) if(!(s.clim[c]>=0.01)){ s.clim[c]=NaN; s.diff[c]=NaN; s.p[c]=NaN; }
+  /* 1e-6: float32 stores 0.01 as 0.0099999998 */
+  for(let c=0;c<s.clim.length;c++) if(!(s.clim[c]>=0.01-1e-6)){ s.clim[c]=NaN; s.diff[c]=NaN; s.p[c]=NaN; }
 }
 function monthLabel(mi,long){
   const m=MSEQ[mi], nm=(long?MFULL:MONTHS)[m-1];
@@ -1886,6 +1979,13 @@ function monthLabel(mi,long){
 /* labels for whatever the maps average over */
 function tkLong(){ if(FCST&&FCO) return `${MFULL[FCO.m-1]} ${FCO.y}`; return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : AV().long; }
 function tkShort(){ return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO-year' : AV().label; }
+/* years of the window that have data for this field and average (Storm Events lost June-July 1993) */
+function yearsWithData(win){
+  const X=CUR&&CUR.X; if(!X||!DS) return win.length;
+  const NC=DS.NC; let n=0;
+  for(const w of win){ const o=w.y*NC; for(let c=0;c<NC;c++) if(isFinite(X[o+c])){ n++; break; } }
+  return n;
+}
 function writeTitles(domD){
   const [a,b]=yearsSel(), f=F(), win=windowYears();
   const nE=win.filter(w=>w.c==='EN').length, nL=win.filter(w=>w.c==='LN').length;
@@ -1898,8 +1998,12 @@ function writeTitles(domD){
   const nN=win.filter(w=>w.c==='N').length, neu=S.base==='neu'&&S.ph!=='enln';
   const phs=S.ph==='enln'?`<span class="ph-en">El Niño</span> minus <span class="ph-ln">La Niña</span>`
           :(S.ph==='en'?`<span class="ph-en">El Niño</span>`:`<span class="ph-ln">La Niña</span>`)+(neu?' minus neutral years':' minus climatology');
-  const nTxt=(S.ph==='en'?`${nE} El Niño years`:S.ph==='ln'?`${nL} La Niña years`
-            :`${nE} El Niño and ${nL} La Niña years`)+(neu?` vs ${nN} neutral years`:'');
+  const yrs=n=>n===1?'year':'years';
+  const nTxt=(S.ph==='en'?`${nE} El Niño ${yrs(nE)}`:S.ph==='ln'?`${nL} La Niña ${yrs(nL)}`
+            :`${nE} El Niño and ${nL} La Niña years`);
+  const neuTxt=neu?` vs ${nN} neutral ${yrs(nN)}`:'';
+  const ctTxt=S.ct?` · contours: climatology (${f.src==='era5'?unitAbs():unitAbs()+'/'+perWord()})`:'';
+  const nData=yearsWithData(win);
   let need=S.ph==='en'?nE:S.ph==='ln'?nL:Math.min(nE,nL);
   let short=S.ph==='en'?'El Niño':S.ph==='ln'?'La Niña':(nE<=nL?'El Niño':'La Niña');
   if(neu&&nN<need){ need=nN; short='neutral'; }
@@ -1907,7 +2011,7 @@ function writeTitles(domD){
         warn=document.getElementById('mapWarn');
   if(S.mode==='clim'){
     title.textContent=`Climatology · ${tkLong()}`;
-    sub.innerHTML=esc(`${per}, ${when} all ${win.length} years, ${range} (${unitP})`+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
+    sub.innerHTML=esc(`${per}, ${when} ${nData===win.length?'all '+win.length+' years':'the '+nData+' years with data'}, ${range} (${unitP})`+ctTxt)+srcTag()+smTag();
     warn.textContent='';
     const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
     drawColorbar(document.getElementById('cbMain'),CURDOM.clim,climCap,false);
@@ -1918,7 +2022,7 @@ function writeTitles(domD){
     sub.innerHTML=esc(`${per} · fitted to the Dec–Feb RONI of all ${win.length} years, ${range}, one line each for El Niño and La Niña · `+
       (pctOn()?'% change from climatology':unitAbs())+` · `+
       (S.dt==='on'?'linear trend removed':'trend kept')+
-      (S.sig&&testable?' · dots: significant patches':'')+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
+      (S.sig&&testable?' · dots: significant patches':'')+ctTxt)+srcTag()+smTag();
     const far = side==='p' ? (ex.hi&&S.ro>ex.hi.x+1e-9 ? ex.hi : null) : side==='n' ? (ex.lo&&S.ro<ex.lo.x-1e-9 ? ex.lo : null) : null;
     const noDots = S.sig&&SIGNOW&&SIGNOW!=='pending'&&!(REND.D&&REND.D.sig&&REND.D.sig.some(v=>v));
     const big=win.filter(w=>w.x>=2-1e-9).map(w=>ensoLabel(w.Y));
@@ -1928,29 +2032,29 @@ function writeTitles(domD){
     const fcPre = FCST&&FCO ? `What the past ${win.length} years suggest for ${MFULL[FCO.m-1]} in ${roPhrase(S.ro)} `+
       `(${FCO.obs?'the observed':'CPC’s most likely'} Dec–Feb RONI, ${roTxt(S.ro)}), from the strength page’s fit. A guide from history, not NOAA’s forecast for that month.` : '';
     warn.textContent = FCST&&fitOK&&S.ro ? fcPre+lev+(far?` No year in ${a}–${b} reached ${roTxt(S.ro)} (strongest: ${ensoLabel(far.Y)}, ${sgn(far.x,2)}°C), so this map extends the line beyond the record.`:'')+
-        ` Read coherent patterns (dotted = stronger signal), not the value in any single box.`+(noDots?' Note: no dotted areas = signal is weak in this domain.':'')
+        ` Read coherent patterns (dotted = unlikely to be chance), not the value in any single box.`+(noDots?' Note: no patch on this map passes the significance test.':'')
       : !fitOK
       ? `Only ${Math.min(nP,nM)} year${Math.min(nP,nM)===1?'':'s'} in ${a}–${b} had a Dec–Feb RONI ${nP<nM?'above':'below'} 0: too few to fit both lines, so nothing is drawn. Widen the period.`
       : !S.ro
       ? `RONI 0, where the two lines meet, compared with the average year: a neutral year is not quite an average one, since El Niño and La Niña years pull the average their way. No dots here: the dots test the El Niño or La Niña slope.`
       : `Two straight lines fitted through all ${win.length} years, one for El Niño (${nP} years above RONI 0) and one for La Niña (${nM} below), read at ${roTxt(S.ro)} and compared with the average year.`+
-        lev+weak+` Read coherent patterns (dotted = stronger signal), not the value in any single box.`+
+        lev+weak+` Read coherent patterns (dotted = unlikely to be chance), not the value in any single box.`+
         (far?` No year in ${a}–${b} reached ${roTxt(S.ro)} (strongest: ${ensoLabel(far.Y)}, ${sgn(far.x,2)}°C), so this map extends the line beyond the record.`:'')+
-        (noDots?' Note: no dotted areas = signal is weak in this domain.':'');
-    drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':unitAbs(),true);
+        (noDots?' Note: no patch on this map passes the significance test.':'');
+    drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':isCount()?unitAbs()+'/'+perWord():unitAbs(),true);
   } else {
     title.innerHTML=`${phs} · ${esc(tkLong())}`;
     const thrTxt=S.ph==='en'?`RONI ≥ +${S.str.toFixed(1)}°C`:S.ph==='ln'?`RONI ≤ −${S.str.toFixed(1)}°C`:`RONI ≥ +${S.str.toFixed(1)} / ≤ −${S.str.toFixed(1)}°C`;
-    sub.innerHTML=esc(`${per} · ${nTxt} (${thrTxt} in Dec–Feb), ${range} · `+
+    sub.innerHTML=esc(`${per} · ${nTxt} (${thrTxt} in Dec–Feb)${neuTxt}, ${range} · `+
       (pctOn()?'% change from climatology':unitAbs())+` · `+
       (S.dt==='on'?'linear trend removed':'trend kept')+
-      (S.sig?' · dots: significant patches':'')+(S.ct?' · contours: climatology':''))+srcTag()+smTag();
+      (S.sig?' · dots: significant patches':'')+ctTxt)+srcTag()+smTag();
     /* name the empty case instead of drawing a blank map */
     warn.textContent = need<2
       ? `Only ${need} ${short} year${need===1?'':'s'} in ${a}–${b} at this strength: too few to composite, so nothing is drawn. Widen the period or lower the strength.`
-      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years${neu?` against ${nN} neutral years`:''}: read coherent patterns (dotted = stronger signal), not the value in any single box.`+
-        (S.sig&&SIGNOW&&SIGNOW!=='pending'&&!(REND.D&&REND.D.sig&&REND.D.sig.some(v=>v))?' Note: no dotted areas = signal is weak in this domain.':'');
-    drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':unitAbs(),true);
+      : `A composite of ${S.ph==='enln'?nE+' El Niño and '+nL+' La Niña':S.ph==='en'?nE+' El Niño':nL+' La Niña'} years${neu?` against ${nN} neutral years`:''}: read coherent patterns (dotted = unlikely to be chance), not the value in any single box.`+
+        (S.sig&&SIGNOW&&SIGNOW!=='pending'&&!(REND.D&&REND.D.sig&&REND.D.sig.some(v=>v))?' Note: no patch on this map passes the significance test.':'');
+    drawColorbar(document.getElementById('cbMain'),domD,pctOn()?'% change':isCount()?unitAbs()+'/'+perWord():unitAbs(),true);
   }
   writeBubbles();
   /* derechos: the archive has no events outside April-August, so a cool season is
@@ -2021,7 +2125,7 @@ function txt(x,y,s,o){
   return `<text x="${(+x).toFixed(1)}" y="${(+y).toFixed(1)}" font-family="${FF}" font-size="${o.size||12}"`+
     `${o.weight?` font-weight="${o.weight}"`:''} fill="${o.fill||T().ink}"`+
     `${o.anchor?` text-anchor="${o.anchor}"`:''}${o.rot?` transform="rotate(${o.rot} ${(+x).toFixed(1)} ${(+y).toFixed(1)})"`:''}`+
-    `${o.op?` opacity="${o.op}"`:''}>${xesc(s)}</text>`;
+    `${o.op?` opacity="${o.op}"`:''}${o.halo?` stroke="${o.halo}" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke"`:''}>${xesc(s)}</text>`;
 }
 const PANEL_BREAK=780;
 function panelLayout(){
@@ -2269,7 +2373,7 @@ function fcRoniPanel(x,y,w,h){
 function boxPanel(x,y,w,h,bs){
   if(REG) return regBoxPanel(x,y,w,h,bs);
   const t=T(), [a,b]=yearsSel(), m=MSEQ[S.mi], st=bs.st, mon=S.av==='mon';
-  const L=x+70,R=x+w-18,TOP=y+64,BOT=y+h-40;
+  const L=x+70,R=x+w-18,BOT=y+h-40; let TOP=y+64;
   let o=`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${t.panel}" stroke="${t.line}"/>`;
   const sc=selCell(), a1=sc>=0?admin1At(DS.lat[sc],DS.lon[sc]):'';
   const where=placeName(sc)+(a1?` (${a1})`:'');
@@ -2283,26 +2387,40 @@ function boxPanel(x,y,w,h,bs){
   const cv=u=> okPct?100*u/qP : cvD(u);
   const unit=okPct?'% change from climatology':unitAbs();
   const clim=cvC(st.mean), dd=decs();
-  o+=txt(x+14,y+38,(w<1000?`Departure from the ${S.dt==='on'?'trend':'mean'}, ${a}–${b}`:`Each bar is one ENSO year's departure from the ${S.dt==='on'?'least-squares trend through':'mean of'} ${a}–${b}`)+
-     ` (${unit}) · climatology ${fmt(clim,dd.c)} ${unitAbs()}`+
-     (S.dt==='on'?` · trend ${sgn(cvD(st.slope*10),dd.c+1)} ${unitAbs()}/decade, removed`:'')+
-     (smoothOn()&&selCell()>=0?' · this box only, not smoothed':'')+(pct&&!okPct?' · climatology too small for %, shown as amount':''),
-     {size:11,fill:t.mute});
+  /* decimals from each number's own size (about three significant figures), so a
+     global total is not printed to the per-box precision */
+  const d3=v=>!isFinite(v)||v===0?dd.c:Math.max(0,Math.min(3,2-Math.floor(Math.log10(Math.abs(v)))));
+  const num=u=>sgn(u,okPct?(Math.abs(u)<10?1:0):d3(u));
+  const head=(w<1000?`Departure from the ${S.dt==='on'?'trend':'mean'}, ${a}–${b}`:`Each bar is one ENSO year's departure from the ${S.dt==='on'?'least-squares trend through':'mean of'} ${a}–${b}`)+
+     ` (${unit}) · climatology ${fmt(clim,d3(clim))} ${unitAbs()}`+
+     (S.dt==='on'?` · trend ${sgn(cvD(st.slope*10),d3(cvD(st.slope*10)))} ${unitAbs()}/decade, removed`:'')+
+     (smoothOn()&&selCell()>=0?' · this box only, not smoothed':'')+(pct&&!okPct?' · climatology too small for %, shown as amount':'');
+  /* wrap the subtitle at a " · " when it would run past the panel */
+  let hl=[head];
+  if(head.length*5.9>w-28){ const parts=head.split(' · '); let best=1,bd=1e9;
+    for(let k=1;k<parts.length;k++){ const l=parts.slice(0,k).join(' · ').length, dlt=Math.abs(l-head.length/2); if(dlt<bd){ bd=dlt; best=k; } }
+    hl=[parts.slice(0,best).join(' · ')+' ·',parts.slice(best).join(' · ')]; }
+  hl.forEach((l,k)=>{ o+=txt(x+14,y+38+k*14,l,{size:11,fill:t.mute}); });
+  let my=y+56+(hl.length-1)*14; TOP+= (hl.length-1)*14;
   const pE=S.ph==='en'||S.ph==='enln', pL=S.ph==='ln'||S.ph==='enln';
   const st2=seriesStats(bs.xs,bs.ys,bs.cs,S.dt==='on','en'), st3=seriesStats(bs.xs,bs.ys,bs.cs,S.dt==='on','ln');
   const pstr=p=>!isFinite(p)?'p —':p<0.001?'p < 0.001':'p = '+fmt(p,3);
   let sx=x+14;
   /* with Compare with: Neutral years, report each phase against the neutral-year mean,
      as the map does, and draw that mean */
-  const neu=S.base==='neu';
+  const neu=S.base==='neu'&&S.ph!=='enln';           // the baseline does not enter El Niño − La Niña
   let mN=NaN, nN=0; if(neu){ let s0=0; bs.cs.forEach((c,i)=>{ if(c==='N'){ s0+=st.r[i]; nN++; } }); mN=nN?s0/nN:NaN; }
-  const sE= neu ? `El Niño − neutral ${sgn(cv(st2.d),dd.d)} (${st.nE} vs ${nN} yrs, ${pstr(st2.p)})`
-               : `El Niño mean ${sgn(cv(st.mE),dd.d)} (n = ${st.nE}, ${pstr(st.nE>1?st2.p:NaN)})`;
-  const sL= neu ? `La Niña − neutral ${sgn(cv(st3.d),dd.d)} (${st.nL} vs ${nN} yrs, ${pstr(st3.p)})`
-               : `La Niña mean ${sgn(cv(st.mL),dd.d)} (n = ${st.nL}, ${pstr(st.nL>1?st3.p:NaN)})`;
-  o+=txt(sx,y+56,sE,{size:12,weight:pE?650:400,fill:t.en,op:pE?1:.7});
-  o+=txt(sx+Math.max(270,sE.length*6.6),y+56,sL,{size:12,weight:pL?650:400,fill:t.ln,op:pL?1:.7});
-  if(S.ph==='enln') o+=txt(R,y+56,`El Niño − La Niña ${sgn(cv(st.d),dd.d)} (Welch ${pstr(st.p)})`,{size:12,weight:650,anchor:'end'});
+  const sE= neu ? `El Niño − neutral ${num(cv(st2.d))} (${st.nE} vs ${nN} yrs, ${pstr(st2.p)})`
+               : `El Niño mean ${num(cv(st.mE))} (n = ${st.nE}, ${pstr(st.nE>1?st2.p:NaN)})`;
+  const sL= neu ? `La Niña − neutral ${num(cv(st3.d))} (${st.nL} vs ${nN} yrs, ${pstr(st3.p)})`
+               : `La Niña mean ${num(cv(st.mL))} (n = ${st.nL}, ${pstr(st.nL>1?st3.p:NaN)})`;
+  const xL=sx+Math.max(270,sE.length*6.6);
+  o+=txt(sx,my,sE,{size:12,weight:pE?650:400,fill:t.en,op:pE?1:.7});
+  o+=txt(xL,my,sL,{size:12,weight:pL?650:400,fill:t.ln,op:pL?1:.7});
+  if(S.ph==='enln'){ const sD=`El Niño − La Niña ${num(cv(st.d))} (Welch ${pstr(st.p)})`;
+    /* its own line when it would run into the La Niña text */
+    if(xL+sL.length*6.6+16>R-sD.length*6.6){ my+=16; TOP+=16; o+=txt(sx,my,sD,{size:12,weight:650}); }
+    else o+=txt(R,my,sD,{size:12,weight:650,anchor:'end'}); }
   const rs=Array.from(st.r,cv);
   let lo=Math.min(0,...rs), hi=Math.max(0,...rs);
   const AX=niceAxis(lo,hi,5);
@@ -2317,12 +2435,12 @@ function boxPanel(x,y,w,h,bs){
     const c=bs.cs[i], col=c==='EN'?t.en:c==='LN'?t.ln:t.neu, u=rs[i];
     const yy=Math.min(Y(u),Y(0)), hh=Math.max(.8,Math.abs(Y(u)-Y(0)));
     o+=`<rect x="${(X(Y0)-bw/2).toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${hh.toFixed(1)}" fill="${col}" opacity="${c==='EN'||c==='LN'?.9:c==='W'?.35:.6}">`+
-       `<title>${mon?MONTHS[m-1]+' '+calYear(Y0,S.mi)+' (ENSO year '+ensoLabel(Y0)+', ':AV().label+' '+ensoLabel(Y0)+' ('}${c==='EN'?'El Niño':c==='LN'?'La Niña':c==='W'?'weaker event':'neutral'}): ${sgn(u,dd.d)} ${xesc(unit)}; value ${fmt(cvC(bs.ys[i]),dd.c)} ${xesc(unitAbs())}</title></rect>`;
+       `<title>${mon?MONTHS[m-1]+' '+calYear(Y0,S.mi)+' (ENSO year '+ensoLabel(Y0)+', ':AV().label+' '+ensoLabel(Y0)+' ('}${c==='EN'?'El Niño':c==='LN'?'La Niña':c==='W'?'weaker event':'neutral'}): ${num(u)} ${xesc(unit)}; value ${fmt(cvC(bs.ys[i]),d3(cvC(bs.ys[i])))} ${xesc(unitAbs())}</title></rect>`;
   });
   /* the two composite means */
   if(neu&&nN){ const yy=Y(cv(mN)).toFixed(1);
     o+=`<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="${t.neu}" stroke-width="1.8" stroke-dasharray="3 4"/>`;
-    o+=txt(R-4,+yy-5,'neutral mean',{size:10.5,fill:t.mute,anchor:'end'}); }
+    o+=txt(R-4,+yy-5,'neutral mean',{size:10.5,fill:t.mute,anchor:'end',halo:t.panel}); }
   [[st.mE,t.en,pE,st.nE],[st.mL,t.ln,pL,st.nL]].forEach(([mu,col,on,nn])=>{
     if(!nn) return;
     const yy=Y(cv(mu)).toFixed(1);
@@ -2335,7 +2453,8 @@ function boxPanel(x,y,w,h,bs){
   }
   o+=`<line x1="${L}" y1="${TOP}" x2="${L}" y2="${BOT}" stroke="${t.axis}"/>`;
   o+=`<text x="${x+20}" y="${(TOP+BOT)/2}" transform="rotate(-90 ${x+20} ${(TOP+BOT)/2})" font-family="${FF}" font-size="12" fill="${t.mute}" text-anchor="middle">${xesc('Departure ('+unit+')')}</text>`;
-  o+=txt((L+R)/2,BOT+35,`ENSO year (June – May)${mon?`, ${MONTHS[m-1]} of ${m>=6?'that year':'the following year'}`:''} · click a box on the map to change place, click it again for the ${aggLabel()}`,{size:11,fill:t.mute,anchor:'middle'});
+  const cap=`ENSO year (June – May)${mon?`, ${MONTHS[m-1]} of ${m>=6?'that year':'the following year'}`:''} · click a box on the map to change place, click it again for the ${aggLabel()}`;
+  o+=txt((L+R)/2,BOT+35,cap.length*5.9>w-20?`ENSO year (June – May)${mon?`, ${MONTHS[m-1]} of ${m>=6?'year 0':'year +1'}`:''} · click the map to change place`:cap,{size:11,fill:t.mute,anchor:'middle'});
   return o+'</g>';
 }
 async function drawPanels(){
@@ -2379,7 +2498,9 @@ function writeFoot(bs){
   document.getElementById('foot').innerHTML=s;
 }
 let PANELW=null;
+let CBNARROW=null;
 window.addEventListener('resize',()=>{
+  const nb=cbNarrow(); if(CBNARROW!==null&&nb!==CBNARROW&&DOMD&&CUR){ try{ writeTitles(DOMD); }catch(e){} } CBNARROW=nb;
   const w=panelLayout().W;
   if(PANELW!==null && w!==PANELW){ PANELW=w; try{ drawPanels(); }catch(e){} }
   PANELW=w;
@@ -2510,8 +2631,8 @@ function methodsHtml(){
     alone, so they are independent and asymmetries show directly, at the cost of a small, noisier baseline whose noise
     both maps share. Neutral here always means no event at all (Dec–Feb RONI within ±0.5°C, or not part of an event
     lasting about half a year), whatever the strength chosen, so raising the strength drops the weaker events from the
-    composites without adding them to the baseline: ${nNeutral(1979)} neutral years in 1979–${lastRoniYear()},
-    ${nNeutral(2000)} in 2000–${lastRoniYear()}. <i>El Niño − La Niña</i> is the same either way.`);
+    composites without adding them to the baseline: ${nNeutral(1979)} neutral years in 1979–${lastDataYear()},
+    ${nNeutral(2000)} in 2000–${lastDataYear()}. <i>El Niño − La Niña</i> is the same either way.`);
   li.push(`<b>Significance.</b> A cluster-based permutation test
     (<a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener">Maris &amp; Oostenveld 2007</a>),
     which judges patches rather than single boxes. (1) Each box gets Welch's two-sample t on the anomalies: El Niño (or
@@ -2549,9 +2670,9 @@ function methodsHtml(){
       The 0.25° fields are averaged to 1° boxes (trapezoid rule, cos-latitude weighted) and then to the
       <b>2° boxes</b> shown. The period runs to the 2025–26 ENSO year (May 2026).`);
     li.push(`<b>Reading the temperatures.</b> Over the ocean, the 2 m air temperature anomaly is smaller than the
-      sea-surface temperature anomaly beneath it (roughly 0.7–0.8 times), and the ENSO-year mean also takes in the onset
-      and decay: in Dec–Feb the El Niño composite warms the Niño-3.4 region by about 0.9°C, against about 1.2°C in the
-      SST index for the same years. Two large volcanic eruptions, El Chichón (1982) and Pinatubo (1991), cooled the globe
+      sea-surface temperature anomaly beneath it (here roughly 0.85 times), and the ENSO-year mean also takes in the onset
+      and decay: in Dec–Feb the El Niño composite warms the Niño-3.4 region (5°S–5°N, 170°W–120°W) by about 1.0°C, against
+      about 1.2°C in the SST index for the same years. Two large volcanic eruptions, El Chichón (1982) and Pinatubo (1991), cooled the globe
       in years that were also El Niño years (1982–83, 1991–92 and 1992–93); this damps the El Niño composite of
       global-mean temperature slightly (by about 0.015°C over the ENSO year).`);
   } else if(f.src==='tc'){
@@ -2647,7 +2768,7 @@ function regMethods(li){
     dotted where the climatology is below ${isSnow()?'0.05':'0.1'} mm/day, nor count fields below 5% of their typical value. The p
     shown on hover is the box's own t-test of the slope.`);
   rep('<b>Reading the temperatures.</b>',`<b>Reading the temperatures.</b> Over the ocean, the 2 m air temperature anomaly is
-    smaller than the sea-surface temperature anomaly beneath it (roughly 0.7–0.8 times). Two large volcanic eruptions, El Chichón
+    smaller than the sea-surface temperature anomaly beneath it (roughly 0.85 times). Two large volcanic eruptions, El Chichón
     (1982) and Pinatubo (1991), cooled the globe in two of the four strongest El Niño years (1982–83 and 1991–92). Because the El Niño
     line leans on those years, this lowers the fitted El Niño warming of the global and tropical mean: by about a third in Mar–May and
     about an eighth over the ENSO year.`);
@@ -2677,6 +2798,10 @@ function syncControls(){
   if(!REG) document.getElementById('strSel').value=String(S.str);
   document.getElementById('sigChk').checked=!!S.sig;
   document.getElementById('ctChk').checked=!!S.ct;
+  /* the climatology map is the plain average: strength, dots and the trend choice do not change it */
+  ['strSel','sigChk','dtSel'].forEach(id=>{ const e=document.getElementById(id); if(!e) return;
+    const box=e.closest('.fld')||e.closest('label'); e.disabled=clim;
+    if(box) box.classList.toggle('off',clim); });
   if(FCST){
     /* the month buttons and the forecast line */
     const L=fcMonths(), seg=document.getElementById('fmSeg');
@@ -2685,11 +2810,12 @@ function syncControls(){
       b.onclick=()=>{ S.fm=b.dataset.fm; refresh(); }; });
     const o=FCO, nt=document.getElementById('fcNote');
     if(o){ const ph=o.x>=0.5?'El Niño':o.x<=-0.5?'La Niña':'', cls=o.x>0?'ph-en':'ph-ln';
-      const yy=`${o.Y}–${String(o.Y+1).slice(2)}`, iss=`${MFULL[+RFC.issued.slice(5)-1]} ${RFC.issued.slice(0,4)}`;
+      const isd=o.from||RFC.issued, yy=`${o.Y}–${String(o.Y+1).slice(2)}`, iss=`${MFULL[+isd.slice(5)-1]} ${isd.slice(0,4)}`;
       nt.innerHTML = (o.obs
         ? `Dec–Feb ${yy}: RONI was <b class="${cls}">${roTxt(o.x)}</b> (observed), ${esc(roPhrase(o.x))}.`
         : `NOAA CPC's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/outlook/" target="_blank" rel="noopener">RONI outlook</a>, issued ${iss}: `+
           `Dec–Feb ${yy} most likely <b class="${cls}">${roTxt(o.x)}</b>, ${esc(roPhrase(o.x))} (50% chance between ${sgn(o.q['25'],2)} and ${sgn(o.q['75'],2)}; 90% between ${sgn(o.q['5'],2)} and ${sgn(o.q['95'],2)}).`)+
+        (o.from?` (CPC’s newer outlook starts after Dec–Feb, and the observed value is posted in early March.)`:'')+
         ` Every month of the ${yy} ENSO year (June–May) is mapped at that value.`+
         (fcStale()?' <span class="stale">CPC issues a new outlook on the second Thursday of each month; this one may have been replaced.</span>':''); }
     document.querySelectorAll('#phSeg button').forEach(b=>{ const on=b.dataset.ph===(S.mode==='clim'?'clim':'reg');
@@ -2734,14 +2860,15 @@ function syncControls(){
   const [a,b]=yearsSel(), i0=document.getElementById('y0In'), i1=document.getElementById('y1In');
   i0.min=i1.min=DS.ey0; i0.max=i1.max=DS.ey1; i0.value=a; i1.value=b;
   document.getElementById('fldSel').value=S.f+':'+menuItem()[1];
-  document.getElementById('mRange').value=S.mi;
+  { const r=document.getElementById('mRange'); r.value=S.mi; const m=MSEQ[S.mi]; r.setAttribute('aria-valuetext',MFULL[m-1]+(m>=6?' (year 0)':' (year +1)')); }
 }
 function writeHash(){
   const p=new URLSearchParams();
   p.set('f',S.f); if(S.thr) p.set('t',S.thr);
   if(FCST){ if(S.mode==='clim') p.set('ph','clim'); if(S.fm) p.set('mo',S.fm); }
   else if(REG){ if(S.mode==='clim') p.set('ph','clim'); p.set('r',S.ro); }
-  else { p.set('ph',S.mode==='clim'?'clim':S.ph); p.set('s',S.str); }
+  else { p.set('ph',S.mode==='clim'?'clim':S.ph); p.set('s',S.str);
+    if(S.mode==='clim'&&S.ph!=='en') p.set('cp',S.ph); }       // the phase to return to from Climatology
   if(!FCST) p.set('m',S.av==='mon'?MSEQ[S.mi]:S.av);
   if(S.per==='custom'){ const [a,b]=yearsSel(); p.set('p',a+'-'+b); }
   else if(S.per!==defaultPer()) p.set('p',S.per);
@@ -2769,8 +2896,8 @@ function readHash(){
     if(rq&&isFinite(r)) S.ro=Math.max(-2.5,Math.min(2.5,Math.sign(r)*Math.round(Math.abs(r)*2)/2)); }
   else {
   if(['en','ln','enln'].includes(p.get('ph'))){ S.ph=p.get('ph'); S.mode='diff'; }
-  else if(p.get('ph')==='clim') S.mode='clim';
-  if(['0.5','1','1.5'].includes(p.get('s'))) S.str=+p.get('s');
+  else if(p.get('ph')==='clim'){ S.mode='clim'; if(['ln','enln'].includes(p.get('cp'))) S.ph=p.get('cp'); }
+  if([0.5,1,1.5].includes(parseFloat(p.get('s')))) S.str=parseFloat(p.get('s'));
   }
   const mq=p.get('m');
   if(mq && AVGS.some(a=>a.k===mq&&a.k!=='mon')) S.av=mq;
@@ -2779,8 +2906,11 @@ function readHash(){
      one that is just a preset (1979/1980-2025, 2000-2025) opens as that preset */
   const pq=p.get('p');
   if(pq==='recent'||pq==='all') S.per=pq;
-  else if(pq){ const [a,b]=pq.split('-').map(Number);
-    if(a&&b){ if(b>=2025&&a<=1980) S.per='all'; else if(b>=2025&&a===2000) S.per='recent';
+  else if(pq){ let [a,b]=pq.split('-').map(Number); if(a&&b&&a>b) [a,b]=[b,a];
+    /* only a range that IS the preset for this field is read as the preset (a custom
+       1980-2025 on an ERA5 field, or 1955-2025 on hail, stays custom) */
+    const f0=FIELDS.find(x=>x.k===S.f), a0=f0&&f0.src==='tc'?1980:1979, bEnd=S.f==='derechoday'?2024:2025;
+    if(a&&b){ if(b>=bEnd&&a===a0) S.per='all'; else if(b>=bEnd&&a===2000) S.per='recent';
       else { S.per='custom'; S.y0=a; S.y1=b; } } }
   if(p.get('dt')==='off') S.dt='off';
   if(p.get('pc')==='abs') S.pc='abs'; else if(p.get('pc')==='pct') S.pc='pct';
@@ -2867,15 +2997,16 @@ function wire(){
     S.theme=S.theme==='dark'?'light':'dark';
     applyTheme(); addRefLayers(); STATS=null; refresh(); };
   document.getElementById('pngBtn').onclick=exportPNG;
-  document.getElementById('linkBtn').onclick=function(){ writeHash();
-    navigator.clipboard.writeText(location.href).then(()=>{ const s=this.textContent; this.textContent='Copied';
-      setTimeout(()=>this.textContent=s,1200); }).catch(()=>{}); };
+  document.getElementById('linkBtn').onclick=function(){ writeHash(); const btn=this, s0=btn.textContent;
+    const done=ok=>{ btn.textContent=ok?'Copied':'Copy failed: use the address bar'; setTimeout(()=>btn.textContent=s0,ok?1200:3000); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(()=>done(true),()=>{ try{ prompt('Copy this link:',location.href); }catch(e){} done(false); });
+    else { try{ prompt('Copy this link:',location.href); }catch(e){} done(false); } };
   /* averaging: ENSO year, a season, or a single month */
   document.querySelectorAll('#avSeg button').forEach(b=>b.onclick=()=>{ S.av=b.dataset.av; refresh(); });
   /* month strip */
   const tk=document.getElementById('mTicks');
   MSEQ.forEach((m,i)=>{ const s=document.createElement('span');
-    s.innerHTML=`${MONTHS[m-1]}<span class="yr">${m>=6?'(0)':'(+1)'}</span>`;
+    s.innerHTML=`<span class="mf">${MONTHS[m-1]}</span><span class="mi">${MONTHS[m-1][0]}</span><span class="yr">${m>=6?'(0)':'(+1)'}</span>`;
     s.onclick=()=>{ setMonth(i); }; tk.appendChild(s); });
   const rg=document.getElementById('mRange');
   rg.oninput=e=>{ setMonth(+e.target.value); };

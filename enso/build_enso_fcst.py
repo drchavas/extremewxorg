@@ -67,9 +67,23 @@ def main(outdir):
         cy, cmo = iy + (cm - 1) // 12, (cm - 1) % 12 + 1
         seasons.append({'code': code, 'center': f'{cy:04d}-{cmo:02d}',
                         'q': {str(p): v for p, v in zip(PCTS, q)}})
+    # From February to May the new outlook starts after Dec-Feb, but CPC's observed Dec-Feb
+    # RONI only appears in early March: keep the previous outlook's Dec-Feb (flagged) so the
+    # forecast page is never left without this winter's strength in the gap.
+    path = os.path.join(outdir, 'roni_fcst.json')
+    djf_center = f'{iy:04d}-01'
+    if 2 <= im <= 5 and not any(x['code'] == 'DJF' and x['center'] == djf_center for x in seasons) \
+            and os.path.exists(path):
+        try:
+            old = json.load(open(path))
+            prev = next((x for x in old.get('seasons', []) if x['code'] == 'DJF' and x['center'] == djf_center), None)
+            if prev:
+                prev = dict(prev, carried_from=prev.get('carried_from') or old['issued'])
+                seasons.insert(0, prev)
+        except (OSError, ValueError, KeyError):
+            pass
     out = {'source': URL, 'issued': f'{iy:04d}-{im:02d}',
            'fetched': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'), 'seasons': seasons}
-    path = os.path.join(outdir, 'roni_fcst.json')
     with open(path, 'w') as f:
         json.dump(out, f, indent=1)
     dj = next((x for x in seasons if x['code'] == 'DJF'), None)

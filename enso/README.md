@@ -270,6 +270,69 @@ python3 build_enso_era5.py /tmp/coarse data --y0 1979 --y1 2025   # ENSO_VARS=sf
 - `data/era5_*.bin.gz` layout: gzip of Int16 LE `[clim(cell) | anom(year0,cell) | …]`, ×100,
   cell = row·180 + col, row 0 = 90–88°S, col 0 = 0–2°E. See `data/era5_index.json`.
 
+## Independent review, Nov 3 2026, and fixes
+
+Five reviewers covered data, calculations, visualization, UX/text and science/papers. Every number reproduced from raw data:
+- ERA5, IBTrACS, NCEI Storm Events, CPC RONI and the CPC outlook;
+- composites, p-values, panels and the regression;
+- the dots, bit for bit;
+- the null false-positive rate, about 5%.
+
+**Fixed:**
+- **Header:** the peak is now "usually around December (Nov–Jan)", matching Methods and the data.
+- **Papers box** (`tools/build_refs.py`, 65 papers):
+  - sentences corrected: Ramsay, Allen/Lepore (only tornadoes reverse; hail still agrees), Johns & Hirt, Ropelewski & Halpert 1986/1987, Hoerling, Karoly, Mo & Higgins, Kumar, Smith 1998, Brönnimann, Gray, Bell & Chelliah, Camargo 2008, Wang & Chan, Girishkumar, Bentley & Mote, Wilks, Black, Smith & O'Brien, and Rasmusson (+0.5/+1.0 °C);
+  - added Bjerknes 1969, Horel & Wallace 1981, Kiladis & Diaz 1989, Camargo, Emanuel & Sobel 2007, Capotondi 2015 and Deser 2018;
+  - full titles restored, and the unused `SHORT` dict removed.
+- **Methods:** Niño-3.4 numbers now use the true 5°S–5°N, 170°W–120°W boxes (about 1.0 °C in Dec–Feb, roughly 0.85× the SST anomaly).
+- **Phones (≤ 640 px):**
+  - the map is sized to the world (aspect 2.05) and the colorbar sits under it as a horizontal strip;
+  - panels scroll sideways at full size, with a "swipe" hint;
+  - month ticks use initials below 420 px, and the averaging buttons wrap;
+  - the attribution stays on one line;
+  - the ◀ slider ▶ group wraps as a unit.
+- **Dots when zoomed far out:** below 3.2 px per box, one dot is drawn per 2×2 (up to 4×4) block that holds a significant box. Before, nothing was drawn while the legend still promised dots.
+- **"Too rare for %" boxes** (climatology and change present, but below the % floor) are hatched, with a legend swatch. Marked with alpha 254 in `REND.D.rgba`; painted in `paintTile`; counted in `HATCHN`.
+- **Failed download:** the page goes back to the last state that drew (`LASTGOOD`), names what failed and offers "Try again". `BUSY` no longer sticks.
+- **Forecast page in Feb–May:** `build_enso_fcst.py` carries the previous issue's Dec–Feb (flagged `carried_from`) into an issue that starts after DJF. It stays until CPC posts the observed DJF, and the note says so.
+- **Text:**
+  - "dotted = unlikely to be chance";
+  - "no patch on this map passes the significance test";
+  - singular/plural, with the neutral count after the threshold bracket;
+  - the climatology subtitle counts only the years with data (hail 46, not 47);
+  - contour units shown;
+  - the tooltip says "El Niño − neutral" with the neutral baseline;
+  - typographic minus and no "−0";
+  - box-panel numbers use about 3 significant figures (percent < 10 to one decimal), long subtitles wrap, El Niño − La Niña gets its own line when crowded, the caption is shortened when narrow, and "neutral mean" has a halo.
+- **Controls:**
+  - Strength, Dots and Trend are greyed out in Climatology;
+  - selected buttons use white on a darker orange (`--accent2` #9c5607, 5.6:1);
+  - the stale warning uses the theme color;
+  - aria-live on the map title, aria-valuetext on the month slider, a label and role on the map;
+  - "Panels PNG";
+  - "Copy link" falls back to a prompt.
+- **Hash:**
+  - a custom range aliases to a preset only when it equals that field's preset;
+  - reversed ranges are swapped;
+  - `s=1.0` is accepted;
+  - `cp=` keeps the phase from a Climatology link.
+- **Other:**
+  - no two contour labels within about 7°×14° of each other;
+  - the U.S. view leaves room for the title bubble;
+  - the dot seed ignores the baseline for El Niño − La Niña;
+  - snowfall boxes at a climatology of exactly 0.01 are no longer blanked;
+  - the neutral-years text runs only to the last data year.
+
+**Not done (judged minor):**
+- **Rounding:** classify from CPC's one-decimal table. Half-away-from-zero rounding differs from CPC only before 1979: 1970–71 counts as La Niña at 1.0.
+- **Storage precision:**
+  - store pr/sf at 0.001 (shifts snowfall % by up to about 5–9 pp in a few boxes);
+  - store TC ACE in kt² (it is low by up to 0.06%);
+  - store IBTrACS coverage date in `meta.through`.
+- **Statistics:** exact-df `tcrit` (one box in 1,186 shows p = 0.050 while dotted); the near-constant-series guard in `welch`.
+- **Accessibility:** keyboard reading and picking of boxes.
+- **Layout nits:** "Reload default" wrapping in the control bar; RONI panel label overlaps; ensofcst's og:image.
+
 ## Not done yet / ideas
 
 - SST / 500 hPa height fields; a scatter of DJF RONI vs the box value.
