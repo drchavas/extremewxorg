@@ -12,6 +12,8 @@ unchanged since that commit, or its modification time if it has uncommitted chan
 (i.e. it is about to be deployed). The landing page takes the latest over the whole site.
 
 A stamp is any element with class "dataupd" whose text starts "Data last updated".
+A stamp that also carries data-for="<page>" (the per-card stamps on the landing page)
+takes that page's stamp instead of its own page's.
 """
 import os, re, subprocess, sys, datetime as dt
 
@@ -33,7 +35,9 @@ PAGES = {
     'scs/trends/scstrend.html': ['scs/trends/data'],
     'scs/trends/scstrend_grid.html': ['scs/trends/data'],
 }
-STAMP = re.compile(r'(class="[^"]*\bdataupd\b[^"]*"[^>]*>)Data last updated [^<]*(<)')
+# class first, then (optionally) data-for, inside the same tag
+STAMP = re.compile(r'(class="[^"]*\bdataupd\b[^"]*"(?![^>]*\bdata-for=)[^>]*>)Data last updated [^<]*(<)')
+FOR = re.compile(r'(class="[^"]*\bdataupd\b[^"]*"[^>]*\bdata-for="([^"]+)"[^>]*>)Data last updated [^<]*(<)')
 
 
 def git(*a):
@@ -62,17 +66,26 @@ def changed(path, dirty):
 TRACKED = set(git('ls-files').split('\n'))
 DIRTY = {l[3:].strip() for l in git('status', '--porcelain').split('\n') if l.strip()}
 check = '--check' in sys.argv
+STAMPS = {}
 for page, paths in PAGES.items():
     times = [t for t in (changed(f, DIRTY) for f in files(paths)) if t]
-    if not times:
-        continue
-    stamp = max(times).strftime('%Y-%m-%d %H:%M UTC')
+    if times:
+        STAMPS[page] = max(times).strftime('%Y-%m-%d %H:%M UTC')
+for page, stamp in STAMPS.items():
     fn = os.path.join(ROOT, page)
     s = open(fn, encoding='utf-8').read()
     new, n = STAMP.subn(lambda m: f'{m.group(1)}Data last updated {stamp}{m.group(2)}', s)
-    if n == 0:
+
+    def per_card(m):
+        st = STAMPS.get(m.group(2))
+        if st is None:
+            print(f'  ! {page}: data-for="{m.group(2)}" is not a page in PAGES')
+            return m.group(0)
+        return f'{m.group(1)}Data last updated {st}{m.group(3)}'
+    new, k = FOR.subn(per_card, new)
+    if n + k == 0:
         print(f'  ! {page}: no "Data last updated" stamp found')
     elif new != s:
-        print(f'  {page}: {stamp}')
+        print(f'  {page}: {stamp}' + (f' (+{k} per-card)' if k else ''))
         if not check:
             open(fn, 'w', encoding='utf-8').write(new)
