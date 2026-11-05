@@ -167,6 +167,7 @@
           <div class="txt">
             <h3>tcviewer.org: IBTrACS TC Track &amp; Wind Footprint Map Explorer<span class="ext">external site</span></h3>
             <p class="desc">Maps of all global tropical cyclones: individual storm, day in history, month in history, and date range</p>
+            <p class="cardupd" data-remote="https://tcviewer.org/data/stamp.json" data-path="built" hidden>Data last updated</p>
           </div>
         </a>
         <a class="card" href="https://tcviewer.org/impacts/" target="_blank" rel="noopener">
@@ -174,6 +175,7 @@
           <div class="txt">
             <h3>tcviewer.org: Storm Hazards &amp; Impacts by County<span class="beta">new — in beta</span><span class="ext">external site</span></h3>
             <p class="desc">“What did this hurricane do, and where?” Every U.S. tropical storm and hurricane since 2004, county by county: wind, rain, storm surge, inland flooding and tornadoes, plus deaths, injuries, damage and power outages. Click any county for its details.</p>
+            <p class="cardupd" data-remote="https://tcviewer.org/impacts/data/index.json" data-path="built" hidden>Data last updated</p>
           </div>
         </a>
       </div>
@@ -275,6 +277,20 @@
       <p>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)</p>
     </footer>
   </main>
+<script>
+/* tcviewer.org refreshes its own data every 6 h on GitHub, outside this repo, so its
+   cards read the live "built" time from tcviewer.org itself after the page loads
+   (GitHub Pages sends Access-Control-Allow-Origin: *). The line stays hidden if the
+   fetch fails. */
+addEventListener('load',()=>{
+  document.querySelectorAll('.cardupd[data-remote]').forEach(el=>{
+    fetch(el.dataset.remote).then(r=>r.ok?r.json():null).then(j=>{
+      const v=j&&el.dataset.path.split('.').reduce((o,k)=>o&&o[k],j);
+      if(typeof v==='string'&&v){ el.textContent='Data last updated '+v; el.hidden=false; }
+    }).catch(()=>{});
+  });
+});
+</script>
 <script src="assets/feedback.js" defer></script>
 </body>
 </html>
