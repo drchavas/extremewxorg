@@ -808,8 +808,8 @@ const REG=false;
 const FCST=false;   // the forecast page (ensofcst.html): the regression read at CPC's forecast
 const MSEQ=[6,7,8,9,10,11,12,1,2,3,4,5];          // the slider: Jun (year 0) .. May (year +1)
 const NM=MSEQ.length;
-/* What the maps average over. The default is the whole ENSO year: June of year 0 to May
-   of year +1, e.g. "1997–98". Seasons are the three-month blocks of that year; "Single
+/* What the maps average over. The composite page opens on Dec–Feb (the regression pages on
+   the whole ENSO year): June of year 0 to May of year +1, e.g. "1997–98". Seasons are the three-month blocks of that year; "Single
    month" brings back the month slider. `mis` index MSEQ. */
 const AVGS=[
   {k:'yr', label:'ENSO year', long:'ENSO year (Jun–May)', mis:[0,1,2,3,4,5,6,7,8,9,10,11]},
@@ -1023,7 +1023,8 @@ function classify(thr){
    need: for a slider month, a dense (ENSO year x box) matrix of values, NaN
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
-const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:'yr',mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
+const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:REG?'yr':'djf',   // the composite page opens on Dec–Feb, when events peak
+         mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
          sm:'on',sig:1,ct:0,base:'all',pt:null,theme:'light',ro:1.5};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
@@ -2976,7 +2977,8 @@ function methodsHtml(){
     alone is a common choice for a June–May year, but it counts a multi-year event only in its DJF years, and an event
     that peaks well away from DJF can be missed. A year whose December–February has not happened yet (the event
     developing now) is not used.`);
-  li.push(`<b>Averaging.</b> The maps show the whole <b>ENSO year</b> (June–May) by default, a three-month season of it
+  li.push(`<b>Averaging.</b> The maps show ${REG?'the whole <b>ENSO year</b> (June–May) by default, a three-month season of it':
+    '<b>Dec–Feb</b> by default, when El Niño and La Niña usually peak, or the whole <b>ENSO year</b> (June–May), another three-month season of it'}
     (Jun–Aug and Sep–Nov of year 0, Dec–Feb, Mar–May of year +1), or a single month. ERA5 fields are the mean of the
     monthly means (months weighted equally); the count fields are totals over the months, so an ENSO-year value is
     storm-days, hazard days or storms per year. A year missing any of its months (Storm Events June/July 1993) is left
