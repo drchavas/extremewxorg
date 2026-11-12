@@ -4,15 +4,283 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World &mdash; elninolanina.org</title>
-<meta name="description" content="How El Niño and La Niña years differ from normal around the world: temperature, rain and snow (ERA5), tropical cyclones (IBTrACS) and U.S. hail, tornadoes, wind and derechos (NOAA Storm Events), by year, season or month, with the NOAA RONI years used.">
+<meta name="description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
 <link rel="canonical" href="https://elninolanina.org/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="elninolanina.org">
 <meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World">
-<meta property="og:description" content="How El Niño and La Niña years differ from normal around the world: temperature, rain and snow (ERA5), tropical cyclones (IBTrACS) and U.S. hail, tornadoes, wind and derechos (NOAA Storm Events), by year, season or month, with the NOAA RONI years used.">
+<meta property="og:description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
 <meta property="og:url" content="https://elninolanina.org/">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="author" content="Daniel R. Chavas (Purdue University)">
+<meta property="og:image:alt" content="Map of how El Niño years change temperature around the world">
+<meta property="og:locale" content="en_US">
+
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "WebSite",
+   "@id": "https://elninolanina.org/#site",
+   "url": "https://elninolanina.org/",
+   "name": "elninolanina.org",
+   "alternateName": "El Niño & La Niña: Weather Impacts Around the World",
+   "inLanguage": "en",
+   "publisher": {
+    "@id": "https://web.ics.purdue.edu/~dchavas/#me"
+   }
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://elninolanina.org/#page",
+   "url": "https://elninolanina.org/",
+   "name": "El Niño & La Niña: Weather Impacts Around the World",
+   "description": "Interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, 1979–2025.",
+   "isPartOf": {
+    "@id": "https://elninolanina.org/#site"
+   },
+   "about": [
+    {
+     "@type": "Thing",
+     "name": "El Niño",
+     "sameAs": "https://en.wikipedia.org/wiki/El_Ni%C3%B1o"
+    },
+    {
+     "@type": "Thing",
+     "name": "La Niña",
+     "sameAs": "https://en.wikipedia.org/wiki/La_Ni%C3%B1a"
+    },
+    {
+     "@type": "Thing",
+     "name": "El Niño–Southern Oscillation",
+     "sameAs": "https://en.wikipedia.org/wiki/El_Ni%C3%B1o%E2%80%93Southern_Oscillation"
+    }
+   ],
+   "primaryImageOfPage": {
+    "@type": "ImageObject",
+    "url": "https://elninolanina.org/assets/thumbs/ensogrid.webp"
+   },
+   "author": {
+    "@id": "https://web.ics.purdue.edu/~dchavas/#me"
+   },
+   "inLanguage": "en",
+   "mainEntity": {
+    "@id": "https://elninolanina.org/#data"
+   }
+  },
+  {
+   "@type": "Dataset",
+   "@id": "https://elninolanina.org/#data",
+   "name": "El Niño and La Niña composite impact maps (1979–2025)",
+   "description": "Composite maps of the difference between El Niño or La Niña years and the climatology (or neutral years) for 2 m temperature, precipitation and snowfall (ERA5), tropical cyclone track density, energy (ACE) and genesis (IBTrACS), and U.S. hail, tornado, damaging-wind and derecho days (NOAA NCEI Storm Events), on 2° (ERA5, U.S.) and 5° (tropical cyclone) grids, for the ENSO year (June–May), seasons and months, with per-box linear trends removed and significance from a cluster permutation test. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI).",
+   "url": "https://elninolanina.org/",
+   "creator": {
+    "@type": "Person",
+    "@id": "https://web.ics.purdue.edu/~dchavas/#me",
+    "name": "Daniel R. Chavas",
+    "url": "https://web.ics.purdue.edu/~dchavas/",
+    "identifier": "https://orcid.org/0000-0001-9172-8328",
+    "sameAs": [
+     "https://orcid.org/0000-0001-9172-8328"
+    ],
+    "affiliation": {
+     "@type": "CollegeOrUniversity",
+     "name": "Purdue University",
+     "url": "https://www.purdue.edu/"
+    }
+   },
+   "temporalCoverage": "1979-06/2026-05",
+   "spatialCoverage": {
+    "@type": "Place",
+    "name": "Global (U.S. for severe-storm fields)"
+   },
+   "variableMeasured": [
+    "2 m air temperature",
+    "precipitation rate",
+    "snowfall rate (water equivalent)",
+    "tropical cyclone storm-days",
+    "accumulated cyclone energy (ACE)",
+    "tropical cyclone genesis",
+    "hail days",
+    "tornado days",
+    "damaging thunderstorm wind days",
+    "derecho days"
+   ],
+   "keywords": [
+    "El Niño",
+    "La Niña",
+    "ENSO",
+    "teleconnections",
+    "RONI",
+    "ERA5",
+    "IBTrACS",
+    "Storm Events",
+    "tropical cyclones",
+    "hurricanes",
+    "tornadoes",
+    "hail",
+    "winter outlook",
+    "drought",
+    "rainfall"
+   ],
+   "isBasedOn": [
+    "https://doi.org/10.1002/qj.3803",
+    "https://www.ncei.noaa.gov/products/international-best-track-archive",
+    "https://www.ncdc.noaa.gov/stormevents/",
+    "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/"
+   ],
+   "funder": {
+    "@type": "Organization",
+    "name": "U.S. National Science Foundation",
+    "url": "https://www.nsf.gov/"
+   },
+   "isAccessibleForFree": true,
+   "citation": [
+    "https://doi.org/10.1175/1520-0493(1969)097<0163:ATFTEP>2.3.CO;2",
+    "https://doi.org/10.1175/1520-0493(1981)109<0813:PSAPAW>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1982)110<0354:VITSST>2.0.CO;2",
+    "https://doi.org/10.1029/2000JD000298",
+    "https://doi.org/10.1175/1520-0442(1992)005<0577:STPAWT>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1986)114<2352:NAPATP>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1987)115<1606:GARSPP>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1989)002<0268:PPAWTH>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1989)002<1069:GCAAWE>2.0.CO;2",
+    "https://doi.org/10.1029/1999GL011140",
+    "https://doi.org/10.1175/1520-0477(2001)082<0619:PPAAWE>2.3.CO;2",
+    "https://doi.org/10.1175/1520-0442(1997)010<1769:ENOLNA>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1989)002<1239:SHCFAW>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1998)126<1581:TPSAMA>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1999)012<0917:RSSTVD>2.0.CO;2",
+    "https://doi.org/10.1088/1748-9326/6/4/044022",
+    "https://doi.org/10.1175/2009JCLI3089.1",
+    "https://doi.org/10.1126/science.284.5423.2156",
+    "https://doi.org/10.1029/96GL00246",
+    "https://doi.org/10.1175/1520-0442(1999)012<1577:TMDOMA>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(2003)016<1775:IRVIOE>2.0.CO;2",
+    "https://doi.org/10.1002/joc.950",
+    "https://doi.org/10.1175/1520-0493(2003)131<0074:AOSOTR>2.0.CO;2",
+    "https://doi.org/10.1038/43854",
+    "https://doi.org/10.1002/qj.49710343505",
+    "https://doi.org/10.1175/1520-0493(1998)126<3102:ROMLTC>2.0.CO;2",
+    "https://doi.org/10.1029/2006RG000199",
+    "https://doi.org/10.1038/ngeo381",
+    "https://doi.org/10.1175/1520-0477(2001)082<1179:RSDAWE>2.3.CO;2",
+    "https://doi.org/10.1175/1520-0434(2003)018<0965:IOEOSF>2.0.CO;2",
+    "https://doi.org/10.1029/1999JD900010",
+    "https://doi.org/10.1029/2000JD900134",
+    "https://doi.org/10.1175/JCLI3969.1",
+    "https://doi.org/10.1175/1520-0493(1984)112<1649:ASHFPI>2.0.CO;2",
+    "https://doi.org/10.1175/JCLI3659.1",
+    "https://doi.org/10.1175/2010JCLI3799.1",
+    "https://doi.org/10.1175/2010JCLI3497.1",
+    "https://doi.org/10.1175/1520-0442(1997)010<2683:TCOITV>2.0.CO;2",
+    "https://doi.org/10.1029/2007GC001861",
+    "https://doi.org/10.1175/1520-0442(2002)015<1643:HSEEAT>2.0.CO;2",
+    "https://doi.org/10.1175/JCLI4282.1",
+    "https://doi.org/10.1175/JCLI3457.1",
+    "https://doi.org/10.1175/1520-0442(1995)008<1249:TCITSP>2.0.CO;2",
+    "https://doi.org/10.1175/2009JCLI2880.1",
+    "https://doi.org/10.1029/2007GL032983",
+    "https://doi.org/10.1175/2007JCLI1970.1",
+    "https://doi.org/10.1029/2006JD007289",
+    "https://doi.org/10.1029/2011JC007417",
+    "https://doi.org/10.1175/2007MWR2171.1",
+    "https://doi.org/10.1175/JAMC-D-16-0249.1",
+    "https://doi.org/10.1038/ngeo2385",
+    "https://doi.org/10.1002/2017GL074781",
+    "https://doi.org/10.1175/1520-0434(1987)002<0032:DWCIW>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0477(1998)079<2527:ACODPM>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0434(2004)019<0595:ITCOD>2.0.CO;2",
+    "https://doi.org/10.1175/JCLI-D-23-0406.1",
+    "https://doi.org/10.1088/1748-9326/abe9ed",
+    "https://doi.org/10.1175/BAMS-D-13-00117.1",
+    "https://doi.org/10.1175/JCLI-D-17-0783.1",
+    "https://doi.org/10.1002/qj.3803",
+    "https://doi.org/10.1175/1525-7541(2003)004<1147:TVGPCP>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1992)005<1140:TACIEC>2.0.CO;2",
+    "https://doi.org/10.1002/2015JD024546",
+    "https://doi.org/10.1175/BAMS-D-15-00267.1",
+    "https://doi.org/10.1016/j.jneumeth.2007.03.024"
+   ]
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://elninolanina.org/#faq",
+   "isPartOf": {
+    "@id": "https://elninolanina.org/#page"
+   },
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What are El Niño and La Niña?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "El Niño is the periodic warming of the central and eastern tropical Pacific Ocean, and La Niña its cooling; together they are the El Niño–Southern Oscillation (ENSO). An event usually grows through the northern summer and autumn, peaks around December and fades by the following spring, and one comes along every two to seven years. Here a year (June to May) counts as El Niño or La Niña when NOAA’s Relative Oceanic Niño Index (RONI) for December–February is at least +0.5 °C or at most −0.5 °C: 16 El Niño, 19 La Niña and 12 neutral years from 1979–80 to 2025–26."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How does El Niño change winter weather in the United States and Canada?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "In El Niño winters (December–February), the Gulf Coast and Florida are about 20% wetter than average, Alaska and Canada are about 0.6–0.9 °C warmer, and the Gulf Coast is slightly cooler. Snowfall is lower in the Pacific Northwest, northern Rockies and Great Lakes and higher in the southern Rockies. Winter tornado days drop by about a fifth in the Mid-South and rise by about a quarter in Florida."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What does La Niña usually do?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "La Niña is broadly the reverse of El Niño: in December–February Canada is about 0.3 °C colder than average and southern Africa 0.4 °C cooler, the tropics as a whole cool by about 0.2 °C, and the rainfall pattern over the Pacific, Indonesia, Australia, Africa and the Americas largely flips. La Niña is not an exact mirror image: its rain deficit in the tropical Pacific is smaller and sits farther west than El Niño’s rain excess."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does El Niño affect hurricanes and typhoons?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Compared with La Niña years, El Niño years have about a third fewer Atlantic tropical-storm days and a little over half the Atlantic storm energy (ACE), with the biggest drop in the Caribbean and Gulf of Mexico. In the Pacific it is the opposite: about three times as many storm-days near Hawaii, about 25% more energy in the eastern Pacific, and West Pacific typhoons that form farther southeast and carry about 1.7 times the energy. The Australian region sees fewer cyclones, about 7 a season against 12 in La Niña years."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where does El Niño bring drought or heavy rain around the world?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "In El Niño years rain increases over the central and eastern tropical Pacific (by about 4 mm/day near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does El Niño make the whole world warmer?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Slightly, and with a delay of a few months: global-mean surface air temperature in December–February is about 0.2 °C higher in El Niño years than in La Niña years, with almost no difference during the developing northern summer."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this a forecast of this winter?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. These maps describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How are the maps made?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes, damaging wind and derechos from NOAA NCEI Storm Events and a derecho archive. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
 
 <meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -215,6 +483,7 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
+  .methods .faq h3{font-size:12.5px;font-weight:650;color:var(--text);margin:12px 0 2px} .methods .faq p{margin:0 0 4px}
   .guide a{color:var(--accent)}
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
@@ -288,6 +557,7 @@
 </style>
 </head>
 <body>
+<noscript><p style="margin:12px 16px;padding:10px 14px;border:1px solid #cfdbe7;border-radius:8px;background:#fff">These interactive maps need JavaScript. A written summary is under &ldquo;Quick answers&rdquo; at the bottom of the page.</p></noscript>
 
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 
@@ -299,7 +569,7 @@
      <br>For NOAA&rsquo;s official U.S. outlook for the coming months, see the
      <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
      and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
-     <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
+     <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
 
 </header>
@@ -400,6 +670,27 @@
   <details class="methods" id="guideBox">
     <summary>How to read these maps</summary>
     <div class="body"><div class="gbody" id="guide"></div></div>
+  </details>
+  <details class="methods" id="faqBox">
+    <summary>Quick answers: what El Niño and La Niña usually do</summary>
+    <div class="body faq">
+      <h3>What are El Niño and La Niña?</h3>
+      <p>El Niño is the periodic warming of the central and eastern tropical Pacific Ocean, and La Niña its cooling; together they are the El Niño–Southern Oscillation (ENSO). An event usually grows through the northern summer and autumn, peaks around December and fades by the following spring, and one comes along every two to seven years. Here a year (June to May) counts as El Niño or La Niña when NOAA’s Relative Oceanic Niño Index (RONI) for December–February is at least +0.5 °C or at most −0.5 °C: 16 El Niño, 19 La Niña and 12 neutral years from 1979–80 to 2025–26.</p>
+      <h3>How does El Niño change winter weather in the United States and Canada?</h3>
+      <p>In El Niño winters (December–February), the Gulf Coast and Florida are about 20% wetter than average, Alaska and Canada are about 0.6–0.9 °C warmer, and the Gulf Coast is slightly cooler. Snowfall is lower in the Pacific Northwest, northern Rockies and Great Lakes and higher in the southern Rockies. Winter tornado days drop by about a fifth in the Mid-South and rise by about a quarter in Florida.</p>
+      <h3>What does La Niña usually do?</h3>
+      <p>La Niña is broadly the reverse of El Niño: in December–February Canada is about 0.3 °C colder than average and southern Africa 0.4 °C cooler, the tropics as a whole cool by about 0.2 °C, and the rainfall pattern over the Pacific, Indonesia, Australia, Africa and the Americas largely flips. La Niña is not an exact mirror image: its rain deficit in the tropical Pacific is smaller and sits farther west than El Niño’s rain excess.</p>
+      <h3>Does El Niño affect hurricanes and typhoons?</h3>
+      <p>Yes. Compared with La Niña years, El Niño years have about a third fewer Atlantic tropical-storm days and a little over half the Atlantic storm energy (ACE), with the biggest drop in the Caribbean and Gulf of Mexico. In the Pacific it is the opposite: about three times as many storm-days near Hawaii, about 25% more energy in the eastern Pacific, and West Pacific typhoons that form farther southeast and carry about 1.7 times the energy. The Australian region sees fewer cyclones, about 7 a season against 12 in La Niña years.</p>
+      <h3>Where does El Niño bring drought or heavy rain around the world?</h3>
+      <p>In El Niño years rain increases over the central and eastern tropical Pacific (by about 4 mm/day near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower.</p>
+      <h3>Does El Niño make the whole world warmer?</h3>
+      <p>Slightly, and with a delay of a few months: global-mean surface air temperature in December–February is about 0.2 °C higher in El Niño years than in La Niña years, with almost no difference during the developing northern summer.</p>
+      <h3>Is this a forecast of this winter?</h3>
+      <p>No. These maps describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion.</p>
+      <h3>How are the maps made?</h3>
+      <p>Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes, damaging wind and derechos from NOAA NCEI Storm Events and a derecho archive. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance.</p>
+    </div>
   </details>
   <details class="methods" id="papersBox">
     <summary>Foundations: published research</summary>

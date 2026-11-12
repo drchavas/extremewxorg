@@ -1,0 +1,5 @@
+# elninolanina.org — served at /robots.txt by a Cloudflare URL rewrite (source: enso/seo/robots.txt)
+User-agent: *
+Allow: /
+
+Sitemap: https://elninolanina.org/sitemap.xml

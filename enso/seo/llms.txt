@@ -1,0 +1,53 @@
+# elninolanina.org: El Niño & La Niña weather impacts around the world
+
+> Interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, from 1979–2025 data. Made by Daniel R. Chavas (Purdue University), part of extremewx.org; supported by the U.S. National Science Foundation.
+
+The maps are averages of past El Niño or La Niña years compared with all years, not a forecast. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI). Data: ERA5 reanalysis (ECMWF) for temperature, rain and snow; NOAA IBTrACS for tropical cyclones; NOAA NCEI Storm Events and a derecho archive for U.S. severe weather. Per-box linear trends are removed, and dots mark patches that pass a whole-map permutation test.
+
+## Pages
+
+- [El Niño & La Niña: Weather Impacts Around the World](https://elninolanina.org/): the interactive map page. Links can set the view, e.g. [U.S. winter rain, El Niño](https://elninolanina.org/#f=pr&ph=en&m=djf), [Atlantic and Pacific hurricanes, El Niño minus La Niña](https://elninolanina.org/#f=tcd&ph=enln&m=son), [winter tornadoes, El Niño](https://elninolanina.org/#f=tornado&ph=en&m=djf).
+
+## Key findings
+
+### What are El Niño and La Niña?
+
+El Niño is the periodic warming of the central and eastern tropical Pacific Ocean, and La Niña its cooling; together they are the El Niño–Southern Oscillation (ENSO). An event usually grows through the northern summer and autumn, peaks around December and fades by the following spring, and one comes along every two to seven years. Here a year (June to May) counts as El Niño or La Niña when NOAA’s Relative Oceanic Niño Index (RONI) for December–February is at least +0.5 °C or at most −0.5 °C: 16 El Niño, 19 La Niña and 12 neutral years from 1979–80 to 2025–26.
+
+### How does El Niño change winter weather in the United States and Canada?
+
+In El Niño winters (December–February), the Gulf Coast and Florida are about 20% wetter than average, Alaska and Canada are about 0.6–0.9 °C warmer, and the Gulf Coast is slightly cooler. Snowfall is lower in the Pacific Northwest, northern Rockies and Great Lakes and higher in the southern Rockies. Winter tornado days drop by about a fifth in the Mid-South and rise by about a quarter in Florida.
+
+### What does La Niña usually do?
+
+La Niña is broadly the reverse of El Niño: in December–February Canada is about 0.3 °C colder than average and southern Africa 0.4 °C cooler, the tropics as a whole cool by about 0.2 °C, and the rainfall pattern over the Pacific, Indonesia, Australia, Africa and the Americas largely flips. La Niña is not an exact mirror image: its rain deficit in the tropical Pacific is smaller and sits farther west than El Niño’s rain excess.
+
+### Does El Niño affect hurricanes and typhoons?
+
+Yes. Compared with La Niña years, El Niño years have about a third fewer Atlantic tropical-storm days and a little over half the Atlantic storm energy (ACE), with the biggest drop in the Caribbean and Gulf of Mexico. In the Pacific it is the opposite: about three times as many storm-days near Hawaii, about 25% more energy in the eastern Pacific, and West Pacific typhoons that form farther southeast and carry about 1.7 times the energy. The Australian region sees fewer cyclones, about 7 a season against 12 in La Niña years.
+
+### Where does El Niño bring drought or heavy rain around the world?
+
+In El Niño years rain increases over the central and eastern tropical Pacific (by about 4 mm/day near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower.
+
+### Does El Niño make the whole world warmer?
+
+Slightly, and with a delay of a few months: global-mean surface air temperature in December–February is about 0.2 °C higher in El Niño years than in La Niña years, with almost no difference during the developing northern summer.
+
+### Is this a forecast of this winter?
+
+No. These maps describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion.
+
+### How are the maps made?
+
+Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes, damaging wind and derechos from NOAA NCEI Storm Events and a derecho archive. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance.
+
+## Official outlooks
+
+- [NOAA CPC seasonal outlooks](https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1)
+- [NOAA CPC ENSO diagnostic discussion](https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml)
+- [What are El Niño and La Niña? (NOAA)](https://oceanservice.noaa.gov/facts/ninonina.html)
+
+## Related
+
+- [extremewx.org](https://extremewx.org/): climatologies and trends of weather and climate extremes by the same author.

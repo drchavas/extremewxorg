@@ -1,5 +1,7 @@
 # ENSO composites — `ensogrid.html`
 
+> **Sources:** the three pages are built from `enso/src/` (template + script). Edit there, then run `python3 enso/src/build.py`. See `enso/src/README.md`.
+
 **El Niño and La Niña: Climatology and Impacts — global grid.** Built 2026-10-10.
 
 **Layout (Oct 2026, simplified for a general audience):** one Leaflet map. Above it are two main
@@ -65,7 +67,7 @@ per-pixel map geolocation). Fixes from that review are noted below.
 
 ## Regression version — `ensoreg.html` (Oct 22, 2026; separate page, not linked from ensogrid yet)
 
-**El Niño and La Niña by Strength.** Built from the *same sources* as ensogrid: `assemble.sh` writes both
+**El Niño and La Niña by Strength.** Built from the *same sources* as ensogrid (`src/`): `src/build.py` writes both
 pages, ensoreg with `const REG=true` and the template's `<!--R-->…<!--/R-->` blocks (ensogrid keeps
 `<!--C-->…<!--/C-->`). All `REG` branches are no-ops on ensogrid.
 - **Model (per box), revised Oct 22 after the independent review:** one-step OLS
@@ -280,7 +282,7 @@ Five reviewers covered data, calculations, visualization, UX/text and science/pa
 
 **Fixed:**
 - **Header:** the peak is now "usually around December (Nov–Jan)", matching Methods and the data.
-- **Papers box** (`tools/build_refs.py`, 65 papers):
+- **Papers box** (65 papers):
   - sentences corrected: Ramsay, Allen/Lepore (only tornadoes reverse; hail still agrees), Johns & Hirt, Ropelewski & Halpert 1986/1987, Hoerling, Karoly, Mo & Higgins, Kumar, Smith 1998, Brönnimann, Gray, Bell & Chelliah, Camargo 2008, Wang & Chan, Girishkumar, Bentley & Mote, Wilks, Black, Smith & O'Brien, and Rasmusson (+0.5/+1.0 °C);
   - added Bjerknes 1969, Horel & Wallace 1981, Kiladis & Diaz 1989, Camargo, Emanuel & Sobel 2007, Capotondi 2015 and Deser 2018;
   - full titles restored, and the unused `SHORT` dict removed.
@@ -332,6 +334,18 @@ Five reviewers covered data, calculations, visualization, UX/text and science/pa
 - **Statistics:** exact-df `tcrit` (one box in 1,186 shows p = 0.050 while dotted); the near-constant-series guard in `welch`.
 - **Accessibility:** keyboard reading and picking of boxes.
 - **Layout nits:** "Reload default" wrapping in the control bar; RONI panel label overlaps; ensofcst's og:image.
+
+## Search and AI-assistant visibility (Nov 8, 2026)
+
+The map page draws everything with JavaScript, and most AI crawlers read only the raw HTML. So the key findings are also written into the page as plain text.
+- **"Quick answers" box:** a collapsed box above "Foundations", with 8 questions and answers. Every number in it was checked on the page in the Nov 3 review.
+- **JSON-LD in the head:** a WebSite, WebPage, Dataset and FAQPage graph. The Dataset lists the variables, coverage, sources, NSF funder and all 65 papers as `citation`; the author has an ORCID.
+- **Both blocks are edited directly in `src/ensogrid.tmpl.html`.** `python3 enso/src/check_seo.py` checks that the FAQPage data matches the visible Quick answers, and that the Dataset citations match the papers box.
+- **Head tags:** a new meta and og description written around the questions people ask, plus `author`, `og:image:alt` and `og:locale`.
+- **`<noscript>` note:** points readers without JavaScript to the Quick answers.
+- **Site files in `enso/seo/`:** `robots.txt`, `sitemap.xml` and `llms.txt` for elninolanina.org.
+  - They only reach `https://elninolanina.org/robots.txt` etc. through Cloudflare URL rewrites, plus exceptions in the "non-ENSO to extremewx" redirect rule. Until those exist, these paths redirect to extremewx.org.
+  - Update `sitemap.xml`'s `lastmod` when the page changes materially.
 
 ## Not done yet / ideas
 

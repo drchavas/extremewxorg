@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--C--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World &mdash; elninolanina.org</title>
+<meta name="description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
+<link rel="canonical" href="https://elninolanina.org/"><!--/C-->
+<!--R--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org</title>
+<meta name="description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
+<link rel="canonical" href="https://elninolanina.org/enso/ensoreg"><!--/R-->
+<!--F--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Outlook &mdash; elninolanina.org</title>
+<meta name="description" content="What past El Niño and La Niña events of the strength NOAA CPC now forecasts looked like, month by month: temperature, rain and snow, tropical cyclones and U.S. severe weather.">
+<link rel="canonical" href="https://elninolanina.org/enso/ensofcst"><!--/F-->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="elninolanina.org">
+<!--C--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World">
+<meta property="og:description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
+<meta property="og:url" content="https://elninolanina.org/">
+<meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp"><!--/C-->
+<!--R--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org">
+<meta property="og:description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
+<meta property="og:url" content="https://elninolanina.org/enso/ensoreg">
+<meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensoreg.webp"><!--/R-->
+<!--F--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Outlook &mdash; elninolanina.org">
+<meta property="og:description" content="What past El Niño and La Niña events of the strength NOAA CPC now forecasts looked like, month by month: temperature, rain and snow, tropical cyclones and U.S. severe weather.">
+<meta property="og:url" content="https://elninolanina.org/enso/ensofcst">
+<meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensoreg.webp"><!--/F-->
+<meta name="twitter:card" content="summary_large_image">
+<!--C--><meta name="author" content="Daniel R. Chavas (Purdue University)">
+<meta property="og:image:alt" content="Map of how El Niño years change temperature around the world">
+<meta property="og:locale" content="en_US"><!--/C-->
+
+<!--C--><script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "WebSite",
+   "@id": "https://elninolanina.org/#site",
+   "url": "https://elninolanina.org/",
+   "name": "elninolanina.org",
+   "alternateName": "El Niño & La Niña: Weather Impacts Around the World",
+   "inLanguage": "en",
+   "publisher": {
+    "@id": "https://web.ics.purdue.edu/~dchavas/#me"
+   }
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://elninolanina.org/#page",
+   "url": "https://elninolanina.org/",
+   "name": "El Niño & La Niña: Weather Impacts Around the World",
+   "description": "Interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, 1979–2025.",
+   "isPartOf": {
+    "@id": "https://elninolanina.org/#site"
+   },
+   "about": [
+    {
+     "@type": "Thing",
+     "name": "El Niño",
+     "sameAs": "https://en.wikipedia.org/wiki/El_Ni%C3%B1o"
+    },
+    {
+     "@type": "Thing",
+     "name": "La Niña",
+     "sameAs": "https://en.wikipedia.org/wiki/La_Ni%C3%B1a"
+    },
+    {
+     "@type": "Thing",
+     "name": "El Niño–Southern Oscillation",
+     "sameAs": "https://en.wikipedia.org/wiki/El_Ni%C3%B1o%E2%80%93Southern_Oscillation"
+    }
+   ],
+   "primaryImageOfPage": {
+    "@type": "ImageObject",
+    "url": "https://elninolanina.org/assets/thumbs/ensogrid.webp"
+   },
+   "author": {
+    "@id": "https://web.ics.purdue.edu/~dchavas/#me"
+   },
+   "inLanguage": "en",
+   "mainEntity": {
+    "@id": "https://elninolanina.org/#data"
+   }
+  },
+  {
+   "@type": "Dataset",
+   "@id": "https://elninolanina.org/#data",
+   "name": "El Niño and La Niña composite impact maps (1979–2025)",
+   "description": "Composite maps of the difference between El Niño or La Niña years and the climatology (or neutral years) for 2 m temperature, precipitation and snowfall (ERA5), tropical cyclone track density, energy (ACE) and genesis (IBTrACS), and U.S. hail, tornado, damaging-wind and derecho days (NOAA NCEI Storm Events), on 2° (ERA5, U.S.) and 5° (tropical cyclone) grids, for the ENSO year (June–May), seasons and months, with per-box linear trends removed and significance from a cluster permutation test. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI).",
+   "url": "https://elninolanina.org/",
+   "creator": {
+    "@type": "Person",
+    "@id": "https://web.ics.purdue.edu/~dchavas/#me",
+    "name": "Daniel R. Chavas",
+    "url": "https://web.ics.purdue.edu/~dchavas/",
+    "identifier": "https://orcid.org/0000-0001-9172-8328",
+    "sameAs": [
+     "https://orcid.org/0000-0001-9172-8328"
+    ],
+    "affiliation": {
+     "@type": "CollegeOrUniversity",
+     "name": "Purdue University",
+     "url": "https://www.purdue.edu/"
+    }
+   },
+   "temporalCoverage": "1979-06/2026-05",
+   "spatialCoverage": {
+    "@type": "Place",
+    "name": "Global (U.S. for severe-storm fields)"
+   },
+   "variableMeasured": [
+    "2 m air temperature",
+    "precipitation rate",
+    "snowfall rate (water equivalent)",
+    "tropical cyclone storm-days",
+    "accumulated cyclone energy (ACE)",
+    "tropical cyclone genesis",
+    "hail days",
+    "tornado days",
+    "damaging thunderstorm wind days",
+    "derecho days"
+   ],
+   "keywords": [
+    "El Niño",
+    "La Niña",
+    "ENSO",
+    "teleconnections",
+    "RONI",
+    "ERA5",
+    "IBTrACS",
+    "Storm Events",
+    "tropical cyclones",
+    "hurricanes",
+    "tornadoes",
+    "hail",
+    "winter outlook",
+    "drought",
+    "rainfall"
+   ],
+   "isBasedOn": [
+    "https://doi.org/10.1002/qj.3803",
+    "https://www.ncei.noaa.gov/products/international-best-track-archive",
+    "https://www.ncdc.noaa.gov/stormevents/",
+    "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/"
+   ],
+   "funder": {
+    "@type": "Organization",
+    "name": "U.S. National Science Foundation",
+    "url": "https://www.nsf.gov/"
+   },
+   "isAccessibleForFree": true,
+   "citation": [
+    "https://doi.org/10.1175/1520-0493(1969)097<0163:ATFTEP>2.3.CO;2",
+    "https://doi.org/10.1175/1520-0493(1981)109<0813:PSAPAW>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1982)110<0354:VITSST>2.0.CO;2",
+    "https://doi.org/10.1029/2000JD000298",
+    "https://doi.org/10.1175/1520-0442(1992)005<0577:STPAWT>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1986)114<2352:NAPATP>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1987)115<1606:GARSPP>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1989)002<0268:PPAWTH>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1989)002<1069:GCAAWE>2.0.CO;2",
+    "https://doi.org/10.1029/1999GL011140",
+    "https://doi.org/10.1175/1520-0477(2001)082<0619:PPAAWE>2.3.CO;2",
+    "https://doi.org/10.1175/1520-0442(1997)010<1769:ENOLNA>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1989)002<1239:SHCFAW>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0493(1998)126<1581:TPSAMA>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1999)012<0917:RSSTVD>2.0.CO;2",
+    "https://doi.org/10.1088/1748-9326/6/4/044022",
+    "https://doi.org/10.1175/2009JCLI3089.1",
+    "https://doi.org/10.1126/science.284.5423.2156",
+    "https://doi.org/10.1029/96GL00246",
+    "https://doi.org/10.1175/1520-0442(1999)012<1577:TMDOMA>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(2003)016<1775:IRVIOE>2.0.CO;2",
+    "https://doi.org/10.1002/joc.950",
+    "https://doi.org/10.1175/1520-0493(2003)131<0074:AOSOTR>2.0.CO;2",
+    "https://doi.org/10.1038/43854",
+    "https://doi.org/10.1002/qj.49710343505",
+    "https://doi.org/10.1175/1520-0493(1998)126<3102:ROMLTC>2.0.CO;2",
+    "https://doi.org/10.1029/2006RG000199",
+    "https://doi.org/10.1038/ngeo381",
+    "https://doi.org/10.1175/1520-0477(2001)082<1179:RSDAWE>2.3.CO;2",
+    "https://doi.org/10.1175/1520-0434(2003)018<0965:IOEOSF>2.0.CO;2",
+    "https://doi.org/10.1029/1999JD900010",
+    "https://doi.org/10.1029/2000JD900134",
+    "https://doi.org/10.1175/JCLI3969.1",
+    "https://doi.org/10.1175/1520-0493(1984)112<1649:ASHFPI>2.0.CO;2",
+    "https://doi.org/10.1175/JCLI3659.1",
+    "https://doi.org/10.1175/2010JCLI3799.1",
+    "https://doi.org/10.1175/2010JCLI3497.1",
+    "https://doi.org/10.1175/1520-0442(1997)010<2683:TCOITV>2.0.CO;2",
+    "https://doi.org/10.1029/2007GC001861",
+    "https://doi.org/10.1175/1520-0442(2002)015<1643:HSEEAT>2.0.CO;2",
+    "https://doi.org/10.1175/JCLI4282.1",
+    "https://doi.org/10.1175/JCLI3457.1",
+    "https://doi.org/10.1175/1520-0442(1995)008<1249:TCITSP>2.0.CO;2",
+    "https://doi.org/10.1175/2009JCLI2880.1",
+    "https://doi.org/10.1029/2007GL032983",
+    "https://doi.org/10.1175/2007JCLI1970.1",
+    "https://doi.org/10.1029/2006JD007289",
+    "https://doi.org/10.1029/2011JC007417",
+    "https://doi.org/10.1175/2007MWR2171.1",
+    "https://doi.org/10.1175/JAMC-D-16-0249.1",
+    "https://doi.org/10.1038/ngeo2385",
+    "https://doi.org/10.1002/2017GL074781",
+    "https://doi.org/10.1175/1520-0434(1987)002<0032:DWCIW>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0477(1998)079<2527:ACODPM>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0434(2004)019<0595:ITCOD>2.0.CO;2",
+    "https://doi.org/10.1175/JCLI-D-23-0406.1",
+    "https://doi.org/10.1088/1748-9326/abe9ed",
+    "https://doi.org/10.1175/BAMS-D-13-00117.1",
+    "https://doi.org/10.1175/JCLI-D-17-0783.1",
+    "https://doi.org/10.1002/qj.3803",
+    "https://doi.org/10.1175/1525-7541(2003)004<1147:TVGPCP>2.0.CO;2",
+    "https://doi.org/10.1175/1520-0442(1992)005<1140:TACIEC>2.0.CO;2",
+    "https://doi.org/10.1002/2015JD024546",
+    "https://doi.org/10.1175/BAMS-D-15-00267.1",
+    "https://doi.org/10.1016/j.jneumeth.2007.03.024"
+   ]
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://elninolanina.org/#faq",
+   "isPartOf": {
+    "@id": "https://elninolanina.org/#page"
+   },
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "What are El Niño and La Niña?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "El Niño is the periodic warming of the central and eastern tropical Pacific Ocean, and La Niña its cooling; together they are the El Niño–Southern Oscillation (ENSO). An event usually grows through the northern summer and autumn, peaks around December and fades by the following spring, and one comes along every two to seven years. Here a year (June to May) counts as El Niño or La Niña when NOAA’s Relative Oceanic Niño Index (RONI) for December–February is at least +0.5 °C or at most −0.5 °C: 16 El Niño, 19 La Niña and 12 neutral years from 1979–80 to 2025–26."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How does El Niño change winter weather in the United States and Canada?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "In El Niño winters (December–February), the Gulf Coast and Florida are about 20% wetter than average, Alaska and Canada are about 0.6–0.9 °C warmer, and the Gulf Coast is slightly cooler. Snowfall is lower in the Pacific Northwest, northern Rockies and Great Lakes and higher in the southern Rockies. Winter tornado days drop by about a fifth in the Mid-South and rise by about a quarter in Florida."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "What does La Niña usually do?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "La Niña is broadly the reverse of El Niño: in December–February Canada is about 0.3 °C colder than average and southern Africa 0.4 °C cooler, the tropics as a whole cool by about 0.2 °C, and the rainfall pattern over the Pacific, Indonesia, Australia, Africa and the Americas largely flips. La Niña is not an exact mirror image: its rain deficit in the tropical Pacific is smaller and sits farther west than El Niño’s rain excess."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does El Niño affect hurricanes and typhoons?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Compared with La Niña years, El Niño years have about a third fewer Atlantic tropical-storm days and a little over half the Atlantic storm energy (ACE), with the biggest drop in the Caribbean and Gulf of Mexico. In the Pacific it is the opposite: about three times as many storm-days near Hawaii, about 25% more energy in the eastern Pacific, and West Pacific typhoons that form farther southeast and carry about 1.7 times the energy. The Australian region sees fewer cyclones, about 7 a season against 12 in La Niña years."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Where does El Niño bring drought or heavy rain around the world?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "In El Niño years rain increases over the central and eastern tropical Pacific (by about 4 mm/day near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does El Niño make the whole world warmer?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Slightly, and with a delay of a few months: global-mean surface air temperature in December–February is about 0.2 °C higher in El Niño years than in La Niña years, with almost no difference during the developing northern summer."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Is this a forecast of this winter?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. These maps describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "How are the maps made?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes, damaging wind and derechos from NOAA NCEI Storm Events and a derecho archive. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script><!--/C-->
+<!--RF--><meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><!--/RF-->
+
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#16212e; --panel2:#1d2a3a; --line:#2a3a4d;
+    --text:#e6edf3; --muted:#9fb0c0; --accent:#46a3ff; --accent2:#ffb14e; --onaccent2:#111;
+    --en:#ff6b5a; --ln:#5aa9ff; --sea:#0b1119;
+  }
+  /* Light theme: the same values the JS THEME.light uses, so the chrome, the
+     maps and the SVG panels agree (as on scstrend_grid.html). */
+  html[data-theme="light"]{
+    --bg:#eaf2fa; --panel:#ffffff; --panel2:#f2f6fa; --line:#cfdbe7;
+    --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#9c5607; --onaccent2:#ffffff;
+    --en:#c8321f; --ln:#1f63b8; --sea:#eef2f6;
+  }
+  html[data-theme="light"] body{
+    background:
+      radial-gradient(1100px 520px at 80% -10%, rgba(43,111,184,.07), transparent 60%),
+      radial-gradient(900px 460px at 0% 0%, rgba(179,100,10,.06), transparent 55%),
+      linear-gradient(180deg,#f7f9fb 0%, #ffffff 100%);
+  }
+  html[data-theme="light"] .btn.on{background:rgba(43,111,184,.14)}
+  html[data-theme="light"] .cbar{background:rgba(255,255,255,.94)}
+  html[data-theme="light"] .hint{background:rgba(255,255,255,.9)}
+  html[data-theme="light"] .tip{background:#ffffff;color:#16212e;border-color:#c9d4de}
+  html[data-theme="light"] .leaflet-control-attribution{
+    background:rgba(255,255,255,.8)!important;color:#5b6b7c!important}
+  html[data-theme="light"] .leaflet-control-attribution a{color:#2b6fb8!important}
+
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            background:var(--bg);color:var(--text)}
+  header{padding:11px 18px 0;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{margin:0;font-size:17px;font-weight:650}
+  header p{margin:4px 0 0;font-size:12.5px;color:var(--muted);max-width:1100px;line-height:1.5}
+  header a{color:var(--accent)}
+  header .hmeta{margin:5px 0 0;font-size:11px;color:var(--muted)}
+
+  .bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;padding:10px 0 11px}
+  .fld{display:flex;flex-direction:column;gap:3px}
+  .fld label{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  .fld.off{opacity:.38}
+  select,input[type=number]{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+       border-radius:6px;padding:5px 7px;font-size:12.5px;font-family:inherit}
+  select:focus,input:focus{outline:none;border-color:var(--accent)}
+  select:disabled,input:disabled{cursor:not-allowed}
+  input[type=number]{width:68px}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;
+       font-size:12px;padding:6px 11px;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--accent)}
+  .btn-us{color:var(--accent2);font-weight:700}
+  .btn-us:hover{border-color:var(--accent2)}
+  .btn.on{background:rgba(70,163,255,.2);border-color:var(--accent)}
+  .chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text);padding:5px 0;cursor:pointer}
+  .chk input{accent-color:var(--accent);margin:0}
+
+  /* Phase is the one choice that changes what the lower map means, so it is a
+     segmented control rather than a menu buried among the others. */
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .seg button{background:var(--panel2);color:var(--text);border:0;border-right:1px solid var(--line);
+              font:inherit;font-size:12.5px;padding:5px 11px;cursor:pointer}
+  .seg button:last-child{border-right:0}
+  .seg button.on[data-ph="en"]{background:var(--en);color:#fff;font-weight:650}
+  .seg button.on[data-ph="ln"]{background:var(--ln);color:#fff;font-weight:650}
+  .seg button.on[data-ph="enln"]{background:linear-gradient(90deg,var(--en),var(--ln));color:#fff;font-weight:650}
+
+  /* The month strip: June of the developing year through May of the next. */
+  /* every control in one box, the width of the map below it */
+  #controls{max-width:1100px;margin:0 auto 14px;background:var(--panel);border:1px solid var(--line);
+            border-radius:10px;padding:12px 16px 8px}
+  #controls .mainbar{padding:0 0 11px}
+  #controls .mainbar .fld:last-child{margin-left:auto}
+  #monthbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+  header{padding-bottom:10px}
+  #monthbar .mnote{font-size:11.5px;color:var(--muted);margin-top:5px}
+  #monthbar .mlab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  #monthbar .mnow{font-size:15px;font-weight:650;min-width:205px}
+  #monthbar.avg .mtrack,#monthbar.avg #mPrev,#monthbar.avg #mNext{opacity:.35}
+  #monthbar .btn:disabled{cursor:not-allowed}
+  .seg button.on[data-av],.seg button.on[data-per],.seg button.on[data-pc],.seg button.on[data-base]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
+  .srctag{color:var(--text);opacity:.85}
+  .mapbubble{background:rgba(22,33,46,.94);color:var(--text);border:1px solid var(--line);border-radius:8px;
+             padding:7px 12px 8px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none;max-width:min(460px,62vw);
+             line-height:1.25;margin:10px 0 0 10px!important}
+  .mapbubble .bv{font-size:17px;font-weight:700;letter-spacing:-.01em}
+  .mapbubble .bs{font-size:12px;color:var(--muted);margin-top:2px}
+  html[data-theme="light"] .mapbubble{background:rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  @media (max-width:640px){ .mapbubble{padding:5px 9px 6px;margin:6px 0 0 6px!important} .mapbubble .bv{font-size:14px} .mapbubble .bs{font-size:10.5px} }
+  .clab{font-size:10.5px;font-weight:650;color:#0d1117;white-space:nowrap;transform:translate(-50%,-50%);
+        text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff;pointer-events:none}
+  .percustom{display:none} body.custom-period .percustom{display:flex}
+  .emptychip{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);z-index:640;display:none;max-width:80%;
+             text-align:center;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;
+             padding:8px 14px;font-size:13px;line-height:1.35;pointer-events:none}
+  .loadchip{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:650;display:none;
+            background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;
+            padding:4px 12px;font-size:12px;pointer-events:none}
+  /* keyboard focus: always visible (the field styling used to remove it) */
+  :focus-visible{outline:2px solid var(--accent2)!important;outline-offset:2px}
+  header .home{font-weight:650;text-decoration:none}
+  #monthbar .mnow small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+  .mtrack{flex:1 1 380px;min-width:260px}
+  .mtrack input[type=range]{width:100%;margin:0;accent-color:var(--accent2)}
+  .mticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);padding:0 2px;
+          font-variant-numeric:tabular-nums;user-select:none}
+  .mticks span{cursor:pointer;width:2.4em;text-align:center}
+  .mticks span.on{color:var(--accent2);font-weight:700}
+  .mticks .yr{display:block;font-size:9px;opacity:.75}
+  .mticks .mi{display:none}
+  @media (max-width:420px){ .mticks .mf,.mticks .yr{display:none} .mticks .mi{display:inline} }
+
+  #wrap{padding:14px 18px 28px}
+  #msg{padding:60px 18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+  #maps,#panels,.foot{max-width:1100px;margin-left:auto;margin-right:auto}
+  #maps{display:flex;flex-direction:column;gap:16px}
+  .mapcol{flex:0 0 auto;min-width:0;background:var(--panel);border:1px solid var(--line);
+          border-radius:10px;overflow:hidden}
+  .maphead{padding:10px 14px 8px}
+  .maphead.hastog{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .maphead .mhtext{flex:1 1 420px;min-width:0}
+  .pcwrap{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  #pcSeg button:disabled{opacity:.35;cursor:not-allowed} #pcSeg button.locked{pointer-events:none}
+  .pclab{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  .maphead h2{margin:0;font-size:14.5px;font-weight:650}
+  .maphead h2 .ph-en,.mapbubble .ph-en{color:var(--en)} .maphead h2 .ph-ln,.mapbubble .ph-ln{color:var(--ln)}
+  .mapbubble .ph-en,.mapbubble .ph-ln{font-weight:650}
+  .maphead p{margin:2px 0 0;font-size:11px;color:var(--muted);line-height:1.4}
+  .maphead .smtag{color:var(--accent2);font-weight:700}
+  .maphead p.warn{margin:3px 0 0;font-size:11px;color:var(--accent2);line-height:1.4}
+  /* one map: as tall as the world is at the map's width (lat 75S-82N over 360 deg
+     of longitude), so the global view has no empty bands above or below */
+  .lmap{width:100%;height:auto;aspect-ratio:2.3/1;min-height:360px;max-height:640px;background:var(--sea);position:relative}
+  .mainbar{gap:14px 22px}
+  .mainbar .fld label{font-size:11px}
+  .seg.big button{font-size:14px;padding:7px 15px}
+  .seg button.on[data-ph="clim"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
+  #enlnBtn{display:none} body.cmp #enlnBtn{display:inline-block}
+  select.big{font-size:14px;padding:7px 9px;width:340px;max-width:100%}
+  .mainbar .fld{max-width:100%}
+  .advanced .advbar{padding:2px 0 4px}
+  .advbrk{flex-basis:100%;height:0}   /* checkboxes and buttons on their own line */
+  #maps .mapcol .maphead.hastog .mhtext h2{font-size:15.5px}
+  .lmap .leaflet-container{background:var(--sea)}
+  .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
+        border:1px solid var(--line);border-radius:8px;padding:8px 9px 6px;
+        font-size:10px;color:var(--muted);backdrop-filter:blur(6px);pointer-events:none}
+  .cbar .strip{width:13px;height:150px;border:1px solid var(--line);margin:0 auto}
+  .cbar .ticks{display:flex;flex-direction:column;justify-content:space-between;
+               height:150px;margin-left:5px;font-variant-numeric:tabular-nums}
+  .cbar .row{display:flex}
+  .cbar .cap{text-align:center;margin-bottom:4px;color:var(--text);font-size:10.5px;max-width:96px}
+  .cbar .zchip{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:9.5px;
+               color:var(--muted);white-space:nowrap}
+  .cbar .zchip i{width:11px;height:11px;border:1px solid var(--line);display:inline-block;flex:0 0 auto;
+                 background:radial-gradient(circle,#000 0 1.3px,transparent 1.6px) center/5px 5px,#c8ccd0}
+  .hint{position:absolute;left:10px;bottom:10px;z-index:600;background:rgba(22,33,46,.9);
+        border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:10.5px;
+        color:var(--muted);pointer-events:none}
+  .tip{position:absolute;z-index:700;pointer-events:none;background:#101b27;color:#e6edf3;
+       border:1px solid #2a3a4d;border-radius:7px;font-size:11.5px;padding:6px 9px;line-height:1.45;
+       white-space:nowrap;display:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tip b{font-weight:650}
+  #panels{margin-top:10px}
+  .sect{max-width:1100px;margin:26px auto 0;padding-top:16px;border-top:1px solid var(--line)}
+  .secthead h2{margin:0;font-size:18px;font-weight:650}
+  .secthead p a{color:var(--accent)}
+  .secthead p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+  #panels svg,.panels2 svg{width:100%;height:auto;display:block;border-radius:10px}
+  .advnote{margin:0 0 10px}
+  .foot{margin-top:14px;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .foot a{color:var(--accent)}
+
+  .methods{max-width:1100px;margin:18px auto 0;border:1px solid var(--line);
+           border-radius:10px;background:var(--panel)}
+  .methods>summary{cursor:pointer;user-select:none;padding:11px 16px;font-size:13px;
+                   font-weight:650;color:var(--text);list-style:none}
+  .methods>summary::-webkit-details-marker{display:none}
+  .methods>summary::before{content:'\25B8  ';color:var(--muted);font-size:11px}
+  .methods[open]>summary::before{content:'\25BE  '}
+  .methods>summary:hover{color:var(--accent)}
+  .methods .body{padding:0 18px 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .methods ol{margin:0;padding-left:20px}
+  .methods li{margin:7px 0}
+  .methods li b{color:var(--text);font-weight:650}
+  .methods code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+                background:var(--panel2);border-radius:3px;padding:1px 4px}
+  .methods a{color:var(--accent)}
+  .guide{max-width:1100px;margin:18px auto 14px;border:1px solid var(--line);
+         border-left:3px solid var(--accent2);border-radius:8px;background:var(--panel);
+         padding:11px 16px;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .guide b.lead{color:var(--text)}
+  .gbody{font-size:12.5px;color:var(--muted);line-height:1.65} .gbody b{color:var(--text)} .gbody a{color:var(--accent)}
+  .gbody b.lead{display:none}
+  .methods .refs{font-size:11.5px;line-height:1.5;color:var(--muted)}
+  .refs p{margin:0 0 6px}
+  .refs h3{font-size:11px;font-weight:650;color:var(--text);margin:10px 0 3px;text-transform:uppercase;letter-spacing:.04em}
+  .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
+  .refs a{color:var(--accent);white-space:nowrap}
+  #papersBox{margin-bottom:24px}
+<!--C-->  .methods .faq h3{font-size:12.5px;font-weight:650;color:var(--text);margin:12px 0 2px} .methods .faq p{margin:0 0 4px}<!--/C-->
+  .guide a{color:var(--accent)}
+  .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
+            padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
+  .alertbar b{color:#fff}
+  /* the month step buttons stay with the slider when the bar wraps */
+  .mgroup{display:flex;align-items:center;gap:10px;flex:1 1 440px;min-width:0}
+  .mgroup .mtrack{flex:1 1 auto;min-width:0}
+  /* colorbar ticks sit exactly at their quarter of the strip */
+  .cbar .ticks{position:relative}
+  .cbar .ticks span{position:absolute;left:0;white-space:nowrap;transform:translateY(-50%)}
+  /* boxes too rare to show as a % change: hatched, with a legend swatch */
+  .cbar .zchip i.hatch{background:repeating-linear-gradient(45deg,var(--hatchA) 0 2px,var(--hatchB) 2px 5px)}
+  :root{--hatchA:#3d4a5a;--hatchB:#1c2633} html[data-theme="light"]{--hatchA:#aab3bd;--hatchB:#e1e6eb}
+  #cbHost{display:none}
+  @media (max-width:640px){
+    .lmap{min-height:0!important;aspect-ratio:2.05/1}
+    .mapbubble .bs{display:none} .lmap .leaflet-control-attribution{font-size:8px;line-height:1.3;max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #cbHost{display:block;padding:6px 12px 2px}
+    .cbar.h{position:static;transform:none!important;background:none;border:none;padding:0;backdrop-filter:none;
+            display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
+    .cbar.h .cap{max-width:none;margin:0;flex:0 0 100%;text-align:left}
+    .cbar.h .row{flex-direction:column;flex:1 1 220px}
+    .cbar.h .strip{width:100%;height:10px;margin:0}
+    .cbar.h .ticks{height:1.4em;margin:3px 0 0}
+    .cbar.h .ticks span{top:0;transform:translateX(-50%)}
+    .cbar.h .ticks span:first-child{transform:none} .cbar.h .ticks span:last-child{transform:translateX(-100%)}
+    .cbar.h .zchip{margin:0}
+    #avSeg{display:flex;flex-wrap:wrap}
+    .mticks{font-size:9px;padding:0} .mticks span{width:auto;flex:1 1 0;min-width:0} .mticks .yr{font-size:8px}
+    #panels,.panels2{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    #panels svg,.panels2 svg{width:760px;max-width:none}
+    .panelscroll{display:block!important}
+  }
+  .panelscroll{display:none;font-size:11px;color:var(--muted);margin:4px 2px 0}
+  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px}
+    .lmap .hint{display:none}
+    .mainbar .fld:nth-child(2){width:100%} select.big{width:100%}
+                            #monthbar .mnow{min-width:0} }
+  /* overlap the canvas tiles by a pixel: at fractional zoom the browser
+     otherwise leaves a hairline seam between them */
+  .fieldlayer canvas.leaflet-tile{width:257px!important;height:257px!important}
+  /* the regression page's RONI slider */
+  .rofld{flex:1 1 360px;min-width:280px}
+  .rowrap{display:flex;align-items:center;gap:9px}
+  .rowrap.dim{opacity:.55}
+  .roend{font-size:12.5px;font-weight:650;white-space:nowrap}
+  .roend.en{color:var(--en)} .roend.ln{color:var(--ln)}
+  .rotrack{flex:1 1 auto;min-width:160px}
+  #roRange{width:100%;margin:0;-webkit-appearance:none;appearance:none;height:8px;border-radius:4px;
+    background:linear-gradient(90deg,var(--ln),var(--line) 50%,var(--en));outline-offset:4px}
+  #roRange::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--text);
+    border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+  #roRange::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);border:3px solid var(--panel);cursor:pointer}
+  .roticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px;padding:0 3px}
+  .roticks span{cursor:pointer;width:2.2em;text-align:center;margin:0 -0.6em}
+  .roval{font-size:14px;font-weight:650;margin-top:3px;min-height:1.3em} .roval.dim{opacity:.55}
+  .roval .rofar{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:6px}
+  .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
+  #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
+  /* the forecast page: months instead of the averaging bar */
+  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
+  .fcst #monthbar{display:none}
+  .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
+  .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
+  .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
+  #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
+  #fmSeg{flex-wrap:wrap;max-width:100%} #fmbar .fld{max-width:100%}
+  #robar .rofld{flex:1 1 auto;max-width:900px}
+  .leaflet-control-attribution{background:rgba(15,23,32,.75)!important;color:#7f909f!important;font-size:10px!important}
+  .leaflet-control-attribution a{color:#9fb0c0!important}
+</style>
+</head>
+<body>
+<!--C--><noscript><p style="margin:12px 16px;padding:10px 14px;border:1px solid #cfdbe7;border-radius:8px;background:#fff">These interactive maps need JavaScript. A written summary is under &ldquo;Quick answers&rdquo; at the bottom of the page.</p></noscript><!--/C-->
+
+<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
+
+<header>
+<!--C-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World</h1><!--/C-->
+<!--R-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a by Strength: Climatology and Impacts &mdash; global grid</h1><!--/R-->
+<!--F-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a Outlook: What to Expect, Month by Month &mdash; global grid</h1><!--/F-->
+  <p>
+<!--C-->     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
+     <br>An El Ni&ntilde;o / La Ni&ntilde;a year runs from June to May (1997&ndash;1998 = June 1997 &ndash; May 1998), with the peak usually around December (Nov&ndash;Jan).
+     <br>For NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/C-->
+<!--R-->     What happens around the world in an El Ni&ntilde;o or La Ni&ntilde;a of a given strength, compared with the average year.
+     <b>Drag the slider</b> right for El Ni&ntilde;o, left for La Ni&ntilde;a (the Dec&ndash;Feb, northern-winter value of NOAA's ocean index, RONI), pick a
+     <b>variable</b>, or switch to the normal <b>Climatology</b>; choose the
+     whole year, a season or a single month with the bar above the map. An <b>ENSO year</b> runs from June to May
+     (1997&ndash;1998 = June 1997 &ndash; May 1998), the twelve months over which an event usually grows, peaks and decays.
+     <b>Hover</b> over the map to read the values. More options are under <b>Advanced settings</b>.
+     These maps describe past years, not a forecast: for NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/R-->
+<!--F-->     What past El Ni&ntilde;o and La Ni&ntilde;a events suggest for the coming months. NOAA's Climate Prediction Center forecasts
+     how strong the current event will be this winter (its Dec&ndash;Feb value of the ocean index RONI); this page shows what
+     past events of that strength looked like in the <b>month</b> you pick, compared with the average year. Pick a month and a
+     <b>variable</b>; <b>hover</b> over the map to read the values. More options are under <b>Advanced settings</b>.
+     This is a guide from history, not NOAA&rsquo;s forecast: for the official U.S. outlook for the coming months, see the<!--/F-->
+     <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
+     and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
+     <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
+
+</header>
+
+<div id="wrap">
+  <div id="controls">
+  <div class="bar mainbar">
+      <div class="fld"><label>Show</label>
+        <div class="seg big" id="phSeg" role="group" aria-label="Show">
+<!--C-->          <button data-ph="en" title="El Niño years compared with all years">El Ni&ntilde;o</button><button data-ph="ln" title="La Niña years compared with all years">La Ni&ntilde;a</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button><button data-ph="enln" id="enlnBtn" title="El Niño years compared directly with La Niña years (Advanced settings)">El Ni&ntilde;o &minus; La Ni&ntilde;a</button><!--/C-->
+<!--RF-->          <button data-ph="reg" title="The fitted value at this strength, minus the average year (the climatology)">Difference</button><button data-ph="clim" title="The normal: the average over all years">Climatology</button><!--/RF-->
+        </div></div>
+      <div class="fld"><label for="fldSel">Variable</label><select id="fldSel" class="big"></select></div>
+      <div class="fld" id="pcWrap"><label>Show difference as</label>
+        <div class="seg big" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
+              <button data-pc="pct">Percentage</button><button data-pc="abs">Absolute</button></div>
+      </div>
+      <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
+    </div>
+<!--R-->  <div id="robar">
+      <div class="fld rofld" title="The Dec–Feb value of NOAA CPC's Relative Oceanic Niño Index: above 0 for El Niño, below 0 for La Niña. The map shows the fitted value at this strength minus the average year (the climatology).">
+        <label for="roRange">El Ni&ntilde;o or La Ni&ntilde;a strength (Dec&ndash;Feb RONI, &deg;C)</label>
+        <div class="rowrap" id="roWrap"><span class="roend ln">La Ni&ntilde;a</span>
+          <div class="rotrack"><input type="range" id="roRange" min="-2.5" max="2.5" step="0.5" value="1.5" aria-describedby="roVal">
+            <div class="roticks" id="roTicks"><span data-v="-2.5">&minus;2.5</span><span data-v="-2">&minus;2</span><span data-v="-1.5">&minus;1.5</span><span data-v="-1">&minus;1</span><span data-v="-0.5">&minus;0.5</span><span data-v="0">0</span><span data-v="0.5">+0.5</span><span data-v="1">+1</span><span data-v="1.5">+1.5</span><span data-v="2">+2</span><span data-v="2.5">+2.5</span></div></div>
+          <span class="roend en">El Ni&ntilde;o</span></div>
+        <div class="roval" id="roVal" aria-live="polite">&nbsp;</div></div>
+  </div><!--/R-->
+<!--F-->  <div id="fmbar">
+    <div class="fld"><label>Month</label>
+      <div class="seg" id="fmSeg" role="group" aria-label="Month"></div></div>
+    <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
+  </div><!--/F-->
+  <div id="monthbar">
+    <div><div class="mlab">Average over</div>
+      <div class="seg" id="avSeg" role="group" aria-label="Average over">
+        <button data-av="yr" title="The whole ENSO year, June (year 0) to May (year +1)">ENSO year (Jun&ndash;May)</button><button data-av="jja" title="June–August of year 0">Jun–Aug</button><button data-av="son" title="September–November of year 0">Sep–Nov</button><button data-av="djf" title="December (year 0) – February (year +1)">Dec–Feb</button><button data-av="mam" title="March–May of year +1">Mar–May</button><button data-av="mon" title="One month at a time, with the slider">Month</button>
+      </div>
+      <div class="mnote">ENSO year is Jun&ndash;May (ex: 1997&ndash;1998 = June 1997 &ndash; May 1998)</div></div>
+    <div class="mgroup">
+    <button class="btn" id="mPrev" title="Previous month" aria-label="Previous month">&#9664;</button>
+    <div class="mtrack">
+      <input type="range" id="mRange" min="0" max="11" step="1" value="6" aria-label="Month">
+      <div class="mticks" id="mTicks"></div>
+    </div>
+    <button class="btn" id="mNext" title="Next month" aria-label="Next month">&#9654;</button>
+    </div>
+  </div>
+  </div>
+  <div id="msg" role="status">Loading&hellip;</div>
+  <div id="body" style="display:none">
+    <div id="maps">
+      <div class="mapcol">
+        <div class="maphead hastog"><div class="mhtext" aria-live="polite"><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p>
+          <p class="warn" id="mapWarn"></p></div>
+</div>
+        <div class="lmap" id="mapMain" role="region" aria-label="Map. Hover or tap to read a box; click a box to select it for the panels below."><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
+          <div class="hint">drag &middot; scroll to zoom &middot; hover for values</div></div>
+        <div id="cbHost"></div>
+      </div>
+    </div>
+    <details class="methods advanced" id="advanced">
+      <summary>Advanced settings</summary>
+      <div class="body">
+  <div class="bar advbar">
+<!--C-->    <div class="fld" title="An ENSO year is El Niño (La Niña) when its Dec–Feb RONI is at or beyond this value and part of an event lasting at least 5 overlapping 3-month seasons (about half a year) beyond ±0.5 °C.">
+      <label for="strSel">Strength (RONI)</label>
+      <select id="strSel"><option value="0.5">&ge; 0.5&deg;C (all events)</option>
+        <option value="1">&ge; 1.0&deg;C (moderate+)</option><option value="1.5">&ge; 1.5&deg;C (strong)</option></select></div><!--/C-->
+    <div class="fld" title="Which years go into the maps: the whole satellite-era record, or only the years since 2000."><label>Period</label>
+      <div class="seg" id="perSeg" role="group" aria-label="Period">
+        <button data-per="all">1979&ndash;2025</button><button data-per="recent">2000&ndash;2025</button><button data-per="custom" title="Choose your own first and last ENSO year">Custom&hellip;</button>
+      </div></div>
+    <div class="fld percustom"><label for="y0In">From</label><input type="number" id="y0In" step="1"></div>
+    <div class="fld percustom"><label for="y1In">To</label><input type="number" id="y1In" step="1"></div>
+<!--C-->    <div class="fld" title="What the El Niño and La Niña maps are measured against. All years: the climatology, which includes the El Niño and La Niña years themselves, so the two maps are close mirror images by construction. Neutral years: only the years with no El Niño or La Niña event at all (Dec–Feb RONI within ±0.5°C), so El Niño and La Niña are measured independently and asymmetries can show, but the baseline is small and noisier."><label>Compare with</label>
+      <div class="seg" id="baseSeg" role="group" aria-label="Compare with">
+        <button data-base="all">All years</button><button data-base="neu">Neutral years</button></div></div><!--/C-->
+    <div class="fld" title="Remove each box's linear trend over the period before compositing, so a run of recent El Niño (or La Niña) years does not pick up the warming trend, or a reporting trend, as an ENSO signal."><label for="dtSel">Trend</label>
+      <select id="dtSel"><option value="on">Removed</option><option value="off">Kept</option></select></div>
+    <div class="fld" id="unBox"><label for="unSel">Units</label>
+      <select id="unSel"><option value="C">&deg;C</option><option value="F">&deg;F</option></select></div>
+    <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
+      <select id="smSel"><option value="on">1 box</option><option value="off">Raw</option></select></div>
+    <div class="advbrk"></div>
+<!--C-->    <div class="fld"><label>&nbsp;</label><label class="chk" title="Show El Niño years minus La Niña years, instead of either one minus all years"><input type="checkbox" id="cmpChk"> Compare El Ni&ntilde;o with La Ni&ntilde;a directly</label></div><!--/C-->
+    <div class="fld"><label>&nbsp;</label><label class="chk" title="Dot the patches of boxes where the composite difference is significant: each box at p < 0.05 (two-sided t-test), and the patch as a whole stronger than chance (permutation test; see Methods)"><input type="checkbox" id="sigChk" checked> Dots: significant patches</label></div>
+    <div class="fld"><label>&nbsp;</label><label class="chk" title="Draw contour lines of the climatology (the normal for this month, season or year) over the map, with their values"><input type="checkbox" id="ctChk"> Climatology contours</label></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn btn-us" id="usBtn" title="Zoom back out to the whole field">&#8592; Full view</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="themeBtn">Light</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="pngBtn" title="Export the lower panels (RONI and box/global panels) as a PNG image">Panels PNG</button></div>
+    <div class="fld"><label>&nbsp;</label><button class="btn" id="linkBtn">Copy link</button></div>
+  </div>
+      </div>
+    </details>
+    <section class="sect" id="defSect">
+<!--C-->      <div class="secthead"><h2>Defining El Ni&ntilde;o and La Ni&ntilde;a</h2>
+        <p>Which years count as El Ni&ntilde;o and La Ni&ntilde;a: NOAA's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/" target="_blank" rel="noopener">Relative Oceanic Ni&ntilde;o Index</a>, with every
+           year used in the maps marked and listed below.</p></div><!--/C-->
+<!--R-->      <div class="secthead"><h2>Measuring El Ni&ntilde;o and La Ni&ntilde;a</h2>
+        <p>Every year enters the maps at its winter (Dec&ndash;Feb) value of NOAA's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/" target="_blank" rel="noopener">Relative Oceanic Ni&ntilde;o Index</a>, marked below.
+           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="ensogrid.html">composite version</a> of this page.</p></div><!--/R-->
+<!--F-->      <div class="secthead"><h2>The forecast and the years behind the maps</h2>
+        <p>The last two years of NOAA's ocean index (RONI) and NOAA CPC's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/outlook/" target="_blank" rel="noopener">official RONI outlook</a>
+           for the coming 3-month seasons. The maps use the winter (Dec&ndash;Feb) value; every past year since 1979 enters the fit
+           behind them (the panel under <i>Other advanced</i> shows them for one box). To explore other strengths, see the
+           <a href="ensoreg.html">strength version</a> of this page.</p></div><!--/F-->
+      <div id="panels"><svg id="cardRoni" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div>
+      <div class="foot" id="foot"></div>
+    </section>
+    <details class="methods" id="otherAdv">
+      <summary>Other advanced</summary>
+      <div class="body">
+        <div class="panels2"><svg id="cardBox" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div></div>
+    </details>
+    <details class="methods" id="methods">
+      <summary>Methods</summary>
+      <div class="body" id="methodsBody"></div>
+    </details>
+  </div>
+  <details class="methods" id="guideBox">
+    <summary>How to read these maps</summary>
+    <div class="body"><div class="gbody" id="guide"></div></div>
+  </details>
+<!--C-->  <details class="methods" id="faqBox">
+    <summary>Quick answers: what El Niño and La Niña usually do</summary>
+    <div class="body faq">
+      <h3>What are El Niño and La Niña?</h3>
+      <p>El Niño is the periodic warming of the central and eastern tropical Pacific Ocean, and La Niña its cooling; together they are the El Niño–Southern Oscillation (ENSO). An event usually grows through the northern summer and autumn, peaks around December and fades by the following spring, and one comes along every two to seven years. Here a year (June to May) counts as El Niño or La Niña when NOAA’s Relative Oceanic Niño Index (RONI) for December–February is at least +0.5 °C or at most −0.5 °C: 16 El Niño, 19 La Niña and 12 neutral years from 1979–80 to 2025–26.</p>
+      <h3>How does El Niño change winter weather in the United States and Canada?</h3>
+      <p>In El Niño winters (December–February), the Gulf Coast and Florida are about 20% wetter than average, Alaska and Canada are about 0.6–0.9 °C warmer, and the Gulf Coast is slightly cooler. Snowfall is lower in the Pacific Northwest, northern Rockies and Great Lakes and higher in the southern Rockies. Winter tornado days drop by about a fifth in the Mid-South and rise by about a quarter in Florida.</p>
+      <h3>What does La Niña usually do?</h3>
+      <p>La Niña is broadly the reverse of El Niño: in December–February Canada is about 0.3 °C colder than average and southern Africa 0.4 °C cooler, the tropics as a whole cool by about 0.2 °C, and the rainfall pattern over the Pacific, Indonesia, Australia, Africa and the Americas largely flips. La Niña is not an exact mirror image: its rain deficit in the tropical Pacific is smaller and sits farther west than El Niño’s rain excess.</p>
+      <h3>Does El Niño affect hurricanes and typhoons?</h3>
+      <p>Yes. Compared with La Niña years, El Niño years have about a third fewer Atlantic tropical-storm days and a little over half the Atlantic storm energy (ACE), with the biggest drop in the Caribbean and Gulf of Mexico. In the Pacific it is the opposite: about three times as many storm-days near Hawaii, about 25% more energy in the eastern Pacific, and West Pacific typhoons that form farther southeast and carry about 1.7 times the energy. The Australian region sees fewer cyclones, about 7 a season against 12 in La Niña years.</p>
+      <h3>Where does El Niño bring drought or heavy rain around the world?</h3>
+      <p>In El Niño years rain increases over the central and eastern tropical Pacific (by about 4 mm/day near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower.</p>
+      <h3>Does El Niño make the whole world warmer?</h3>
+      <p>Slightly, and with a delay of a few months: global-mean surface air temperature in December–February is about 0.2 °C higher in El Niño years than in La Niña years, with almost no difference during the developing northern summer.</p>
+      <h3>Is this a forecast of this winter?</h3>
+      <p>No. These maps describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion.</p>
+      <h3>How are the maps made?</h3>
+      <p>Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes, damaging wind and derechos from NOAA NCEI Storm Events and a derecho archive. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance.</p>
+    </div>
+  </details>
+  <details class="methods" id="papersBox">
+    <summary>Foundations: published research</summary>
+    <div class="body refs">
+      <p>These maps stand on decades of research into El Ni&ntilde;o and La Ni&ntilde;a around the world. A hearty list of such studies with comparison:</p>
+      <h3>Temperature and rainfall around the world</h3>
+      <ul>
+        <li><a href="https://doi.org/10.1175/1520-0493(1969)097%3C0163:ATFTEP%3E2.3.CO;2" target="_blank" rel="noopener" title="Atmospheric teleconnections from the equatorial Pacific, Mon. Wea. Rev.">Bjerknes 1969</a>. <b>Matches.</b> He linked El Niño to heavier rain over the warmed central Pacific and to weather far away; here Dec–Feb rain rises about 4 mm/day (+77%) near the date line while the Maritime Continent dries about 11%.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(1981)109%3C0813:PSAPAW%3E2.0.CO;2" target="_blank" rel="noopener" title="Planetary-scale atmospheric phenomena associated with the Southern Oscillation, Mon. Wea. Rev.">Horel &amp; Wallace 1981</a>. <b>Matches.</b> They described the Pacific–North American pattern; here Dec–Feb is warm over Alaska and western Canada (+0.6 to +0.9 °C) and slightly cool along the U.S. Gulf Coast.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(1982)110%3C0354:VITSST%3E2.0.CO;2" target="_blank" rel="noopener" title="Variations in tropical sea surface temperature and surface wind fields associated with the Southern Oscillation/El Niño, Mon. Wea. Rev.">Rasmusson &amp; Carpenter 1982</a>. <b>Matches.</b> El Niño warming of the equatorial Pacific builds through the northern summer and autumn and peaks around December; here the Niño-3.4 warming grows from about +0.5 °C in Jun–Aug to +1.0 °C in Dec–Feb.</li>
+        <li><a href="https://doi.org/10.1029/2000JD000298" target="_blank" rel="noopener" title="Evolution of El Niño–Southern Oscillation and global atmospheric surface temperatures, J. Geophys. Res.">Trenberth et al. 2002</a>. <b>Matches.</b> The warm eastern Pacific, the cooler horseshoe in the western Pacific and the warming of Alaska and the tropical Indian Ocean all appear in the El Niño temperature maps.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1992)005%3C0577:STPAWT%3E2.0.CO;2" target="_blank" rel="noopener" title="Surface temperature patterns associated with the Southern Oscillation, J. Climate">Halpert &amp; Ropelewski 1992</a>. <b>Matches.</b> El Niño winters (Dec–Feb) are warm over Canada, Alaska and southern Africa and slightly cool along the U.S. Gulf Coast, as they found.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(1986)114%3C2352:NAPATP%3E2.0.CO;2" target="_blank" rel="noopener" title="North American precipitation and temperature patterns associated with the El Niño/Southern Oscillation (ENSO), Mon. Wea. Rev.">Ropelewski &amp; Halpert 1986</a>. <b>Matches.</b> They found wetter Gulf Coast and northern Mexico winters, warm Alaska and western Canada and a cool Gulf Coast in El Niño; here Dec–Feb is about 20% wetter along the Gulf Coast and Florida, 0.6–0.9 °C warmer over Alaska and Canada, and slightly cool (about −0.2 °C) along the Gulf.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(1987)115%3C1606:GARSPP%3E2.0.CO;2" target="_blank" rel="noopener" title="Global and regional scale precipitation patterns associated with the El Niño/Southern Oscillation, Mon. Wea. Rev.">Ropelewski &amp; Halpert 1987</a>. <b>Matches.</b> Their regions of consistent El Niño rainfall show up: drier Indonesia, northern Australia, southern Africa, India and northeast Brazil, and wetter southeast South America (wetter here, though not dotted).</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1989)002%3C0268:PPAWTH%3E2.0.CO;2" target="_blank" rel="noopener" title="Precipitation patterns associated with the high index phase of the Southern Oscillation, J. Climate">Ropelewski &amp; Halpert 1989</a>. <b>Matches.</b> La Niña rainfall is broadly the reverse of El Niño in the same regions, as they found.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1989)002%3C1069:GCAAWE%3E2.0.CO;2" target="_blank" rel="noopener" title="Global climatic anomalies associated with extremes in the Southern Oscillation, J. Climate">Kiladis &amp; Diaz 1989</a>. <b>Consistent.</b> La Niña winters are broadly the reverse of El Niño; here Dec–Feb is −0.3 °C over Canada (El Niño +0.9), −0.4 °C over southern Africa (El Niño +0.6) and −0.18 °C across the tropics (El Niño +0.23).</li>
+        <li><a href="https://doi.org/10.1029/1999GL011140" target="_blank" rel="noopener" title="Global patterns of ENSO-induced precipitation, Geophys. Res. Lett.">Dai &amp; Wigley 2000</a>. <b>Matches.</b> The global El Niño rainfall pattern, wet central and eastern Pacific wrapped by a dry “boomerang” to the west, is reproduced.</li>
+        <li><a href="https://doi.org/10.1175/1520-0477(2001)082%3C0619:PPAAWE%3E2.3.CO;2" target="_blank" rel="noopener" title="Probabilistic precipitation anomalies associated with ENSO, Bull. Amer. Meteor. Soc.">Mason &amp; Goddard 2001</a>. <b>Consistent.</b> They found ENSO reliably shifts the odds of wet or dry seasons in a limited set of regions and seasons; the dotted (significant) rainfall patches here sit in those same places.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1997)010%3C1769:ENOLNA%3E2.0.CO;2" target="_blank" rel="noopener" title="El Niño, La Niña, and the nonlinearity of their teleconnections, J. Climate">Hoerling et al. 1997</a>. <b>Consistent.</b> El Niño and La Niña are not mirror images; here El Niño’s Dec–Feb rain excess peaks near the date line while La Niña’s deficit sits farther west, the shift they described, and over 5°S–5°N, 170°E–120°W the excess (about +2.9 mm/day) is larger than the deficit (about −1.9).</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1989)002%3C1239:SHCFAW%3E2.0.CO;2" target="_blank" rel="noopener" title="Southern Hemisphere circulation features associated with El Niño–Southern Oscillation events, J. Climate">Karoly 1989</a>. <b>Consistent.</b> The Pacific–South American wave pattern shows up in Sep–Nov as a warm/cold temperature dipole near the Amundsen and Bellingshausen Seas off West Antarctica, though no box there passes the significance test.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(1998)126%3C1581:TPSAMA%3E2.0.CO;2" target="_blank" rel="noopener" title="The Pacific–South American modes and tropical convection during the Southern Hemisphere winter, Mon. Wea. Rev.">Mo &amp; Higgins 1998</a>. <b>Consistent.</b> A similar West Antarctic temperature dipole appears in the developing-season El Niño maps, beginning in the southern winter they studied.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1999)012%3C0917:RSSTVD%3E2.0.CO;2" target="_blank" rel="noopener" title="Remote sea surface temperature variations during ENSO: Evidence for a tropical atmospheric bridge, J. Climate">Klein et al. 1999</a>. <b>Matches.</b> Oceans across the tropics warm a few months after an El Niño peaks; here the warming spreads tropics-wide in Mar–May.</li>
+        <li><a href="https://doi.org/10.1088/1748-9326/6/4/044022" target="_blank" rel="noopener" title="Global temperature evolution 1979–2010, Environ. Res. Lett.">Foster &amp; Rahmstorf 2011</a>. <b>Consistent.</b> Global-mean temperature rises a few months after El Niño and falls after La Niña; here the El Niño − La Niña global difference is about +0.2 °C in Dec–Feb and near zero in the developing summer.</li>
+        <li><a href="https://doi.org/10.1175/2009JCLI3089.1" target="_blank" rel="noopener" title="Identifying signatures of natural climate variability in time series of global-mean surface temperature: Methodology and insights, J. Climate">Thompson et al. 2009</a>. <b>Consistent.</b> Volcanic eruptions cool the globe for a year or two; here the El Chichón (1982) and Pinatubo (1991) eruptions fell in El Niño years and slightly reduce El Niño’s global warmth (by about 0.015 °C).</li>
+        <li><a href="https://doi.org/10.1126/science.284.5423.2156" target="_blank" rel="noopener" title="On the weakening relationship between the Indian monsoon and ENSO, Science">Kumar et al. 1999</a>. <b>Consistent.</b> El Niño weakens the Indian summer monsoon, but less so in recent decades; here India’s Jun–Aug rainfall is about 6–8% lower in El Niño years, a modest drop.</li>
+        <li><a href="https://doi.org/10.1029/96GL00246" target="_blank" rel="noopener" title="Sahel droughts and ENSO dynamics, Geophys. Res. Lett.">Janicot et al. 1996</a>. <b>Consistent.</b> El Niño tends to dry the African Sahel in its summer rainy season; here Sahel rainfall in July is lower in El Niño years.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1999)012%3C1577:TMDOMA%3E2.0.CO;2" target="_blank" rel="noopener" title="The midsummer drought over Mexico and Central America, J. Climate">Magaña et al. 1999</a>. <b>Matches.</b> Central America’s summer rains are about 10% lower in El Niño years, deepening the midsummer drought they describe.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(2003)016%3C1775:IRVIOE%3E2.0.CO;2" target="_blank" rel="noopener" title="Indonesian rainfall variability: Impacts of ENSO and local air–sea interaction, J. Climate">Hendon 2003</a>. <b>Matches.</b> Indonesia’s El Niño drought is strongest in Sep–Nov and fades in the Dec–Feb monsoon, as he found.</li>
+        <li><a href="https://doi.org/10.1002/joc.950" target="_blank" rel="noopener" title="Identification of three dominant rainfall regions within Indonesia and their relationship to sea surface temperature, Int. J. Climatol.">Aldrian &amp; Susanto 2003</a>. <b>Matches.</b> Most of Indonesia dries in El Niño, mostly in the dry and transition seasons rather than the wet monsoon.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(2003)131%3C0074:AOSOTR%3E2.0.CO;2" target="_blank" rel="noopener" title="An observational study of the relationship between excessively strong short rains in coastal East Africa and Indian Ocean SST, Mon. Wea. Rev.">Black et al. 2003</a>. <b>Matches.</b> East Africa’s autumn “short rains” are wetter in El Niño years (about +24% in Sep–Nov).</li>
+        <li><a href="https://doi.org/10.1038/43854" target="_blank" rel="noopener" title="A dipole mode in the tropical Indian Ocean, Nature">Saji et al. 1999</a>. <b>Consistent.</b> The Sep–Nov El Niño rainfall map shows the Indian Ocean Dipole pattern, wetter in the west and drier in the east, which often develops alongside El Niño.</li>
+        <li><a href="https://doi.org/10.1002/qj.49710343505" target="_blank" rel="noopener" title="Dynamics of climatic hazards in northeast Brazil, Quart. J. Roy. Meteor. Soc.">Hastenrath &amp; Heller 1977</a>. <b>Matches.</b> Northeast Brazil’s Mar–May rainy season is drier in El Niño years and wetter in La Niña years.</li>
+        <li><a href="https://doi.org/10.1175/1520-0493(1998)126%3C3102:ROMLTC%3E2.0.CO;2" target="_blank" rel="noopener" title="Role of multiple-level tropospheric circulations in forcing ENSO winter precipitation anomalies, Mon. Wea. Rev.">Smith et al. 1998</a>. <b>Partly.</b> They found wetter southern U.S. winters and a drier Pacific Northwest in El Niño; here California, Texas and Florida are about 18–26% wetter in Dec–Feb, but the Pacific Northwest is barely drier (about −2%), likely because its drying is mainly a strong-event signal.</li>
+        <li><a href="https://doi.org/10.1029/2006RG000199" target="_blank" rel="noopener" title="Impact of El Niño–Southern Oscillation on European climate, Rev. Geophys.">Brönnimann 2007</a>. <b>Differs.</b> He found a tendency to cold late winters in northern and central Europe after El Niño; here February in Europe is slightly warm and not significant, because the signal is small next to Europe’s large year-to-year swings and four very warm Februaries after El Niño (1995, 1998, 2016, 2024) dominate the average; without them it is slightly cold.</li>
+        <li><a href="https://doi.org/10.1038/ngeo381" target="_blank" rel="noopener" title="The role of the stratosphere in the European climate response to El Niño, Nature Geosci.">Ineson &amp; Scaife 2009</a>. <b>Differs.</b> Same as Brönnimann (2007): the cold European late winter they explain does not appear above the noise in this sample of years.</li>
+      </ul>
+      <h3>Snowfall</h3>
+      <ul>
+        <li><a href="https://doi.org/10.1175/1520-0477(2001)082%3C1179:RSDAWE%3E2.3.CO;2" target="_blank" rel="noopener" title="Regional snowfall distributions associated with ENSO: Implications for seasonal forecasting, Bull. Amer. Meteor. Soc.">Smith &amp; O’Brien 2001</a>. <b>Consistent.</b> El Niño winters bring less snow to the Pacific Northwest, northern Rockies and Great Lakes and more to the southern Rockies and, in February, the mid-Atlantic, as they found; the wider Northeast increase they report is not seen here.</li>
+        <li><a href="https://doi.org/10.1175/1520-0434(2003)018%3C0965:IOEOSF%3E2.0.CO;2" target="_blank" rel="noopener" title="Impacts of ENSO on snowfall frequencies in the United States, Wea. Forecasting">Patten et al. 2003</a>. <b>Matches.</b> Less El Niño snow in the Cascades and around the Great Lakes, more in New Mexico and the southern Rockies.</li>
+        <li><a href="https://doi.org/10.1029/1999JD900010" target="_blank" rel="noopener" title="Relationship of ENSO to snowfall and related cyclone activity in the contiguous United States, J. Geophys. Res.">Kunkel &amp; Angel 1999</a>. <b>Matches.</b> Less snow across the northern U.S. in El Niño and more in the Southwest, with La Niña broadly reversed.</li>
+        <li><a href="https://doi.org/10.1029/2000JD900134" target="_blank" rel="noopener" title="Interannual climate variability in the Central Andes and its relation to tropical Pacific and Atlantic forcing, J. Geophys. Res.">Vuille et al. 2000</a>. <b>Consistent.</b> El Niño dries the high Andean Altiplano; here the Altiplano gets less snow in El Niño years.</li>
+        <li><a href="https://doi.org/10.1175/JCLI3969.1" target="_blank" rel="noopener" title="Snowpack variations in the central Andes of Argentina and Chile, 1951–2005: Large-scale atmospheric influences and implications for water resources in the region, J. Climate">Masiokas et al. 2006</a>. <b>Matches.</b> El Niño winters bring deeper snow to the central Andes of Chile and Argentina; here those Andes get more snowfall in Jun–Aug of El Niño years.</li>
+      </ul>
+      <h3>Tropical cyclones</h3>
+      <ul>
+        <li><a href="https://doi.org/10.1175/1520-0493(1984)112%3C1649:ASHFPI%3E2.0.CO;2" target="_blank" rel="noopener" title="Atlantic seasonal hurricane frequency. Part I: El Niño and 30 mb quasi-biennial oscillation influences, Mon. Wea. Rev.">Gray 1984</a>. <b>Matches.</b> El Niño suppresses Atlantic hurricanes; here Atlantic storm-days are about a third fewer, and storm energy (ACE) a little over half, in El Niño years compared with La Niña years.</li>
+        <li><a href="https://doi.org/10.1175/JCLI3659.1" target="_blank" rel="noopener" title="Leading tropical modes associated with interannual and multidecadal fluctuations in North Atlantic hurricane activity, J. Climate">Bell &amp; Chelliah 2006</a>. <b>Consistent.</b> The El Niño suppression is strongest in the Caribbean and the Gulf of Mexico (about −45% against the average year) and weaker in the eastern main development region.</li>
+        <li><a href="https://doi.org/10.1175/2010JCLI3799.1" target="_blank" rel="noopener" title="El Niño–Southern Oscillation’s impact on Atlantic basin hurricanes and U.S. landfalls, J. Climate">Klotzbach 2011</a>. <b>Matches.</b> Fewer storms reach the Caribbean, the Gulf of Mexico and the Bahamas in El Niño years, where the drop here is largest.</li>
+        <li><a href="https://doi.org/10.1175/2010JCLI3497.1" target="_blank" rel="noopener" title="Climate modulation of North Atlantic hurricane tracks, J. Climate">Kossin et al. 2010</a>. <b>Consistent.</b> El Niño mainly suppresses low-latitude Atlantic storms; here the subtropical central Atlantic is not suppressed in September.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1997)010%3C2683:TCOITV%3E2.0.CO;2" target="_blank" rel="noopener" title="Tropical cyclone occurrences in the vicinity of Hawaii: Are the differences between El Niño and non-El Niño years significant?, J. Climate">Chu &amp; Wang 1997</a>. <b>Matches.</b> More storms near Hawaii in El Niño years; here central Pacific storm-days are about three times those of La Niña years.</li>
+        <li><a href="https://doi.org/10.1029/2007GC001861" target="_blank" rel="noopener" title="Clustering of eastern North Pacific tropical cyclone tracks: ENSO and MJO effects, Geochem. Geophys. Geosyst.">Camargo et al. 2008</a>. <b>Matches.</b> Eastern Pacific storms form farther west and are more energetic in El Niño years (ACE about 25% higher here).</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(2002)015%3C1643:HSEEAT%3E2.0.CO;2" target="_blank" rel="noopener" title="How strong ENSO events affect tropical storm activity over the western North Pacific, J. Climate">Wang &amp; Chan 2002</a>. <b>Matches.</b> In El Niño years West Pacific typhoons form farther southeast and last longer, with fewer forming in the northwest of the basin; here genesis there is about 22% lower, and about 16% lower over the South China Sea.</li>
+        <li><a href="https://doi.org/10.1175/JCLI4282.1" target="_blank" rel="noopener" title="Use of a genesis potential index to diagnose ENSO effects on tropical cyclone genesis, J. Climate">Camargo et al. 2007</a>. <b>Matches.</b> El Niño favors storm formation in the southeast of the West Pacific; here about four times as many storms form at 0–20°N, 150°E–180° in El Niño as in La Niña years (7.0 against 1.6 a year).</li>
+        <li><a href="https://doi.org/10.1175/JCLI3457.1" target="_blank" rel="noopener" title="Western North Pacific tropical cyclone intensity and ENSO, J. Climate">Camargo &amp; Sobel 2005</a>. <b>Matches.</b> West Pacific typhoons are stronger and longer-lived in El Niño years; here ACE is about 1.7 times and intense-storm days about twice those of La Niña years, with similar numbers of storms.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1995)008%3C1249:TCITSP%3E2.0.CO;2" target="_blank" rel="noopener" title="Tropical cyclones in the southwest Pacific: Spatial patterns and relationships to Southern Oscillation and sea surface temperature, J. Climate">Basher &amp; Zheng 1995</a>. <b>Matches.</b> South Pacific cyclones shift east, toward French Polynesia, in El Niño years.</li>
+        <li><a href="https://doi.org/10.1175/2009JCLI2880.1" target="_blank" rel="noopener" title="Tropical cyclone activity in the Fiji region: Spatial patterns and relationship to large-scale circulation, J. Climate">Chand &amp; Walsh 2009</a>. <b>Matches.</b> More South Pacific cyclones form, and farther northeast, in El Niño years.</li>
+        <li><a href="https://doi.org/10.1029/2007GL032983" target="_blank" rel="noopener" title="On tropical cyclone activity in the Southern Hemisphere: Trends and the ENSO connection, Geophys. Res. Lett.">Kuleshov et al. 2008</a>. <b>Matches.</b> Fewer cyclones in the Australian region in El Niño years: about 7 a season here against 12 in La Niña years.</li>
+        <li><a href="https://doi.org/10.1175/2007JCLI1970.1" target="_blank" rel="noopener" title="Interannual variability of tropical cyclones in the Australian region: Role of large-scale environment, J. Climate">Ramsay et al. 2008</a>. <b>Consistent.</b> They tied fewer Australian-region cyclones to warm Niño-3.4 waters; here fewer form across the region, and storm-days drop most off northwest Australia, while Coral Sea storm-days are not lower as activity shifts east.</li>
+        <li><a href="https://doi.org/10.1029/2006JD007289" target="_blank" rel="noopener" title="Variation of tropical cyclone activity in the South Indian Ocean: El Niño–Southern Oscillation and Madden-Julian Oscillation effects, J. Geophys. Res.">Ho et al. 2006</a>. <b>Partly.</b> ENSO changes where South Indian Ocean storms form and travel more than how many there are; here basin totals barely change and there is only a weak west–east shift, a loose match for a weak signal.</li>
+        <li><a href="https://doi.org/10.1029/2011JC007417" target="_blank" rel="noopener" title="The influences of ENSO on tropical cyclone activity in the Bay of Bengal during October–December, J. Geophys. Res.">Girishkumar &amp; Ravichandran 2012</a>. <b>Matches.</b> In Oct–Dec they found Bay of Bengal storms favored in La Niña, with formation shifting west in El Niño; here Bay of Bengal storm-days in Sep–Nov are lower in El Niño years (3.6 against 4.9 in La Niña), while the Arabian Sea is busier (4.0 against 1.1).</li>
+      </ul>
+      <h3>U.S. tornadoes, hail and derechos</h3>
+      <ul>
+        <li><a href="https://doi.org/10.1175/2007MWR2171.1" target="_blank" rel="noopener" title="The relation of El Niño–Southern Oscillation (ENSO) to winter tornado outbreaks, Mon. Wea. Rev.">Cook &amp; Schaefer 2008</a>. <b>Matches.</b> El Niño winters bring fewer tornado days to the Mid-South and Ohio and Tennessee valleys and more to Florida and the Gulf Coast.</li>
+        <li><a href="https://doi.org/10.1175/JAMC-D-16-0249.1" target="_blank" rel="noopener" title="The impact of El Niño–Southern Oscillation (ENSO) on winter and early spring U.S. tornado outbreaks, J. Appl. Meteor. Climatol.">Cook et al. 2017</a>. <b>Matches.</b> The same Mid-South and Ohio Valley reduction carries into March.</li>
+        <li><a href="https://doi.org/10.1038/ngeo2385" target="_blank" rel="noopener" title="Influence of the El Niño/Southern Oscillation on tornado and hail frequency in the United States, Nature Geosci.">Allen et al. 2015</a>. <b>Partly.</b> Winter agrees, and spring hail in the southern Plains is still slightly lower after El Niño, as they found; but spring tornado days there are now slightly higher (about +9%) over 1979–2025 because of very active springs after El Niño (2015, 2016, 2019, 2024); for their 1979–2013 period these data show fewer (about −7%).</li>
+        <li><a href="https://doi.org/10.1002/2017GL074781" target="_blank" rel="noopener" title="ENSO-based probabilistic forecasts of March–May U.S. tornado and hail activity, Geophys. Res. Lett.">Lepore et al. 2017</a>. <b>Partly.</b> As for Allen et al. (2015): spring hail in the southern Plains still agrees in sign, but the tornado signal is reversed in this longer record by a few recent springs.</li>
+        <li><a href="https://doi.org/10.1175/1520-0434(1987)002%3C0032:DWCIW%3E2.0.CO;2" target="_blank" rel="noopener" title="Derechos: Widespread convectively induced windstorms, Wea. Forecasting">Johns &amp; Hirt 1987</a>. <b>Consistent.</b> They found warm-season derechos most frequent from eastern South Dakota to the upper Ohio Valley; the derecho map here peaks in a similar band, from Kansas–Nebraska and Iowa–Illinois toward Ohio.</li>
+        <li><a href="https://doi.org/10.1175/1520-0477(1998)079%3C2527:ACODPM%3E2.0.CO;2" target="_blank" rel="noopener" title="A climatology of derecho-producing mesoscale convective systems in the central and eastern United States, 1986–95. Part I: Temporal and spatial distribution, Bull. Amer. Meteor. Soc.">Bentley &amp; Mote 1998</a>. <b>Partly.</b> Their main warm-season corridor (1986–95) ran through the southern Plains, and they also found cool-season derechos in the South; this archive peaks farther north (Iowa–Illinois) and lists warm-season events only.</li>
+        <li><a href="https://doi.org/10.1175/1520-0434(2004)019%3C0595:ITCOD%3E2.0.CO;2" target="_blank" rel="noopener" title="Interpreting the climatology of derechos, Wea. Forecasting">Coniglio &amp; Stensrud 2004</a>. <b>Matches.</b> The warm-season derecho corridor runs from Kansas and Nebraska through Iowa and Illinois to Ohio.</li>
+      </ul>
+      <h3>Data and methods behind the maps</h3>
+      <ul>
+        <li><a href="https://doi.org/10.1175/JCLI-D-23-0406.1" target="_blank" rel="noopener" title="A relative sea surface temperature index for classifying ENSO events in a changing climate, J. Climate">L’Heureux et al. 2024</a>. Defines the Relative Oceanic Niño Index (RONI), NOAA’s index since 2025, which sets the El Niño and La Niña years here; the year lists match NOAA’s.</li>
+        <li><a href="https://doi.org/10.1088/1748-9326/abe9ed" target="_blank" rel="noopener" title="Defining El Niño indices in a warming climate, Environ. Res. Lett.">van Oldenborgh et al. 2021</a>. Explains why a relative index is needed as the whole tropics warm, the reason these maps use RONI.</li>
+        <li><a href="https://doi.org/10.1175/BAMS-D-13-00117.1" target="_blank" rel="noopener" title="Understanding ENSO diversity, Bull. Amer. Meteor. Soc.">Capotondi et al. 2015</a>. Events differ in where and when the ocean warming peaks; these maps average over that diversity.</li>
+        <li><a href="https://doi.org/10.1175/JCLI-D-17-0783.1" target="_blank" rel="noopener" title="How well do we know ENSO’s climate impacts over North America, and how do we evaluate models accordingly?, J. Climate">Deser et al. 2018</a>. With only about 15 events of each kind, composites carry large sampling noise; for example, Canada’s Dec–Feb El Niño warmth is +0.9 °C against all years but +1.7 °C against the 12 neutral years.</li>
+        <li><a href="https://doi.org/10.1002/qj.3803" target="_blank" rel="noopener" title="The ERA5 global reanalysis, Quart. J. Roy. Meteor. Soc.">Hersbach et al. 2020</a>. Describes ERA5, the source of the temperature, rainfall and snowfall maps.</li>
+        <li><a href="https://doi.org/10.1175/1525-7541(2003)004%3C1147:TVGPCP%3E2.0.CO;2" target="_blank" rel="noopener" title="The Version-2 Global Precipitation Climatology Project (GPCP) monthly precipitation analysis (1979–present), J. Hydrometeor.">Adler et al. 2003</a>. The ERA5 rainfall climatology here has the same patterns as this satellite–gauge product, running about 5–10% wetter over the tropical oceans, a known ERA5 trait.</li>
+        <li><a href="https://doi.org/10.1175/1520-0442(1992)005%3C1140:TACIEC%3E2.0.CO;2" target="_blank" rel="noopener" title="The annual cycle in equatorial convection and sea surface temperature, J. Climate">Mitchell &amp; Wallace 1992</a>. The seasonal march of the tropical rain belts they describe, including the eastern Pacific’s double rain belt in spring, is reproduced in the climatology maps.</li>
+        <li><a href="https://doi.org/10.1002/2015JD024546" target="_blank" rel="noopener" title="Status of high-latitude precipitation estimates from observations and reanalyses, J. Geophys. Res. Atmos.">Behrangi et al. 2016</a>. High-latitude precipitation and snowfall differ widely between products, so read the polar snowfall maps as approximate.</li>
+        <li><a href="https://doi.org/10.1175/BAMS-D-15-00267.1" target="_blank" rel="noopener" title="“The stippling shows statistically significant grid points”: How research results are routinely overstated and overinterpreted, and what to do about it, Bull. Amer. Meteor. Soc.">Wilks 2016</a>. Shows that box-by-box significance dots often appear by chance and recommends controlling the false discovery rate; the dots here use a stricter whole-map patch test instead.</li>
+        <li><a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener" title="Nonparametric statistical testing of EEG- and MEG-data, J. Neurosci. Methods">Maris &amp; Oostenveld 2007</a>. The cluster permutation test used for the dots, borrowed from brain imaging.</li>
+      </ul>
+    </div>
+  </details><!--/C-->
+</div>
+
+<script>
+/*__SCRIPT__*/</script>
+<script src="/assets/feedback.js" defer></script>
+</body>
+</html>
