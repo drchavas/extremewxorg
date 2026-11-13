@@ -57,7 +57,7 @@ box's own fit has p ≥ 0.05. It is a hand-written page (no template), `noindex`
 
 ## Units on the map pages (2026-11-13)
 `S.un` is `'F'` (U.S., default) or `'C'` (metric). `cvC`/`cvD` convert temperature to °F and the two water fluxes
-(precipitation, snowfall) to in/month (× 30.44/25.4); `unitAbs` gives `in/month` or `mm/day`; `domains` swaps in round
+(precipitation, snowfall) to in/month (× 30.44/25.4); `unitAbs` gives `in/month` or `mm/month` (metric was mm/day until 2026-11-13); `domains` swaps in round
 in/month colour limits. The Units menu ("U.S. (°F, in)" / "Metric (°C, mm)") is shown for every ERA5 field. The choice
 is saved in `localStorage` `ensoUnits` and read when a link has no `u=`; links carry `u=C` only for metric.
 
@@ -119,3 +119,22 @@ Dan), and `update_stamps.py` stamps all four.
   metric on to the maps; darker muted text and a clearer focus ring. "Deeper science view" link removed (Dan);
   "View maps" renamed "Forecast maps". Table row "Precipitation" (was "Rain and snow").
 
+## Round 3 (2026-11-13): units, labels, derechos, links
+- **Derechos removed** from every ENSO map page (menu, field list, notes, methods text, the three derecho papers and their
+  JSON-LD citations, the description/keywords). Reason: 96 events in 1996–2025, none Sep–Mar, two Aprils, and only
+  three post-strong-El-Niño springs, too few for a composite or regression. Old `f=derechoday` links fall back to temperature.
+  The Storm Events grid file stays in `scs/trends/data/` for the 2° climatology page.
+- **Metric rain/snow in mm/month** on the maps (×30.44, `MM_MO`), matching the location page; metric colour bars
+  0–400 (rain) / 0–120 (snow) mm/month with round difference ranges; contour levels 10–400 / 2–100 mm/month;
+  mm/month shows 0 decimals (climatology) and 1 (change).
+- **Round °F colour bars:** temperature climatology −30…90 °F (was −22…86, converted °C); differences 6/8/4/3/4 °F;
+  U.S. rain climatology 0–16 in/month, snow 0–4 in/month (quarter ticks are whole numbers).
+- **Location → maps links** pass the centre of the box the location page used (`boxCtr`), so a place on a box edge
+  opens the same box; a link with `c=` but no `v=` opens zoomed in (+2 levels) around the place (not on U.S.-only fields).
+- **Location page:** no "+" before "warmer" (the word gives the direction); event counts "0.3 days" (was "0.27 d");
+  search results with identical "Name — Region, Country" are merged (most populous kept).
+
+- **Forecast page trimmed (later 2026-11-13):** no RONI/years section, no "Other advanced" panel, no Panels PNG
+  (template `<!--CRS-->` block around `#defSect`+`#otherAdv`, and around the PNG button); Methods is a one-line
+  pointer to the Science page's Regression tab. `build.py` resolves nested block markers (inner first, at their
+  template position). JS skips the panels when `#cardRoni` is absent.

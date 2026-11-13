@@ -26,16 +26,22 @@ def build(letter, reg, fcst, old=None):
     h = open(os.path.join(HERE, 'ensogrid.tmpl.html')).read()
     js = open(os.path.join(HERE, 'enso.js')).read()
     head_end = h.index('</head>')
-    def keep(m):
-        L, body, nl = m.group(1), m.group(2), m.group(3)
+    BLK = re.compile(r'<!--([CRFSN]+)-->(.*?)<!--/\1-->(\n?)', re.S)
+    def proc(text, off):
+        # blocks may nest (a CRS block holding C and R blocks): inner blocks are resolved first,
+        # at their position in the whole template (the head/body test needs it)
+        return BLK.sub(lambda m: keep(m, off), text)
+    def keep(m, off):
+        L, nl = m.group(1), m.group(3)
+        body = proc(m.group(2), off + m.start(2))
         if letter != 'S': return body + nl if letter in L else ''
         if 'N' in L: return ''
         if 'S' in L: return body + nl
-        if m.start() < head_end or not ('C' in L or 'R' in L): return ''
+        if off + m.start() < head_end or not ('C' in L or 'R' in L): return ''
         if 'C' in L and 'R' in L: return body + nl
         tag = 'v-c' if 'C' in L else 'v-r'
         return '<%s>%s</%s>%s' % (tag, body, tag, nl)
-    s = re.sub(r'<!--([CRFSN]+)-->(.*?)<!--/\1-->(\n?)', keep, h, flags=re.S)
+    s = proc(h, 0)
     assert not re.search(r'<!--/?[CRFSN]+-->', s), 'unbalanced block marker'
     if letter == 'S':        # the science page picks its view at load
         js = js.replace('const REG=/*__REG__*/false;',

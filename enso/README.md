@@ -148,7 +148,7 @@ other pages), and use CPC's **median** as "most likely".
 |---|---|---|---|
 | ERA5 | 2 m temperature, precipitation, snowfall (water equivalent) | 2° global | `data/era5_<var>_<MM\|yr\|jja\|son\|djf\|mam>.bin.gz` (17 per variable, ~1 MB each) |
 | Tropical cyclones | track density (TS+/Cat1+/Cat3+), ACE, genesis | 5° global, ±60° | `data/tc_month.json.gz` (83 KB) |
-| U.S. severe weather | hail, tornado, thunderstorm wind, derecho (+ their thresholds) | 2° lower 48 | **`../scs/trends/data/grid_*.json.gz` — read in place** |
+| U.S. severe weather | hail, tornado, thunderstorm wind (+ their thresholds); derechos removed 2026-11-13 (too few events: 96 in 1996–2025, none Sep–Mar) | 2° lower 48 | **`../scs/trends/data/grid_*.json.gz` — read in place** |
 
 The U.S. fields read the 2° page's own data files (and `../scs/trends/geo/states.topo.json.gz` for
 state lines) via relative paths. That keeps one copy of the data, but it couples the pages: **if
@@ -225,7 +225,7 @@ check this page too.**
 - **Smoothing** (count fields only): Gaussian, sigma one box, applied to each *year's* map before
   compositing so dots and colors describe the same field; panels are never smoothed.
 - **Period (Oct 2026)**: a three-way toggle — **1979–2025**, **2000–2025**, or **Custom…**, which
-  reveals From/To boxes. Presets are clipped to each record (TC 1980–, derechos 1996–). Default:
+  reveals From/To boxes. Presets are clipped to each record (TC 1980–). Default:
   1979 for every field (the larger sample matters most for a public page). Storm Events reporting
   grew steeply into the late 1990s, but over 1979–2025 quadratic instead of linear per-box
   detrending changes the U.S. EN−LN maps by 3–13% RMS and flips ≤4% of boxes (hail, tornado,

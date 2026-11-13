@@ -10,7 +10,7 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v12">
+<meta name="version" content="ensolocal-2026-11-13-v13">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
@@ -71,7 +71,7 @@
   .fcstale:empty{display:none}
   .pastnote{font-size:14px;color:var(--muted);font-style:italic}
   .tv{font-weight:600}
-  .tv.vw{color:#b2432a} .tv.vc{color:#2d6684} .tv.vwet{color:#1f7568} .tv.vdry{color:#8a5a14} .tv.vsnow{color:#2d6684} .tv.vless{color:#6b7778}
+  .tv.vw{color:#b2432a} .tv.vc{color:#2d6684} .tv.vwet{color:#1f7568} .tv.vdry{color:#8a5a14} .tv.vsnow{color:#2d6684} .tv.vless{color:#8a5a14}
   .unc{font-style:italic;font-weight:400!important;opacity:.62}
   .uncnote .unc{opacity:1;color:#66787a}
   .uncnote{font-size:13.5px;color:var(--muted);margin:10px 0 0}
@@ -345,6 +345,9 @@ function boxOf(f,la,lo){
   const cla=g.lat0+(r+0.5)*g.g, clo=((g.lon0+(k+0.5)*g.g)%360+360)%360;
   return {id:r*g.nlon+k, tile:Math.floor(cla/10)*10+'_'+Math.floor(clo/10)*10, la0:g.lat0+r*g.g, lo0:g.lon0+k*g.g, g:g.g};
 }
+/* the centre of a box, for map links: the place's own coordinates, rounded, can land a hair over the
+   edge in the neighbouring box on the maps */
+function boxCtr(b){ return `${(b.la0+b.g/2).toFixed(3)},${((b.lo0+b.g/2+540)%360-180).toFixed(3)}`; }
 async function tile(key){
   if(!META.tiles.includes(key)) return null;
   if(!TILES[key]) TILES[key]=fetch(BASE+'local/t/'+key+'.json').then(r=>r.ok?r.json():null).catch(()=>null);
@@ -372,7 +375,7 @@ function amount(k,v,m){            // a monthly amount from the stored daily rat
   if(k==='t2m') return us?`${fmt(v*1.8+32,0)} °F`:`${fmt(v,0)} °C`;
   if(k==='pr'){ const mmv=Math.max(0,v*days); return us?`${fmt(mmv/25.4,1)} in`:`${fmt(mmv,0)} mm`; }
   if(k==='sf'){ const cm=Math.max(0,v*days); return us?`${fmt(cm/2.54,1)} in`:`${fmt(cm,cm<10?1:0)} cm`; }
-  const n=Math.max(0,v); return `${fmt(n,n<1?2:1)} d`;
+  const n=Math.max(0,v), s=fmt(n,1); return `${s} ${s==='1.0'?'day':'days'}`;
 }
 /* table changes are rounded like the month tiles: to the degree and to 10%, since the fit is not that exact */
 function changeTxt(k,c){
@@ -451,7 +454,7 @@ function seasonTiles(W){
     const n=[], t=Math.round(W.t2m.cs[i].d*(us?1.8:1));
     /* coloured like the maps (Dan): warmer red, cooler blue, wetter green, drier brown, more snow blue, less snow gray;
        "1 °F cooler" carries no minus sign (the word says it) */
-    n.push(['Temperature',t===0?'around normal':`${t>0?'+':''}${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`,faint('t2m'),t>0?'vw':t<0?'vc':'']);
+    n.push(['Temperature',t===0?'around normal':`${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`,faint('t2m'),t>0?'vw':t<0?'vc':'']);
     const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?Math.round(c.pct/10)*10:null; };
     const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`,faint('pr'),pp>0?'vwet':pp<0?'vdry':'']);
     const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`,faint('sf'),ps>0?'vsnow':ps<0?'vless':'']);
@@ -500,7 +503,8 @@ async function render(){
      of this ENSO year while it is still ahead, else the page's own default month */
   { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:'';
     const uq=S.units==='metric'?'&u=C':'';        // the maps open in the units shown here
-    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}${uq}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
+    const tb0=rows.find(r=>r.R.k==='t2m');
+    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}${uq}&c=${tb0?boxCtr(tb0.b):loc.la.toFixed(2)+','+loc.lo.toFixed(2)}`; }
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
@@ -512,9 +516,9 @@ async function render(){
   if(!rows.length){ tb.innerHTML=''; document.getElementById('legend').innerHTML=''; return; }
   let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':'Typical value in a year like this')+'</th>'+
     L.map(mo=>`<th scope="col">${MONTHS[mo.m-1]}<small>${mo.y}</small></th>`).join('')+'</tr></thead><tbody>';
-  for(const {R,f,cells} of rows){
+  for(const {R,f,b,cells} of rows){
     const fm=L[0]?ymStr(L[0].y,L[0].m):'';
-    h+=`<tr><th class="row" scope="row">${esc(R.name)}<small>${esc(R.sub)}</small><a href="${BASE}ensofcst#f=${R.k}${mapMo}${S.units==='metric'?'&u=C':''}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}" target="_blank" rel="noopener">map</a></th>`;
+    h+=`<tr><th class="row" scope="row">${esc(R.name)}<small>${esc(R.sub)}</small><a href="${BASE}ensofcst#f=${R.k}${mapMo}${S.units==='metric'?'&u=C':''}&c=${boxCtr(b)}" target="_blank" rel="noopener">map</a></th>`;
     cells.forEach((c,i)=>{
       const mo=L[i];
       if(!c){ h+=`<td class="none" title="Not shown: too rare here in ${MFULL[mo.m-1]}">–</td>`; return; }
@@ -557,7 +561,13 @@ async function geo(name,prefix){
     .then(r=>r.json()).catch(e=>{ delete GEO[key]; throw e; });
   const j=await GEO[key];
   /* places people live in, regions and countries; not airports, parks, stations or buildings */
-  const res=(j.results||[]).filter(p=>{ const c=p.feature_code||'PPL'; return /^(PPL|ADM[12]$|PCL)/.test(c)&&!/^(PPLX|PPLH|PPLQ|PPLW|PCLH)$/.test(c); });
+  const res0=(j.results||[]).filter(p=>{ const c=p.feature_code||'PPL'; return /^(PPL|ADM[12]$|PCL)/.test(c)&&!/^(PPLX|PPLH|PPLQ|PPLW|PCLH)$/.test(c); });
+  /* one entry per name as shown: the service can list a town and its county seat, or two records of one
+     town, under the same "Name — Region, Country"; keep the most populous, in the first one's place */
+  const res=[], seen=new Map();
+  for(const p of res0){ const id=norm(p.name)+'|'+placeLabel(p), i=seen.get(id);
+    if(i==null){ seen.set(id,res.length); res.push(p); }
+    else if((p.population||0)>(res[i].population||0)) res[i]=p; }
   if(prefix){                                   // as you type: names that start with what is typed come first
     const k=norm(name); return res.filter(p=>norm(p.name).startsWith(k)).concat(res.filter(p=>!norm(p.name).startsWith(k))); }
   /* "Paris" means the places called Paris (not "Paris 15 Vaugirard"), but a tiny exact match must not hide a big
