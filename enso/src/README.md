@@ -98,3 +98,8 @@ and a `.sky` layer right after `<body>` with a sun at top left, rain streaks at 
 (`z-index:-1` inside the body's own stacking context, so it sits behind everything). The header is transparent there.
 `applyTheme` leaves the light background to the stylesheet and sets the plain colour only in the dark theme.
 
+## Forecast page: small outlook graph (2026-11-13)
+Under the month buttons, `fcMiniSvg` draws CPC's most likely (50th percentile) RONI for each 3-month season of the
+outlook (`data/roni_fcst.json`) as a small line graph, with the Dec–Feb value the maps use marked in red and labelled.
+It follows the light/dark theme colours. The full fan chart (5–95%) stays in the panel further down.
+

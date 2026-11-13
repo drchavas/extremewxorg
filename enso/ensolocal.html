@@ -167,8 +167,12 @@
   #det{padding:18px 0 8px;border-top:1px solid #e3e8e4;margin-top:14px}
   #det[hidden]{display:none}
   .fc{position:relative}
-  .explore{max-width:1090px;width:100%;margin:56px auto 8px}
-  body.landing .explore{margin-top:8px}
+  /* a full-width light gray band, set apart from the location tool above and the footer below */
+  .explore{width:100vw;margin:64px 0 0 calc(50% - 50vw);padding:44px 16px 52px;
+    background:rgba(236,239,238,.82);border-top:1px solid rgba(255,255,255,.7);border-bottom:1px solid rgba(190,202,200,.6);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+  body.landing .explore{margin-top:24px}
+  .explore .xin{max-width:1090px;margin:0 auto}
   .explore h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.2vw,38px);margin:0 0 16px;color:var(--ink);text-align:center}
   .xcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
   .xcard{display:flex;flex-direction:column;background:#fdfcf8;border:1px solid rgba(214,224,219,.9);border-radius:22px;overflow:hidden;
@@ -178,7 +182,7 @@
   .xt{font-family:var(--serif);font-size:clamp(26px,2.8vw,34px);line-height:1.1;padding:18px 22px 4px}
   .xt span{font-family:var(--sans);font-size:.6em;color:var(--teal2);vertical-align:.25em;margin-left:4px}
   .xd{font-size:16px;line-height:1.5;color:var(--ink2);padding:0 22px 22px}
-  @media (max-width:700px){ .xcards{grid-template-columns:1fr} .explore{margin-top:40px} }
+  @media (max-width:700px){ .xcards{grid-template-columns:1fr} .explore{margin-top:40px;padding:32px 16px 40px} }
   @media (max-width:760px){
     .card{padding:26px 18px 18px;border-radius:22px}
     .tiles{grid-template-columns:1fr;gap:10px}
@@ -230,8 +234,8 @@
     </div>
   </div>
   <!-- two ways into the maps, under the location tool -->
-  <section class="explore" aria-labelledby="exploreH">
-    <h2 id="exploreH">Explore the maps</h2>
+  <section class="explore" aria-labelledby="exploreH"><div class="xin">
+    <h2 id="exploreH">Deeper dive: map views</h2>
     <div class="xcards">
       <a class="xcard" href="/enso/ensofcst" target="_blank" rel="noopener">
         <img src="/assets/thumbs/ensoreg.webp" alt="" width="720" height="360" loading="lazy">
@@ -244,7 +248,7 @@
         <span class="xd">Past El Ni&ntilde;o and La Ni&ntilde;a years, and how their effects grow with strength.</span>
       </a>
     </div>
-  </section>
+  </div></section>
 </main>
 <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
   Part of <a href="https://extremewx.org/">extremewx.org</a>.

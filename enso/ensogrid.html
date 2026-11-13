@@ -568,6 +568,8 @@
   #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
   .fcst #monthbar{display:none}
   .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
+  .fcmini{flex:0 0 auto;width:310px;max-width:100%}
+  .fcmini svg{display:block;width:100%;height:auto;overflow:visible}
   .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
@@ -2738,6 +2740,27 @@ function regBoxPanel(x,y,w,h,bs){
   return o+'</g>';
 }
 /* the forecast page's RONI panel: the last two years observed, then CPC's outlook */
+/* The small graph at the top of the forecast page (2026-11-13): CPC's most likely (50th percentile) RONI
+   for each 3-month season of the outlook, with the Dec-Feb value the maps use marked. */
+function fcMiniSvg(o){
+  if(!RFC||!RFC.seasons||!RFC.seasons.length) return '';
+  const Q=RFC.seasons, W=310, H=118, l=30, r=8, t=16, b=22, th=T();
+  const v=Q.map(q=>q.q['50']), lo=Math.min(-0.5,Math.floor(Math.min(...v)*2)/2), hi=Math.max(0.5,Math.ceil((Math.max(...v)+0.15)*2)/2);
+  const X=i=>l+(W-l-r)*(Q.length>1?i/(Q.length-1):0.5), Y=u=>t+(H-t-b)*(hi-u)/(hi-lo);
+  const k=o?Q.findIndex(q=>q.code==='DJF'&&q.center===ymStr(o.Y+1,1)):-1;
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="CPC most likely RONI by season">`;
+  g+=`<text x="${l}" y="10" font-size="10.5" font-weight="650" fill="${th.ink}">NOAA CPC outlook: most likely RONI (°C)</text>`;
+  for(let u=Math.ceil(lo);u<=hi+1e-9;u+=1){ const yy=Y(u).toFixed(1);
+    g+=`<line x1="${l}" x2="${W-r}" y1="${yy}" y2="${yy}" stroke="${th.line}" stroke-width="1"${u===0?'':' stroke-dasharray="2 3"'}/>`+
+       `<text x="${l-5}" y="${(+yy+3.5).toFixed(1)}" font-size="9.5" text-anchor="end" fill="${th.mute}">${u>0?'+':u<0?'−':''}${Math.abs(u)}</text>`; }
+  g+=`<polyline fill="none" stroke="${th.pt}" stroke-width="2" points="${Q.map((q,i)=>X(i).toFixed(1)+','+Y(q.q['50']).toFixed(1)).join(' ')}"/>`;
+  Q.forEach((q,i)=>{ const on=i===k;
+    g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(q.q['50']).toFixed(1)}" r="${on?5:2.6}" fill="${on?th.en:th.pt}"${on?` stroke="${th.panel}" stroke-width="1.5"`:''}><title>${q.code}: most likely ${sgn(q.q['50'],2)}°C</title></circle>`+
+       `<text x="${X(i).toFixed(1)}" y="${H-6}" font-size="9" text-anchor="middle" fill="${on?th.ink:th.mute}"${on?' font-weight="700"':''}>${q.code}</text>`; });
+  if(k>=0){ const xx=X(k), yy=Y(Q[k].q['50']), right=xx<W-90;
+    g+=`<text x="${(xx+(right?9:-9)).toFixed(1)}" y="${(yy-7).toFixed(1)}" font-size="11" font-weight="700" fill="${th.en}" text-anchor="${right?'start':'end'}">${sgn(Q[k].q['50'],2)} (Dec–Feb, used for maps)</text>`; }
+  return g+'</svg>';
+}
 function fcRoniPanel(x,y,w,h){
   const t=T(), v=RONI.v, n=v.length;
   const [iy,im]=RFC.issued.split('-').map(Number);
@@ -3240,6 +3263,7 @@ function syncControls(){
         (o.from?` (CPC’s newer outlook starts after Dec–Feb, and the observed value is posted in early March.)`:'')+
         ` Every month of the ${yy} ENSO year (June–May) is mapped at that value.`+
         (fcStale()?' <span class="stale">CPC issues a new outlook on the second Thursday of each month; this one may have been replaced.</span>':''); }
+    document.getElementById('fcMini').innerHTML=fcMiniSvg(o);
     document.querySelectorAll('#phSeg button').forEach(b=>{ const on=b.dataset.ph===(S.mode==='clim'?'clim':'reg');
       b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
   } else if(REG){
