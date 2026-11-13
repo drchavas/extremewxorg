@@ -201,6 +201,7 @@
     <div class="cardfoot">
       <button type="button" class="go" id="detBtn" aria-expanded="false" aria-controls="det">Detailed outlook <span aria-hidden="true">&rarr;</span></button>
       <a class="go" id="mapsLink" href="/enso/ensoreg" target="_blank" rel="noopener">View maps (opens new tab) <span aria-hidden="true">&rarr;</span></a>
+      <a class="go" id="sciLink" href="/enso/ensoscience#view=reg" target="_blank" rel="noopener">Deeper science view (opens new tab) <span aria-hidden="true">&rarr;</span></a>
     </div>
     <div id="det" hidden>
       <p class="placesub" id="placesub"></p>
@@ -431,7 +432,10 @@ async function render(){
   /* the maps: the forecast page (NOAA's outlook, month by month), temperature, centered here; December
      of this ENSO year while it is still ahead, else the page's own default month */
   { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12?`&mo=${Y}-12`:'';
-    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
+    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`;
+    /* the science view: the science page's regression tab (any strength, any season), at the outlook rounded to 0.5 */
+    const d=fcDJF(Y), r=d?Math.sign(d.x)*Math.round(Math.abs(d.x)*2)/2:1.5;
+    document.getElementById('sciLink').href=`${BASE}ensoscience#view=reg&f=t2m&r=${r}&m=djf&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`

@@ -19,6 +19,9 @@
 <!--F--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Outlook &mdash; elninolanina.org</title>
 <meta name="description" content="What past El Niño and La Niña events of the strength NOAA CPC now forecasts looked like, month by month: temperature, rain and snow, tropical cyclones and U.S. severe weather.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensofcst"><!--/F-->
+<!--S--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Science View &mdash; elninolanina.org</title>
+<meta name="description" content="Two science views of how El Niño and La Niña change weather around the world: composites of past El Niño and La Niña years, and a regression on their strength.">
+<link rel="canonical" href="https://elninolanina.org/enso/ensoscience"><!--/S-->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="elninolanina.org">
 <!--C--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World">
@@ -33,6 +36,9 @@
 <meta property="og:description" content="What past El Niño and La Niña events of the strength NOAA CPC now forecasts looked like, month by month: temperature, rain and snow, tropical cyclones and U.S. severe weather.">
 <meta property="og:url" content="https://elninolanina.org/enso/ensofcst">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensoreg.webp"><!--/F-->
+<!--S--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Science View">
+<meta property="og:url" content="https://elninolanina.org/enso/ensoscience">
+<meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp"><!--/S-->
 <meta name="twitter:card" content="summary_large_image">
 <!--C--><meta name="author" content="Daniel R. Chavas (Purdue University)">
 <meta property="og:image:alt" content="Map of how El Niño years change temperature around the world">
@@ -302,8 +308,8 @@
  ]
 }
 </script><!--/C-->
-<!--RF--><meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><!--/RF-->
+<!--RFS--><meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex"><!--/RFS-->
 
 <meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -506,7 +512,16 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
-<!--C-->  .methods .faq h3{font-size:12.5px;font-weight:650;color:var(--text);margin:12px 0 2px} .methods .faq p{margin:0 0 4px}<!--/C-->
+<!--S-->  v-c,v-r{display:contents}
+  .viewtabs{max-width:1100px;margin:0 auto 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .viewtabs a{display:block;text-align:center;text-decoration:none;padding:13px 14px 12px;border:1px solid var(--line);
+    border-radius:12px;background:var(--panel);color:var(--text);font-size:19px;font-weight:700;line-height:1.2}
+  .viewtabs a small{display:block;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:3px}
+  .viewtabs a:hover{border-color:var(--accent2)}
+  .viewtabs a.on{background:var(--accent2);border-color:var(--accent2);color:#fff;cursor:default}
+  .viewtabs a.on small{color:rgba(255,255,255,.85)}
+  @media (max-width:640px){ .viewtabs a{font-size:16px;padding:10px 8px} .viewtabs a small{font-size:11px} }<!--/S-->
+<!--CS-->  .methods .faq h3{font-size:12.5px;font-weight:650;color:var(--text);margin:12px 0 2px} .methods .faq p{margin:0 0 4px}<!--/CS-->
   .guide a{color:var(--accent)}
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
@@ -580,13 +595,14 @@
 </style>
 </head>
 <body>
-<!--C--><noscript><p style="margin:12px 16px;padding:10px 14px;border:1px solid #cfdbe7;border-radius:8px;background:#fff">These interactive maps need JavaScript. A written summary is under &ldquo;Quick answers&rdquo; at the bottom of the page.</p></noscript><!--/C-->
+<!--CS--><noscript><p style="margin:12px 16px;padding:10px 14px;border:1px solid #cfdbe7;border-radius:8px;background:#fff">These interactive maps need JavaScript. A written summary is under &ldquo;Quick answers&rdquo; at the bottom of the page.</p></noscript><!--/CS-->
 
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 
 <header>
-<!--C-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World</h1><!--/C-->
-<!--R-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a by Strength: Climatology and Impacts &mdash; global grid</h1><!--/R-->
+<!--CN-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World</h1><!--/CN-->
+<!--RN-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a by Strength: Climatology and Impacts &mdash; global grid</h1><!--/RN-->
+<!--S-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Science View</h1><!--/S-->
 <!--F-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a Outlook: What to Expect, Month by Month &mdash; global grid</h1><!--/F-->
   <p>
 <!--C-->     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
@@ -612,6 +628,10 @@
 </header>
 
 <div id="wrap">
+<!--S-->  <nav class="viewtabs" aria-label="View">
+    <a href="#" data-view="comp">Composite view<small>past El Ni&ntilde;o and La Ni&ntilde;a years vs. the average year</small></a>
+    <a href="#view=reg" data-view="reg">Regression view<small>the change with El Ni&ntilde;o or La Ni&ntilde;a strength</small></a>
+  </nav><!--/S-->
   <div id="controls">
   <div class="bar mainbar">
       <div class="fld"><label>Show</label>
@@ -731,7 +751,7 @@
     <summary>How to read these maps</summary>
     <div class="body"><div class="gbody" id="guide"></div></div>
   </details>
-<!--C-->  <details class="methods" id="faqBox">
+<!--CS-->  <details class="methods" id="faqBox">
     <summary>Quick answers: what El Niño and La Niña usually do</summary>
     <div class="body faq">
       <h3>What are El Niño and La Niña?</h3>
@@ -837,7 +857,7 @@
         <li><a href="https://doi.org/10.1016/j.jneumeth.2007.03.024" target="_blank" rel="noopener" title="Nonparametric statistical testing of EEG- and MEG-data, J. Neurosci. Methods">Maris &amp; Oostenveld 2007</a>. The cluster permutation test used for the dots, borrowed from brain imaging.</li>
       </ul>
     </div>
-  </details><!--/C-->
+  </details><!--/CS-->
 </div>
 
 <script>

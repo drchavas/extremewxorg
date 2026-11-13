@@ -74,3 +74,19 @@ carry the same logic. Data files are not redirected (EarthVis reads them on extr
 
 ## History
 These sources first lived only in a cloud workspace, which was reset on 2026-11-12. They were rebuilt from the deployed pages, and `build.py --check` confirmed all three come out byte-identical. The earlier split of the script into `src_part1-5.js` and the generators for the papers box and Quick answers did not survive. The content they produced is now edited directly in the template.
+
+## The science page (`enso/ensoscience.html`, 2026-11-13, hidden)
+"El Niño & La Niña Weather Effects: Science View": the composite and regression views on one page behind two
+big tabs, **Composite view** and **Regression view** (Dan's names), with the Quick answers and Foundations boxes
+under both. `ensogrid.html` and `ensoreg.html` stay as they were (Dan: keep the old pages).
+- Built as a fourth page (`S`) by `build.py`. Template markers may now also carry `S` (kept on the science page as
+  is) and `N` (dropped there). Other `C` / `R` blocks in the body are kept inside `<v-c>` / `<v-r>`; `C`/`R`/`F`
+  blocks in the head and `F`-only blocks are left out.
+- `REG` is decided at load: `#view=reg` is the regression view. At the top of `enso.js`, `SCI` (true only on this
+  page) removes the other view's `<v-c>`/`<v-r>` blocks before anything reads the page and unwraps the rest.
+- A tab click reloads the page in the other view, keeping the shared settings in the link (variable, threshold,
+  season/month, period, units, smoothing, dots, contours, point, map view) and dropping the view-only ones
+  (`ph`, `s`, `cp`, `b`, `r`). `writeHash` adds `view=reg`; "Reload default" keeps the view.
+- `noindex` like the other hidden pages; `update_stamps.py` stamps it. The location page's "Deeper science view"
+  opens its Regression tab.
+

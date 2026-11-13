@@ -23,6 +23,27 @@
    maps the fitted difference from RONI 0 at the value on the slider. */
 const REG=/*__REG__*/false;
 const FCST=/*__FCST__*/false;   // the forecast page (ensofcst.html): the regression read at CPC's forecast
+/* SCI: the science page (ensoscience.html, 2026-11-13) carries both views. Its two tabs pick one at
+   load (#view=reg is the regression view, as REG; otherwise the composites); the template keeps each
+   view's own blocks in <v-c>/<v-r>, and the one not shown is removed here, before anything reads the
+   page. A tab reloads the page in the other view, keeping the shared settings in the link. */
+const SCI=typeof SCI_PAGE!=='undefined';
+if(SCI){
+  document.querySelectorAll(REG?'v-c':'v-r').forEach(e=>e.remove());
+  document.querySelectorAll('v-c,v-r').forEach(e=>e.replaceWith(...e.childNodes));
+  document.querySelectorAll('.viewtabs a').forEach(a=>{
+    const on=(a.dataset.view==='reg')===REG; a.classList.toggle('on',on);
+    if(on) a.setAttribute('aria-current','page');
+    a.addEventListener('click',e=>{ e.preventDefault(); if(!on) switchView(a.dataset.view); });
+  });
+}
+function switchView(v){
+  const p=new URLSearchParams(location.hash.slice(1));
+  ['ph','s','cp','b','r','view'].forEach(k=>p.delete(k));      // settings that belong to one view only
+  const q=(v==='reg'?'view=reg&':'')+p.toString();
+  try{ history.replaceState(null,'',location.pathname+location.search+(q?'#'+q:'')); }catch(e){}
+  location.reload();
+}
 const MSEQ=[6,7,8,9,10,11,12,1,2,3,4,5];          // the slider: Jun (year 0) .. May (year +1)
 const NM=MSEQ.length;
 /* What the maps average over. The composite page opens on Dec–Feb (the regression pages on
@@ -2460,6 +2481,7 @@ function syncControls(){
 }
 function writeHash(){
   const p=new URLSearchParams();
+  if(SCI&&REG) p.set('view','reg');
   p.set('f',S.f); if(S.thr) p.set('t',S.thr);
   if(FCST){ if(S.mode==='clim') p.set('ph','clim'); if(S.fm) p.set('mo',S.fm); }
   else if(REG){ if(S.mode==='clim') p.set('ph','clim'); p.set('r',S.ro); }
@@ -2588,7 +2610,7 @@ function wire(){
   document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };
   if(!REG) document.querySelectorAll('#baseSeg button').forEach(b=>b.onclick=()=>{ S.base=b.dataset.base; refresh(); });
   document.getElementById('usBtn').onclick=()=>fullView();
-  document.getElementById('resetBtn').onclick=()=>{ if(location.hash) history.replaceState(null,'',location.pathname); location.reload(); };
+  document.getElementById('resetBtn').onclick=()=>{ if(location.hash) history.replaceState(null,'',location.pathname+(SCI&&REG?'#view=reg':'')); location.reload(); };
   document.getElementById('themeBtn').onclick=function(){
     S.theme=S.theme==='dark'?'light':'dark';
     applyTheme(); addRefLayers(); STATS=null; refresh(); };
