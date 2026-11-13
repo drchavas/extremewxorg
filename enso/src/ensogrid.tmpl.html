@@ -541,7 +541,7 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
-<!--F-->  #mapSub,#mapWarn,#advanced{display:none}   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */<!--/F-->
+<!--F-->  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */<!--/F-->
 <!--S-->  v-c,v-r{display:contents}
   .viewtabs{max-width:1100px;margin:0 auto 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .viewtabs a{display:block;text-align:center;text-decoration:none;padding:13px 14px 12px;border:1px solid var(--line);
@@ -617,10 +617,10 @@
   .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
   .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
-  #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
+  #fmSeg button .yr,#fsSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
   #fmSeg{flex-wrap:wrap;max-width:100%} #fmbar .fld{max-width:100%}
-  @media (max-width:640px){ #fmbar .fld{width:100%} #fmSeg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%}
-    #fmSeg button{padding:5px 2px;font-size:12.5px;min-width:0} #fmSeg button .yr{font-size:9.5px} }
+  @media (max-width:640px){ #fmbar .fld{width:100%} #fmSeg,#fsSeg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%}
+    #fmSeg button,#fsSeg button{padding:5px 2px;font-size:12.5px;min-width:0} #fmSeg button .yr,#fsSeg button .yr{font-size:9.5px} }
   #robar .rofld{flex:1 1 auto;max-width:900px}
   .leaflet-control-attribution{background:rgba(15,23,32,.75)!important;color:#7f909f!important;font-size:10px!important}
   .leaflet-control-attribution a{color:#9fb0c0!important}
@@ -684,6 +684,8 @@
         <div class="roval" id="roVal" aria-live="polite">&nbsp;</div></div>
   </div><!--/R-->
 <!--F-->  <div id="fmbar">
+    <div class="fld"><label>Season</label>
+      <div class="seg" id="fsSeg" role="group" aria-label="Season"></div></div>
     <div class="fld"><label>Month</label>
       <div class="seg" id="fmSeg" role="group" aria-label="Month"></div></div>
     <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>

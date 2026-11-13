@@ -608,9 +608,23 @@ function fcMonths(){
   while(y*12+m<=ly*12+lm){ const Y=m>=6?y:y-1, d=fcDJF(Y); if(d) out.push({y,m,Y,...d}); if(++m>12){ m=1; y++; } }
   return out;
 }
-/* the month on screen: the one asked for, else next month (or this one, if it is the last) */
+/* the seasons offered before the months (Dan 2026-11-13): Dec-Feb and Mar-May of each ENSO year whose Dec-Feb is
+   known or forecast, while the season is not over. Key 'YYYY-djf' / 'YYYY-mam', YYYY = the ENSO year (June start). */
+const FSEAS=[{k:'djf',m0:12,dy0:0,m1:2,dy1:1},{k:'mam',m0:3,dy0:1,m1:5,dy1:1}];
+function fcSeasons(){
+  if(!RFC||!RFC.seasons.length) return [];
+  const now=new Date(), ym=now.getFullYear()*12+now.getMonth()+1, L=fcMonths(), out=[];
+  [...new Set(L.map(q=>q.Y))].forEach(Y=>{ const d=fcDJF(Y); if(!d) return;
+    FSEAS.forEach(s=>{ const end=(Y+s.dy1)*12+s.m1; if(end<ym) return;
+      const a=s.k==='djf'?{k:'djf',label:'Dec–Feb',yr:`${Y}–${String(Y+1).slice(2)}`,long:`December ${Y} – February ${Y+1}`}
+                         :{k:'mam',label:'Mar–May',yr:`${Y+1}`,long:`March–May ${Y+1}`};
+      out.push({...a,key:`${Y}-${s.k}`,Y,y:Y+s.dy0,m:s.m0,season:s.k,...d}); }); });
+  return out;
+}
+/* the month on screen: the one asked for, else next month (or this one, if it is the last); or a season */
 function fcPick(){
   const L=fcMonths(); if(!L.length) return null;
+  { const s=fcSeasons().find(q=>q.key===S.fm); if(s) return s; }
   let o=L.find(q=>ymStr(q.y,q.m)===S.fm);
   if(!o){ o=L[Math.min(1,L.length-1)]; S.fm=ymStr(o.y,o.m); }
   return o;
@@ -1373,6 +1387,12 @@ function aggLabel(){
 function tipHtml(c,lat,lon){
   const s=CUR; if(!s) return '';
   const raw=CURRAW||s, d=decs();
+  /* the forecast page: just the value plotted (Dan 2026-11-13) */
+  if(FCST){
+    if(S.mode==='clim'){ const cl=s.clim[c]; return isFinite(cl)?`<b>${fmt(cvC(cl),d.c)}</b> ${esc(unitAbs())}${isCount()?'/'+perWord():''}`:'—'; }
+    const df=s.disp[c];
+    return isFinite(df)?`<b>${sgn(df,d.d)}</b>${pctOn()?'%':' '+esc(unitAbs())}`:(pctOn()?'too rare here for a %':'—');
+  }
   const where=(lat!=null)?admin1At(lat,lon):'';
   let h=`<b>${esc(placeName(c))}</b>${where?`<br><span style="opacity:.8">${esc(where)}</span>`:''}<br>`;
   const cl=s.clim[c], df=s.disp[c];
@@ -1514,7 +1534,8 @@ async function refresh(){
     FCO=fcPick();
     if(!FCO){ const m=document.getElementById('msg'); m.style.display='block';
       m.textContent='The El Niño / La Niña forecast on this page is out of date or missing: see NOAA CPC\'s ENSO outlook for the latest.'; return; }
-    S.av='mon'; S.mi=MSEQ.indexOf(FCO.m); S.ro=FCO.x; }
+    if(FCO.season) S.av=FCO.season; else { S.av='mon'; S.mi=MSEQ.indexOf(FCO.m); }
+    S.ro=FCO.x; }
   if(REG){ S.ph=S.ro<0?'ln':'en'; S.str=0.5; S.base='all'; }      // the slider stands in for phase and strength
   BUSY=true; document.querySelectorAll('.tip').forEach(e=>e.style.display='none');
   const msg=document.getElementById('msg');
@@ -1647,7 +1668,7 @@ function monthLabel(mi,long){
   return nm+(m<6?' (+1)':' (0)');
 }
 /* labels for whatever the maps average over */
-function tkLong(){ if(FCST&&FCO) return `${MFULL[FCO.m-1]} ${FCO.y}`; return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : AV().long; }
+function tkLong(){ if(FCST&&FCO) return FCO.season?FCO.long:`${MFULL[FCO.m-1]} ${FCO.y}`; return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : AV().long; }
 function tkShort(){ return S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO-year' : AV().label; }
 /* years of the window that have data for this field and average (Storm Events lost June-July 1993) */
 function yearsWithData(win){
@@ -1680,7 +1701,8 @@ function writeTitles(domD){
   const title=document.getElementById('mapTitle'), sub=document.getElementById('mapSub'),
         warn=document.getElementById('mapWarn');
   if(S.mode==='clim'){
-    title.textContent=`Climatology · ${tkLong()}`;
+    /* the forecast page names the variable in the title (no inset box there; Dan 2026-11-13) */
+    title.textContent=FCST ? `${tkLong()}: ${fcVar()} climatology` : `Climatology · ${tkLong()}`;
     sub.innerHTML=esc(`${per}, ${when} ${nData===win.length?'all '+win.length+' years':'the '+nData+' years with data'}, ${range} (${unitP})`+ctTxt)+srcTag()+smTag();
     warn.textContent='';
     const climCap = f.src==='era5' ? unitAbs() : unitAbs()+'/'+perWord();
@@ -1688,7 +1710,8 @@ function writeTitles(domD){
   } else if(REG){
     const side=sideOf(S.ro), nP=win.filter(w=>w.x>0).length, nM=win.filter(w=>w.x<0).length, ex=roExtremes(win);
     const fitOK=Math.min(nP,nM)>=3, testable=fitOK&&!!S.ro;
-    title.innerHTML=FCST ? `${esc(tkLong())}: ${roSpan(S.ro)} minus climatology` : `${roSpan(S.ro)} minus climatology · ${esc(tkLong())}`;
+    title.innerHTML=FCST ? `${esc(tkLong())}: change in ${esc(fcVar())} `+
+      `(<span class="ph-${S.ro>0?'en':'ln'}">${esc(Math.abs(S.ro)<0.5-1e-9?'near-neutral':roWord(S.ro)+' '+(S.ro>0?'El Niño':'La Niña'))}</span>, RONI ${roTxt(S.ro)})` : `${roSpan(S.ro)} minus climatology · ${esc(tkLong())}`;
     sub.innerHTML=esc(`${per} · fitted to the Dec–Feb RONI of all ${win.length} years, ${range}, one line each for El Niño and La Niña · `+
       (pctOn()?'% change from climatology':unitAbs())+` · `+
       (S.dt==='on'?'linear trend removed':'trend kept')+
@@ -1699,7 +1722,7 @@ function writeTitles(domD){
     const lev = side==='p'&&big.length>=2 ? ` The El Niño line leans on the ${big.length===4?'four':big.length} strongest events (${big.join(', ')})`+
       (big.includes('1991–1992')?', and 1991–92 also carries the cooling from the Pinatubo eruption':'')+'.' : '';
     const weak = Math.abs(S.ro)<0.75 && S.ro ? ` At this weak strength the map is largely the stronger events' pattern scaled down, so it can overstate a weak ${side==='p'?'El Niño':'La Niña'}, especially for rain.` : '';
-    const fcPre = FCST&&FCO ? `What the past ${win.length} years suggest for ${MFULL[FCO.m-1]} in ${roPhrase(S.ro)} `+
+    const fcPre = FCST&&FCO ? `What the past ${win.length} years suggest for ${FCO.season?FCO.long:MFULL[FCO.m-1]} in ${roPhrase(S.ro)} `+
       `(${FCO.obs?'the observed':'CPC’s most likely'} Dec–Feb RONI, ${roTxt(S.ro)}), from the strength page’s fit. A guide from history, not NOAA’s forecast for that month.` : '';
     warn.textContent = FCST&&fitOK&&S.ro ? fcPre+lev+(far?` No year in ${a}–${b} reached ${roTxt(S.ro)} (strongest: ${ensoLabel(far.Y)}, ${sgn(far.x,2)}°C), so this map extends the line beyond the record.`:'')+
         ` Read coherent patterns (dotted = unlikely to be chance), not the value in any single box.`+(noDots?' Note: no patch on this map passes the significance test.':'')
@@ -1760,6 +1783,8 @@ function varName(){
     : f.k==='wind'?'Thunderstorm wind days' : f.label+' days';
   const t=thrShort(); return t?`${base} · ${t}`:base;
 }
+/* the variable as it reads in the forecast page's title: "change in snowfall" (Dan 2026-11-13) */
+function fcVar(){ const s=menuItem()[2]; return s.charAt(0).toLowerCase()+s.slice(1); }
 function writeBubbles(){
   const when = FCST&&FCO ? tkLong() : S.av==='mon' ? MFULL[MSEQ[S.mi]-1] : S.av==='yr' ? 'ENSO year (Jun–May)' : AV().label;
   const base = S.base==='neu' ? ' minus neutral years' : ' minus climatology';
@@ -2484,9 +2509,10 @@ function syncControls(){
     if(box) box.classList.toggle('off',clim); });
   if(FCST){
     /* the month buttons and the forecast line */
-    const L=fcMonths(), seg=document.getElementById('fmSeg');
+    const L=fcMonths(), seg=document.getElementById('fmSeg'), sseg=document.getElementById('fsSeg');
     seg.innerHTML=L.map(q=>`<button data-fm="${ymStr(q.y,q.m)}" title="${MFULL[q.m-1]} ${q.y}">${MONTHS[q.m-1]}<span class="yr">${q.y}</span></button>`).join('');
-    seg.querySelectorAll('button').forEach(b=>{ const on=b.dataset.fm===S.fm; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on);
+    if(sseg) sseg.innerHTML=fcSeasons().map(q=>`<button data-fm="${q.key}" title="${q.long}">${q.label}<span class="yr">${q.yr}</span></button>`).join('');
+    document.querySelectorAll('#fmSeg button,#fsSeg button').forEach(b=>{ const on=b.dataset.fm===S.fm; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on);
       b.onclick=()=>{ S.fm=b.dataset.fm; refresh(); }; });
     const o=FCO, nt=document.getElementById('fcNote');
     if(o){ const ph=o.x>=0.5?'El Niño':o.x<=-0.5?'La Niña':'', cls=o.x>0?'ph-en':'ph-ln';
@@ -2581,7 +2607,7 @@ function readHash(){
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
   if(p.get('t')) S.thr=Math.max(0,+p.get('t')||0);
   S.thr=menuItem()[1];                                  // only menu combinations exist
-  if(FCST){ if(p.get('ph')==='clim') S.mode='clim'; if(/^\d{4}-\d{2}$/.test(p.get('mo')||'')) S.fm=p.get('mo'); }
+  if(FCST){ if(p.get('ph')==='clim') S.mode='clim'; if(/^\d{4}-(\d{2}|djf|mam)$/.test(p.get('mo')||'')) S.fm=p.get('mo'); }
   else if(REG){ if(p.get('ph')==='clim') S.mode='clim';
     const rq=p.get('r'), r=parseFloat(rq);
     if(rq&&isFinite(r)) S.ro=Math.max(-2.5,Math.min(2.5,Math.sign(r)*Math.round(Math.abs(r)*2)/2)); }
