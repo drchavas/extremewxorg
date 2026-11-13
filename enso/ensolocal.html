@@ -10,84 +10,108 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#eaf2fa;--panel:#ffffff;--panel2:#f2f6fa;--line:#cfdbe7;--text:#16212e;--muted:#5b6b7c;
-        --accent:#2b6fb8;--accent2:#9c5607;--en:#c8321f;--ln:#1f63b8}
+  :root{--ink:#1c2f34;--ink2:#3e5459;--muted:#6c7f80;--line:#d5e0db;--panel:#ffffff;--panel2:#f3f6f3;
+        --teal:#26494f;--teal2:#33606a;--en:#a24e2e;--ln:#2d6684;--focus:#c98a4b;
+        --serif:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
+        --sans:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
-  a{color:var(--accent)}
-  .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
-            padding:9px 16px;font-size:14px;font-weight:650;line-height:1.35}
-  .alertbar b{color:#fff}
-  main{max-width:1100px;margin:0 auto;padding:22px 16px 40px}
-  h1{font-size:28px;line-height:1.2;margin:4px 0 6px;letter-spacing:-.01em}
-  .lede{color:var(--muted);margin:0 0 18px;font-size:15px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 16px}
-  label.big{display:block;font-weight:650;font-size:15px;margin:0 0 8px}
-  .searchrow{display:flex;gap:8px;flex-wrap:wrap}
-  .searchrow input{flex:1 1 260px;min-width:0;font-size:16px;padding:10px 12px;border:1px solid var(--line);
-    border-radius:8px;background:#fff;color:var(--text)}
-  .btn{font:inherit;font-size:15px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);
-       background:var(--panel2);color:var(--text);cursor:pointer}
-  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:650}
-  .btn:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
-  #results{list-style:none;margin:10px 0 0;padding:0}
-  #results li button{width:100%;text-align:left;font:inherit;padding:8px 10px;border:1px solid var(--line);
-    border-radius:8px;background:#fff;margin:0 0 6px;cursor:pointer;color:var(--text)}
-  #results li button:hover{border-color:var(--accent)}
-  #results small{color:var(--muted)}
-  .msg{color:var(--muted);font-size:14px;margin:8px 0 0}
-  .fc{font-size:16px} .fc b.en{color:var(--en)} .fc b.ln{color:var(--ln)}
-  .fc small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
-  .place{font-size:20px;font-weight:700;margin:0 0 2px}
-  .placesub{color:var(--muted);font-size:13px;margin:0 0 12px}
-  .toolbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
-  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-  .seg button{font:inherit;font-size:14px;padding:7px 12px;border:0;background:var(--panel2);color:var(--text);cursor:pointer}
-  .seg button+button{border-left:1px solid var(--line)}
-  .seg button.on{background:var(--accent2);color:#fff;font-weight:650}
-  .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px}
+  html{background:#eef2ec}
+  body{margin:0;color:var(--ink);font-family:var(--sans);line-height:1.5;min-height:100vh;min-height:100dvh;
+    display:flex;flex-direction:column;
+    /* a warm glow at the top fading into pale sage */
+    background:radial-gradient(ellipse 70% 55% at 50% -8%,rgba(248,222,170,.85) 0%,rgba(248,222,170,0) 70%),
+               radial-gradient(ellipse 50% 60% at 0% 10%,rgba(250,246,236,.9) 0%,rgba(250,246,236,0) 70%),
+               linear-gradient(180deg,#f7f3e8 0%,#eef2ea 45%,#e5eee9 100%);
+    background-repeat:no-repeat}
+  a{color:var(--teal2)}
+  main{flex:1 0 auto;width:100%;max-width:1100px;margin:0 auto;padding:28px 16px 32px;display:flex;flex-direction:column}
+  /* before a place is chosen the title and the search box sit in the middle of the screen */
+  .hero{text-align:center;margin:0 auto;width:100%;max-width:1080px}
+  body.landing .hero{margin:auto;padding-bottom:6vh}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(46px,7.4vw,100px);line-height:.98;letter-spacing:-.02em;
+     margin:0 0 44px;color:var(--ink);text-wrap:balance}
+  h1 em{font-style:italic;color:var(--en);padding-right:.04em}
+  h1 em.ln{color:var(--ln)} h1 em.nt{color:var(--ink2)}
+  body:not(.landing) h1{font-size:clamp(34px,5vw,56px);margin:0 0 24px}
+  .searchrow{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:24px;
+    padding:9px 9px 9px 0;max-width:720px;margin:0 auto;box-shadow:0 12px 34px rgba(38,73,79,.10),0 2px 6px rgba(38,73,79,.05)}
+  .searchrow:focus-within{border-color:#a9bfba;box-shadow:0 12px 38px rgba(38,73,79,.16),0 0 0 3px rgba(38,73,79,.08)}
+  .searchrow input{flex:1 1 auto;min-width:0;font-family:var(--sans);font-size:clamp(17px,2vw,21px);padding:14px 10px 14px 28px;
+    border:0;background:transparent;color:var(--ink);outline:none}
+  .searchrow input::placeholder{color:#748587}
+  .searchrow input::-webkit-search-cancel-button{display:none}
+  .searchrow button{font-family:var(--sans);font-size:clamp(16px,1.8vw,19px);font-weight:600;padding:17px 30px;border:0;border-radius:15px;
+    background:var(--teal);color:#fff;cursor:pointer;white-space:nowrap;letter-spacing:.01em}
+  .searchrow button:hover{background:var(--teal2)}
+  .linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--muted);cursor:pointer;margin:16px 0 0;padding:2px 4px;
+    text-decoration:underline;text-decoration-color:#b5c4c1;text-underline-offset:3px}
+  .linkbtn:hover{color:var(--ink)}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  #results{list-style:none;margin:14px auto 0;padding:0;text-align:left;max-width:600px}
+  #results li button{width:100%;text-align:left;font:inherit;font-size:16px;padding:11px 18px;border:1px solid var(--line);
+    border-radius:14px;background:rgba(255,255,255,.92);margin:0 0 7px;cursor:pointer;color:var(--ink)}
+  #results li button:hover{border-color:var(--teal2);background:#fff}
+  #results small{color:var(--muted);font-size:14px;margin-left:4px}
+  .msg{color:var(--muted);font-size:15px;margin:12px 0 0}
+  .msg:empty{display:none}
+  .fc{font-size:clamp(19px,2.3vw,24px);line-height:1.45;margin:38px auto 0;max-width:720px;color:var(--ink2);text-wrap:balance}
+  body:not(.landing) .fc{font-size:clamp(16px,1.9vw,19px);margin-top:22px}
+  .fc b{font-family:var(--serif);font-style:italic;font-weight:400;font-size:1.3em;line-height:1;white-space:nowrap;color:var(--en)}
+  .fc b.ln{color:var(--ln)} .fc:empty{display:none}
+  .fc a{color:inherit;text-decoration-color:#a9bab6;text-underline-offset:3px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 24px 20px;margin:40px 0 0;
+    box-shadow:0 14px 40px rgba(38,73,79,.08)}
+  .place{font-family:var(--serif);font-size:clamp(28px,3.4vw,38px);font-weight:400;line-height:1.1;margin:0 0 4px}
+  .placesub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+  .seg button{font:inherit;font-size:14px;font-weight:500;padding:7px 14px;border:0;border-radius:9px;background:transparent;color:var(--ink2);cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fff;font-weight:600}
+  .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
-  th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
-  thead th{background:var(--panel2);font-size:13px;font-weight:650;position:sticky;top:0}
+  th,td{padding:10px 8px;text-align:center;border-bottom:1px solid #e6ece9;white-space:nowrap}
+  thead th{background:#fff;font-size:13px;font-weight:600;position:sticky;top:0;color:var(--ink)}
   thead th small{display:block;font-weight:400;color:var(--muted);font-size:11px}
-  th.row{text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:normal;min-width:150px;font-weight:650}
+  th.row{text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:normal;min-width:150px;font-weight:600}
   th.row small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
-  th.row a{font-weight:400;font-size:11.5px}
-  td{font-weight:650;min-width:66px}
+  th.row a{font-weight:400;font-size:11.5px;color:var(--muted)}
+  td{font-weight:600;min-width:66px}
   td.faint{font-weight:400}
   td.none{color:var(--muted);font-weight:400;background:#fff}
   tr:last-child td,tr:last-child th{border-bottom:0}
-  .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:10px 0 0}
-  .legend .bar{width:160px;height:10px;border-radius:3px;border:1px solid var(--line);display:inline-block;vertical-align:middle;margin:0 6px}
-  .legend .chip{display:inline-block;width:22px;height:14px;border-radius:3px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
-  .notes{font-size:13.5px;color:var(--muted)}
-  .notes p{margin:0 0 8px}
-  footer{font-size:12px;color:var(--muted);margin-top:18px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:12px 0 0}
+  .legend .bar{width:150px;height:9px;border-radius:5px;display:inline-block;vertical-align:middle;margin:0 6px}
+  .legend .chip{display:inline-block;width:22px;height:14px;border-radius:4px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
+  .note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  footer{flex-shrink:0;font-size:12px;color:var(--muted);text-align:center;padding:14px 16px 18px;line-height:1.6}
+  footer a{color:var(--muted);text-decoration-color:#b5c4c1}
   .hidden{display:none}
-  @media (max-width:640px){ h1{font-size:23px} .alertbar{font-size:12px;padding:7px 12px} th.row{min-width:118px} td{min-width:58px;font-size:13px} }
+  @media (max-width:640px){
+    h1{margin-bottom:30px}
+    .searchrow{border-radius:18px;padding:6px 6px 6px 0}
+    .searchrow input{padding:12px 6px 12px 18px}
+    .searchrow button{padding:13px 16px;border-radius:13px}
+    .card{padding:18px 14px 16px;border-radius:18px}
+    th.row{min-width:118px} td{min-width:58px;font-size:13px} }
 </style>
 </head>
-<body>
-<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
+<body class="landing">
 <main>
-  <h1>How will El Ni&ntilde;o &amp; La Ni&ntilde;a affect where you are?</h1>
-  <p class="lede">Type a place to see how the coming months usually change there in a year like this one, based on
-    past El Ni&ntilde;o and La Ni&ntilde;a years and NOAA&rsquo;s latest outlook.</p>
-
-  <div class="card">
-    <label class="big" for="q">Location</label>
-    <form class="searchrow" id="sform" autocomplete="off">
-      <input id="q" type="search" placeholder="City, state or country (e.g. Lima, Indiana, Kenya)" aria-describedby="smsg">
-      <button class="btn primary" type="submit">Search</button>
-      <button class="btn" type="button" id="geo">Use my location</button>
+  <div class="hero">
+    <h1>How will <em id="phaseWord">El&nbsp;Ni&ntilde;o</em> change the weather where you are?</h1>
+    <form class="searchrow" id="sform" role="search" autocomplete="off">
+      <input id="q" type="search" placeholder="City, region, or postal code" aria-label="Location" aria-describedby="smsg">
+      <button type="submit">Search&nbsp;&rarr;</button>
     </form>
+    <button class="linkbtn" type="button" id="geo">or use my location</button>
     <ul id="results" aria-live="polite"></ul>
     <p class="msg" id="smsg"></p>
+    <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through June 2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
   </div>
-
-  <div class="card fc" id="fcCard"><span id="fcText">Loading NOAA&rsquo;s outlook&hellip;</span></div>
 
   <div class="card hidden" id="out">
     <p class="place" id="place"></p>
@@ -97,35 +121,25 @@
         <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Expected amount</button>
       </div>
       <div class="seg" role="group" aria-label="Units">
-        <button data-u="metric" class="on" aria-pressed="true">&deg;C, mm</button><button data-u="us" aria-pressed="false">&deg;F, inches</button>
+        <button data-u="us" class="on" aria-pressed="true">&deg;F, inches</button><button data-u="metric" aria-pressed="false">&deg;C, mm</button>
       </div>
     </div>
     <div class="tbwrap"><table id="tbl"></table></div>
     <div class="legend" id="legend"></div>
+    <p class="note">What has tended to happen at this spot in past years like this one (1979&ndash;2025), read from the
+      <a href="/enso/ensofcst" target="_blank" rel="noopener">forecast maps</a>: not a weather forecast, and any single winter can differ.
+      Data: ERA5 (ECMWF), NOAA IBTrACS and NOAA Storm Events; outlook from
+      <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA CPC</a>.</p>
   </div>
-
-  <div class="card notes">
-    <p><b>What these numbers are.</b> For each month, how much a year with this winter&rsquo;s expected El Ni&ntilde;o
-      or La Ni&ntilde;a strength has differed from an average year at this spot, 1979&ndash;2025: a straight-line fit
-      of each past year&rsquo;s value against that year&rsquo;s strength (NOAA&rsquo;s December&ndash;February Relative
-      Oceanic Ni&ntilde;o Index, RONI), read at the strength NOAA now expects. They are the same numbers as the maps,
-      for the map box that contains your location. They describe what tends to happen, not a weather forecast: any
-      single winter can differ a lot. Pale numbers in plain type could easily be chance (p &ge; 0.05 for that box&rsquo;s fit).</p>
-    <p><b>Data.</b> Temperature, rain and snow: ERA5 reanalysis (ECMWF), 2&deg; boxes (about 200 km). Tropical storms:
-      NOAA IBTrACS, days with a storm in the 5&deg; box (about 550 km). U.S. tornadoes, hail and thunderstorm wind: days
-      with a report in the 2&deg; box, NOAA NCEI Storm Events. The long-term warming trend is removed first. For the
-      official outlook, see NOAA&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">seasonal outlooks</a>
-      and <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
-      Place search by <a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">Open-Meteo</a> (what you type is sent there).</p>
-    <p><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be
-      integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
-  </div>
-  <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)
-    &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; <a href="https://elninolanina.org/">El Ni&ntilde;o &amp; La Ni&ntilde;a maps</a>
-    &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including
-    <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>
-    &middot; <span id="built"></span></footer>
 </main>
+<footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
+  Part of <a href="https://extremewx.org/">extremewx.org</a>.
+  Supported in part by grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including
+  <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>.<br>
+  This site is updated regularly. <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.<br>
+  Place search by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>.
+  Have a dataset to add? <a href="mailto:dchavas@purdue.edu">Email me!</a>
+  <span id="built"></span></footer>
 
 <script>
 /* The location page. Every number comes from the forecast map page (ensofcst.html): enso/src/build_local.js
@@ -147,7 +161,7 @@ const ROWS=[
   {k:'tornado', name:'Tornado days', sub:'any tornado in the 2° box'},
   {k:'hail', name:'Hail days', sub:'any hail report in the 2° box'},
   {k:'wind', name:'Damaging wind days', sub:'thunderstorm wind report in the 2° box'}];
-const S={mode:'pct',units:'metric',loc:null};
+const S={mode:'pct',units:'us',loc:null};      // U.S. units by default
 let META=null, RONI=null, RFC=null, TILES={};
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -174,19 +188,17 @@ function fcMonths(){
   return out;
 }
 function roWord(v){ const a=Math.abs(v); return a<0.75?'weak':a<1.25?'moderate':a<1.75?'strong':'very strong'; }
-function phaseHtml(v){ if(Math.abs(v)<0.5-1e-9) return 'a <b>neutral</b> year (neither El Niño nor La Niña)';
-  return `a <b class="${v>0?'en':'ln'}">${roWord(v)} ${v>0?'El Niño':'La Niña'}</b>`; }
+const OUTLOOK='https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml';
 function fcStatement(){
-  const L=fcMonths(); const el=document.getElementById('fcText');
-  if(!L.length){ el.innerHTML='NOAA&rsquo;s outlook on this page is out of date. See NOAA CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a> for the latest.'; return; }
-  const o=L.find(q=>q.Y===L[0].Y&&!q.obs)||L[0], yy=`${o.Y}–${String(o.Y+1).slice(2)}`, x=o.x;
-  const isd=o.from||RFC.issued, iss=`${MFULL[+isd.slice(5)-1]} ${isd.slice(0,4)}`;
-  el.innerHTML = o.obs
-    ? `This winter (December–February ${yy}) was ${phaseHtml(x)}: NOAA&rsquo;s Relative Oceanic Niño Index (RONI) was ${sgn(x,2)} °C.`
-    : `NOAA&rsquo;s latest outlook (issued ${iss}) expects ${phaseHtml(x)} this winter: its index for December–February ${yy}
-       (RONI) is most likely <b>${sgn(x,2)} °C</b>, with a 50% chance of ${sgn(o.q['25'],2)} to ${sgn(o.q['75'],2)}.`+
-      (x>=2.2?` <small>That would be close to the strongest on record (+2.40 °C, winter 1982–83).</small>`:'')+
-      `<small>Positive values mean El Niño, negative La Niña; beyond ±0.5 °C counts as an event, beyond ±1.5 °C as strong.</small>`;
+  const L=fcMonths(), el=document.getElementById('fcText'), hw=document.getElementById('phaseWord');
+  const noaa=`(<a href="${OUTLOOK}" target="_blank" rel="noopener">NOAA</a>)`;
+  if(!L.length){ hw.textContent='El Niño or La Niña'; hw.className='nt'; el.innerHTML=`See NOAA&rsquo;s latest El Niño / La Niña outlook ${noaa}.`; return; }
+  /* this ENSO year's winter: the outlook's December-February value (or the observed one once it is in) */
+  const o=L.find(q=>q.Y===L[0].Y&&!q.obs)||L[0], x=o.x, end=`June ${o.Y+1}`;
+  if(Math.abs(x)<0.5-1e-9){ hw.textContent='El Niño or La Niña'; hw.className='nt';
+    el.innerHTML=`Neither El Niño nor La Niña is expected this winter, so their usual effects should be small through ${end} ${noaa}.`; return; }
+  const ph=x>0?'El\u00a0Niño':'La\u00a0Niña'; hw.textContent=ph; hw.className=x>0?'':'ln';
+  el.innerHTML=`We are in the midst of a <b class="${x>0?'en':'ln'}">${roWord(x)} ${ph}</b> that will affect weather around the world through ${end} ${noaa}.`;
 }
 
 /* ---- the map box that holds a place, and its stored fit */
@@ -235,6 +247,7 @@ function changeTxt(k,c){
 
 async function render(){
   const L=fcMonths(), loc=S.loc; if(!loc||!META) return;
+  document.body.classList.remove('landing');
   document.getElementById('out').classList.remove('hidden');
   document.getElementById('place').textContent=loc.name;
   const rows=[];
@@ -281,36 +294,80 @@ async function render(){
   writeHash();
 }
 
-/* ---- place search */
+/* ---- place search (Open-Meteo matches the name only, so "City, ST" or "City Country" is split:
+   the name is searched and the rest filters the results by state, region or country) */
+const USST={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',
+  DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',
+  KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',
+  MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',
+  NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',
+  SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',
+  WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',PR:'Puerto Rico'};
+const CTRY={usa:'US',us:'US','united states':'US',america:'US',uk:'GB','united kingdom':'GB',england:'GB',britain:'GB'};
+const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+async function geo(name){
+  const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=20&language=en&format=json&name='+encodeURIComponent(name));
+  const j=await r.json();
+  /* places people live in, regions and countries; not airports, parks, stations or buildings */
+  const res=(j.results||[]).filter(p=>{ const c=p.feature_code||'PPL'; return /^(PPL|ADM[12]$|PCL)/.test(c)&&!/^(PPLX|PPLH|PPLQ|PPLW|PCLH)$/.test(c); });
+  /* "Paris" means the places called Paris, not "Paris 15 Vaugirard" */
+  const exact=res.filter(p=>norm(p.name)===norm(name));
+  return exact.length?exact:res;
+}
+function matches(p,rest){
+  const t=norm(rest); if(!t) return true;
+  const st=USST[rest.trim().toUpperCase()], cc=CTRY[t];
+  const fields=[p.admin1,p.admin2,p.admin3,p.country].map(norm);
+  return (st&&p.country_code==='US'&&norm(p.admin1)===norm(st)) || (cc&&p.country_code===cc) ||
+         norm(p.country_code)===t || fields.some(f=>f&&(f===t||f.startsWith(t)||(t.length>3&&f.includes(t))));
+}
 async function search(q){
   const msg=document.getElementById('smsg'), ul=document.getElementById('results'); ul.innerHTML=''; msg.textContent='Searching…';
   try{
-    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&format=json&name='+encodeURIComponent(q));
-    const j=await r.json(); const res=(j.results||[]);
-    if(!res.length){ msg.textContent='No place found. Try a nearby city, or add the country.'; return; }
+    let res=[];
+    const parts=q.split(',').map(x=>x.trim()).filter(Boolean);
+    if(parts.length>1){                         // "Lima, Peru", "Paris, TX"
+      const all=await geo(parts[0]), rest=parts.slice(1).join(' ');
+      res=all.filter(p=>parts.slice(1).every(x=>matches(p,x))); if(!res.length) res=all.filter(p=>matches(p,rest));
+      if(!res.length) res=all;
+    } else {
+      res=await geo(q);
+      const w=q.split(/\s+/);
+      for(let i=w.length-1;!res.length&&i>0;i--){  // "Paris France", "Fort Wayne Indiana"
+        const all=await geo(w.slice(0,i).join(' ')), rest=w.slice(i).join(' ');
+        res=all.filter(p=>matches(p,rest));
+      }
+    }
+    res=res.slice(0,8);
+    if(!res.length){ msg.textContent='No place found. Try a nearby city, or add the state or country after a comma.'; return; }
     msg.textContent=res.length>1?'Pick one:':'';
     if(res.length===1){ pick(res[0]); return; }
     res.forEach(p=>{ const li=document.createElement('li'), b=document.createElement('button');
-      b.innerHTML=`${esc(p.name)} <small>${esc([p.admin1,p.country].filter(Boolean).join(', '))}</small>`;
+      b.innerHTML=`${esc(p.name)} <small>${esc([p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', '))}</small>`;
       b.onclick=()=>pick(p); li.appendChild(b); ul.appendChild(li); });
-  }catch(e){ msg.textContent='The place search is not responding. Try again, or use “Use my location”.'; }
+  }catch(e){ msg.textContent='The place search is not responding. Try again, or use your location.'; }
 }
 function pick(p){
   document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
   S.loc={name:[p.name,p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', '),short:p.name,la:+p.latitude,lo:+p.longitude};
+  document.getElementById('q').value=S.loc.name;
   render();
 }
+/* the units choice is shared with the map pages ('F' = U.S., 'C' = metric) */
+function unitsSave(){ try{ localStorage.setItem('ensoUnits',S.units==='us'?'F':'C'); }catch(e){} }
+function unitsSaved(){ try{ return localStorage.getItem('ensoUnits'); }catch(e){ return null; } }
 function writeHash(){
   if(!S.loc) return;
   const q=new URLSearchParams({p:S.loc.name,la:S.loc.la.toFixed(3),lo:S.loc.lo.toFixed(3)});
-  if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='metric') q.set('u',S.units);
+  if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='us') q.set('u',S.units);
   history.replaceState(null,'','#'+q.toString());
 }
 function readHash(){
   const q=new URLSearchParams(location.hash.slice(1)), la=parseFloat(q.get('la')), lo=parseFloat(q.get('lo'));
-  if(q.get('m')==='val') S.mode='val'; if(q.get('u')==='us') S.units='us';
+  if(q.get('m')==='val') S.mode='val';
+  { const u=q.get('u'); if(u==='metric'||(!u&&unitsSaved()==='C')) S.units='metric'; }   // a link's units, else the last choice
   if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
-    S.loc={name:n,short:n.split(',')[0],la,lo}; }
+    S.loc={name:n,short:n.split(',')[0],la,lo}; document.getElementById('q').value=n; }
 }
 function syncSeg(){
   document.querySelectorAll('[data-m]').forEach(b=>{ const on=b.dataset.m===S.mode; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
@@ -325,16 +382,19 @@ async function init(){
     if(!navigator.geolocation){ msg.textContent='Your browser does not share its location.'; return; }
     msg.textContent='Finding you…';
     navigator.geolocation.getCurrentPosition(p=>{ const la=p.coords.latitude, lo=p.coords.longitude;
-      msg.textContent=''; S.loc={name:`Your location (${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'})`,short:'your location',la,lo}; render(); },
+      msg.textContent=''; document.getElementById('results').innerHTML=''; S.loc={name:`Your location (${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'})`,short:'your location',la,lo}; render(); },
       ()=>{ msg.textContent='Could not get your location. Type a place instead.'; },{timeout:10000});
   };
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; syncSeg(); render(); });
-  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; syncSeg(); render(); });
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; unitsSave(); syncSeg(); render(); });
   try{
     [META,RONI,RFC]=await Promise.all([BASE+'local/meta.json',BASE+'data/roni.json',BASE+'data/roni_fcst.json']
       .map(u=>fetch(u,{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(u); return r.json(); })));
-  }catch(e){ document.getElementById('fcText').textContent='Could not load the data. Please try again later.'; return; }
-  document.getElementById('built').textContent='Data built '+META.built.slice(0,10);
+  }catch(e){
+    const off=location.protocol==='file:'||!/^https?:$/.test(location.protocol);
+    if(!off) document.getElementById('smsg').textContent='Could not load the data. Please try again later.';
+    return; }
+  document.getElementById('built').textContent='Data built '+META.built.slice(0,10)+'.';
   fcStatement();
   if(S.loc) render();
 }
