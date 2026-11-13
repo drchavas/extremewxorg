@@ -2946,6 +2946,10 @@ function syncControls(){
     b.querySelectorAll('select,input').forEach(e=>e.disabled=!on); };
   tog('unBox',!isCount()); tog('smBox',isCount());
   document.getElementById('unSel').value=S.un;
+  /* the forecast page's own U.S. / Metric buttons (its Advanced settings are hidden; Dan 2026-11-13) */
+  { const us=document.getElementById('unSeg'); if(us){ us.parentElement.classList.toggle('off',isCount());
+      us.parentElement.title=isCount()?'Counts have no units to switch.':'';
+      us.querySelectorAll('button').forEach(b=>{ const on=b.dataset.un===S.un; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); b.disabled=isCount(); }); } }
   /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
   /* temperature: Absolute shown as chosen, % change grayed out (the stored choice
      is left alone, so precipitation etc. come back in whatever was picked there) */
@@ -3161,6 +3165,7 @@ function wire(){
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
   document.querySelectorAll('#pcSeg button').forEach(b=>b.onclick=()=>{ S.pc=b.dataset.pc; refresh(); });
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; unitsSave(); refresh(); };
+  document.querySelectorAll('#unSeg button').forEach(b=>b.onclick=()=>{ if(S.un===b.dataset.un) return; S.un=b.dataset.un; unitsSave(); refresh(); });
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
   document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };

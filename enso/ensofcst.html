@@ -258,7 +258,8 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
-  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */
+  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}
+  @media (min-width:900px){ #fldSel.big{max-width:250px} }   /* room for the Units buttons on one row */   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */
   .guide a{color:var(--accent)}
   .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
             padding:9px 16px;font-size:14px;font-weight:650;letter-spacing:.01em;line-height:1.35}
@@ -362,6 +363,8 @@
         <div class="seg big" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
               <button data-pc="pct">Percentage</button><button data-pc="abs">Absolute</button></div>
       </div>
+      <div class="fld" id="unWrap"><label>Units</label>
+        <div class="seg big" id="unSeg" role="group" aria-label="Units"><button data-un="F">U.S.</button><button data-un="C">Metric</button></div></div>
       <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
     </div>
   <div id="fmbar">
@@ -2927,6 +2930,10 @@ function syncControls(){
     b.querySelectorAll('select,input').forEach(e=>e.disabled=!on); };
   tog('unBox',!isCount()); tog('smBox',isCount());
   document.getElementById('unSel').value=S.un;
+  /* the forecast page's own U.S. / Metric buttons (its Advanced settings are hidden; Dan 2026-11-13) */
+  { const us=document.getElementById('unSeg'); if(us){ us.parentElement.classList.toggle('off',isCount());
+      us.parentElement.title=isCount()?'Counts have no units to switch.':'';
+      us.querySelectorAll('button').forEach(b=>{ const on=b.dataset.un===S.un; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); b.disabled=isCount(); }); } }
   /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
   /* temperature: Absolute shown as chosen, % change grayed out (the stored choice
      is left alone, so precipitation etc. come back in whatever was picked there) */
@@ -3142,6 +3149,7 @@ function wire(){
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
   document.querySelectorAll('#pcSeg button').forEach(b=>b.onclick=()=>{ S.pc=b.dataset.pc; refresh(); });
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; unitsSave(); refresh(); };
+  document.querySelectorAll('#unSeg button').forEach(b=>b.onclick=()=>{ if(S.un===b.dataset.un) return; S.un=b.dataset.un; unitsSave(); refresh(); });
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
   document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };

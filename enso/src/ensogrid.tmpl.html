@@ -541,7 +541,8 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
-<!--F-->  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */<!--/F-->
+<!--F-->  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}
+  @media (min-width:900px){ #fldSel.big{max-width:250px} }   /* room for the Units buttons on one row */   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */<!--/F-->
 <!--S-->  v-c,v-r{display:contents}
   .viewtabs{max-width:1100px;margin:0 auto 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .viewtabs a{display:block;text-align:center;text-decoration:none;padding:13px 14px 12px;border:1px solid var(--line);
@@ -672,6 +673,8 @@
         <div class="seg big" id="pcSeg" role="group" aria-label="Show the difference as" title="Percent change: the difference as a percentage of the climatology (saturating where the climatology is very small). Absolute change: the difference itself, in the field's units. Temperature is always shown in degrees.">
               <button data-pc="pct">Percentage</button><button data-pc="abs">Absolute</button></div>
       </div>
+<!--F-->      <div class="fld" id="unWrap"><label>Units</label>
+        <div class="seg big" id="unSeg" role="group" aria-label="Units"><button data-un="F">U.S.</button><button data-un="C">Metric</button></div></div><!--/F-->
       <div class="fld"><label>&nbsp;</label><button class="btn" id="resetBtn" title="Discard every choice and reload the page as it first opens">Reload default</button></div>
     </div>
 <!--R-->  <div id="robar">
