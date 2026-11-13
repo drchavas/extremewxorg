@@ -66,6 +66,23 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 24px 20px;margin:40px 0 0;
     box-shadow:0 14px 40px rgba(38,73,79,.08)}
   .place{font-family:var(--serif);font-size:clamp(28px,3.4vw,38px);font-weight:400;line-height:1.1;margin:0 0 4px}
+  .sum{font-size:clamp(20px,2.5vw,27px);line-height:1.45;margin:10px 0 6px;color:var(--ink);max-width:860px;text-wrap:pretty}
+  .sum b{font-weight:600;white-space:nowrap}
+  .sum .w{color:#b2432a} .sum .c{color:#2d6684} .sum .wet{color:#1f7568} .sum .dry{color:#946016} .sum .n{color:var(--ink2)}
+  .season{margin:0 0 18px}
+  .season .sum{margin:8px 0 6px}
+  .sum .lab{font-family:var(--serif);font-style:italic;font-size:1.12em;color:var(--ink)}
+  .sumnum{color:var(--muted);font-size:14px;margin:0;display:flex;flex-wrap:wrap;gap:4px 22px}
+  .sumnum span b{font-weight:600;color:var(--ink2)}
+  .maplink{font-size:clamp(18px,2vw,22px);font-weight:500;margin:16px 0 0;padding-top:14px;border-top:1px solid #e6ece9}
+  .maplink a{color:var(--teal2);font-weight:600;text-decoration-thickness:2px;text-underline-offset:4px}
+  details#more{border-top:4px solid var(--ink);margin-top:26px;padding-top:16px}
+  details#more>summary{cursor:pointer;font-size:clamp(18px,2vw,22px);font-weight:500;color:var(--ink);list-style:none;padding:2px 0;user-select:none}
+  details#more>summary::-webkit-details-marker{display:none}
+  details#more>summary u{color:var(--teal2);text-decoration-thickness:2px;text-underline-offset:4px;font-weight:600}
+  details#more>summary:hover u{color:var(--teal)}
+  details#more .op{display:none} details#more[open] .op{display:inline} details#more[open] .cl{display:none}
+  details#more[open]>summary{margin-bottom:14px}
   .placesub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
   .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
   .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
@@ -86,7 +103,7 @@
   .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:12px 0 0}
   .legend .bar{width:150px;height:9px;border-radius:5px;display:inline-block;vertical-align:middle;margin:0 6px}
   .legend .chip{display:inline-block;width:22px;height:14px;border-radius:4px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
-  .note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .note{font-size:12.5px;color:var(--muted);margin:4px 0 0}
   footer{flex-shrink:0;font-size:12px;color:var(--muted);text-align:center;padding:14px 16px 18px;line-height:1.6}
   footer a{color:var(--muted);text-decoration-color:#b5c4c1}
   .hidden{display:none}
@@ -115,6 +132,9 @@
 
   <div class="card hidden" id="out">
     <p class="place" id="place"></p>
+    <div id="sums"></div><!-- one plain-language line per season, with each month's numbers below it -->
+    <details id="more">
+    <summary><span class="cl">Want a more detailed view for this location? <u>Click here</u></span><span class="op">Detailed view, month by month <u>(hide)</u></span></summary>
     <p class="placesub" id="placesub"></p>
     <div class="toolbar">
       <div class="seg" role="group" aria-label="Show">
@@ -126,10 +146,8 @@
     </div>
     <div class="tbwrap"><table id="tbl"></table></div>
     <div class="legend" id="legend"></div>
-    <p class="note">What has tended to happen at this spot in past years like this one (1979&ndash;2025), read from the
-      <a href="/enso/ensofcst" target="_blank" rel="noopener">forecast maps</a>: not a weather forecast, and any single winter can differ.
-      Data: ERA5 (ECMWF), NOAA IBTrACS and NOAA Storm Events; outlook from
-      <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA CPC</a>.</p>
+    </details>
+    <p class="maplink">Want to see maps of these changes? <a id="mapsLink" href="/enso/ensoreg">Click here</a></p>
   </div>
 </main>
 <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
@@ -245,21 +263,90 @@ function changeTxt(k,c){
   return isFinite(c.pct)?`${sgn(c.pct,0)}%`:null;
 }
 
+/* ---- the plain-language summary: one sentence each for December-February and March-May at this
+   place, from the same fits as the table, read at the outlook's Dec-Feb strength (the strength every
+   month of the ENSO year is regressed on). Sizes: temperature under 0.5 °C (about 1 °F) is "near normal",
+   under 1.5 °C (about 3 °F) "a little", more "a lot"; precipitation and snow under 10% near normal,
+   under 25% a little, more a lot. When fewer than two of the three months are significant (p < 0.05,
+   same sign) the size drops one step, so a change that could be chance never reads as "a lot". Snow is
+   mentioned only where the season averages at least 0.25 mm/day of water (about 3 inches of snow a month). */
+const LVL=['near normal','a little','a lot'];
+const SEASONS=[{k:'djf',mons:[[12,0],[1,1],[2,1]],names:['Winter','Summer'],span:'December–February'},
+               {k:'mam',mons:[[3,1],[4,1],[5,1]],names:['Spring','Autumn'],span:'March–May'}];
+function ensoYearNow(){ const now=new Date(), m=now.getMonth()+1, y=now.getFullYear(); return {Y:m>=6?y:y-1, ym:y*12+m}; }
+function seasonSummary(sea,recsBy){
+  const {Y,ym}=ensoYearNow(), d=fcDJF(Y); if(!d) return null;
+  const mons=sea.mons.map(([mm,dy])=>({m:mm,y:Y+dy,mi:MSEQ.indexOf(mm),x:d.x}));
+  const last=mons[2].y*12+mons[2].m;
+  const out={sea,Y,mons,past:ym>last};
+  for(const k of ['t2m','pr','sf']){
+    const f=META.fields.find(x=>x.k===k), recs=recsBy[k]; if(!f||!recs) continue;
+    const cs=mons.map(mo=>cell(f,recs[mo.mi],mo)); if(cs.some(c=>!c)) continue;
+    const w=mons.map(mo=>DAYS[mo.m-1]), W=w.reduce((a,b)=>a+b,0);
+    const dlt=cs.reduce((a,c,i)=>a+c.d*w[i],0)/W, mean=cs.reduce((a,c,i)=>a+c.mean*w[i],0)/W;
+    const sig=cs.filter(c=>c.p!=null&&c.p<0.05&&Math.sign(c.d)===Math.sign(dlt)).length;
+    let v, lv;
+    if(k==='t2m'){ v=dlt; const a=Math.abs(v); lv=a<0.5?0:a<1.5?1:2; }
+    else { if(k==='sf'&&mean<0.25) continue;                  // little snow here this season: leave it out
+           if(!(mean>0)) continue; v=100*dlt/Math.max(mean,k==='pr'?0.1:0.05); const a=Math.abs(v); lv=a<10?0:a<25?1:2; }
+    if(sig<2) lv=Math.max(0,lv-1);
+    out[k]={v,lv,up:v>0,cs};
+  }
+  return out.t2m?out:null;
+}
+function seasonLead(W){
+  /* named by the season it is where you are: Dec-Feb is winter in the north, summer in the south */
+  const la=S.loc?S.loc.la:45, nm=la>=23.5?W.sea.names[0]:la<=-23.5?W.sea.names[1]:null;
+  const yy=W.sea.k==='djf'?`${W.Y}–${String(W.Y+1).slice(2)}`:`${W.Y+1}`;
+  return nm?`<span class="lab">${nm}</span> (${W.sea.span} ${yy})`:`<span class="lab">${W.sea.span} ${yy}</span>`;
+}
+function seasonHtml(W){
+  const cl=[], t=W.t2m, p=W.pr, s=W.sf;
+  cl.push(t.lv?`<b class="${t.up?'w':'c'}">${LVL[t.lv]} ${t.up?'warmer':'cooler'}</b> than normal`:`<b class="n">near normal</b> in temperature`);
+  if(p) cl.push(p.lv?`<b class="${p.up?'wet':'dry'}">${LVL[p.lv]} ${p.up?'wetter':'drier'}</b> than normal`:`<b class="n">near normal</b> in precipitation`);
+  if(s) cl.push(s.lv?`have <b class="${s.up?'wet':'dry'}">${LVL[s.lv]} ${s.up?'more':'less'} snow</b> than normal`:`have <b class="n">near-normal</b> snowfall`);
+  const list=cl.length>1?cl.slice(0,-1).join(', ')+(cl.length>2?',':'')+' and '+cl[cl.length-1]:cl[0];
+  return `${seasonLead(W)} ${W.past?'was':'is'} expected to be ${list}.`;
+}
+/* the small line: each month's change from an average year */
+function seasonMonths(W){
+  const us=S.units==='us';
+  return W.mons.map((mo,i)=>{
+    const n=[], t=W.t2m.cs[i].d*(us?1.8:1);
+    n.push(Math.abs(t)<0.25?'usual temperature':`${sgn(t,Math.abs(t)<0.95?1:0)} °${us?'F':'C'}`);
+    const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?c.pct:null; };
+    const pp=pc('pr'); if(pp!=null) n.push(Math.abs(pp)<0.5?'usual precipitation':`${fmt(Math.abs(pp),0)}% ${pp>=0?'more':'less'} precipitation`);
+    const ps=pc('sf'); if(ps!=null) n.push(Math.abs(ps)<0.5?'usual snow':`${fmt(Math.abs(ps),0)}% ${ps>=0?'more':'less'} snow`);
+    return `<span><b>${MONTHS[mo.m-1]}:</b> ${n.join(', ')}</span>`;
+  }).join('');
+}
+function renderSummary(recsBy){
+  const el=document.getElementById('sums');
+  const Ws=SEASONS.map(sea=>seasonSummary(sea,recsBy)).filter(Boolean);
+  if(!Ws.length){ el.innerHTML='<p class="sum">No outlook here: this spot is open ocean, outside the map data.</p>'; return; }
+  el.innerHTML=Ws.map(W=>`<div class="season"><p class="sum">${seasonHtml(W)}</p><p class="sumnum">${seasonMonths(W)}</p></div>`).join('');
+}
+
 async function render(){
   const L=fcMonths(), loc=S.loc; if(!loc||!META) return;
   document.body.classList.remove('landing');
   document.getElementById('out').classList.remove('hidden');
   document.getElementById('place').textContent=loc.name;
-  const rows=[];
+  const rows=[], recsBy={};
   for(const R of ROWS){
     const f=META.fields.find(x=>x.k===R.k); if(!f) continue;
     const b=boxOf(f,loc.la,loc.lo); if(!b) continue;
     const t=await tile(b.tile); const recs=t&&t[R.k]&&t[R.k][b.id];
     if(!recs) continue;
+    recsBy[R.k]=recs;
     const cells=L.map(mo=>cell(f,recs[mo.mi],mo));
     if(!cells.some(c=>c&&(R.k==='t2m'||isFinite(c.pct)))) continue;     // nothing to show in any month
     rows.push({R,f,b,cells});
   }
+  renderSummary(recsBy);
+  /* the maps: the regression page at the outlook's strength (it steps by 0.5), winter, centered here */
+  { const d=fcDJF(ensoYearNow().Y), r=d?Math.sign(d.x)*Math.round(Math.abs(d.x)*2)/2:1.5;
+    document.getElementById('mapsLink').href=`${BASE}ensoreg#f=t2m&r=${r}&m=djf&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
