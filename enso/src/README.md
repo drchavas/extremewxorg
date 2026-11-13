@@ -101,5 +101,7 @@ and a `.sky` layer right after `<body>` with a sun at top left, rain streaks at 
 ## Forecast page: small outlook graph (2026-11-13)
 Under the month buttons, `fcMiniSvg` draws CPC's most likely (50th percentile) RONI for each 3-month season of the
 outlook (`data/roni_fcst.json`) as a small line graph, with the Dec–Feb value the maps use marked in red and labelled.
-It follows the light/dark theme colours. The full fan chart (5–95%) stays in the panel further down.
+The middle-50% range is shaded, seasons are labelled "Oct–Dec"… (codes on phones), and it is drawn at the
+box's own width (redrawn on resize). It follows the light/dark theme colours. The full fan chart (5–95%) stays in the panel
+further down.
 

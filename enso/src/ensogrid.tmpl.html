@@ -596,11 +596,14 @@
   .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
   /* the forecast page: months instead of the averaging bar */
-  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
+  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
   .fcst #monthbar{display:none}
   .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
-  .fcmini{flex:0 0 auto;width:310px;max-width:100%}
-  .fcmini svg{display:block;width:100%;height:auto;overflow:visible}
+  .fccol{flex:1 1 380px;max-width:760px;min-width:0}
+  .fccol .fcnote{max-width:none}
+  .fcmini{margin:10px 0 0;padding:10px 12px 6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+  .fcmini svg{display:block;width:100%;height:auto}
+  .fcmini:empty{display:none}
   .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
@@ -675,8 +678,10 @@
 <!--F-->  <div id="fmbar">
     <div class="fld"><label>Month</label>
       <div class="seg" id="fmSeg" role="group" aria-label="Month"></div></div>
-    <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
-    <div class="fcmini" id="fcMini" aria-hidden="true"></div>
+    <div class="fccol">
+      <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
+      <div class="fcmini" id="fcMini"></div>
+    </div>
   </div><!--/F-->
   <div id="monthbar">
     <div><div class="mlab">Average over</div>

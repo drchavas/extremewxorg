@@ -299,11 +299,14 @@
   .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
   /* the forecast page: months instead of the averaging bar */
-  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
+  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
   .fcst #monthbar{display:none}
   .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
-  .fcmini{flex:0 0 auto;width:310px;max-width:100%}
-  .fcmini svg{display:block;width:100%;height:auto;overflow:visible}
+  .fccol{flex:1 1 380px;max-width:760px;min-width:0}
+  .fccol .fcnote{max-width:none}
+  .fcmini{margin:10px 0 0;padding:10px 12px 6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+  .fcmini svg{display:block;width:100%;height:auto}
+  .fcmini:empty{display:none}
   .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
@@ -350,8 +353,10 @@
   <div id="fmbar">
     <div class="fld"><label>Month</label>
       <div class="seg" id="fmSeg" role="group" aria-label="Month"></div></div>
-    <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
-    <div class="fcmini" id="fcMini" aria-hidden="true"></div>
+    <div class="fccol">
+      <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
+      <div class="fcmini" id="fcMini"></div>
+    </div>
   </div>
   <div id="monthbar">
     <div><div class="mlab">Average over</div>
@@ -2368,25 +2373,39 @@ function regBoxPanel(x,y,w,h,bs){
   return o+'</g>';
 }
 /* the forecast page's RONI panel: the last two years observed, then CPC's outlook */
-/* The small graph at the top of the forecast page (2026-11-13): CPC's most likely (50th percentile) RONI
-   for each 3-month season of the outlook, with the Dec-Feb value the maps use marked. */
+/* The small graph at the top of the forecast page (2026-11-13): CPC's most likely (50th percentile) RONI for
+   each 3-month season of the outlook, its middle-50% range shaded, and the Dec-Feb value the maps use marked.
+   Drawn at the box's own width so the text keeps its size on phones. */
+const SEASON_SPAN={DJF:'Dec–Feb',JFM:'Jan–Mar',FMA:'Feb–Apr',MAM:'Mar–May',AMJ:'Apr–Jun',MJJ:'May–Jul',JJA:'Jun–Aug',
+  JAS:'Jul–Sep',ASO:'Aug–Oct',SON:'Sep–Nov',OND:'Oct–Dec',NDJ:'Nov–Jan'};
 function fcMiniSvg(o){
   if(!RFC||!RFC.seasons||!RFC.seasons.length) return '';
-  const Q=RFC.seasons, W=310, H=118, l=30, r=8, t=16, b=22, th=T();
-  const v=Q.map(q=>q.q['50']), lo=Math.min(-0.5,Math.floor(Math.min(...v)*2)/2), hi=Math.max(0.5,Math.ceil((Math.max(...v)+0.15)*2)/2);
-  const X=i=>l+(W-l-r)*(Q.length>1?i/(Q.length-1):0.5), Y=u=>t+(H-t-b)*(hi-u)/(hi-lo);
+  const box=document.getElementById('fcMini'), th=T(), Q=RFC.seasons;
+  const pw=box&&box.parentElement?box.parentElement.clientWidth:0;
+  const W=Math.max(260,Math.round((pw||520)-26)), H=W<480?150:156;      // the box's padding and border
+  const wide=W>=480, l=26, r=10, t=wide?32:44, b=20;
+  const v=Q.map(q=>q.q['50']), v25=Q.map(q=>q.q['25']), v75=Q.map(q=>q.q['75']);
+  const lo=Math.min(0,Math.floor(Math.min(...v25)*2)/2), hi=Math.ceil((Math.max(...v75)+0.1)*2)/2;
+  const X=i=>l+(W-l-r)*(i+0.5)/Q.length, Y=u=>t+(H-t-b)*(hi-u)/(hi-lo);
   const k=o?Q.findIndex(q=>q.code==='DJF'&&q.center===ymStr(o.Y+1,1)):-1;
-  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="CPC most likely RONI by season">`;
-  g+=`<text x="${l}" y="10" font-size="10.5" font-weight="650" fill="${th.ink}">NOAA CPC outlook: most likely RONI (°C)</text>`;
-  for(let u=Math.ceil(lo);u<=hi+1e-9;u+=1){ const yy=Y(u).toFixed(1);
-    g+=`<line x1="${l}" x2="${W-r}" y1="${yy}" y2="${yy}" stroke="${th.line}" stroke-width="1"${u===0?'':' stroke-dasharray="2 3"'}/>`+
-       `<text x="${l-5}" y="${(+yy+3.5).toFixed(1)}" font-size="9.5" text-anchor="end" fill="${th.mute}">${u>0?'+':u<0?'−':''}${Math.abs(u)}</text>`; }
-  g+=`<polyline fill="none" stroke="${th.pt}" stroke-width="2" points="${Q.map((q,i)=>X(i).toFixed(1)+','+Y(q.q['50']).toFixed(1)).join(' ')}"/>`;
-  Q.forEach((q,i)=>{ const on=i===k;
-    g+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(q.q['50']).toFixed(1)}" r="${on?5:2.6}" fill="${on?th.en:th.pt}"${on?` stroke="${th.panel}" stroke-width="1.5"`:''}><title>${q.code}: most likely ${sgn(q.q['50'],2)}°C</title></circle>`+
-       `<text x="${X(i).toFixed(1)}" y="${H-6}" font-size="9" text-anchor="middle" fill="${on?th.ink:th.mute}"${on?' font-weight="700"':''}>${q.code}</text>`; });
-  if(k>=0){ const xx=X(k), yy=Y(Q[k].q['50']), right=xx<W-90;
-    g+=`<text x="${(xx+(right?9:-9)).toFixed(1)}" y="${(yy-7).toFixed(1)}" font-size="11" font-weight="700" fill="${th.en}" text-anchor="${right?'start':'end'}">${sgn(Q[k].q['50'],2)} (Dec–Feb, used for maps)</text>`; }
+  const f1=n=>n.toFixed(1);
+  let g=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="NOAA CPC's most likely RONI for each season of its outlook">`;
+  g+=`<text x="0" y="12" font-size="12" font-weight="650" fill="${th.ink}">NOAA&#8217;s outlook: most likely ENSO index (RONI, °C)</text>`+
+     (wide?`<text x="${W}" y="12" font-size="10.5" text-anchor="end" fill="${th.mute}">shaded: middle 50% chance</text>`
+          :`<text x="0" y="27" font-size="10.5" fill="${th.mute}">shaded: middle 50% chance</text>`);
+  for(let u=Math.ceil(lo);u<=hi+1e-9;u+=1){
+    g+=`<line x1="${l}" x2="${W-r}" y1="${f1(Y(u))}" y2="${f1(Y(u))}" stroke="${th.line}" stroke-width="${u===0?1.2:0.7}" opacity="${u===0?1:0.7}"/>`+
+       `<text x="${l-6}" y="${f1(Y(u)+3.5)}" font-size="10" text-anchor="end" fill="${th.mute}">${u>0?'+':u<0?'−':''}${Math.abs(u)}</text>`; }
+  g+=`<path d="M${Q.map((q,i)=>f1(X(i))+','+f1(Y(v75[i]))).join(' L')} L${Q.map((q,i)=>f1(X(i))+','+f1(Y(v25[i]))).reverse().join(' L')} Z" fill="${th.pt}" opacity="0.16"/>`;
+  g+=`<polyline fill="none" stroke="${th.pt}" stroke-width="2.2" stroke-linejoin="round" points="${Q.map((q,i)=>f1(X(i))+','+f1(Y(v[i]))).join(' ')}"/>`;
+  Q.forEach((q,i)=>{ const on=i===k, nm=SEASON_SPAN[q.code]||q.code;
+    if(!on) g+=`<circle cx="${f1(X(i))}" cy="${f1(Y(v[i]))}" r="2.8" fill="${th.pt}"><title>${nm} ${q.center.slice(0,4)}: most likely ${sgn(v[i],2)}°C</title></circle>`;
+    g+=`<text x="${f1(X(i))}" y="${H-5}" font-size="${wide?10:9}" text-anchor="middle" fill="${on?th.ink:th.mute}"${on?' font-weight="700"':''}>${wide?nm:q.code}</text>`; });
+  if(k>=0){ const xx=X(k), yy=Y(v[k]);
+    /* the label sits above and to the right of the point, where the line (falling through the outlook) is not */
+    g+=`<circle cx="${f1(xx)}" cy="${f1(yy)}" r="5.5" fill="${th.en}" stroke="${th.panel}" stroke-width="2"><title>Dec–Feb: most likely ${sgn(v[k],2)}°C, the value the maps use</title></circle>`+
+       `<text x="${f1(xx+9)}" y="${f1(yy-9)}" font-size="12" font-weight="700" fill="${th.en}">${sgn(v[k],2)} °C`+
+       `<tspan font-size="11" font-weight="400" fill="${th.mute}"> used for the maps</tspan></text>`; }
   return g+'</svg>';
 }
 function fcRoniPanel(x,y,w,h){
@@ -2892,6 +2911,8 @@ function syncControls(){
         ` Every month of the ${yy} ENSO year (June–May) is mapped at that value.`+
         (fcStale()?' <span class="stale">CPC issues a new outlook on the second Thursday of each month; this one may have been replaced.</span>':''); }
     document.getElementById('fcMini').innerHTML=fcMiniSvg(o);
+    if(!window.__fcMiniRs){ window.__fcMiniRs=1; let tm=null;       // redraw at the new width
+      addEventListener('resize',()=>{ clearTimeout(tm); tm=setTimeout(()=>{ const e=document.getElementById('fcMini'); if(e&&RFC) e.innerHTML=fcMiniSvg(FCO); },150); }); }
     document.querySelectorAll('#phSeg button').forEach(b=>{ const on=b.dataset.ph===(S.mode==='clim'?'clim':'reg');
       b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
   } else if(REG){
