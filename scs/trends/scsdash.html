@@ -219,6 +219,17 @@
   #dash .cell.on{outline:3px solid var(--accent2);outline-offset:-3px}
   #dash .cell.none{opacity:.35;cursor:default}
   #dash .cell.none:hover{outline:none}
+  /* tropical-cyclone section: a header row, then the rows, then the storm list */
+  #dash tr.grp td{padding:9px 10px 6px;font-weight:650;font-size:12.5px;color:var(--text);
+                  background:var(--panel2);border-top:2px solid var(--line)}
+  #dash tr.grp td span{font-weight:400;font-size:10.5px;color:var(--muted);margin-left:6px}
+  #dash tr.grp td a{color:var(--accent)}
+  #dash .cell .bot.notrend{font-size:10.5px;color:var(--muted);font-style:italic}
+  #dash tr.tclist td{padding:9px 10px 11px;font-size:11.5px;line-height:1.6;color:var(--text);white-space:normal}
+  #dash tr.tclist .note{font-size:10.5px;color:var(--muted);font-weight:400}
+  #dash tr.tclist .chips{margin-top:3px}
+  #dash tr.tclist .chips a{color:var(--accent);font-weight:600;white-space:nowrap}
+  #dash tr.tclist .chips span{color:var(--muted);font-size:10.5px;white-space:nowrap}
   #dash .foot2{padding:10px 16px;border-top:1px solid var(--line);font-size:11px;
                color:var(--muted);line-height:1.6}
   /* Color key. The scale is absolute now, so it has to be legible somewhere.
@@ -250,7 +261,7 @@
      <a href="scstrend_grid.html">2&deg; grid maps by hazard</a> &middot;
      <a href="scsevents.html">Historical events</a> &middot;
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta dataupd">Data last updated 2026-10-27 13:42 UTC</div>
+  <div class="hmeta dataupd">Data last updated 2026-11-12 21:56 UTC</div>
   <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; built on analysis by Danny Brouillette and the <a href="https://mrcc.purdue.edu/">Midwest Regional Climate Center</a>, supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/">National Science Foundation</a></div>
 
 </header>
@@ -296,6 +307,7 @@
       <div class="scroll"><table>
         <thead><tr id="dashHead"></tr></thead>
         <tbody id="dashBody"></tbody>
+        <tbody id="tcBody"></tbody>
       </table></div>
       <div class="foot2" id="dashFoot"></div>
       </div>
@@ -542,7 +554,41 @@ async function gzFetch(url){
 /* HAZ is the row order. Only county hazards: freezing rain and peak wind are
    twelve Indiana stations, not a national county field, so there is no county
    value for them to show. */
-const HAZ=['hail','tornado','wind','derechoday'];
+const HAZ=['hail','tornado','wind','derechoday','tcwind','tcrain'];
+/* Tropical-cyclone rows come from the tcviewer.org Storm Hazards & Impacts data
+   (build_tc_county.py -> data/tc_county.json.gz), one record per county per storm.
+   They are counted in storms per season, not days, and carry no trend (see TC_NOTE). */
+const TCH=['tcwind','tcrain'];
+function isTC(h){ return TCH.includes(h); }
+let TCD=null;                         // the raw tc_county file, for the storm list
+const TC_SPECS=meta=>[
+  {key:'tcwind',label:'Tropical cyclone wind',rowlabel:'Tropical-cyclone winds',countword:'storm',tc:true,
+   year0:meta.year0,year1:meta.year1,
+   thresholds:[{key:'w34',short:'39+ mph',label:'Tropical-storm force (39+ mph, 34 kt)',min:1},
+               {key:'w50',short:'58+ mph',label:'58+ mph (50 kt)',min:2},
+               {key:'w64',short:'74+ mph',label:'Hurricane force (74+ mph, 64 kt)',min:3}]},
+  {key:'tcrain',label:'Tropical cyclone rain',rowlabel:'Tropical-cyclone rain',countword:'storm',tc:true,
+   year0:meta.year0,year1:meta.year1,
+   thresholds:[{key:'r4',short:'4+ in',label:'4+ inches storm total',min:40},
+               {key:'r8',short:'8+ in',label:'8+ inches storm total',min:80},
+               {key:'r15',short:'15+ in',label:'15+ inches storm total',min:150}]}];
+/* Turn tc_county records into the same (county, year, month, value-per-threshold)
+   layout the Storm Events hazards use, so the matrix, the smoother and the map need
+   nothing new. Storms from a season that is not over yet are kept out of the
+   rates (they would also overrun the year axis) but stay in the storm list. */
+function tcHazard(h){
+  const T=TCD, m=T.meta, spec=INDEX.hazards.find(x=>x.key===h), n=T.ci.length;
+  const ci=[],yi=[],mi=[], v=spec.thresholds.map(()=>[]);
+  for(let k=0;k<n;k++){
+    const st=T.storms[T.si[k]], y=st[2];
+    if(y<m.year0||y>m.year1) continue;
+    const x = h==='tcwind' ? T.wl[k] : T.rr[k];
+    if(!(x>=spec.thresholds[0].min)) continue;
+    ci.push(T.ci[k]); yi.push(y-m.year0); mi.push(st[3]);
+    spec.thresholds.forEach((t,i)=>v[i].push(x>=t.min?1:0));
+  }
+  return {meta:{hazard:h,year0:m.year0,year1:m.year1,gaps:[]},counties:T.counties,ci,yi,mi,v};
+}
 /* Severity levels the dashboard shows, per hazard. Tornado stops at EF3+: EF4+ is
    too rare to carry a county climatology or trend, and ratings that high are too
    uncertain between EF3, EF4 and EF5 to be worth separating. The hazard pages
@@ -592,7 +638,8 @@ function smoothOn(){ return S.smooth!=='off'; }
 async function loadHazard(k){
   if(HZ[k]) return HZ[k];
   const spec=INDEX.hazards.find(h=>h.key===k);
-  const d=await gzFetch('data/'+spec.file);
+  if(!spec) return null;
+  const d=isTC(k) ? tcHazard(k) : await gzFetch('data/'+spec.file);
   d.nY=d.meta.year1-d.meta.year0+1;
   d.g=new Int32Array(d.counties.length);
   d.counties.forEach((g,i)=>{ const gi=gidxOf[g]; d.g[i]=(gi===undefined)?-1:gi; });
@@ -704,6 +751,35 @@ function smoothField(v){
       const u=v[I[k]];
       if(!isFinite(u)) continue;
       s+=W[k]*u; ww+=W[k];
+    }
+    out[i]= ww>0 ? s/ww : v[i];
+  }
+  return out;
+}
+/* Coast-aware smoothing for the tropical-cyclone rows. TC winds and rain fall off
+   steeply inland, so the plain 2° neighbourhood -- built for sparse Storm Events
+   reports -- mixed inland counties into every coastal one and read several times low
+   (Brunswick County, NC: hurricane-force winds in 6 of 22 seasons, but "one every 28
+   years"). Here each neighbour's weight is also multiplied by how close its distance
+   from the sea coast is to this county's (tc_county.json's `coast`, km), so a coastal
+   county is averaged along the coast and an inland one with counties equally far
+   inland. The tolerance widens inland: 25 km on the coast, +0.25 km per km inland. */
+const TC_SIGC0=25, TC_SIGC1=0.25;
+let TCC=null;
+function smoothFieldTC(v){
+  if(!smoothOn()||!TCD||!TCD.coast) return smoothField(v);
+  const {idx,wt}=smoothNeighbours();
+  if(!TCC) TCC=GEOID.map(g=>TCD.coast[g]!=null?TCD.coast[g]:NaN);
+  const out=new Float32Array(v.length).fill(NaN);
+  for(let i=0;i<v.length;i++){
+    if(!isFinite(v[i])) continue;
+    const I=idx[i], W=wt[i], ci=TCC[i], sc=TC_SIGC0+TC_SIGC1*(isFinite(ci)?ci:0);
+    let s=0,ww=0;
+    for(let k=0;k<I.length;k++){
+      const j=I[k], u=v[j]; if(!isFinite(u)) continue;
+      const cj=TCC[j], dc=(isFinite(ci)&&isFinite(cj))?(cj-ci)/sc:0;
+      const w=W[k]*Math.exp(-0.5*dc*dc);
+      s+=w*u; ww+=w;
     }
     out[i]= ww>0 ? s/ww : v[i];
   }
@@ -830,7 +906,8 @@ function buildFields(){
       S.hazard=h; S.thresh=ti;
       rebuildMatrix();
       const cm=countyMetrics();
-      out[h][ti]={mean:smoothField(cm.mean),trend:smoothField(cm.trend),
+      const sm=isTC(h)?smoothFieldTC:smoothField;
+      out[h][ti]={mean:sm(cm.mean),trend:sm(cm.trend),
                   pv:cm.pv,nyr:cm.nyr,raw:cm.mean};
     });
   });
@@ -1006,7 +1083,7 @@ function refreshCUR(){
 
 function drawDash(){
   const c=gidxOf[S.county], [a,b]=yearsSel();
-  const maxLev=Math.max(...HAZ.filter(covered).map(h=>dashLevels(h)));
+  const maxLev=Math.max(...HAZ.filter(h=>hazSpec(h)&&covered(h)).map(h=>dashLevels(h)));
 
   document.getElementById('dashTitle').textContent =
     countyLabel(c);
@@ -1018,18 +1095,20 @@ function drawDash(){
   for(let i=0;i<maxLev;i++) th+=`<th>Severity ${i+1}</th>`;
   document.getElementById('dashHead').innerHTML=th;
 
-  let rows='';
-  HAZ.forEach(h=>{
+  const rowOf=h=>{
+    let rows='';
     const spec=hazSpec(h);
     const on=covered(h);
     const [ha,hb]=hazYears(h);
     /* Name the row for what is actually counted. "Hail" invites the reading
        "how much hail"; "Hail days" says a day on which any qualifying report
        occurred, which is what the number is. Derecho counts events, not days. */
-    rows+=`<tr><td class="haz">${esc(spec.label+' '+countWord(h)+'s')}`+
+    rows+=`<tr><td class="haz">${esc(spec.rowlabel||spec.label+' '+countWord(h)+'s')}`+
           (on?`<span class="yrs">${esc(ha+'–'+hb)}</span>`:'')+
-          `<a href="scstrend.html#h=${esc(h)}&t=${h===S.hazard?S.thresh:0}&r=${esc(STUSPS[c])}&c=${esc(S.county)}`+
-          `&p=${ha}-${hb}">full hazard map &rarr;</a>`+
+          (isTC(h)
+            ? `<a href="https://tcviewer.org/impacts/" target="_blank" rel="noopener">storm by storm on tcviewer.org &rarr;</a>`
+            : `<a href="scstrend.html#h=${esc(h)}&t=${h===S.hazard?S.thresh:0}&r=${esc(STUSPS[c])}&c=${esc(S.county)}`+
+              `&p=${ha}-${hb}">full hazard map &rarr;</a>`)+
           `<span class="src">${sourceHtml(h)}</span></td>`;
     for(let i=0;i<maxLev;i++){
       const t=i<dashLevels(h)?spec.thresholds[i]:null;
@@ -1048,6 +1127,7 @@ function drawDash(){
                  returnPeriod(d.mean)?'one every '+esc(returnPeriod(d.mean))
                                      :'none on record'}</span></div>`+
             `</div>`+
+            (isTC(h) ? `<div class="bot notrend">no trend: ${hb-ha+1} seasons</div>` :
             `<div class="bot${nearZero(d.trend,d.mean)?'':' moves'}" style="color:${tc}">`+
               `${arrowSVG(d.trend,trendMax(h,i),tc,d.mean)}`+
               `<div class="tnum">`+
@@ -1055,12 +1135,22 @@ function drawDash(){
                 `<span class="unit"> /decade</span></div>`+
                 (trendPct(d.trend,d.mean)
                    ? `<div class="pct">(${esc(trendPct(d.trend,d.mean))})</div>` : '')+
-              `</div></div></td>`;
+              `</div></div>`)+`</td>`;
     }
     rows+='</tr>';
-  });
-  document.getElementById('dashBody').innerHTML=rows;
-  [...document.querySelectorAll('#dashBody .cell[data-h]')].forEach(td=>{
+    return rows;
+  };
+  document.getElementById('dashBody').innerHTML=
+    HAZ.filter(h=>!isTC(h)&&hazSpec(h)).map(rowOf).join('');
+  /* Tropical cyclones: their own section, then the storms behind the numbers. */
+  const tcOn=TCH.filter(h=>hazSpec(h)&&HZ[h]);
+  document.getElementById('tcBody').innerHTML = !tcOn.length ? '' :
+    `<tr class="grp"><td colspan="${maxLev+1}">Tropical cyclones `+
+      `<span>storms per season reaching the area &middot; from `+
+      `<a href="https://tcviewer.org/impacts/" target="_blank" rel="noopener">tcviewer.org</a></span></td></tr>`+
+    tcOn.map(rowOf).join('')+
+    `<tr class="tclist"><td colspan="${maxLev+1}">${tcStormList()}</td></tr>`;
+  [...document.querySelectorAll('#dashBody .cell[data-h], #tcBody .cell[data-h]')].forEach(td=>{
     td.onclick=()=>pickCell(td.dataset.h,+td.dataset.t);
   });
 
@@ -1076,13 +1166,52 @@ function drawDash(){
     (gaps.includes(1993)?` <b>1993 is excluded</b>: June and July 1993 are missing from `+
                  `Storm Events entirely.`:'')+
     ' Each value is a 2° neighborhood average rather than this county alone, over the '+
-    'years listed beside the hazard.';
+    'years listed beside the hazard.'+
+    (TCD?` <b>Tropical-cyclone rows count storms, not days</b>: a storm counts once if winds of `+
+         `that strength reached any part of a county, or its storm-total rain reached that amount `+
+         `anywhere in it. They show no trend: ${TCD.meta.year1-TCD.meta.year0+1} seasons, and even `+
+         `a coastal county sees hurricane-force winds only a handful of times.`:'');
+}
+/* The storms behind this county's tropical-cyclone numbers -- this county alone,
+   not the neighbourhood the rates are averaged over -- each linking to that storm on
+   the tcviewer.org impacts page, opened on this county. A storm is listed if its
+   tropical-storm-force winds reached the county or it left 4+ inches of rain. */
+function tcStormList(){
+  if(!TCD) return '';
+  const gi=TCD.counties.indexOf(S.county), m=TCD.meta, c=gidxOf[S.county];
+  const nm=countyLabel(c).replace(/, [A-Z]{2}$/,'');
+  const hits=[];
+  if(gi>=0) for(let k=0;k<TCD.ci.length;k++){
+    if(TCD.ci[k]!==gi) continue;
+    const wl=TCD.wl[k], rr=TCD.rr[k];
+    if(wl<1 && !(rr>=40)) continue;
+    hits.push({st:TCD.storms[TCD.si[k]],wl,rr});
+  }
+  if(!hits.length)
+    return `<b>Storms in ${esc(nm)}:</b> none since ${m.year0} brought tropical-storm-force winds `+
+           `or 4+ inches of rain to this county.`;
+  hits.sort((a,b)=>b.st[2]-a.st[2]||b.st[3]-a.st[3]);
+  const W=['','39+ mph','58+ mph','74+ mph'];
+  const items=hits.map(({st,wl,rr})=>{
+    const det=[wl?W[wl]:'',rr>=0?(rr/10).toFixed(1)+'″':''].filter(Boolean).join(', ');
+    const late=st[2]>m.year1;
+    return `<a href="https://tcviewer.org/impacts/?storm=${encodeURIComponent(st[0])}&county=${esc(S.county)}" `+
+           `target="_blank" rel="noopener" title="${esc(st[1]+' '+st[2]+(late?' (season not over; not in the rates)':''))}">`+
+           `${esc(st[1])} ${st[2]}${late?'*':''}</a> <span>${esc(det)}</span>`;
+  });
+  const anyLate=hits.some(h=>h.st[2]>m.year1);
+  return `<b>${hits.length} storm${hits.length===1?'':'s'} in ${esc(nm)} since ${m.year0}</b> `+
+         `<span class="note">(this county alone; strongest wind reached, highest storm-total rain)</span>`+
+         `<div class="chips">${items.join(' · ')}</div>`+
+         (anyLate?`<div class="note">* ${m.year1+1} season, not over yet: listed, not in the rates.</div>`:'');
 }
 /* Where each row's numbers come from, named on the row rather than buried in a
    footnote. Derecho is the only one that is not Storm Events alone: the swaths
    come from the Squitieri, Wade and Jirak archive, and the reports that fall
    inside them come from Storm Events. */
 function sourceHtml(h){
+  if(h==='tcwind') return 'IBTrACS wind radii, via tcviewer.org';
+  if(h==='tcrain') return 'PRISM daily rain, via tcviewer.org';
   if(h==='derechoday')
     return '<a href="https://doi.org/10.1175/BAMS-D-25-0002.1" target="_blank" '+
            'rel="noopener">Squitieri et al. 2026</a> + NCEI StormEvents';
@@ -1377,12 +1506,15 @@ function wire(){
   const msg=document.getElementById('msg');
   try{
     msg.textContent='Loading county map…';
-    const [idx,ctopo,stopo]=await Promise.all([
+    const [idx,ctopo,stopo,tcd]=await Promise.all([
       fetch('data/index.json').then(r=>r.json()),
       gzFetch('geo/counties.topo.json.gz'),
-      gzFetch('geo/states.topo.json.gz')
+      gzFetch('geo/states.topo.json.gz'),
+      /* the TC rows are optional: if the file is missing the page still works */
+      gzFetch('data/tc_county.json.gz').catch(()=>null)
     ]);
     INDEX={hazards:idx.hazards.filter(h=>!h.kind)};   // county hazards only
+    if(tcd){ TCD=tcd; INDEX.hazards.push(...TC_SPECS(tcd.meta)); }
     GEO  =topojson.feature(ctopo,ctopo.objects[Object.keys(ctopo.objects)[0]]);
     STGEO=topojson.feature(stopo,stopo.objects[Object.keys(stopo.objects)[0]]);
     GEO.features.forEach((f,i)=>{ const p=f.properties;

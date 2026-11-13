@@ -21,6 +21,21 @@ The three ENSO pages in `enso/` are built from this folder. **Edit here, then bu
 
   So if you edit a Quick answer or add or remove a paper, edit both places, then run the check.
 
+## The location page (`enso/ensolocal.html`, hidden)
+"How will El Niño & La Niña affect where you are?": type a place (Open-Meteo geocoding, or the browser's location), get a
+table of hazards × the coming months, as % change (default) or expected amount, colored like the maps, pale where the
+box's own fit has p ≥ 0.05. It is a hand-written page (no template), `noindex` and linked from nowhere yet.
+- Its numbers come from **`build_local.js`** (`node enso/src/build_local.js`), which runs `enso.js` itself in a sandbox
+  with the forecast page's settings (REG and FCST on, trend removed, count fields smoothed) and stores, per box and
+  calendar month, the regression on the Dec–Feb RONI: climatology, the two slopes, and their p-values. Output:
+  `enso/local/meta.json` (fields, grids, per-month color scales) and `enso/local/t/<lat>_<lon>.json` (10° tiles that
+  touch land, ~11 MB). The page reads the fit at the Dec–Feb RONI of each month's ENSO year (observed, else CPC's
+  median from `data/roni_fcst.json`), so a new CPC outlook needs no rebuild; rerun the builder when the ENSO data change
+  (and it is cheap to run monthly). Checked 2026-11-12: 61 box-month values at 9 places match the forecast map page to
+  the stored 3 significant figures.
+- Rows: temperature (°C change), precipitation and snowfall (%), tropical-storm days (5° box), and for U.S. places
+  tornado, hail and thunderstorm-wind days (2° box, all reports). A count or rain change is capped at −100%.
+
 ## Where things are in the template
 - **Header text** (title, intro lines, NOAA links, feedback and email line): the `<header>` near the top of `<body>`.
 - **"Quick answers"** (`id="faqBox"`) and **"Foundations: published research"** (`id="papersBox"`): collapsed boxes at the bottom. Both are ensogrid only.

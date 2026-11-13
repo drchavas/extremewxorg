@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How will El Ni&ntilde;o &amp; La Ni&ntilde;a affect where you are? &mdash; elninolanina.org</title>
+<meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
+<link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
+<!-- hidden while in testing: not linked from anywhere, not indexed -->
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="referrer" content="no-referrer">
+<style>
+  :root{--bg:#eaf2fa;--panel:#ffffff;--panel2:#f2f6fa;--line:#cfdbe7;--text:#16212e;--muted:#5b6b7c;
+        --accent:#2b6fb8;--accent2:#9c5607;--en:#c8321f;--ln:#1f63b8}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  a{color:var(--accent)}
+  .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
+            padding:9px 16px;font-size:14px;font-weight:650;line-height:1.35}
+  .alertbar b{color:#fff}
+  main{max-width:1100px;margin:0 auto;padding:22px 16px 40px}
+  h1{font-size:28px;line-height:1.2;margin:4px 0 6px;letter-spacing:-.01em}
+  .lede{color:var(--muted);margin:0 0 18px;font-size:15px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 16px}
+  label.big{display:block;font-weight:650;font-size:15px;margin:0 0 8px}
+  .searchrow{display:flex;gap:8px;flex-wrap:wrap}
+  .searchrow input{flex:1 1 260px;min-width:0;font-size:16px;padding:10px 12px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;color:var(--text)}
+  .btn{font:inherit;font-size:15px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);
+       background:var(--panel2);color:var(--text);cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:650}
+  .btn:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+  #results{list-style:none;margin:10px 0 0;padding:0}
+  #results li button{width:100%;text-align:left;font:inherit;padding:8px 10px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;margin:0 0 6px;cursor:pointer;color:var(--text)}
+  #results li button:hover{border-color:var(--accent)}
+  #results small{color:var(--muted)}
+  .msg{color:var(--muted);font-size:14px;margin:8px 0 0}
+  .fc{font-size:16px} .fc b.en{color:var(--en)} .fc b.ln{color:var(--ln)}
+  .fc small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+  .place{font-size:20px;font-weight:700;margin:0 0 2px}
+  .placesub{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .toolbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{font:inherit;font-size:14px;padding:7px 12px;border:0;background:var(--panel2);color:var(--text);cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent2);color:#fff;font-weight:650}
+  .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+  thead th{background:var(--panel2);font-size:13px;font-weight:650;position:sticky;top:0}
+  thead th small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+  th.row{text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:normal;min-width:150px;font-weight:650}
+  th.row small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+  th.row a{font-weight:400;font-size:11.5px}
+  td{font-weight:650;min-width:66px}
+  td.faint{font-weight:400}
+  td.none{color:var(--muted);font-weight:400;background:#fff}
+  tr:last-child td,tr:last-child th{border-bottom:0}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .legend .bar{width:160px;height:10px;border-radius:3px;border:1px solid var(--line);display:inline-block;vertical-align:middle;margin:0 6px}
+  .legend .chip{display:inline-block;width:22px;height:14px;border-radius:3px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
+  .notes{font-size:13.5px;color:var(--muted)}
+  .notes p{margin:0 0 8px}
+  footer{font-size:12px;color:var(--muted);margin-top:18px}
+  .hidden{display:none}
+  @media (max-width:640px){ h1{font-size:23px} .alertbar{font-size:12px;padding:7px 12px} th.row{min-width:118px} td{min-width:58px;font-size:13px} }
+</style>
+</head>
+<body>
+<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
+<main>
+  <h1>How will El Ni&ntilde;o &amp; La Ni&ntilde;a affect where you are?</h1>
+  <p class="lede">Type a place to see how the coming months usually change there in a year like this one, based on
+    past El Ni&ntilde;o and La Ni&ntilde;a years and NOAA&rsquo;s latest outlook.</p>
+
+  <div class="card">
+    <label class="big" for="q">Location</label>
+    <form class="searchrow" id="sform" autocomplete="off">
+      <input id="q" type="search" placeholder="City, state or country (e.g. Lima, Indiana, Kenya)" aria-describedby="smsg">
+      <button class="btn primary" type="submit">Search</button>
+      <button class="btn" type="button" id="geo">Use my location</button>
+    </form>
+    <ul id="results" aria-live="polite"></ul>
+    <p class="msg" id="smsg"></p>
+  </div>
+
+  <div class="card fc" id="fcCard"><span id="fcText">Loading NOAA&rsquo;s outlook&hellip;</span></div>
+
+  <div class="card hidden" id="out">
+    <p class="place" id="place"></p>
+    <p class="placesub" id="placesub"></p>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Show">
+        <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Expected amount</button>
+      </div>
+      <div class="seg" role="group" aria-label="Units">
+        <button data-u="metric" class="on" aria-pressed="true">&deg;C, mm</button><button data-u="us" aria-pressed="false">&deg;F, inches</button>
+      </div>
+    </div>
+    <div class="tbwrap"><table id="tbl"></table></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="card notes">
+    <p><b>What these numbers are.</b> For each month, how much a year with this winter&rsquo;s expected El Ni&ntilde;o
+      or La Ni&ntilde;a strength has differed from an average year at this spot, 1979&ndash;2025: a straight-line fit
+      of each past year&rsquo;s value against that year&rsquo;s strength (NOAA&rsquo;s December&ndash;February Relative
+      Oceanic Ni&ntilde;o Index, RONI), read at the strength NOAA now expects. They are the same numbers as the maps,
+      for the map box that contains your location. They describe what tends to happen, not a weather forecast: any
+      single winter can differ a lot. Pale numbers in plain type could easily be chance (p &ge; 0.05 for that box&rsquo;s fit).</p>
+    <p><b>Data.</b> Temperature, rain and snow: ERA5 reanalysis (ECMWF), 2&deg; boxes (about 200 km). Tropical storms:
+      NOAA IBTrACS, days with a storm in the 5&deg; box (about 550 km). U.S. tornadoes, hail and thunderstorm wind: days
+      with a report in the 2&deg; box, NOAA NCEI Storm Events. The long-term warming trend is removed first. For the
+      official outlook, see NOAA&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">seasonal outlooks</a>
+      and <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
+      Place search by <a href="https://open-meteo.com/en/docs/geocoding-api" target="_blank" rel="noopener">Open-Meteo</a> (what you type is sent there).</p>
+    <p><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be
+      integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
+  </div>
+  <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)
+    &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; <a href="https://elninolanina.org/">El Ni&ntilde;o &amp; La Ni&ntilde;a maps</a>
+    &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including
+    <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>
+    &middot; <span id="built"></span></footer>
+</main>
+
+<script>
+/* The location page. Every number comes from the forecast map page (ensofcst.html): enso/src/build_local.js
+   runs that page's own code and stores, per box and calendar month, its regression on the Dec-Feb RONI
+   (enso/local/). Here the fit is read at the Dec-Feb RONI of each month's ENSO year: the observed value once
+   that winter is in the record, otherwise CPC's median, exactly as on the map page. */
+const BASE='/enso/';
+const MSEQ=[6,7,8,9,10,11,12,1,2,3,4,5];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MFULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CMAP={div:['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#fddbc7','#f4a582','#d6604d','#b2182b','#67001f'],
+  brbg:['#543005','#8c510a','#bf812d','#dfc27d','#f6e8c3','#f5f5f5','#c7eae5','#80cdc1','#35978f','#01665e','#003c30']};
+/* rows of the table: field, name, what it counts */
+const ROWS=[
+  {k:'t2m', name:'Temperature', sub:'average for the month'},
+  {k:'pr',  name:'Rain and snow', sub:'total precipitation'},
+  {k:'sf',  name:'Snowfall', sub:'as fresh snow (approx.)'},
+  {k:'tcd', name:'Tropical storm days', sub:'storm in the 5° box (~550 km)'},
+  {k:'tornado', name:'Tornado days', sub:'any tornado in the 2° box'},
+  {k:'hail', name:'Hail days', sub:'any hail report in the 2° box'},
+  {k:'wind', name:'Damaging wind days', sub:'thunderstorm wind report in the 2° box'}];
+const S={mode:'pct',units:'metric',loc:null};
+let META=null, RONI=null, RFC=null, TILES={};
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(v,d){ const s=v.toFixed(d); return /^-0(\.0+)?$/.test(s)?s.slice(1):s.replace(/^-/,'−'); }
+function sgn(v,d){ const a=fmt(Math.abs(v),d); return /^0(\.0+)?$/.test(a)?a:(v>=0?'+':'−')+a; }
+function hex(h){ return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16)); }
+function ramp(st,t){ t=Math.max(0,Math.min(1,t)); const x=t*(st.length-1), i=Math.min(st.length-2,Math.floor(x)), f=x-i,
+  a=hex(st[i]), b=hex(st[i+1]); return a.map((u,j)=>Math.round(u+(b[j]-u)*f)); }
+function lum([r,g,b]){ const c=[r,g,b].map(v=>{ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); });
+  return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+
+/* ---- RONI and CPC's outlook (as on the forecast page) */
+function r1(x){ return x==null?null:Math.sign(x)*Math.floor(Math.abs(x)*10+0.5+1e-9)/10; }
+function roniAt(y,m0){ const i=(y-RONI.year0)*12+m0; return (i>=0&&i<RONI.v.length)?RONI.v[i]:null; }
+function ymStr(y,m){ return y+'-'+String(m).padStart(2,'0'); }
+function fcDJF(Y){ const v=roniAt(Y+1,0); if(v!=null) return {x:v,obs:true};
+  const s=RFC&&RFC.seasons.find(q=>q.code==='DJF'&&q.center===ymStr(Y+1,1));
+  return s?{x:s.q['50'],obs:false,q:s.q,from:s.carried_from||null}:null; }
+function fcMonths(){
+  if(!RFC||!RFC.seasons.length) return [];
+  const now=new Date(), out=[]; let y=now.getFullYear(), m=now.getMonth()+1;
+  const [ly,lm]=RFC.seasons[RFC.seasons.length-1].center.split('-').map(Number);
+  while(y*12+m<=ly*12+lm){ const Y=m>=6?y:y-1, d=fcDJF(Y); if(d) out.push({y,m,Y,mi:MSEQ.indexOf(m),...d}); if(++m>12){ m=1; y++; } }
+  return out;
+}
+function roWord(v){ const a=Math.abs(v); return a<0.75?'weak':a<1.25?'moderate':a<1.75?'strong':'very strong'; }
+function phaseHtml(v){ if(Math.abs(v)<0.5-1e-9) return 'a <b>neutral</b> year (neither El Niño nor La Niña)';
+  return `a <b class="${v>0?'en':'ln'}">${roWord(v)} ${v>0?'El Niño':'La Niña'}</b>`; }
+function fcStatement(){
+  const L=fcMonths(); const el=document.getElementById('fcText');
+  if(!L.length){ el.innerHTML='NOAA&rsquo;s outlook on this page is out of date. See NOAA CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a> for the latest.'; return; }
+  const o=L.find(q=>q.Y===L[0].Y&&!q.obs)||L[0], yy=`${o.Y}–${String(o.Y+1).slice(2)}`, x=o.x;
+  const isd=o.from||RFC.issued, iss=`${MFULL[+isd.slice(5)-1]} ${isd.slice(0,4)}`;
+  el.innerHTML = o.obs
+    ? `This winter (December–February ${yy}) was ${phaseHtml(x)}: NOAA&rsquo;s Relative Oceanic Niño Index (RONI) was ${sgn(x,2)} °C.`
+    : `NOAA&rsquo;s latest outlook (issued ${iss}) expects ${phaseHtml(x)} this winter: its index for December–February ${yy}
+       (RONI) is most likely <b>${sgn(x,2)} °C</b>, with a 50% chance of ${sgn(o.q['25'],2)} to ${sgn(o.q['75'],2)}.`+
+      (x>=2.2?` <small>That would be close to the strongest on record (+2.40 °C, winter 1982–83).</small>`:'')+
+      `<small>Positive values mean El Niño, negative La Niña; beyond ±0.5 °C counts as an event, beyond ±1.5 °C as strong.</small>`;
+}
+
+/* ---- the map box that holds a place, and its stored fit */
+function boxOf(f,la,lo){
+  const g=f.grid; const r=Math.floor((la-g.lat0)/g.g); if(r<0||r>=g.nlat) return null;
+  let k;
+  if(g.global) k=Math.floor((((lo-g.lon0)%360)+360)%360/g.g);
+  else { let L=((lo+540)%360)-180; k=Math.floor((L-g.lon0)/g.g); }
+  if(k<0||k>=g.nlon) return null;
+  const cla=g.lat0+(r+0.5)*g.g, clo=((g.lon0+(k+0.5)*g.g)%360+360)%360;
+  return {id:r*g.nlon+k, tile:Math.floor(cla/10)*10+'_'+Math.floor(clo/10)*10, la0:g.lat0+r*g.g, lo0:g.lon0+k*g.g, g:g.g};
+}
+async function tile(key){
+  if(!META.tiles.includes(key)) return null;
+  if(!TILES[key]) TILES[key]=fetch(BASE+'local/t/'+key+'.json').then(r=>r.ok?r.json():null).catch(()=>null);
+  return TILES[key];
+}
+function rng(a,b,P,N){ const d=v=>Math.abs(v).toFixed(0); return a>=0?`${d(a)}–${d(b)}°${P}`:b<=0?`${d(b)}–${d(a)}°${N}`:`${d(a)}°${N}–${d(b)}°${P}`; }
+
+/* ---- one cell: change at strength v, as % (or °C for temperature) and as the expected amount */
+const DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+function cell(f,rec,mo){
+  const mm=f.months[mo.mi]; if(!rec) return null;
+  const [mean,bp,bn,pp,pn,mp=mm.mp,mn=mm.mn]=rec, v=mo.x;
+  const d=bp*((v>0?v:0)-mp)+bn*((v<0?v:0)-mn), p=v>0?pp:v<0?pn:null;
+  let den=NaN;
+  if(f.k==='pr') den=Math.max(mean,0.1);
+  else if(f.k==='sf') den=mean>=0.05-1e-9?mean:NaN;
+  else if(f.k!=='t2m') den=(mean>0&&mean>=(mm.climRef||0)*0.05)?mean:NaN;
+  /* a straight line read near the strongest year on record can overshoot to below zero: a count or a
+     rain total cannot fall by more than all of it */
+  const dd=f.k==='t2m'?d:Math.max(d,-mean);
+  return {mean,d:dd,p,pct:isFinite(den)?Math.max(-100,100*dd/den):NaN,faint:!(p!=null&&p<0.05),lo:mm.lo,hi:mm.hi,cmap:mm.cmap};
+}
+function amount(k,v,m){            // a monthly amount from the stored daily rate / monthly count
+  const us=S.units==='us', days=DAYS[m-1];
+  if(k==='t2m') return us?`${fmt(v*1.8+32,0)} °F`:`${fmt(v,1)} °C`;
+  if(k==='pr'){ const mmv=Math.max(0,v*days); return us?`${fmt(mmv/25.4,mmv/25.4<1?2:1)} in`:`${fmt(mmv,0)} mm`; }
+  if(k==='sf'){ const cm=Math.max(0,v*days); return us?`${fmt(cm/2.54,1)} in`:`${fmt(cm,cm<10?1:0)} cm`; }
+  const n=Math.max(0,v); return `${fmt(n,n<1?2:1)} d`;
+}
+function changeTxt(k,c){
+  if(k==='t2m') return S.units==='us'?`${sgn(c.d*1.8,1)} °F`:`${sgn(c.d,1)} °C`;
+  return isFinite(c.pct)?`${sgn(c.pct,0)}%`:null;
+}
+
+async function render(){
+  const L=fcMonths(), loc=S.loc; if(!loc||!META) return;
+  document.getElementById('out').classList.remove('hidden');
+  document.getElementById('place').textContent=loc.name;
+  const rows=[];
+  for(const R of ROWS){
+    const f=META.fields.find(x=>x.k===R.k); if(!f) continue;
+    const b=boxOf(f,loc.la,loc.lo); if(!b) continue;
+    const t=await tile(b.tile); const recs=t&&t[R.k]&&t[R.k][b.id];
+    if(!recs) continue;
+    const cells=L.map(mo=>cell(f,recs[mo.mi],mo));
+    if(!cells.some(c=>c&&(R.k==='t2m'||isFinite(c.pct)))) continue;     // nothing to show in any month
+    rows.push({R,f,b,cells});
+  }
+  const t2=rows.find(r=>r.R.k==='t2m');
+  document.getElementById('placesub').textContent = t2
+    ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
+    : 'No data here (open ocean).';
+  const tb=document.getElementById('tbl');
+  if(!rows.length){ tb.innerHTML=''; document.getElementById('legend').innerHTML=''; return; }
+  let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':'Expected this year')+'</th>'+
+    L.map(mo=>`<th scope="col">${MONTHS[mo.m-1]}<small>${mo.y}</small></th>`).join('')+'</tr></thead><tbody>';
+  for(const {R,f,cells} of rows){
+    const fm=L[0]?ymStr(L[0].y,L[0].m):'';
+    h+=`<tr><th class="row" scope="row">${esc(R.name)}<small>${esc(R.sub)}</small><a href="${BASE}ensofcst#f=${R.k}&t=0&mo=${fm}" target="_blank" rel="noopener">map</a></th>`;
+    cells.forEach((c,i)=>{
+      const mo=L[i];
+      if(!c){ h+=`<td class="none" title="Not shown: too rare here in ${MFULL[mo.m-1]}">–</td>`; return; }
+      const ch=changeTxt(R.k,c), unitless=!ch;
+      const v=R.k==='t2m'?c.d:c.pct, col=isFinite(v)?ramp(CMAP[c.cmap],(v-c.lo)/(c.hi-c.lo)):[255,255,255];
+      /* faded: the color mixed two-thirds toward white, in plain type, so the eye goes to the reliable cells */
+      const colF=c.faint?col.map(u=>Math.round(u+(255-u)*0.66)):col, ink=c.faint?'#5b6b7c':lum(col)<0.33?'#fff':'#16212e';
+      const show = S.mode==='pct' ? (ch||'–') : amount(R.k,c.mean+c.d,mo.m);
+      const tip=`${MFULL[mo.m-1]} ${mo.y}: average year ${amount(R.k,c.mean,mo.m)}; this year ${amount(R.k,c.mean+c.d,mo.m)}`+
+        (ch?` (${ch})`:' (too rare here for a % change)')+(c.faint?'; could easily be chance':'')+'.';
+      h+=`<td class="${c.faint?'faint':''}${unitless&&S.mode==='pct'?' none':''}" style="background:rgb(${colF.join(',')});color:${ink}" title="${esc(tip)}">${esc(show)}</td>`;
+    });
+    h+='</tr>';
+  }
+  tb.innerHTML=h+'</tbody>';
+  document.getElementById('legend').innerHTML=
+    `<span>Colors: <span class="bar" style="background:linear-gradient(to right,${CMAP.div.join(',')})"></span>cooler / fewer · warmer / more;
+     rain and snow: <span class="bar" style="background:linear-gradient(to right,${CMAP.brbg.join(',')})"></span>drier · wetter</span>
+     <span><span class="chip" style="background:rgb(250,226,211)"></span>pale, plain numbers: could easily be chance</span>
+     <span>– not shown: too rare there that month</span>`;
+  writeHash();
+}
+
+/* ---- place search */
+async function search(q){
+  const msg=document.getElementById('smsg'), ul=document.getElementById('results'); ul.innerHTML=''; msg.textContent='Searching…';
+  try{
+    const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&format=json&name='+encodeURIComponent(q));
+    const j=await r.json(); const res=(j.results||[]);
+    if(!res.length){ msg.textContent='No place found. Try a nearby city, or add the country.'; return; }
+    msg.textContent=res.length>1?'Pick one:':'';
+    if(res.length===1){ pick(res[0]); return; }
+    res.forEach(p=>{ const li=document.createElement('li'), b=document.createElement('button');
+      b.innerHTML=`${esc(p.name)} <small>${esc([p.admin1,p.country].filter(Boolean).join(', '))}</small>`;
+      b.onclick=()=>pick(p); li.appendChild(b); ul.appendChild(li); });
+  }catch(e){ msg.textContent='The place search is not responding. Try again, or use “Use my location”.'; }
+}
+function pick(p){
+  document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
+  S.loc={name:[p.name,p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', '),short:p.name,la:+p.latitude,lo:+p.longitude};
+  render();
+}
+function writeHash(){
+  if(!S.loc) return;
+  const q=new URLSearchParams({p:S.loc.name,la:S.loc.la.toFixed(3),lo:S.loc.lo.toFixed(3)});
+  if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='metric') q.set('u',S.units);
+  history.replaceState(null,'','#'+q.toString());
+}
+function readHash(){
+  const q=new URLSearchParams(location.hash.slice(1)), la=parseFloat(q.get('la')), lo=parseFloat(q.get('lo'));
+  if(q.get('m')==='val') S.mode='val'; if(q.get('u')==='us') S.units='us';
+  if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
+    S.loc={name:n,short:n.split(',')[0],la,lo}; }
+}
+function syncSeg(){
+  document.querySelectorAll('[data-m]').forEach(b=>{ const on=b.dataset.m===S.mode; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
+  document.querySelectorAll('[data-u]').forEach(b=>{ const on=b.dataset.u===S.units; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
+}
+
+async function init(){
+  readHash(); syncSeg();
+  document.getElementById('sform').onsubmit=e=>{ e.preventDefault(); const q=document.getElementById('q').value.trim(); if(q) search(q); };
+  document.getElementById('geo').onclick=()=>{
+    const msg=document.getElementById('smsg');
+    if(!navigator.geolocation){ msg.textContent='Your browser does not share its location.'; return; }
+    msg.textContent='Finding you…';
+    navigator.geolocation.getCurrentPosition(p=>{ const la=p.coords.latitude, lo=p.coords.longitude;
+      msg.textContent=''; S.loc={name:`Your location (${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'})`,short:'your location',la,lo}; render(); },
+      ()=>{ msg.textContent='Could not get your location. Type a place instead.'; },{timeout:10000});
+  };
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; syncSeg(); render(); });
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; syncSeg(); render(); });
+  try{
+    [META,RONI,RFC]=await Promise.all([BASE+'local/meta.json',BASE+'data/roni.json',BASE+'data/roni_fcst.json']
+      .map(u=>fetch(u,{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(u); return r.json(); })));
+  }catch(e){ document.getElementById('fcText').textContent='Could not load the data. Please try again later.'; return; }
+  document.getElementById('built').textContent='Data built '+META.built.slice(0,10);
+  fcStatement();
+  if(S.loc) render();
+}
+init();
+</script>
+<script src="/assets/feedback.js" defer></script>
+</body>
+</html>

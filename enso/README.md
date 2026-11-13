@@ -347,6 +347,10 @@ The map page draws everything with JavaScript, and most AI crawlers read only th
   - They only reach `https://elninolanina.org/robots.txt` etc. through Cloudflare URL rewrites, plus exceptions in the "non-ENSO to extremewx" redirect rule. Until those exist, these paths redirect to extremewx.org.
   - Update `sitemap.xml`'s `lastmod` when the page changes materially.
 
+## Location page `ensolocal.html` (Nov 12, 2026; hidden)
+"How will El Niño & La Niña affect where you are?" — a place search and a hazards × months table from the forecast
+page's regression at CPC's outlook. Built data in `local/` by `src/build_local.js`; details in `src/README.md`.
+
 ## Not done yet / ideas
 
 - SST / 500 hPa height fields; a scatter of DJF RONI vs the box value.
