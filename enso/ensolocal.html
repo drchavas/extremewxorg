@@ -66,6 +66,18 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 24px 20px;margin:40px 0 0;
     box-shadow:0 14px 40px rgba(38,73,79,.08)}
   .place{font-family:var(--serif);font-size:clamp(28px,3.4vw,38px);font-weight:400;line-height:1.1;margin:0 0 4px}
+  .sum{font-size:clamp(20px,2.5vw,27px);line-height:1.45;margin:10px 0 6px;color:var(--ink);max-width:860px;text-wrap:pretty}
+  .sum b{font-weight:600;white-space:nowrap}
+  .sum .w{color:#b2432a} .sum .c{color:#2d6684} .sum .wet{color:#1f7568} .sum .dry{color:#946016} .sum .n{color:var(--ink2)}
+  .sumnum{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .sumnum:empty{display:none}
+  details#more{border-top:4px solid var(--ink);margin-top:26px;padding-top:16px}
+  details#more>summary{cursor:pointer;font-size:clamp(18px,2vw,22px);font-weight:500;color:var(--ink);list-style:none;padding:2px 0;user-select:none}
+  details#more>summary::-webkit-details-marker{display:none}
+  details#more>summary u{color:var(--teal2);text-decoration-thickness:2px;text-underline-offset:4px;font-weight:600}
+  details#more>summary:hover u{color:var(--teal)}
+  details#more .op{display:none} details#more[open] .op{display:inline} details#more[open] .cl{display:none}
+  details#more[open]>summary{margin-bottom:14px}
   .placesub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
   .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
   .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
@@ -86,7 +98,7 @@
   .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:12px 0 0}
   .legend .bar{width:150px;height:9px;border-radius:5px;display:inline-block;vertical-align:middle;margin:0 6px}
   .legend .chip{display:inline-block;width:22px;height:14px;border-radius:4px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
-  .note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .note{font-size:12.5px;color:var(--muted);margin:4px 0 0}
   footer{flex-shrink:0;font-size:12px;color:var(--muted);text-align:center;padding:14px 16px 18px;line-height:1.6}
   footer a{color:var(--muted);text-decoration-color:#b5c4c1}
   .hidden{display:none}
@@ -110,11 +122,19 @@
     <button class="linkbtn" type="button" id="geo">or use my location</button>
     <ul id="results" aria-live="polite"></ul>
     <p class="msg" id="smsg"></p>
-    <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through June 2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
+    <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through mid-2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
   </div>
 
   <div class="card hidden" id="out">
     <p class="place" id="place"></p>
+    <p class="sum" id="sum"></p>
+    <p class="sumnum" id="sumnum"></p>
+    <p class="note">What has tended to happen at this spot in past years like this one (1979&ndash;2025), read from the
+      <a href="/enso/ensofcst" target="_blank" rel="noopener">forecast maps</a>: not a weather forecast, and any single winter can differ.
+      Data: ERA5 (ECMWF), NOAA IBTrACS and NOAA Storm Events; outlook from
+      <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA CPC</a>.</p>
+    <details id="more">
+    <summary><span class="cl">Want a more detailed view? <u>Click here</u></span><span class="op">Detailed view, month by month <u>(hide)</u></span></summary>
     <p class="placesub" id="placesub"></p>
     <div class="toolbar">
       <div class="seg" role="group" aria-label="Show">
@@ -126,10 +146,7 @@
     </div>
     <div class="tbwrap"><table id="tbl"></table></div>
     <div class="legend" id="legend"></div>
-    <p class="note">What has tended to happen at this spot in past years like this one (1979&ndash;2025), read from the
-      <a href="/enso/ensofcst" target="_blank" rel="noopener">forecast maps</a>: not a weather forecast, and any single winter can differ.
-      Data: ERA5 (ECMWF), NOAA IBTrACS and NOAA Storm Events; outlook from
-      <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA CPC</a>.</p>
+    </details>
   </div>
 </main>
 <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
@@ -194,7 +211,7 @@ function fcStatement(){
   const noaa=`(<a href="${OUTLOOK}" target="_blank" rel="noopener">NOAA</a>)`;
   if(!L.length){ hw.textContent='El Niño or La Niña'; hw.className='nt'; el.innerHTML=`See NOAA&rsquo;s latest El Niño / La Niña outlook ${noaa}.`; return; }
   /* this ENSO year's winter: the outlook's December-February value (or the observed one once it is in) */
-  const o=L.find(q=>q.Y===L[0].Y&&!q.obs)||L[0], x=o.x, end=`June ${o.Y+1}`;
+  const o=L.find(q=>q.Y===L[0].Y&&!q.obs)||L[0], x=o.x, end=`mid-${o.Y+1}`;
   if(Math.abs(x)<0.5-1e-9){ hw.textContent='El Niño or La Niña'; hw.className='nt';
     el.innerHTML=`Neither El Niño nor La Niña is expected this winter, so their usual effects should be small through ${end} ${noaa}.`; return; }
   const ph=x>0?'El\u00a0Niño':'La\u00a0Niña'; hw.textContent=ph; hw.className=x>0?'':'ln';
@@ -245,21 +262,74 @@ function changeTxt(k,c){
   return isFinite(c.pct)?`${sgn(c.pct,0)}%`:null;
 }
 
+/* ---- the plain-language winter summary: December-February at this place, from the same fits as the
+   table, read at the outlook's Dec-Feb strength. Sizes: temperature under 0.5 °C (about 1 °F) is "near
+   normal", under 1.5 °C (about 3 °F) "a little", more "a lot"; rain and snow under 10% near normal,
+   under 25% a little, more a lot. When fewer than two of the three months are significant (p < 0.05,
+   same sign) the size drops one step, so a change that could be chance never reads as "a lot". */
+const LVL=['near normal','a little','a lot'];
+function winterSummary(recsBy){
+  const now=new Date(), m=now.getMonth()+1, y=now.getFullYear(), Y=m>=6?y:y-1, past=m>=3&&m<=5;
+  const d=fcDJF(Y); if(!d) return null;
+  const mons=[[12,Y],[1,Y+1],[2,Y+1]].map(([mm,yy])=>({m:mm,y:yy,mi:MSEQ.indexOf(mm),x:d.x}));
+  const out={Y,past};
+  for(const k of ['t2m','pr','sf']){
+    const f=META.fields.find(x=>x.k===k), recs=recsBy[k]; if(!f||!recs) continue;
+    const cs=mons.map(mo=>cell(f,recs[mo.mi],mo)); if(cs.some(c=>!c)) continue;
+    const w=mons.map(mo=>DAYS[mo.m-1]), W=w.reduce((a,b)=>a+b,0);
+    const dlt=cs.reduce((a,c,i)=>a+c.d*w[i],0)/W, mean=cs.reduce((a,c,i)=>a+c.mean*w[i],0)/W;
+    const sig=cs.filter(c=>c.p!=null&&c.p<0.05&&Math.sign(c.d)===Math.sign(dlt)).length;
+    let v, lv;
+    if(k==='t2m'){ v=dlt; const a=Math.abs(v); lv=a<0.5?0:a<1.5?1:2; }
+    else { if(k==='sf'&&mean<0.25) continue;                  // little snow here (under ~3 inches a month): leave it out
+           if(!(mean>0)) continue; v=100*dlt/Math.max(mean,k==='pr'?0.1:0.05); const a=Math.abs(v); lv=a<10?0:a<25?1:2; }
+    if(sig<2) lv=Math.max(0,lv-1);
+    out[k]={v,lv,up:v>0};
+  }
+  return out;
+}
+function summaryHtml(W){
+  if(!W||!W.t2m) return '';
+  const cl=[], t=W.t2m, p=W.pr, s=W.sf;
+  cl.push(t.lv?`<b class="${t.up?'w':'c'}">${LVL[t.lv]} ${t.up?'warmer':'cooler'}</b> than normal`:`<b class="n">near normal</b> in temperature`);
+  if(p) cl.push(p.lv?`<b class="${p.up?'wet':'dry'}">${LVL[p.lv]} ${p.up?'wetter':'drier'}</b> than normal`:`<b class="n">near normal</b> in precipitation`);
+  if(s) cl.push(s.lv?`have <b class="${s.up?'wet':'dry'}">${LVL[s.lv]} ${s.up?'more':'less'} snow</b> than normal`:`have <b class="n">near-normal</b> snowfall`);
+  const list=cl.length>1?cl.slice(0,-1).join(', ')+(cl.length>2?',':'')+' and '+cl[cl.length-1]:cl[0];
+  /* December-February is winter in the north, summer in the south, and neither in the tropics */
+  const la=S.loc?S.loc.la:45, yy=`${W.Y}–${String(W.Y+1).slice(2)}`;
+  const lead=la>=23.5?`Winter (December–February ${yy})`:la<=-23.5?`Summer (December–February ${yy})`:`December–February ${yy}`;
+  return `${lead} ${W.past?'was':'is'} expected to be ${list}.`;
+}
+function summaryNums(W){
+  if(!W||!W.t2m) return '';
+  const us=S.units==='us', n=[];
+  const t=W.t2m.v*(us?1.8:1);
+  n.push(Math.abs(t)<0.25?'about the usual temperature':`${sgn(t,Math.abs(t)<1?1:0)} °${us?'F':'C'}`);
+  if(W.pr) n.push(`${fmt(Math.abs(W.pr.v),0)}% ${W.pr.v>=0?'more':'less'} precipitation`);
+  if(W.sf) n.push(`${fmt(Math.abs(W.sf.v),0)}% ${W.sf.v>=0?'more':'less'} snow`);
+  const la=S.loc?S.loc.la:45;
+  return 'Compared with '+(la>=23.5?'an average winter':la<=-23.5?'an average summer':'an average December–February')+', roughly: '+n.join(', ')+'.';
+}
+
 async function render(){
   const L=fcMonths(), loc=S.loc; if(!loc||!META) return;
   document.body.classList.remove('landing');
   document.getElementById('out').classList.remove('hidden');
   document.getElementById('place').textContent=loc.name;
-  const rows=[];
+  const rows=[], recsBy={};
   for(const R of ROWS){
     const f=META.fields.find(x=>x.k===R.k); if(!f) continue;
     const b=boxOf(f,loc.la,loc.lo); if(!b) continue;
     const t=await tile(b.tile); const recs=t&&t[R.k]&&t[R.k][b.id];
     if(!recs) continue;
+    recsBy[R.k]=recs;
     const cells=L.map(mo=>cell(f,recs[mo.mi],mo));
     if(!cells.some(c=>c&&(R.k==='t2m'||isFinite(c.pct)))) continue;     // nothing to show in any month
     rows.push({R,f,b,cells});
   }
+  const W=winterSummary(recsBy), sh=summaryHtml(W);
+  document.getElementById('sum').innerHTML = sh || 'No winter outlook here: this spot is open ocean, outside the map data.';
+  document.getElementById('sumnum').textContent = summaryNums(W);
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
