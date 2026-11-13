@@ -4,19 +4,47 @@
 <meta charset="utf-8">
 <script>
 /* The ENSO pages live on elninolanina.org: a visit to the same page on extremewx.org goes there
-   (2026-11-13). The maps page is that site's root; the data files stay on both hosts. */
+   (2026-11-13). This page is that site's root (since 2026-11-13; the composite maps were before, and now
+   live at /enso/ensogrid); the data files stay on both hosts. */
 (function(){var h=location.hostname;if(h!=='extremewx.org'&&h!=='www.extremewx.org')return;
-  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensogrid)?$/.test(p))p='/';
+  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensolocal)?$/.test(p))p='/';
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
+/* links shared before the move point at the root with map settings (#f=pr&ph=en...): those were the composite
+   maps, which now live at /enso/ensogrid */
+(function(){var q=location.hash;if(location.pathname==='/'&&/[#&](f|ph|v|s|r)=/.test(q)&&!/[#&]la=/.test(q))
+  location.replace('/enso/ensogrid'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v19">
+<meta name="version" content="ensolocal-2026-11-13-v20">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
-<link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
-<!-- hidden while in testing: not linked from anywhere, not indexed -->
-<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<link rel="canonical" href="https://elninolanina.org/">
+<!-- the site's home page since 2026-11-13 (served at / by a Cloudflare rewrite): indexed -->
+<meta name="author" content="Daniel R. Chavas (Purdue University)">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="elninolanina.org">
+<meta property="og:title" content="How might El Niño change the weather where you are?">
+<meta property="og:description" content="Type a place to see how this El Niño is likely to change temperature, rain and snow there this winter and spring, month by month.">
+<meta property="og:url" content="https://elninolanina.org/">
+<meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensolocal.webp">
+<meta property="og:image:alt" content="The El Niño location outlook: a search box and a city's winter outlook">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebSite","@id":"https://elninolanina.org/#site","url":"https://elninolanina.org/","name":"elninolanina.org",
+  "alternateName":"El Niño & La Niña: Weather Impacts Around the World","inLanguage":"en",
+  "publisher":{"@id":"https://web.ics.purdue.edu/~dchavas/#me"}},
+ {"@type":"WebPage","@id":"https://elninolanina.org/#page","url":"https://elninolanina.org/",
+  "name":"How might El Niño change the weather where you are?",
+  "description":"Location outlook: how this El Niño or La Niña is likely to change temperature, rain and snow at any place, month by month, from regressions on 1979–2025 data read at NOAA CPC's forecast strength.",
+  "isPartOf":{"@id":"https://elninolanina.org/#site"},"inLanguage":"en",
+  "author":{"@type":"Person","@id":"https://web.ics.purdue.edu/~dchavas/#me","name":"Daniel R. Chavas","affiliation":"Purdue University"},
+  "hasPart":[{"@type":"WebPage","url":"https://elninolanina.org/enso/ensofcst","name":"Forecast maps"},
+             {"@type":"WebPage","url":"https://elninolanina.org/enso/ensoscience","name":"Science view"},
+             {"@type":"WebPage","url":"https://elninolanina.org/enso/ensogrid","name":"El Niño & La Niña composite maps"}]}
+]}
+</script>
 <meta name="referrer" content="no-referrer">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

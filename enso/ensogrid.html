@@ -4,20 +4,21 @@
 <meta charset="utf-8">
 <script>
 /* The ENSO pages live on elninolanina.org: a visit to the same page on extremewx.org goes there
-   (2026-11-13). The maps page is that site's root; the data files stay on both hosts. */
+   (2026-11-13). The location page is that site's root (since 2026-11-13; the composite maps were before);
+   the data files stay on both hosts. */
 (function(){var h=location.hostname;if(h!=='extremewx.org'&&h!=='www.extremewx.org')return;
-  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensogrid)?$/.test(p))p='/';
+  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensolocal)?$/.test(p))p='/';
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World &mdash; elninolanina.org</title>
 <meta name="description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
-<link rel="canonical" href="https://elninolanina.org/">
+<link rel="canonical" href="https://elninolanina.org/enso/ensogrid">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="elninolanina.org">
 <meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World">
 <meta property="og:description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
-<meta property="og:url" content="https://elninolanina.org/">
+<meta property="og:url" content="https://elninolanina.org/enso/ensogrid">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="author" content="Daniel R. Chavas (Purdue University)">
@@ -41,8 +42,8 @@
   },
   {
    "@type": "WebPage",
-   "@id": "https://elninolanina.org/#page",
-   "url": "https://elninolanina.org/",
+   "@id": "https://elninolanina.org/enso/ensogrid#page",
+   "url": "https://elninolanina.org/enso/ensogrid",
    "name": "El Niño & La Niña: Weather Impacts Around the World",
    "description": "Interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, 1979–2025.",
    "isPartOf": {
@@ -74,15 +75,15 @@
    },
    "inLanguage": "en",
    "mainEntity": {
-    "@id": "https://elninolanina.org/#data"
+    "@id": "https://elninolanina.org/enso/ensogrid#data"
    }
   },
   {
    "@type": "Dataset",
-   "@id": "https://elninolanina.org/#data",
+   "@id": "https://elninolanina.org/enso/ensogrid#data",
    "name": "El Niño and La Niña composite impact maps (1979–2025)",
    "description": "Composite maps of the difference between El Niño or La Niña years and the climatology (or neutral years) for 2 m temperature, precipitation and snowfall (ERA5), tropical cyclone track density, energy (ACE) and genesis (IBTrACS), and U.S. hail, tornado and damaging-wind days (NOAA NCEI Storm Events), on 2° (ERA5, U.S.) and 5° (tropical cyclone) grids, for the ENSO year (June–May), seasons and months, with per-box linear trends removed and significance from a cluster permutation test. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI).",
-   "url": "https://elninolanina.org/",
+   "url": "https://elninolanina.org/enso/ensogrid",
    "creator": {
     "@type": "Person",
     "@id": "https://web.ics.purdue.edu/~dchavas/#me",
@@ -210,9 +211,9 @@
   },
   {
    "@type": "FAQPage",
-   "@id": "https://elninolanina.org/#faq",
+   "@id": "https://elninolanina.org/enso/ensogrid#faq",
    "isPartOf": {
-    "@id": "https://elninolanina.org/#page"
+    "@id": "https://elninolanina.org/enso/ensogrid#page"
    },
    "mainEntity": [
     {
@@ -856,10 +857,9 @@ if(SCI){
   });
 }
 /* links to "the composite version" (marked data-comp): the science page switches to its Composite tab; elsewhere
-   they go to the composite page at the site's root (not /enso/ensogrid, its duplicate) */
+   they go to /enso/ensogrid (the site's root is the location page since 2026-11-13) */
 document.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('a[data-comp]'); if(!a) return;
-  if(SCI){ e.preventDefault(); switchView('comp'); }
-  else if(!/(^|\.)elninolanina\.org$/.test(location.hostname)){ e.preventDefault(); location.href='/enso/ensogrid'; } });
+  if(SCI){ e.preventDefault(); switchView('comp'); } });
 function switchView(v){
   const p=new URLSearchParams(location.hash.slice(1));
   ['ph','s','cp','b','r','view'].forEach(k=>p.delete(k));      // settings that belong to one view only
@@ -3235,7 +3235,7 @@ function regMethods(li){
     included. RONI is the Niño-3.4 sea-surface temperature anomaly <i>minus</i> the tropical-mean anomaly (rescaled), which CPC adopted
     in 2025 because the plain ONI is pushed upward by the warming of the whole tropical ocean. A year whose December–February
     has not happened yet is not used. The composite version of this page, which averages the years past a RONI threshold instead,
-    is <a href="/" data-comp>here</a>.`);
+    is <a href="/enso/ensogrid" data-comp>here</a>.`);
   rep('<b>El Niño and La Niña maps.</b>',`<b>The regression maps.</b> Each box's values over the period are fitted by least squares,
     in one step, to <i>y = y<sub>0</sub> + a·(year − mean year) + b<sub>+</sub>·max(x, 0) + b<sub>−</sub>·min(x, 0)</i>, where x is the
     year's Dec–Feb RONI: two straight lines that meet at RONI 0, so El Niño and La Niña get their own slopes (a single straight line

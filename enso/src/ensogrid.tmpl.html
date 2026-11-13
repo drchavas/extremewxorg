@@ -4,15 +4,16 @@
 <meta charset="utf-8">
 <script>
 /* The ENSO pages live on elninolanina.org: a visit to the same page on extremewx.org goes there
-   (2026-11-13). The maps page is that site's root; the data files stay on both hosts. */
+   (2026-11-13). The location page is that site's root (since 2026-11-13; the composite maps were before);
+   the data files stay on both hosts. */
 (function(){var h=location.hostname;if(h!=='extremewx.org'&&h!=='www.extremewx.org')return;
-  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensogrid)?$/.test(p))p='/';
+  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensolocal)?$/.test(p))p='/';
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--C--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World &mdash; elninolanina.org</title>
 <meta name="description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
-<link rel="canonical" href="https://elninolanina.org/"><!--/C-->
+<link rel="canonical" href="https://elninolanina.org/enso/ensogrid"><!--/C-->
 <!--R--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org</title>
 <meta name="description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensoreg"><!--/R-->
@@ -26,7 +27,7 @@
 <meta property="og:site_name" content="elninolanina.org">
 <!--C--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World">
 <meta property="og:description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
-<meta property="og:url" content="https://elninolanina.org/">
+<meta property="og:url" content="https://elninolanina.org/enso/ensogrid">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensogrid.webp"><!--/C-->
 <!--R--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org">
 <meta property="og:description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
@@ -61,8 +62,8 @@
   },
   {
    "@type": "WebPage",
-   "@id": "https://elninolanina.org/#page",
-   "url": "https://elninolanina.org/",
+   "@id": "https://elninolanina.org/enso/ensogrid#page",
+   "url": "https://elninolanina.org/enso/ensogrid",
    "name": "El Niño & La Niña: Weather Impacts Around the World",
    "description": "Interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, 1979–2025.",
    "isPartOf": {
@@ -94,15 +95,15 @@
    },
    "inLanguage": "en",
    "mainEntity": {
-    "@id": "https://elninolanina.org/#data"
+    "@id": "https://elninolanina.org/enso/ensogrid#data"
    }
   },
   {
    "@type": "Dataset",
-   "@id": "https://elninolanina.org/#data",
+   "@id": "https://elninolanina.org/enso/ensogrid#data",
    "name": "El Niño and La Niña composite impact maps (1979–2025)",
    "description": "Composite maps of the difference between El Niño or La Niña years and the climatology (or neutral years) for 2 m temperature, precipitation and snowfall (ERA5), tropical cyclone track density, energy (ACE) and genesis (IBTrACS), and U.S. hail, tornado and damaging-wind days (NOAA NCEI Storm Events), on 2° (ERA5, U.S.) and 5° (tropical cyclone) grids, for the ENSO year (June–May), seasons and months, with per-box linear trends removed and significance from a cluster permutation test. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI).",
-   "url": "https://elninolanina.org/",
+   "url": "https://elninolanina.org/enso/ensogrid",
    "creator": {
     "@type": "Person",
     "@id": "https://web.ics.purdue.edu/~dchavas/#me",
@@ -230,9 +231,9 @@
   },
   {
    "@type": "FAQPage",
-   "@id": "https://elninolanina.org/#faq",
+   "@id": "https://elninolanina.org/enso/ensogrid#faq",
    "isPartOf": {
-    "@id": "https://elninolanina.org/#page"
+    "@id": "https://elninolanina.org/enso/ensogrid#page"
    },
    "mainEntity": [
     {
@@ -754,7 +755,7 @@
            year used in the maps marked and listed below.</p></div><!--/C-->
 <!--R-->      <div class="secthead"><h2>Measuring El Ni&ntilde;o and La Ni&ntilde;a</h2>
         <p>Every year enters the maps at its winter (Dec&ndash;Feb) value of NOAA's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/" target="_blank" rel="noopener">Relative Oceanic Ni&ntilde;o Index</a>, marked below.
-           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="/" data-comp>composite version</a> of this page.</p></div><!--/R-->
+           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="/enso/ensogrid" data-comp>composite version</a> of this page.</p></div><!--/R-->
       <div id="panels"><svg id="cardRoni" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div>
       <div class="foot" id="foot"></div>
     </section>

@@ -1,12 +1,15 @@
 # elninolanina.org: El Niño & La Niña weather impacts around the world
 
-> Interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, from 1979–2025 data. Made by Daniel R. Chavas (Purdue University), part of extremewx.org; supported by the U.S. National Science Foundation.
+> What this El Niño (or La Niña) is likely to mean for the weather where you are, plus interactive maps of how El Niño and La Niña years change temperature, rain, snowfall, hurricanes and typhoons, and U.S. tornadoes, hail and damaging wind around the world, by season and month, from 1979–2025 data. Made by Daniel R. Chavas (Purdue University), part of extremewx.org; supported by the U.S. National Science Foundation.
 
-The maps are averages of past El Niño or La Niña years compared with all years, not a forecast. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI). Data: ERA5 reanalysis (ECMWF) for temperature, rain and snow; NOAA IBTrACS for tropical cyclones; NOAA NCEI Storm Events and a derecho archive for U.S. severe weather. Per-box linear trends are removed, and dots mark patches that pass a whole-map permutation test.
+The maps are averages of past El Niño or La Niña years compared with all years, not a forecast. Years are classified by NOAA CPC’s December–February Relative Oceanic Niño Index (RONI). Data: ERA5 reanalysis (ECMWF) for temperature, rain and snow; NOAA IBTrACS for tropical cyclones; NOAA NCEI Storm Events for U.S. severe weather. Per-box linear trends are removed, and dots mark patches that pass a whole-map permutation test.
 
 ## Pages
 
-- [El Niño & La Niña: Weather Impacts Around the World](https://elninolanina.org/): the interactive map page. Links can set the view, e.g. [U.S. winter rain, El Niño](https://elninolanina.org/#f=pr&ph=en&m=djf), [Atlantic and Pacific hurricanes, El Niño minus La Niña](https://elninolanina.org/#f=tcd&ph=enln&m=son), [winter tornadoes, El Niño](https://elninolanina.org/#f=tornado&ph=en&m=djf).
+- [How might El Niño change the weather where you are?](https://elninolanina.org/): the home page. Type a place for a plain-language winter and spring outlook (temperature, rain, snow) with month-by-month changes, from regressions on 1979–2025 data read at NOAA CPC's forecast December–February strength. Links can name a place, e.g. [Chicago](https://elninolanina.org/#p=Chicago&la=41.88&lo=-87.63).
+- [Forecast maps](https://elninolanina.org/enso/ensofcst): month-by-month world maps of the expected change at the forecast strength.
+- [Science view](https://elninolanina.org/enso/ensoscience): composites of past El Niño and La Niña years, and a regression on their strength.
+- [El Niño & La Niña: Weather Impacts Around the World](https://elninolanina.org/enso/ensogrid): the composite map page. Links can set the view, e.g. [U.S. winter rain, El Niño](https://elninolanina.org/enso/ensogrid#f=pr&ph=en&m=djf), [Atlantic and Pacific hurricanes, El Niño minus La Niña](https://elninolanina.org/enso/ensogrid#f=tcd&ph=enln&m=son), [winter tornadoes, El Niño](https://elninolanina.org/enso/ensogrid#f=tornado&ph=en&m=djf).
 
 ## Key findings
 
@@ -28,7 +31,7 @@ Yes. Compared with La Niña years, El Niño years have about a third fewer Atlan
 
 ### Where does El Niño bring drought or heavy rain around the world?
 
-In El Niño years rain increases over the central and eastern tropical Pacific (by about 4 mm/day near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower.
+In El Niño years rain increases over the central and eastern tropical Pacific (by about 120 mm, or 5 inches, a month near the date line in December–February) and in East Africa’s autumn short rains (about 24% wetter in September–November). Indonesia dries most in September–November; northern Australia, southern Africa and northeast Brazil also dry; India’s summer monsoon rain is about 6–8% lower; and Central America’s summer rains are about 10% lower.
 
 ### Does El Niño make the whole world warmer?
 
@@ -36,11 +39,11 @@ Slightly, and with a delay of a few months: global-mean surface air temperature 
 
 ### Is this a forecast of this winter?
 
-No. These maps describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion.
+The composite maps are not: they describe what past El Niño and La Niña years looked like on average (1979–2025), and any single event can differ. The home page and the forecast maps read the historical relationship at NOAA CPC's forecast strength, a guide from history rather than NOAA's own outlook. For the official outlook see NOAA’s Climate Prediction Center seasonal outlooks and its ENSO discussion.
 
 ### How are the maps made?
 
-Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes, damaging wind and derechos from NOAA NCEI Storm Events and a derecho archive. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance.
+Each map averages the El Niño (or La Niña) years and compares them with all years (or with neutral years), after removing each 2° box’s long-term linear trend. Temperature, rain and snowfall come from the ERA5 reanalysis (ECMWF), tropical cyclones from NOAA’s IBTrACS best tracks, and U.S. hail, tornadoes and damaging wind from NOAA NCEI Storm Events. Dots mark patches whose change passes a whole-map permutation test, so they are unlikely to be chance.
 
 ## Official outlooks
 
