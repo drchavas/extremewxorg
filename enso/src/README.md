@@ -147,3 +147,5 @@ Dan), and `update_stamps.py` stamps all four.
   numbers alone. Rain/snow on the season change rounded to 10%: 0–10% near normal, 20–30% a little, 40%+ a lot.
   Temperature (v19): season change rounded to whole °F, 0–1 near normal, 2–4 a little, 5+ a lot (same in metric).
   The Detailed outlook table keeps p-values/pale cells.
+- **Location page v21 (2026-11-13):** the place is not kept in the address bar (`writeHash` only cleans it); a hash
+  place link opens once on a fresh navigation (`performance` navigation type), never on reload. Clear button `#clearBtn`.

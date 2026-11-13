@@ -15,7 +15,7 @@
   location.replace('/enso/ensogrid'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v20">
+<meta name="version" content="ensolocal-2026-11-13-v22">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -83,6 +83,10 @@
   .searchrow button{font-family:var(--sans);font-size:clamp(16px,1.8vw,19px);font-weight:600;padding:17px 30px;border:0;border-radius:15px;
     background:var(--teal);color:#fff;cursor:pointer;white-space:nowrap;letter-spacing:.01em}
   .searchrow button:hover{background:var(--teal2)}
+  /* Clear: a quiet text button beside Search, shown when there is something to clear */
+  .searchrow button.clr{background:transparent;color:var(--teal2);font-weight:500;padding-left:14px;padding-right:14px}
+  .searchrow button.clr:hover{background:var(--panel2);color:var(--teal)}
+  .searchrow button.clr[hidden]{display:none}
   .linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--muted);cursor:pointer;margin:16px 0 0;padding:2px 4px;
     text-decoration:underline;text-decoration-color:#b5c4c1;text-underline-offset:3px}
   .linkbtn:hover{color:var(--ink)}
@@ -197,8 +201,10 @@
   .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
   .tile{background:#f1f4f1;border-radius:14px;padding:14px 16px 16px;font-size:16px;line-height:1.55;color:var(--ink2)}
   .tile .tv{white-space:nowrap}
+  .tk2{font-size:.86em;color:var(--muted)}   /* "(total rain+snow)": lighter than the label */
   @media (min-width:761px) and (max-width:980px){ .tile{font-size:14.5px;padding:12px 12px 14px} }
-  @media (max-width:380px){ .searchrow input{font-size:15px;padding:11px 4px 11px 14px} .searchrow button{padding:12px 12px;font-size:15px} }
+  @media (max-width:380px){ .searchrow input{font-size:15px;padding:11px 4px 11px 14px} .searchrow button{padding:12px 12px;font-size:15px}
+    .searchrow button.clr{padding:12px 6px} }
   .tile .tl{display:block} .tile .tk{color:var(--muted)}
   .tile b{display:block;color:var(--ink);font-weight:600;font-size:16px;margin-bottom:2px}
   .cardfoot{display:flex;flex-wrap:wrap;gap:12px 40px;align-items:center;padding:20px 0 6px}
@@ -241,7 +247,8 @@
     <div class="sbox">
     <form class="searchrow" id="sform" role="search" autocomplete="off">
       <input id="q" type="search" placeholder="City, region, or postal code" aria-label="Location" aria-describedby="smsg"
-        role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg" spellcheck="false">
+        role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg" spellcheck="false" autocomplete="off">
+      <button type="button" class="clr" id="clearBtn" hidden>Clear</button>
       <button type="submit">Search&nbsp;&rarr;</button>
     </form>
     <ul id="sugg" role="listbox" aria-label="Suggested places" hidden></ul><!-- places suggested as you type -->
@@ -313,7 +320,7 @@ const CMAP={div:['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#f
 /* rows of the table: field, name, what it counts */
 const ROWS=[
   {k:'t2m', name:'Temperature', sub:'average for the month'},
-  {k:'pr',  name:'Precipitation', sub:'total for the month'},
+  {k:'pr',  name:'Precipitation (total rain+snow)', sub:'melted snow counted as water; total for the month'},
   {k:'sf',  name:'Snowfall', sub:'as fresh snow (approx.)'},
   {k:'tcd', name:'Tropical storm days', sub:'storm in the 5° box (~550 km)'},
   {k:'tornado', name:'Tornado days', sub:'any tornado in the 2° box'},
@@ -489,9 +496,9 @@ function seasonTiles(W){
        "1 °F cooler" carries no minus sign (the word says it) */
     n.push(['Temperature',t===0?'around normal':`${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`,faint('t2m'),t>0?'vw':t<0?'vc':'']);
     const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?Math.round(c.pct/10)*10:null; };
-    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`,faint('pr'),pp>0?'vwet':pp<0?'vdry':'']);
+    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation (total rain+snow)',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`,faint('pr'),pp>0?'vwet':pp<0?'vdry':'']);
     const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`,faint('sf'),ps>0?'vsnow':ps<0?'vless':'']);
-    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v,f,cl])=>`<span class="tl"><span class="tk">${k}:</span> `+
+    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v,f,cl])=>`<span class="tl"><span class="tk">${k.replace(/ \((.+)\)$/,' <small class="tk2">($1)</small>')}:</span> `+
       `<span class="tv ${cl}${f?' unc':''}"${f?' title="Could easily be chance"':''}>${v}</span></span>`).join('')+`</div>`;
   }).join('');
 }
@@ -698,11 +705,11 @@ function unitsSave(){ try{ localStorage.setItem('ensoUnits2',S.units==='us'?'F':
 /* key renamed 2026-11-13 (was ensoUnits): choices saved before the automatic default existed, many of them
    test clicks, no longer override it */
 function unitsSaved(){ try{ return localStorage.getItem('ensoUnits2'); }catch(e){ return null; } }
+/* The place is not kept in the address bar (Dan 2026-11-13): a visit or a reload always starts with an empty
+   search box. A link that names a place (#p=…&la=…&lo=…, e.g. from llms.txt) still opens it once; the address is
+   then cleaned. Units are remembered separately (localStorage). */
 function writeHash(){
-  if(!S.loc) return;
-  const q=new URLSearchParams({p:S.loc.name,la:S.loc.la.toFixed(3),lo:S.loc.lo.toFixed(3)});
-  if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='us') q.set('u','C');
-  history.replaceState(null,'','#'+q.toString());
+  if(location.hash) try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
 }
 /* with no choice made yet: the units of where the visitor is, from the browser's time zone (no location
    prompt needed), else its language's region; U.S. units when neither says (Dan, 2026-11-13) */
@@ -718,7 +725,9 @@ function readHash(){
   if(q.get('m')==='val') S.mode='val';
   { const u=q.get('u');                          // a link's units (u=C / u=F as on the map pages; older links u=metric), else the last choice
     if(u==='C'||u==='metric') S.units='metric'; else if(u==='F'||u==='us') S.units='us'; else if(unitsSaved()==='C') S.units='metric'; else if(unitsSaved()!=='F') S.units=unitsAuto(); }
-  if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
+  /* a reload or back/forward of a page that still shows an old place link: start clean */
+  let nav='navigate'; try{ nav=(performance.getEntriesByType('navigation')[0]||{}).type||'navigate'; }catch(e){}
+  if(nav==='navigate'&&isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
     S.loc={name:n,short:n.split(',')[0],la,lo}; document.getElementById('q').value=n; }
 }
 function syncSeg(){
@@ -735,7 +744,17 @@ async function init(){
     if(SG.on>=0&&SG.items[SG.on]){ pick(SG.items[SG.on]); return; }
     if(SG.items.length&&SG.q===q&&!document.getElementById('sugg').hidden&&!document.querySelector('#sugg li.hint')){ pick(SG.items[0]); return; }
     SG.seq++; sgClose(); if(q) search(q); };
-  const qi=document.getElementById('q');
+  const qi=document.getElementById('q'), cb=document.getElementById('clearBtn');
+  const syncClear=()=>{ cb.hidden=!qi.value&&!S.loc; };
+  /* Clear: empty the box and go back to the start (no place, no results) */
+  cb.onclick=()=>{ clearTimeout(SG.timer); SG.seq++; sgClose(); qi.value=''; S.loc=null;
+    document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
+    document.getElementById('out').classList.add('hidden'); document.getElementById('det').hidden=true;
+    { const db=document.getElementById('detBtn'); db.setAttribute('aria-expanded','false'); db.firstChild.textContent='Detailed outlook '; }
+    document.body.classList.add('landing'); writeHash(); syncClear(); window.scrollTo(0,0); qi.focus(); };
+  qi.addEventListener('input',syncClear);
+  new MutationObserver(syncClear).observe(document.getElementById('out'),{attributes:true,attributeFilter:['class']});
+  syncClear();
   qi.addEventListener('input',()=>{ clearTimeout(SG.timer); const v=qi.value.trim();
     document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
     SG.timer=setTimeout(()=>suggest(v),220); });
