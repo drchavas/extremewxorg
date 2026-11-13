@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How will El Ni&ntilde;o &amp; La Ni&ntilde;a affect where you are? &mdash; elninolanina.org</title>
+<title>How is El Ni&ntilde;o expected to change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
 <!-- hidden while in testing: not linked from anywhere, not indexed -->
@@ -51,6 +51,14 @@
     text-decoration:underline;text-decoration-color:#b5c4c1;text-underline-offset:3px}
   .linkbtn:hover{color:var(--ink)}
   button:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .sbox{position:relative;max-width:720px;margin:0 auto}
+  #sugg{position:absolute;z-index:20;left:14px;right:14px;top:calc(100% + 6px);list-style:none;margin:0;padding:6px;text-align:left;
+    background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 40px rgba(38,73,79,.16),0 2px 6px rgba(38,73,79,.06)}
+  #sugg li{padding:10px 14px;border-radius:12px;cursor:pointer;font-size:17px;color:var(--ink);line-height:1.3}
+  #sugg li small{color:var(--muted);font-size:14px;margin-left:6px}
+  #sugg li.on,#sugg li:hover{background:var(--panel2)}
+  #sugg li.hint{cursor:default;color:var(--muted);font-size:14px;padding:6px 14px 4px}
+  #sugg li.hint:hover{background:none}
   #results{list-style:none;margin:14px auto 0;padding:0;text-align:left;max-width:600px}
   #results li button{width:100%;text-align:left;font:inherit;font-size:16px;padding:11px 18px;border:1px solid var(--line);
     border-radius:14px;background:rgba(255,255,255,.92);margin:0 0 7px;cursor:pointer;color:var(--ink)}
@@ -74,15 +82,6 @@
   .sum .lab{font-family:var(--serif);font-style:italic;font-size:1.12em;color:var(--ink)}
   .sumnum{color:var(--muted);font-size:14px;margin:0;display:flex;flex-wrap:wrap;gap:4px 22px}
   .sumnum span b{font-weight:600;color:var(--ink2)}
-  .maplink{font-size:clamp(18px,2vw,22px);font-weight:500;margin:16px 0 0;padding-top:14px;border-top:1px solid #e6ece9}
-  .maplink a{color:var(--teal2);font-weight:600;text-decoration-thickness:2px;text-underline-offset:4px}
-  details#more{border-top:4px solid var(--ink);margin-top:26px;padding-top:16px}
-  details#more>summary{cursor:pointer;font-size:clamp(18px,2vw,22px);font-weight:500;color:var(--ink);list-style:none;padding:2px 0;user-select:none}
-  details#more>summary::-webkit-details-marker{display:none}
-  details#more>summary u{color:var(--teal2);text-decoration-thickness:2px;text-underline-offset:4px;font-weight:600}
-  details#more>summary:hover u{color:var(--teal)}
-  details#more .op{display:none} details#more[open] .op{display:inline} details#more[open] .cl{display:none}
-  details#more[open]>summary{margin-bottom:14px}
   .placesub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
   .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
   .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
@@ -114,16 +113,74 @@
     .searchrow button{padding:13px 16px;border-radius:13px}
     .card{padding:18px 14px 16px;border-radius:18px}
     th.row{min-width:118px} td{min-width:58px;font-size:13px} }
+
+  /* ---- the mockup look (Nov 13): sun at top left, rain streaks at right, drops at the bottom */
+  html{background:#cfdde4}
+  body{position:relative;overflow-x:hidden;
+    background:linear-gradient(118deg,#f2d3a6 0%,#f4e3c8 24%,#eee9de 46%,#d6e0e3 70%,#bccfd9 100%)}
+  .sky{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .sky i{position:absolute;display:block}
+  .sky .sun{left:-150px;top:150px;width:480px;height:480px;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,#fbe6c4 0%,#f7d29e 40%,#f2c086 66%,rgba(242,192,134,.0) 70.5%);
+    box-shadow:0 0 0 60px rgba(255,248,236,.16),0 0 0 120px rgba(255,248,236,.10);opacity:.95}
+  .sky .rain{right:0;top:0;width:62%;height:1100px;
+    background:repeating-linear-gradient(-62deg,rgba(255,255,255,0) 0 26px,rgba(255,255,255,.42) 26px 27.2px);
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 75%),linear-gradient(to bottom,#000 55%,transparent 100%);
+    -webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0%,#000 75%),linear-gradient(to bottom,#000 55%,transparent 100%);mask-composite:intersect}
+  .sky .dots{left:0;right:0;bottom:0;height:42%;
+    background:radial-gradient(circle,rgba(255,255,255,.85) 0 2.2px,transparent 2.8px) 0 0/46px 46px;
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 75%);mask-image:linear-gradient(to bottom,transparent 0%,#000 75%)}
+  main,footer{position:relative;z-index:1}
+  .hero{max-width:1090px}
+  .searchrow{max-width:1090px;border-radius:26px;background:#fffdf8}
+  .sbox{max-width:1090px}
+  .card{background:#fdfcf8;border:1px solid rgba(214,224,219,.9);border-radius:30px;padding:40px 46px 26px;margin-top:34px;
+    box-shadow:0 30px 70px rgba(38,73,79,.13),0 3px 10px rgba(38,73,79,.05)}
+  .phead{padding-bottom:22px;border-bottom:1px solid #e3e8e4;margin-bottom:6px}
+  .place{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,62px);line-height:1;margin:0;color:var(--ink);letter-spacing:-.01em}
+  .placesub2{color:var(--ink2);font-size:17px;margin:8px 0 0}
+  .placesub2:empty{display:none}
+  .season{padding:24px 0 24px;border-bottom:1px solid #e3e8e4;margin:0}
+  .shead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin:0 0 10px}
+  .sname{font-family:var(--serif);font-size:clamp(34px,4vw,48px);line-height:1;color:var(--ink)}
+  .sspan{color:var(--ink2);font-size:17px}
+  .sline{font-size:clamp(19px,2.2vw,23px);line-height:1.4;margin:0 0 18px;color:var(--ink);text-wrap:pretty}
+  .sline b{font-weight:600}
+  .sline b.w{color:#a54a2c} .sline b.c{color:#2d6684}
+  .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .tile{background:#f1f4f1;border-radius:14px;padding:14px 16px 16px;font-size:16px;line-height:1.55;color:var(--ink2)}
+  .tile .tl{display:block} .tile .tk{color:var(--muted)}
+  .tile b{display:block;color:var(--ink);font-weight:600;font-size:16px;margin-bottom:2px}
+  .cardfoot{display:flex;flex-wrap:wrap;gap:12px 40px;align-items:center;padding:20px 0 6px}
+  .go{font:inherit;font-size:18px;font-weight:600;color:var(--teal2);background:none;border:0;padding:0;cursor:pointer;text-decoration:none}
+  .go:hover{color:var(--teal);text-decoration:underline;text-underline-offset:4px}
+  .go span{display:inline-block;transition:transform .15s} .go:hover span{transform:translateX(3px)}
+  .go[aria-expanded="true"] span{transform:rotate(90deg)}
+  #det{padding:18px 0 8px;border-top:1px solid #e3e8e4;margin-top:14px}
+  #det[hidden]{display:none}
+  .fc{position:relative}
+  @media (max-width:760px){
+    .card{padding:26px 18px 18px;border-radius:22px}
+    .tiles{grid-template-columns:1fr;gap:10px}
+    .tile{padding:12px 14px}
+    .sky .sun{width:300px;height:300px;left:-120px;top:120px}
+    .sky .rain{width:80%}
+  }
 </style>
 </head>
 <body class="landing">
+<div class="sky" aria-hidden="true"><i class="sun"></i><i class="rain"></i><i class="dots"></i></div>
 <main>
   <div class="hero">
-    <h1>How will <em id="phaseWord">El&nbsp;Ni&ntilde;o</em> change the weather where you are?</h1>
+    <h1>How is <em id="phaseWord">El&nbsp;Ni&ntilde;o</em> expected to change the weather where&nbsp;you&nbsp;are?</h1>
+    <div class="sbox">
     <form class="searchrow" id="sform" role="search" autocomplete="off">
-      <input id="q" type="search" placeholder="City, region, or postal code" aria-label="Location" aria-describedby="smsg">
+      <input id="q" type="search" placeholder="City, region, or postal code" aria-label="Location" aria-describedby="smsg"
+        role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugg" spellcheck="false">
       <button type="submit">Search&nbsp;&rarr;</button>
     </form>
+    <ul id="sugg" role="listbox" aria-label="Suggested places" hidden></ul><!-- places suggested as you type -->
+    </div>
     <button class="linkbtn" type="button" id="geo">or use my location</button>
     <ul id="results" aria-live="polite"></ul>
     <p class="msg" id="smsg"></p>
@@ -131,23 +188,25 @@
   </div>
 
   <div class="card hidden" id="out">
-    <p class="place" id="place"></p>
-    <div id="sums"></div><!-- one plain-language line per season, with each month's numbers below it -->
-    <details id="more">
-    <summary><span class="cl">Want a more detailed view for this location? <u>Click here</u></span><span class="op">Detailed view, month by month <u>(hide)</u></span></summary>
-    <p class="placesub" id="placesub"></p>
-    <div class="toolbar">
-      <div class="seg" role="group" aria-label="Show">
-        <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Expected amount</button>
-      </div>
-      <div class="seg" role="group" aria-label="Units">
-        <button data-u="us" class="on" aria-pressed="true">&deg;F, inches</button><button data-u="metric" aria-pressed="false">&deg;C, mm</button>
-      </div>
+    <div class="phead"><h2 class="place" id="place"></h2><p class="placesub2" id="placeSub"></p></div>
+    <div id="sums"></div><!-- one plain-language line per season, with a tile per month -->
+    <div class="cardfoot">
+      <button type="button" class="go" id="detBtn" aria-expanded="false" aria-controls="det">Detailed outlook <span aria-hidden="true">&rarr;</span></button>
+      <a class="go" id="mapsLink" href="/enso/ensoreg">View maps <span aria-hidden="true">&rarr;</span></a>
     </div>
-    <div class="tbwrap"><table id="tbl"></table></div>
-    <div class="legend" id="legend"></div>
-    </details>
-    <p class="maplink">Want to see maps of these changes? <a id="mapsLink" href="/enso/ensoreg">Click here</a></p>
+    <div id="det" hidden>
+      <p class="placesub" id="placesub"></p>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Show">
+          <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Expected amount</button>
+        </div>
+        <div class="seg" role="group" aria-label="Units">
+          <button data-u="us" class="on" aria-pressed="true">&deg;F, inches</button><button data-u="metric" aria-pressed="false">&deg;C, mm</button>
+        </div>
+      </div>
+      <div class="tbwrap"><table id="tbl"></table></div>
+      <div class="legend" id="legend"></div>
+    </div>
   </div>
 </main>
 <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
@@ -253,14 +312,15 @@ function cell(f,rec,mo){
 }
 function amount(k,v,m){            // a monthly amount from the stored daily rate / monthly count
   const us=S.units==='us', days=DAYS[m-1];
-  if(k==='t2m') return us?`${fmt(v*1.8+32,0)} °F`:`${fmt(v,1)} °C`;
-  if(k==='pr'){ const mmv=Math.max(0,v*days); return us?`${fmt(mmv/25.4,mmv/25.4<1?2:1)} in`:`${fmt(mmv,0)} mm`; }
+  if(k==='t2m') return us?`${fmt(v*1.8+32,0)} °F`:`${fmt(v,0)} °C`;
+  if(k==='pr'){ const mmv=Math.max(0,v*days); return us?`${fmt(mmv/25.4,1)} in`:`${fmt(mmv,0)} mm`; }
   if(k==='sf'){ const cm=Math.max(0,v*days); return us?`${fmt(cm/2.54,1)} in`:`${fmt(cm,cm<10?1:0)} cm`; }
   const n=Math.max(0,v); return `${fmt(n,n<1?2:1)} d`;
 }
+/* rounded like the month tiles: to the degree and to 10%, since the fit is not that exact */
 function changeTxt(k,c){
-  if(k==='t2m') return S.units==='us'?`${sgn(c.d*1.8,1)} °F`:`${sgn(c.d,1)} °C`;
-  return isFinite(c.pct)?`${sgn(c.pct,0)}%`:null;
+  if(k==='t2m') return S.units==='us'?`${sgn(Math.round(c.d*1.8),0)} °F`:`${sgn(Math.round(c.d),0)} °C`;
+  return isFinite(c.pct)?`${sgn(Math.round(c.pct/10)*10,0)}%`:null;
 }
 
 /* ---- the plain-language summary: one sentence each for December-February and March-May at this
@@ -294,44 +354,60 @@ function seasonSummary(sea,recsBy){
   }
   return out.t2m?out:null;
 }
-function seasonLead(W){
+function seasonHead(W){
   /* named by the season it is where you are: Dec-Feb is winter in the north, summer in the south */
   const la=S.loc?S.loc.la:45, nm=la>=23.5?W.sea.names[0]:la<=-23.5?W.sea.names[1]:null;
   const yy=W.sea.k==='djf'?`${W.Y}–${String(W.Y+1).slice(2)}`:`${W.Y+1}`;
-  return nm?`<span class="lab">${nm}</span> (${W.sea.span} ${yy})`:`<span class="lab">${W.sea.span} ${yy}</span>`;
+  return nm?`<span class="sname">${nm}</span><span class="sspan">${W.sea.span} ${yy}</span>`
+           :`<span class="sname">${W.sea.span}</span><span class="sspan">${yy}</span>`;
 }
-function seasonHtml(W){
-  const cl=[], t=W.t2m, p=W.pr, s=W.sf;
-  cl.push(t.lv?`<b class="${t.up?'w':'c'}">${LVL[t.lv]} ${t.up?'warmer':'cooler'}</b> than normal`:`<b class="n">near normal</b> in temperature`);
-  if(p) cl.push(p.lv?`<b class="${p.up?'wet':'dry'}">${LVL[p.lv]} ${p.up?'wetter':'drier'}</b> than normal`:`<b class="n">near normal</b> in precipitation`);
-  if(s) cl.push(s.lv?`have <b class="${s.up?'wet':'dry'}">${LVL[s.lv]} ${s.up?'more':'less'} snow</b> than normal`:`have <b class="n">near-normal</b> snowfall`);
-  const list=cl.length>1?cl.slice(0,-1).join(', ')+(cl.length>2?',':'')+' and '+cl[cl.length-1]:cl[0];
-  return `${seasonLead(W)} ${W.past?'was':'is'} expected to be ${list}.`;
+/* "A little warmer than usual, with near-normal precipitation and a little less snow."
+   "Near-normal temperature and precipitation."  Near-normal items are grouped. */
+function seasonLine(W){
+  const t=W.t2m, items=[];
+  if(W.pr) items.push({k:'precipitation',lv:W.pr.lv,up:W.pr.up});
+  if(W.sf) items.push({k:'snow',lv:W.sf.lv,up:W.sf.up});
+  const and=a=>a.length>1?a.slice(0,-1).join(', ')+' and '+a[a.length-1]:a[0]||'';
+  const ch=x=>`<b>${LVL[x.lv]} ${x.up?'more':'less'} ${x.k}</b>`;
+  let head, rest;
+  if(t.lv){
+    head=`<b class="${t.up?'w':'c'}">${LVL[t.lv][0].toUpperCase()+LVL[t.lv].slice(1)} ${t.up?'warmer':'cooler'}</b> than usual`;
+    rest=items.map(x=>x.lv?ch(x):`<b>near-normal ${x.k}</b>`);
+  } else {
+    const near=['temperature'].concat(items.filter(x=>!x.lv).map(x=>x.k));
+    head=`<b>Near-normal ${and(near)}</b>`;
+    rest=items.filter(x=>x.lv).map(ch);
+  }
+  return (rest.length?`${head}, with ${and(rest)}`:head)+'.';
 }
-/* the small line: each month's change from an average year */
-function seasonMonths(W){
+/* one tile per month: its change from an average year, rounded (to the degree, and to 10%) since the
+   fit is not that exact */
+function seasonTiles(W){
   const us=S.units==='us';
   return W.mons.map((mo,i)=>{
-    const n=[], t=W.t2m.cs[i].d*(us?1.8:1);
-    n.push(Math.abs(t)<0.25?'usual temperature':`${sgn(t,Math.abs(t)<0.95?1:0)} °${us?'F':'C'}`);
-    const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?c.pct:null; };
-    const pp=pc('pr'); if(pp!=null) n.push(Math.abs(pp)<0.5?'usual precipitation':`${fmt(Math.abs(pp),0)}% ${pp>=0?'more':'less'} precipitation`);
-    const ps=pc('sf'); if(ps!=null) n.push(Math.abs(ps)<0.5?'usual snow':`${fmt(Math.abs(ps),0)}% ${ps>=0?'more':'less'} snow`);
-    return `<span><b>${MONTHS[mo.m-1]}:</b> ${n.join(', ')}</span>`;
+    const n=[], t=Math.round(W.t2m.cs[i].d*(us?1.8:1));
+    n.push(['Temperature',t===0?'usual':`${t>0?'+':'−'}${Math.abs(t)} °${us?'F':'C'}`]);
+    const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?Math.round(c.pct/10)*10:null; };
+    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'usual':`${Math.abs(pp)}% ${pp>0?'more':'less'}`]);
+    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'usual':`${Math.abs(ps)}% ${ps>0?'more':'less'}`]);
+    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v])=>`<span class="tl"><span class="tk">${k}:</span> ${v}</span>`).join('')+`</div>`;
   }).join('');
 }
 function renderSummary(recsBy){
   const el=document.getElementById('sums');
   const Ws=SEASONS.map(sea=>seasonSummary(sea,recsBy)).filter(Boolean);
-  if(!Ws.length){ el.innerHTML='<p class="sum">No outlook here: this spot is open ocean, outside the map data.</p>'; return; }
-  el.innerHTML=Ws.map(W=>`<div class="season"><p class="sum">${seasonHtml(W)}</p><p class="sumnum">${seasonMonths(W)}</p></div>`).join('');
+  if(!Ws.length){ el.innerHTML='<div class="season"><p class="sline">No outlook here: this spot is open ocean, outside the map data.</p></div>'; return; }
+  el.innerHTML=Ws.map(W=>`<section class="season"><div class="shead">${seasonHead(W)}</div>
+    <p class="sline">${seasonLine(W)}</p><div class="tiles">${seasonTiles(W)}</div></section>`).join('');
 }
 
 async function render(){
   const L=fcMonths(), loc=S.loc; if(!loc||!META) return;
   document.body.classList.remove('landing');
   document.getElementById('out').classList.remove('hidden');
-  document.getElementById('place').textContent=loc.name;
+  { const i=loc.name.indexOf(', ');
+    document.getElementById('place').textContent=i>0&&!/^Your location/.test(loc.name)?loc.name.slice(0,i):loc.name;
+    document.getElementById('placeSub').textContent=i>0&&!/^Your location/.test(loc.name)?loc.name.slice(i+2):''; }
   const rows=[], recsBy={};
   for(const R of ROWS){
     const f=META.fields.find(x=>x.k===R.k); if(!f) continue;
@@ -392,14 +468,58 @@ const USST={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',
   WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',PR:'Puerto Rico'};
 const CTRY={usa:'US',us:'US','united states':'US',america:'US',uk:'GB','united kingdom':'GB',england:'GB',britain:'GB'};
 const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-async function geo(name){
-  const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=20&language=en&format=json&name='+encodeURIComponent(name));
-  const j=await r.json();
+const GEO={};
+async function geo(name,prefix){
+  const key=norm(name);
+  if(!GEO[key]) GEO[key]=fetch('https://geocoding-api.open-meteo.com/v1/search?count=20&language=en&format=json&name='+encodeURIComponent(name))
+    .then(r=>r.json()).catch(e=>{ delete GEO[key]; throw e; });
+  const j=await GEO[key];
   /* places people live in, regions and countries; not airports, parks, stations or buildings */
   const res=(j.results||[]).filter(p=>{ const c=p.feature_code||'PPL'; return /^(PPL|ADM[12]$|PCL)/.test(c)&&!/^(PPLX|PPLH|PPLQ|PPLW|PCLH)$/.test(c); });
   /* "Paris" means the places called Paris, not "Paris 15 Vaugirard" */
+  if(prefix){                                   // as you type: names that start with what is typed come first
+    const k=norm(name); return res.filter(p=>norm(p.name).startsWith(k)).concat(res.filter(p=>!norm(p.name).startsWith(k))); }
   const exact=res.filter(p=>norm(p.name)===norm(name));
   return exact.length?exact:res;
+}
+/* a typo ("indianapols"): try the name with its last letters dropped, which the service matches as a prefix */
+async function nearMiss(name){
+  for(let n=name.length-1;n>=Math.max(4,name.length-5);n--){
+    const res=(await geo(name.slice(0,n),true)).filter(p=>norm(p.name).startsWith(norm(name.slice(0,n))));
+    if(res.length) return res;
+  }
+  return [];
+}
+function placeLabel(p){ return [p.admin1&&p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', '); }
+
+/* ---- suggestions as you type */
+const SG={items:[],on:-1,seq:0,timer:null};
+function sgClose(){ const ul=document.getElementById('sugg'); ul.hidden=true; ul.innerHTML=''; SG.items=[]; SG.on=-1;
+  document.getElementById('q').setAttribute('aria-expanded','false'); }
+function sgShow(items,hint){
+  const ul=document.getElementById('sugg'); SG.items=items; SG.on=-1;
+  if(!items.length){ sgClose(); return; }
+  ul.innerHTML=(hint?`<li class="hint">${esc(hint)}</li>`:'')+items.map((p,i)=>
+    `<li role="option" id="sg${i}" data-i="${i}">${esc(p.name)}<small>${esc(placeLabel(p))}</small></li>`).join('');
+  ul.hidden=false; document.getElementById('q').setAttribute('aria-expanded','true');
+}
+function sgMove(d){
+  if(!SG.items.length) return;
+  SG.on=(SG.on+d+SG.items.length)%SG.items.length;
+  document.querySelectorAll('#sugg li[data-i]').forEach(li=>li.classList.toggle('on',+li.dataset.i===SG.on));
+  document.getElementById('q').setAttribute('aria-activedescendant','sg'+SG.on);
+}
+async function suggest(q){
+  const seq=++SG.seq, parts=q.split(',').map(x=>x.trim()), name=parts[0], rest=parts.slice(1).filter(Boolean);
+  if(name.length<3){ sgClose(); return; }
+  try{
+    let res=await geo(name,true);
+    if(rest.length){ const f=res.filter(p=>rest.every(x=>matches(p,x))); if(f.length) res=f; }
+    let hint='';
+    if(!res.length){ res=await nearMiss(name); if(res.length) hint='Did you mean:'; }
+    if(seq!==SG.seq) return;                       // a newer keystroke has taken over
+    sgShow(res.slice(0,6),hint);
+  }catch(e){ if(seq===SG.seq) sgClose(); }
 }
 function matches(p,rest){
   const t=norm(rest); if(!t) return true;
@@ -425,16 +545,21 @@ async function search(q){
         res=all.filter(p=>matches(p,rest));
       }
     }
+    let mean=false;
+    if(!res.length){ res=await nearMiss(parts[0]||q);
+      if(parts.length>1){ const f=res.filter(p=>parts.slice(1).every(x=>matches(p,x))); if(f.length) res=f; }
+      mean=res.length>0; }
     res=res.slice(0,8);
     if(!res.length){ msg.textContent='No place found. Try a nearby city, or add the state or country after a comma.'; return; }
-    msg.textContent=res.length>1?'Pick one:':'';
-    if(res.length===1){ pick(res[0]); return; }
+    msg.textContent=mean?'Did you mean:':res.length>1?'Pick one:':'';
+    if(res.length===1&&!mean){ pick(res[0]); return; }
     res.forEach(p=>{ const li=document.createElement('li'), b=document.createElement('button');
       b.innerHTML=`${esc(p.name)} <small>${esc([p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', '))}</small>`;
       b.onclick=()=>pick(p); li.appendChild(b); ul.appendChild(li); });
   }catch(e){ msg.textContent='The place search is not responding. Try again, or use your location.'; }
 }
 function pick(p){
+  sgClose(); SG.seq++;
   document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
   S.loc={name:[p.name,p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', '),short:p.name,la:+p.latitude,lo:+p.longitude};
   document.getElementById('q').value=S.loc.name;
@@ -463,7 +588,21 @@ function syncSeg(){
 
 async function init(){
   readHash(); syncSeg();
-  document.getElementById('sform').onsubmit=e=>{ e.preventDefault(); const q=document.getElementById('q').value.trim(); if(q) search(q); };
+  document.getElementById('sform').onsubmit=e=>{ e.preventDefault();
+    if(SG.on>=0&&SG.items[SG.on]){ pick(SG.items[SG.on]); return; }
+    SG.seq++; sgClose(); const q=document.getElementById('q').value.trim(); if(q) search(q); };
+  const qi=document.getElementById('q');
+  qi.addEventListener('input',()=>{ clearTimeout(SG.timer); const v=qi.value.trim();
+    document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
+    SG.timer=setTimeout(()=>suggest(v),220); });
+  qi.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); sgMove(1); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); sgMove(-1); }
+    else if(e.key==='Escape'){ sgClose(); } });
+  qi.addEventListener('blur',()=>setTimeout(sgClose,150));
+  /* mousedown, not click: it fires before the box loses focus */
+  document.getElementById('sugg').addEventListener('mousedown',e=>{ const li=e.target.closest('li[data-i]'); if(!li) return;
+    e.preventDefault(); pick(SG.items[+li.dataset.i]); });
   document.getElementById('geo').onclick=()=>{
     const msg=document.getElementById('smsg');
     if(!navigator.geolocation){ msg.textContent='Your browser does not share its location.'; return; }
@@ -472,6 +611,9 @@ async function init(){
       msg.textContent=''; document.getElementById('results').innerHTML=''; S.loc={name:`Your location (${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'})`,short:'your location',la,lo}; render(); },
       ()=>{ msg.textContent='Could not get your location. Type a place instead.'; },{timeout:10000});
   };
+  document.getElementById('detBtn').onclick=()=>{ const d=document.getElementById('det'), b=document.getElementById('detBtn'), open=d.hidden;
+    d.hidden=!open; b.setAttribute('aria-expanded',open); b.firstChild.textContent=open?'Hide detailed outlook ':'Detailed outlook ';
+    if(open) d.scrollIntoView({behavior:'smooth',block:'nearest'}); };
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; syncSeg(); render(); });
   document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; unitsSave(); syncSeg(); render(); });
   try{
