@@ -10,88 +10,111 @@
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#ffffff;--panel:#ffffff;--panel2:#f5f6f8;--line:#e3e6ea;--text:#14191f;--muted:#6b7480;
-        --accent:#2b6fb8;--accent2:#14191f;--en:#d0281b;--ln:#1f63b8}
+  :root{--ink:#1c2f34;--ink2:#3e5459;--muted:#6c7f80;--line:#d5e0db;--panel:#ffffff;--panel2:#f3f6f3;
+        --teal:#26494f;--teal2:#33606a;--en:#a24e2e;--ln:#2d6684;--focus:#c98a4b;
+        --serif:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
+        --sans:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
-  body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
-  a{color:var(--accent)}
-  .alertbar{background:#7a2410;border-bottom:2px solid #ff8a3d;color:#ffe3cf;text-align:center;
-            padding:9px 16px;font-size:14px;font-weight:650;line-height:1.35}
-  .alertbar b{color:#fff}
+  html{background:#eef2ec}
+  body{margin:0;color:var(--ink);font-family:var(--sans);line-height:1.5;min-height:100vh;min-height:100dvh;
+    display:flex;flex-direction:column;
+    /* a warm glow at the top fading into pale sage */
+    background:radial-gradient(ellipse 70% 55% at 50% -8%,rgba(248,222,170,.85) 0%,rgba(248,222,170,0) 70%),
+               radial-gradient(ellipse 50% 60% at 0% 10%,rgba(250,246,236,.9) 0%,rgba(250,246,236,0) 70%),
+               linear-gradient(180deg,#f7f3e8 0%,#eef2ea 45%,#e5eee9 100%);
+    background-repeat:no-repeat}
+  a{color:var(--teal2)}
+  .alertbar{background:#8a3f22;color:#fbe9d7;text-align:center;padding:7px 16px;font-size:13px;font-weight:600;line-height:1.35;letter-spacing:.01em}
+  .alertbar b{color:#fff;font-weight:600}
   main{flex:1 0 auto;width:100%;max-width:1100px;margin:0 auto;padding:28px 16px 32px;display:flex;flex-direction:column}
   /* before a place is chosen the title and the search box sit in the middle of the screen */
-  .hero{text-align:center;margin:0 auto;width:100%;max-width:720px}
-  body.landing .hero{margin:auto;padding-bottom:8vh}
-  h1{font-size:clamp(32px,5.4vw,56px);line-height:1.1;margin:0 0 30px;letter-spacing:-.025em;font-weight:780;text-wrap:balance}
-  h1 .en{color:var(--en)} h1 .ln{color:var(--ln)}
-  body:not(.landing) h1{font-size:clamp(24px,3.4vw,34px);margin:0 0 16px}
-  .searchrow{display:flex;gap:0;border:1px solid #d6dae0;border-radius:999px;background:#fff;
-    box-shadow:0 4px 18px rgba(20,25,31,.08);overflow:hidden;max-width:620px;margin:0 auto}
-  .searchrow:focus-within{border-color:#9aa3ad;box-shadow:0 4px 22px rgba(20,25,31,.14)}
-  .searchrow input{flex:1 1 auto;min-width:0;font-size:18px;padding:14px 22px;border:0;background:transparent;color:var(--text);outline:none}
-  .searchrow button{font:inherit;font-size:16px;font-weight:650;padding:0 26px;border:0;background:var(--text);color:#fff;cursor:pointer}
-  .searchrow button:hover{background:#2c3540}
-  .linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--muted);cursor:pointer;margin:12px 0 0;padding:2px 4px;text-decoration:underline;text-underline-offset:3px}
-  .linkbtn:hover{color:var(--text)}
-  .btn:focus-visible,button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
-  #results{list-style:none;margin:12px auto 0;padding:0;text-align:left;max-width:560px}
-  #results li button{width:100%;text-align:left;font:inherit;padding:9px 14px;border:1px solid var(--line);
-    border-radius:10px;background:#fff;margin:0 0 6px;cursor:pointer;color:var(--text)}
-  #results li button:hover{border-color:var(--accent)}
-  #results small{color:var(--muted)}
-  .msg{color:var(--muted);font-size:14px;margin:8px 0 0;min-height:1em}
+  .hero{text-align:center;margin:0 auto;width:100%;max-width:1080px}
+  body.landing .hero{margin:auto;padding-bottom:6vh}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(46px,7.4vw,100px);line-height:.98;letter-spacing:-.02em;
+     margin:0 0 44px;color:var(--ink);text-wrap:balance}
+  h1 em{font-style:italic;color:var(--en);padding-right:.04em}
+  h1 em.ln{color:var(--ln)} h1 em.nt{color:var(--ink2)}
+  body:not(.landing) h1{font-size:clamp(34px,5vw,56px);margin:0 0 24px}
+  .searchrow{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:24px;
+    padding:9px 9px 9px 0;max-width:720px;margin:0 auto;box-shadow:0 12px 34px rgba(38,73,79,.10),0 2px 6px rgba(38,73,79,.05)}
+  .searchrow:focus-within{border-color:#a9bfba;box-shadow:0 12px 38px rgba(38,73,79,.16),0 0 0 3px rgba(38,73,79,.08)}
+  .searchrow input{flex:1 1 auto;min-width:0;font-family:var(--sans);font-size:clamp(17px,2vw,21px);padding:14px 10px 14px 28px;
+    border:0;background:transparent;color:var(--ink);outline:none}
+  .searchrow input::placeholder{color:#748587}
+  .searchrow input::-webkit-search-cancel-button{display:none}
+  .searchrow button{font-family:var(--sans);font-size:clamp(16px,1.8vw,19px);font-weight:600;padding:17px 30px;border:0;border-radius:15px;
+    background:var(--teal);color:#fff;cursor:pointer;white-space:nowrap;letter-spacing:.01em}
+  .searchrow button:hover{background:var(--teal2)}
+  .linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--muted);cursor:pointer;margin:16px 0 0;padding:2px 4px;
+    text-decoration:underline;text-decoration-color:#b5c4c1;text-underline-offset:3px}
+  .linkbtn:hover{color:var(--ink)}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  #results{list-style:none;margin:14px auto 0;padding:0;text-align:left;max-width:600px}
+  #results li button{width:100%;text-align:left;font:inherit;font-size:16px;padding:11px 18px;border:1px solid var(--line);
+    border-radius:14px;background:rgba(255,255,255,.92);margin:0 0 7px;cursor:pointer;color:var(--ink)}
+  #results li button:hover{border-color:var(--teal2);background:#fff}
+  #results small{color:var(--muted);font-size:14px;margin-left:4px}
+  .msg{color:var(--muted);font-size:15px;margin:12px 0 0}
   .msg:empty{display:none}
-  .card{background:var(--panel);margin:34px 0 0;padding:0}
-  .fc{font-size:clamp(19px,2.6vw,25px);line-height:1.4;margin:30px auto 0;max-width:680px}
-  body:not(.landing) .fc{font-size:clamp(16px,2vw,19px);margin-top:18px}
-  .fc{color:#3a434d;text-wrap:balance} .fc b{font-weight:700;white-space:nowrap} .fc b.en{color:var(--en)} .fc b.ln{color:var(--ln)} .fc:empty{display:none}
-  .fc a{color:inherit;text-decoration-color:#b8bec6;text-underline-offset:3px}
-  .place{font-size:20px;font-weight:700;margin:0 0 2px}
-  .placesub{color:var(--muted);font-size:13px;margin:0 0 12px}
-  .toolbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
-  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-  .seg button{font:inherit;font-size:14px;padding:7px 12px;border:0;background:var(--panel2);color:var(--text);cursor:pointer}
-  .seg button+button{border-left:1px solid var(--line)}
-  .seg button.on{background:var(--accent2);color:#fff;font-weight:600}
-  .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px}
+  .fc{font-size:clamp(19px,2.3vw,24px);line-height:1.45;margin:38px auto 0;max-width:720px;color:var(--ink2);text-wrap:balance}
+  body:not(.landing) .fc{font-size:clamp(16px,1.9vw,19px);margin-top:22px}
+  .fc b{font-family:var(--serif);font-style:italic;font-weight:400;font-size:1.3em;line-height:1;white-space:nowrap;color:var(--en)}
+  .fc b.ln{color:var(--ln)} .fc:empty{display:none}
+  .fc a{color:inherit;text-decoration-color:#a9bab6;text-underline-offset:3px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 24px 20px;margin:40px 0 0;
+    box-shadow:0 14px 40px rgba(38,73,79,.08)}
+  .place{font-family:var(--serif);font-size:clamp(28px,3.4vw,38px);font-weight:400;line-height:1.1;margin:0 0 4px}
+  .placesub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
+  .seg button{font:inherit;font-size:14px;font-weight:500;padding:7px 14px;border:0;border-radius:9px;background:transparent;color:var(--ink2);cursor:pointer}
+  .seg button.on{background:var(--teal);color:#fff;font-weight:600}
+  .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
-  th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
-  thead th{background:#fff;font-size:13px;font-weight:650;position:sticky;top:0}
+  th,td{padding:10px 8px;text-align:center;border-bottom:1px solid #e6ece9;white-space:nowrap}
+  thead th{background:#fff;font-size:13px;font-weight:600;position:sticky;top:0;color:var(--ink)}
   thead th small{display:block;font-weight:400;color:var(--muted);font-size:11px}
-  th.row{text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:normal;min-width:150px;font-weight:650}
+  th.row{text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:normal;min-width:150px;font-weight:600}
   th.row small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
-  th.row a{font-weight:400;font-size:11.5px}
-  td{font-weight:650;min-width:66px}
+  th.row a{font-weight:400;font-size:11.5px;color:var(--muted)}
+  td{font-weight:600;min-width:66px}
   td.faint{font-weight:400}
   td.none{color:var(--muted);font-weight:400;background:#fff}
   tr:last-child td,tr:last-child th{border-bottom:0}
-  .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:10px 0 0}
-  .legend .bar{width:160px;height:10px;border-radius:3px;border:1px solid var(--line);display:inline-block;vertical-align:middle;margin:0 6px}
-  .legend .chip{display:inline-block;width:22px;height:14px;border-radius:3px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
-  .note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
-  footer a{color:var(--muted)}
-  footer{flex-shrink:0;font-size:12px;color:var(--muted);text-align:center;padding:14px 16px 16px;line-height:1.6}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:12px 0 0}
+  .legend .bar{width:150px;height:9px;border-radius:5px;display:inline-block;vertical-align:middle;margin:0 6px}
+  .legend .chip{display:inline-block;width:22px;height:14px;border-radius:4px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
+  .note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  footer{flex-shrink:0;font-size:12px;color:var(--muted);text-align:center;padding:14px 16px 18px;line-height:1.6}
+  footer a{color:var(--muted);text-decoration-color:#b5c4c1}
   .hidden{display:none}
-  @media (max-width:640px){ .alertbar{font-size:12px;padding:7px 12px} th.row{min-width:118px} td{min-width:58px;font-size:13px}
-    .searchrow input{font-size:16px;padding:12px 16px} .searchrow button{padding:0 16px} }
+  @media (max-width:640px){
+    .alertbar{font-size:12px;padding:6px 12px}
+    h1{margin-bottom:30px}
+    .searchrow{border-radius:18px;padding:6px 6px 6px 0}
+    .searchrow input{padding:12px 6px 12px 18px}
+    .searchrow button{padding:13px 16px;border-radius:13px}
+    .card{padding:18px 14px 16px;border-radius:18px}
+    th.row{min-width:118px} td{min-width:58px;font-size:13px} }
 </style>
 </head>
 <body class="landing">
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
 <main>
   <div class="hero">
-    <h1>How will <span id="phaseWord" class="en">El&nbsp;Ni&ntilde;o</span> affect weather where you are?</h1>
+    <h1>How will <em id="phaseWord">El&nbsp;Ni&ntilde;o</em> change the weather where you are?</h1>
     <form class="searchrow" id="sform" role="search" autocomplete="off">
-      <input id="q" type="search" placeholder="Your city, state or country" aria-label="Location" aria-describedby="smsg">
-      <button type="submit">Search</button>
+      <input id="q" type="search" placeholder="City, region, or postal code" aria-label="Location" aria-describedby="smsg">
+      <button type="submit">Search&nbsp;&rarr;</button>
     </form>
     <button class="linkbtn" type="button" id="geo">or use my location</button>
     <ul id="results" aria-live="polite"></ul>
     <p class="msg" id="smsg"></p>
-    <p class="fc" id="fcText"></p>
+    <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through June 2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
   </div>
 
   <div class="card hidden" id="out">
@@ -172,12 +195,12 @@ const OUTLOOK='https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_a
 function fcStatement(){
   const L=fcMonths(), el=document.getElementById('fcText'), hw=document.getElementById('phaseWord');
   const noaa=`(<a href="${OUTLOOK}" target="_blank" rel="noopener">NOAA</a>)`;
-  if(!L.length){ hw.textContent='El Niño or La Niña'; hw.className=''; el.innerHTML=`See NOAA&rsquo;s latest El Niño / La Niña outlook ${noaa}.`; return; }
+  if(!L.length){ hw.textContent='El Niño or La Niña'; hw.className='nt'; el.innerHTML=`See NOAA&rsquo;s latest El Niño / La Niña outlook ${noaa}.`; return; }
   /* this ENSO year's winter: the outlook's December-February value (or the observed one once it is in) */
   const o=L.find(q=>q.Y===L[0].Y&&!q.obs)||L[0], x=o.x, end=`June ${o.Y+1}`;
-  if(Math.abs(x)<0.5-1e-9){ hw.textContent='El Niño or La Niña'; hw.className='';
+  if(Math.abs(x)<0.5-1e-9){ hw.textContent='El Niño or La Niña'; hw.className='nt';
     el.innerHTML=`Neither El Niño nor La Niña is expected this winter, so their usual effects should be small through ${end} ${noaa}.`; return; }
-  const ph=x>0?'El\u00a0Niño':'La\u00a0Niña'; hw.textContent=ph; hw.className=x>0?'en':'ln';
+  const ph=x>0?'El\u00a0Niño':'La\u00a0Niña'; hw.textContent=ph; hw.className=x>0?'':'ln';
   el.innerHTML=`We are in the midst of a <b class="${x>0?'en':'ln'}">${roWord(x)} ${ph}</b> that will affect weather around the world through ${end} ${noaa}.`;
 }
 
@@ -333,6 +356,9 @@ function pick(p){
   document.getElementById('q').value=S.loc.name;
   render();
 }
+/* the units choice is shared with the map pages ('F' = U.S., 'C' = metric) */
+function unitsSave(){ try{ localStorage.setItem('ensoUnits',S.units==='us'?'F':'C'); }catch(e){} }
+function unitsSaved(){ try{ return localStorage.getItem('ensoUnits'); }catch(e){ return null; } }
 function writeHash(){
   if(!S.loc) return;
   const q=new URLSearchParams({p:S.loc.name,la:S.loc.la.toFixed(3),lo:S.loc.lo.toFixed(3)});
@@ -341,7 +367,8 @@ function writeHash(){
 }
 function readHash(){
   const q=new URLSearchParams(location.hash.slice(1)), la=parseFloat(q.get('la')), lo=parseFloat(q.get('lo'));
-  if(q.get('m')==='val') S.mode='val'; if(q.get('u')==='metric') S.units='metric';
+  if(q.get('m')==='val') S.mode='val';
+  { const u=q.get('u'); if(u==='metric'||(!u&&unitsSaved()==='C')) S.units='metric'; }   // a link's units, else the last choice
   if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
     S.loc={name:n,short:n.split(',')[0],la,lo}; document.getElementById('q').value=n; }
 }
@@ -362,15 +389,13 @@ async function init(){
       ()=>{ msg.textContent='Could not get your location. Type a place instead.'; },{timeout:10000});
   };
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; syncSeg(); render(); });
-  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; syncSeg(); render(); });
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; unitsSave(); syncSeg(); render(); });
   try{
     [META,RONI,RFC]=await Promise.all([BASE+'local/meta.json',BASE+'data/roni.json',BASE+'data/roni_fcst.json']
       .map(u=>fetch(u,{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(u); return r.json(); })));
   }catch(e){
     const off=location.protocol==='file:'||!/^https?:$/.test(location.protocol);
-    document.getElementById('smsg').textContent = off
-      ? 'This page reads its data from the site: open it at elninolanina.org/enso/ensolocal.'
-      : 'Could not load the data. Please try again later.';
+    if(!off) document.getElementById('smsg').textContent='Could not load the data. Please try again later.';
     return; }
   document.getElementById('built').textContent='Data built '+META.built.slice(0,10);
   fcStatement();
