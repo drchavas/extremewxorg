@@ -901,8 +901,10 @@ const MM_MO=30.44, IN_MO=30.44/25.4;
 function usOn(){ return S.un==='F'; }
 function cvC(v){ return isTemp()?(usOn()?v*1.8+32:v) : isPrecip()?v*(usOn()?IN_MO:MM_MO) : v; }   // a value
 function cvD(v){ return isTemp()?(usOn()?v*1.8:v) : isPrecip()?v*(usOn()?IN_MO:MM_MO) : v; }      // a difference
-function unitsSave(){ try{ localStorage.setItem('ensoUnits',S.un); }catch(e){} }
-function unitsSaved(){ try{ return localStorage.getItem('ensoUnits'); }catch(e){ return null; } }
+function unitsSave(){ try{ localStorage.setItem('ensoUnits2',S.un); }catch(e){} }
+/* key renamed 2026-11-13 (was ensoUnits): choices saved before the automatic default existed, many of them
+   test clicks, no longer override it */
+function unitsSaved(){ try{ return localStorage.getItem('ensoUnits2'); }catch(e){ return null; } }
 function unitAbs(){
   const f=F();
   if(f.src==='era5') return isTemp()?(usOn()?'°F':'°C'):(usOn()?'in/month':'mm/month');
@@ -1310,6 +1312,7 @@ function drawContours(vals){
   CONT=grp.addTo(mapA);
 }
 function drawSelection(){
+  requestAnimationFrame(pinTip);
   const t=T();
   selA.forEach(l=>mapA.removeLayer(l)); selA.length=0;
   const c=selCell();
@@ -1396,6 +1399,8 @@ function wireHover(m,tipId){
   const tip=document.getElementById(tipId);
   /* the readout for the box under the pointer: on hover with a mouse, and on a tap (phones fire no hover) */
   const show=e=>{
+    /* a clicked box keeps its readout pinned beside it (pinTip); the pointer's readout waits until it is let go */
+    if(selCell()>=0){ tip.style.display='none'; return; }
     /* while a new state loads, CUR still holds the old numbers: no readout until it is drawn */
     if(BUSY||!DS||!CUR){ tip.style.display='none'; return; }
     const c=cellAt(e.latlng.lat,e.latlng.lng);
@@ -1419,8 +1424,34 @@ function wireHover(m,tipId){
     else if(selCell()===c) S.pt=null;
     else S.pt=[DS.lat[c],((DS.lon[c]+540)%360)-180];
     drawSelection(); drawPanels(); writeHash();
-    if(S.pt) boxHint();
+    if(S.pt){ tip.style.display='none'; boxHint(); } else show(e);
   });
+  m.on('move zoom',pinTip);
+}
+/* the readout of the clicked box, kept up beside it (Dan, 2026-11-13): it follows the box when the map is
+   dragged or zoomed and the numbers when the month or field changes; a second click on the box, or ×, lets it go */
+function pinTip(){
+  let pin=document.getElementById('tipPin');
+  const host=document.getElementById('mapMain'); if(!host||!mapA) return;
+  if(!pin){ pin=document.createElement('div'); pin.id='tipPin'; pin.className='tip pin'; host.appendChild(pin);
+    pin.addEventListener('click',e=>{ if(!e.target.closest('.pinx')) return; e.stopPropagation();
+      S.pt=null; drawSelection(); drawPanels(); writeHash(); pinTip(); });
+    ['mousedown','dblclick','wheel','touchstart'].forEach(ev=>pin.addEventListener(ev,e=>e.stopPropagation())); }
+  const c=(DS&&CUR&&!BUSY)?selCell():-1;
+  if(c<0||!isFinite(CUR.clim[c])){ pin.style.display='none'; return; }
+  const W=host.clientWidth, H=host.clientHeight, g=DS.grid;
+  /* the copy of the box in view (the world maps repeat every 360°) */
+  const pts=(g.global?[-360,0,360]:[0]).map(dx=>mapA.latLngToContainerPoint([DS.lat[c],DS.lon[c]+dx]));
+  const p=pts.find(q=>q.x>=0&&q.x<=W&&q.y>=0&&q.y<=H);
+  if(!p){ pin.style.display='none'; return; }
+  const lon=((DS.lon[c]+540)%360)-180;
+  pin.innerHTML=`<button class="pinx" type="button" aria-label="Close this readout">×</button>`+tipHtml(c,DS.lat[c],lon);
+  pin.style.maxWidth=Math.max(160,W-12)+'px'; pin.style.display='block';
+  const tw=pin.offsetWidth, th=pin.offsetHeight, half=mapA.latLngToContainerPoint([DS.lat[c],DS.lon[c]+g.g/2]).x-mapA.latLngToContainerPoint([DS.lat[c],DS.lon[c]]).x;
+  const off=Math.abs(half)+8;
+  let x=p.x+off+tw>W? p.x-off-tw : p.x+off; x=Math.max(6,Math.min(W-tw-6,x));
+  let y=Math.max(4,p.y-th/2); if(y+th>H-4) y=Math.max(4,H-4-th);
+  pin.style.left=x+'px'; pin.style.top=y+'px';
 }
 
 /* ------------------------------------------------------------- refresh */
@@ -2540,7 +2571,7 @@ function writeHash(){
 function unitsAuto(){
   try{ const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
     if(tz&&!/^(UTC|GMT|Etc\/)/.test(tz))
-      return /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+|Puerto_Rico)|Pacific\/(Honolulu|Guam|Saipan|Pago_Pago)|US\/.+)$/.test(tz)?'us':'metric';
+      return /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indianapolis|Louisville|Fort_Wayne|Knox_IN|Shiprock|Atka|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+|Puerto_Rico)|Pacific\/(Honolulu|Guam|Saipan|Pago_Pago)|US\/.+)$/.test(tz)?'us':'metric';
   }catch(e){}
   const l=(navigator.language||'').toUpperCase(); return !l||/-US$/.test(l)||!/-/.test(l)?'us':'metric';
 }
@@ -2709,7 +2740,7 @@ async function init(){
   } catch(err){ document.getElementById('msg').textContent='Could not load: '+err.message; return; }
   document.getElementById('body').style.display='';
   mapA=makeMap('mapMain',true);
-  if(FCST) document.getElementById('mapMain').setAttribute('aria-label','Map. Hover or tap to read a box.');
+  if(FCST) document.getElementById('mapMain').setAttribute('aria-label','Map. Hover or tap to read a box; click a box to keep its readout up.');
   /* give the map a view at once: the outline layers (and a shared link's selected box)
      can be added before the first refresh fits the view, and Leaflet throws on a map
      without one (shared links with a box selected used to open blank) */

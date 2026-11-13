@@ -138,6 +138,8 @@ Dan), and `update_stamps.py` stamps all four.
   (template `<!--CRS-->` block around `#defSect`+`#otherAdv`, and around the PNG button); Methods is a one-line
   pointer to the Science page's Regression tab. `build.py` resolves nested block markers (inner first, at their
   template position). JS skips the panels when `#cardRoni` is absent.
-- **Units default (later 2026-11-13):** link `u=` > saved click (`ensoUnits`) > `unitsAuto()` (browser time zone: U.S. zones →
+- **Units default (later 2026-11-13):** link `u=` > saved click (`ensoUnits2`; was `ensoUnits` until 2026-11-13) > `unitsAuto()` (browser time zone: U.S. zones →
   U.S. units, any other zone → metric; UTC/unknown → language region; else U.S.). Same function in `enso.js` and
   `ensolocal.html`. The location page's toggle now sits beside the place name ("U.S." / "Metric").
+- **Pinned readout (later 2026-11-13):** a clicked box's readout stays up (`pinTip()`, `#tipPin`, × to close); hover
+  readouts pause while a box is selected; `pinTip` runs on map move/zoom and from `drawSelection` (so after every refresh).

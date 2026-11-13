@@ -498,6 +498,10 @@
        border:1px solid #2a3a4d;border-radius:7px;font-size:11.5px;padding:6px 9px;line-height:1.45;
        white-space:nowrap;display:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
   .tip b{font-weight:650}
+  .tip.pin{pointer-events:auto;z-index:1090;padding-right:24px}   /* a clicked box's readout stays up */
+  .tip.pin .pinx{position:absolute;top:2px;right:3px;border:0;background:transparent;color:inherit;opacity:.7;
+       font:inherit;font-size:15px;line-height:1;padding:2px 5px;cursor:pointer;border-radius:4px}
+  .tip.pin .pinx:hover{opacity:1;background:rgba(127,127,127,.18)}
   @media (max-width:640px){ .tip{white-space:normal;overflow-wrap:anywhere} }   /* phones: wrap inside the map rather than run past it */
   #panels{margin-top:10px}
   .sect{max-width:1100px;margin:26px auto 0;padding-top:16px;border-top:1px solid var(--line)}
@@ -705,8 +709,8 @@
         <div class="maphead hastog"><div class="mhtext" aria-live="polite"><h2 id="mapTitle">&nbsp;</h2><p id="mapSub">&nbsp;</p>
           <p class="warn" id="mapWarn"></p></div>
 </div>
-        <div class="lmap" id="mapMain" role="region" aria-label="Map. Hover or tap to read a box; click a box to select it for the panels below."><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
-          <div class="hint">drag &middot; scroll to zoom &middot; hover for values</div></div>
+        <div class="lmap" id="mapMain" role="region" aria-label="Map. Hover or tap to read a box; click a box to keep its readout up and select it for the panels below."><div class="cbar" id="cbMain"></div><div class="tip" id="tipA"></div><div class="loadchip">Loading&hellip;</div><div class="emptychip"></div>
+          <div class="hint">drag &middot; scroll to zoom &middot; hover for values &middot; click to keep</div></div>
         <div id="cbHost"></div>
       </div>
     </div>

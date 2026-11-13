@@ -10,7 +10,7 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v15">
+<meta name="version" content="ensolocal-2026-11-13-v16">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
@@ -663,8 +663,10 @@ function pick(p){
   render();
 }
 /* the units choice is shared with the map pages ('F' = U.S., 'C' = metric) */
-function unitsSave(){ try{ localStorage.setItem('ensoUnits',S.units==='us'?'F':'C'); }catch(e){} }
-function unitsSaved(){ try{ return localStorage.getItem('ensoUnits'); }catch(e){ return null; } }
+function unitsSave(){ try{ localStorage.setItem('ensoUnits2',S.units==='us'?'F':'C'); }catch(e){} }
+/* key renamed 2026-11-13 (was ensoUnits): choices saved before the automatic default existed, many of them
+   test clicks, no longer override it */
+function unitsSaved(){ try{ return localStorage.getItem('ensoUnits2'); }catch(e){ return null; } }
 function writeHash(){
   if(!S.loc) return;
   const q=new URLSearchParams({p:S.loc.name,la:S.loc.la.toFixed(3),lo:S.loc.lo.toFixed(3)});
@@ -676,7 +678,7 @@ function writeHash(){
 function unitsAuto(){
   try{ const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
     if(tz&&!/^(UTC|GMT|Etc\/)/.test(tz))
-      return /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+|Puerto_Rico)|Pacific\/(Honolulu|Guam|Saipan|Pago_Pago)|US\/.+)$/.test(tz)?'us':'metric';
+      return /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indianapolis|Louisville|Fort_Wayne|Knox_IN|Shiprock|Atka|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+|Puerto_Rico)|Pacific\/(Honolulu|Guam|Saipan|Pago_Pago)|US\/.+)$/.test(tz)?'us':'metric';
   }catch(e){}
   const l=(navigator.language||'').toUpperCase(); return !l||/-US$/.test(l)||!/-/.test(l)?'us':'metric';
 }
