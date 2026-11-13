@@ -18,13 +18,16 @@ takes that page's stamp instead of its own page's.
 import os, re, subprocess, sys, datetime as dt
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-# ensofcst and ensoscience carry no data stamp since 2026-11-13 (Dan's shorter footer line)
 PAGES = {
     'index.html': ['scs/trends/data', 'tc/trends/data', 'enso/data', 'climate/data'],
     'enso/ensogrid.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
                            'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
     'enso/ensoreg.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
                           'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
+    'enso/ensofcst.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
+                           'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
+    'enso/ensoscience.html': ['enso/data', 'scs/trends/data/grid_hail.json.gz', 'scs/trends/data/grid_tornado.json.gz',
+                              'scs/trends/data/grid_wind.json.gz', 'scs/trends/data/grid_derechoday.json.gz'],
     'climate/earthvis.html': ['climate/data', 'enso/data/tc_month.json.gz', 'scs/trends/data/grid_hail.json.gz',
                               'scs/trends/data/grid_tornado.json.gz', 'scs/trends/data/grid_wind.json.gz',
                               'scs/trends/data/grid_derechoday.json.gz'],

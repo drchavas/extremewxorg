@@ -986,7 +986,11 @@ function pctDenom(cl,climRef){
 function dispDiff(st,climRef){
   const out=new Float32Array(st.diff.length).fill(NaN);
   for(let c=0;c<out.length;c++){
-    const d=st.diff[c]; if(!isFinite(d)) continue;
+    let d=st.diff[c]; if(!isFinite(d)) continue;
+    /* the regression is a straight line, so read near the strongest years it can fall below zero: a count or a
+       water amount cannot drop by more than all of it, so cap the change at minus the climatology (-100%), as
+       the location page does (QA 2026-11-13). Composites cannot go below zero anyway. */
+    if(REG&&!isTemp()&&isFinite(st.clim[c])&&st.clim[c]>=0) d=Math.max(d,-st.clim[c]);
     if(pctOn()){ const q=pctDenom(st.clim[c],climRef); if(!isFinite(q)) continue; out[c]=100*d/q; }
     else out[c]=cvD(d);
   }
@@ -1382,25 +1386,32 @@ function decs(){
 }
 function wireHover(m,tipId){
   const tip=document.getElementById(tipId);
-  m.on('mousemove',e=>{
+  /* the readout for the box under the pointer: on hover with a mouse, and on a tap (phones fire no hover) */
+  const show=e=>{
     /* while a new state loads, CUR still holds the old numbers: no readout until it is drawn */
     if(BUSY||!DS||!CUR){ tip.style.display='none'; return; }
     const c=cellAt(e.latlng.lat,e.latlng.lng);
     if(c<0||!isFinite(CUR.clim[c])){ tip.style.display='none'; return; }
     tip.innerHTML=tipHtml(c,e.latlng.lat,e.latlng.lng);
-    const W=m.getContainer().clientWidth, p=e.containerPoint;
+    const W=m.getContainer().clientWidth, H=m.getContainer().clientHeight, p=e.containerPoint;
+    tip.style.maxWidth=Math.max(160,W-12)+'px';                   // never wider than the map (phones)
     tip.style.display='block';
-    const tw=tip.offsetWidth;
-    tip.style.left=(p.x+14+tw>W? p.x-14-tw : p.x+14)+'px';
-    tip.style.top=Math.max(4,p.y-10)+'px';
-  });
+    const tw=tip.offsetWidth, th=tip.offsetHeight;
+    /* beside the pointer where it fits, else on the other side; always kept inside the map (QA 2026-11-13) */
+    let x=p.x+14+tw>W? p.x-14-tw : p.x+14; x=Math.max(6,Math.min(W-tw-6,x));
+    let y=Math.max(4,p.y-10); if(y+th>H-4) y=Math.max(4,p.y-14-th);
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  };
+  m.on('mousemove',show);
   m.on('mouseout',()=>{ tip.style.display='none'; });
   m.on('click',e=>{
+    show(e);
     const c=cellAt(e.latlng.lat,e.latlng.lng);
     if(c<0){ S.pt=null; }
     else if(selCell()===c) S.pt=null;
     else S.pt=[DS.lat[c],((DS.lon[c]+540)%360)-180];
     drawSelection(); drawPanels(); writeHash();
+    if(S.pt) boxHint();
   });
 }
 
@@ -2073,6 +2084,24 @@ function boxPanel(x,y,w,h,bs){
   o+=txt((L+R)/2,BOT+35,cap.length*5.9>w-20?`ENSO year (June – May)${mon?`, ${MONTHS[m-1]} of ${m>=6?'year 0':'year +1'}`:''} · click the map to change place`:cap,{size:11,fill:t.mute,anchor:'middle'});
   return o+'</g>';
 }
+/* After a box is picked: its time-series panel is under "Other advanced". Open that box and say so on the
+   map, with a link down to it, so the click visibly does something (QA 2026-11-13). */
+function boxHint(){
+  const adv=document.getElementById('otherAdv'); if(adv&&!adv.open) adv.open=true;
+  const host=document.getElementById('mapMain'); if(!host) return;
+  let chip=document.getElementById('boxHint');
+  if(!chip){ chip=document.createElement('button'); chip.id='boxHint'; chip.type='button'; chip.className='boxhint';
+    chip.onclick=()=>{ const a=document.getElementById('otherAdv'); if(a) a.scrollIntoView({behavior:'smooth',block:'start'}); chip.classList.remove('on'); };
+    host.appendChild(chip); }
+  chip.textContent=host.clientWidth<480?'Panel for this box below ↓':'This box over the years: see the panel below ↓';
+  chip.classList.add('on'); clearTimeout(chip._t); chip._t=setTimeout(()=>chip.classList.remove('on'),6000);
+}
+/* phones: the panels are wider than the screen; open them at their right end, where the recent years and
+   the forecast are, once per page (not again after the visitor has scrolled) (QA 2026-11-13) */
+function panelsToRecent(){
+  ['panels'].forEach(id=>{ const el=document.getElementById(id); if(!el||el.dataset.scrolled) return;
+    if(el.scrollWidth>el.clientWidth+4){ el.scrollLeft=el.scrollWidth; el.dataset.scrolled='1'; } });
+}
 async function drawPanels(){
   if(!DS||!RONI) return;
   const t=T(), LO=panelLayout();
@@ -2083,6 +2112,7 @@ async function drawPanels(){
   put('cardRoni',LO.roni[3],FCST&&RFC?fcRoniPanel(...LO.roni):roniPanel(...LO.roni));
   put('cardBox',LO.box[3],boxPanel(...LO.box,bs));
   writeFoot(bs);
+  requestAnimationFrame(panelsToRecent);
 }
 function writeFoot(bs){
   const win=windowYears(), [a,b]=yearsSel();

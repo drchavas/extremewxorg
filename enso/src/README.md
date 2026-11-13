@@ -101,6 +101,21 @@ and a `.sky` layer right after `<body>` with a sun at top left, rain streaks at 
 ## Headers and banner (2026-11-13)
 `ensofcst` ("El Niño & La Niña Weather Effects: Forecast View") and `ensoscience` ("… Science View") share the composite
 page's intro (marker `CSF`). The red work-in-progress banner is kept only on `ensogrid` and `ensoreg` (marker `CRN`).
-They have no credit line under the intro (Dan, 2026-11-13; the intro's own "Send feedback" line stays) and no data
-stamp, so `update_stamps.py` no longer lists them.
+All four map pages carry the same credit line with the data stamp (restored on ensofcst and ensoscience the same day,
+Dan), and `update_stamps.py` stamps all four.
+
+## Fixes from the independent test (2026-11-13)
+- Map readout (hover, and now also on a tap) is kept inside the map and wraps on phones; it sits above the map's title bubble.
+- Clicking a box opens "Other advanced" (its panel) and shows a chip on the map, "This box over the years: see the panel
+  below ↓", that scrolls there.
+- On phones the RONI panel opens scrolled to its recent (right) end, once.
+- Regression pages cap a count or water change at minus the climatology (−100%), as the location page does (`dispDiff`).
+- Keyboard focus is drawn inside segmented buttons; dark-theme active tab and El Niño/La Niña buttons use dark text;
+  the light theme's muted text is darker (`--muted:#4d5c6b`).
+- Saved units are read even when a link has no settings.
+- Location page: Enter takes the top suggestion; a tiny exact name no longer hides a large place ("Lond" → London);
+  no late suggestions over results; Escape closes the list without clearing it; the status line sits above the list
+  and is a live region; month-tile values that could be chance are pale, with a note; accepts `u=C`/`u=F` and passes
+  metric on to the maps; darker muted text and a clearer focus ring. "Deeper science view" link removed (Dan);
+  "View maps" renamed "Forecast maps". Table row "Precipitation" (was "Rain and snow").
 

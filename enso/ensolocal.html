@@ -10,7 +10,7 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v10">
+<meta name="version" content="ensolocal-2026-11-13-v11">
 <title>How is El Ni&ntilde;o expected to change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <style>
-  :root{--ink:#1c2f34;--ink2:#3e5459;--muted:#6c7f80;--line:#d5e0db;--panel:#ffffff;--panel2:#f3f6f3;
+  :root{--ink:#1c2f34;--ink2:#3e5459;--muted:#4e6264;--line:#d5e0db;--panel:#ffffff;--panel2:#f3f6f3;
         --teal:#26494f;--teal2:#33606a;--en:#a24e2e;--ln:#2d6684;--focus:#c98a4b;
         --serif:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
         --sans:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -47,7 +47,7 @@
   body:not(.landing) h1{font-size:clamp(34px,5vw,56px);margin:0 0 24px}
   .searchrow{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:24px;
     padding:9px 9px 9px 0;max-width:720px;margin:0 auto;box-shadow:0 12px 34px rgba(38,73,79,.10),0 2px 6px rgba(38,73,79,.05)}
-  .searchrow:focus-within{border-color:#a9bfba;box-shadow:0 12px 38px rgba(38,73,79,.16),0 0 0 3px rgba(38,73,79,.08)}
+  .searchrow:focus-within{border-color:var(--teal2);box-shadow:0 12px 38px rgba(38,73,79,.16),0 0 0 3px rgba(51,96,106,.32)}
   .searchrow input{flex:1 1 auto;min-width:0;font-family:var(--sans);font-size:clamp(17px,2vw,21px);padding:14px 10px 14px 28px;
     border:0;background:transparent;color:var(--ink);outline:none}
   .searchrow input::placeholder{color:#748587}
@@ -64,7 +64,10 @@
     background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 40px rgba(38,73,79,.16),0 2px 6px rgba(38,73,79,.06)}
   #sugg li{padding:10px 14px;border-radius:12px;cursor:pointer;font-size:17px;color:var(--ink);line-height:1.3}
   #sugg li small{color:var(--muted);font-size:14px;margin-left:6px}
-  #sugg li.on,#sugg li:hover{background:var(--panel2)}
+  #sugg li:hover{background:var(--panel2)}
+  #sugg li.on{background:#dfe9e5;box-shadow:inset 3px 0 0 var(--teal2)}
+  .unc{color:#66787a;font-style:italic}
+  .uncnote{font-size:13.5px;color:var(--muted);margin:10px 0 0}
   #sugg li.hint{cursor:default;color:var(--muted);font-size:14px;padding:6px 14px 4px}
   #sugg li.hint:hover{background:none}
   #results{list-style:none;margin:14px auto 0;padding:0;text-align:left;max-width:600px}
@@ -205,8 +208,8 @@
     <ul id="sugg" role="listbox" aria-label="Suggested places" hidden></ul><!-- places suggested as you type -->
     </div>
     <button class="linkbtn" type="button" id="geo">or use my location</button>
-    <ul id="results" aria-live="polite"></ul>
-    <p class="msg" id="smsg"></p>
+    <p class="msg" id="smsg" role="status" aria-live="polite"></p>
+    <ul id="results"></ul>
     <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through mid-2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
   </div>
 
@@ -215,8 +218,7 @@
     <div id="sums"></div><!-- one plain-language line per season, with a tile per month -->
     <div class="cardfoot">
       <button type="button" class="go" id="detBtn" aria-expanded="false" aria-controls="det">Detailed outlook <span aria-hidden="true">&rarr;</span></button>
-      <a class="go" id="mapsLink" href="/enso/ensoreg" target="_blank" rel="noopener">View maps (opens new tab) <span aria-hidden="true">&rarr;</span></a>
-      <a class="go" id="sciLink" href="/enso/ensoscience#view=reg" target="_blank" rel="noopener">Deeper science view (opens new tab) <span aria-hidden="true">&rarr;</span></a>
+      <a class="go" id="mapsLink" href="/enso/ensoreg" target="_blank" rel="noopener">Forecast maps (opens new tab) <span aria-hidden="true">&rarr;</span></a>
     </div>
     <div id="det" hidden>
       <p class="placesub" id="placesub"></p>
@@ -239,12 +241,12 @@
       <a class="xcard" href="/enso/ensofcst" target="_blank" rel="noopener">
         <img src="/assets/thumbs/ensoreg.webp" alt="" width="720" height="360" loading="lazy">
         <span class="xt">Forecast maps <span aria-hidden="true">&nearr;</span></span>
-        <span class="xd">Month by month, what NOAA&rsquo;s El Ni&ntilde;o outlook means for weather around the world.</span>
+        <span class="xd">Month by month, what this El Ni&ntilde;o means for weather around the world.</span>
       </a>
       <a class="xcard" href="/enso/ensoscience" target="_blank" rel="noopener">
         <img src="/assets/thumbs/ensogrid.webp" alt="" width="720" height="360" loading="lazy">
         <span class="xt">Science view <span aria-hidden="true">&nearr;</span></span>
-        <span class="xd">Past El Ni&ntilde;o and La Ni&ntilde;a years, and how their effects grow with strength.</span>
+        <span class="xd">Effects vs. strength of El Ni&ntilde;o or La Ni&ntilde;a.</span>
       </a>
     </div>
   </div></section>
@@ -271,7 +273,7 @@ const CMAP={div:['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#f
 /* rows of the table: field, name, what it counts */
 const ROWS=[
   {k:'t2m', name:'Temperature', sub:'average for the month'},
-  {k:'pr',  name:'Rain and snow', sub:'total precipitation'},
+  {k:'pr',  name:'Precipitation', sub:'total for the month'},
   {k:'sf',  name:'Snowfall', sub:'as fresh snow (approx.)'},
   {k:'tcd', name:'Tropical storm days', sub:'storm in the 5° box (~550 km)'},
   {k:'tornado', name:'Tornado days', sub:'any tornado in the 2° box'},
@@ -425,12 +427,16 @@ function seasonLine(W){
 function seasonTiles(W){
   const us=S.units==='us';
   return W.mons.map((mo,i)=>{
+    /* a value whose month's fit could easily be chance (p >= 0.05) is shown pale, as in the table: the summary
+       line above gives such months less weight, and this is what explains the difference (QA 2026-11-13) */
+    const faint=k=>{ const c=W[k]&&W[k].cs[i]; return !!(c&&c.faint); };
     const n=[], t=Math.round(W.t2m.cs[i].d*(us?1.8:1));
-    n.push(['Temperature',t===0?'around normal':`${t>0?'+':'−'}${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`]);
+    n.push(['Temperature',t===0?'around normal':`${t>0?'+':'−'}${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`,faint('t2m')]);
     const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?Math.round(c.pct/10)*10:null; };
-    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`]);
-    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`]);
-    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v])=>`<span class="tl"><span class="tk">${k}:</span> ${v}</span>`).join('')+`</div>`;
+    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`,faint('pr')]);
+    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`,faint('sf')]);
+    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v,f])=>`<span class="tl"><span class="tk">${k}:</span> `+
+      (f?`<span class="unc" title="Could easily be chance">${v}</span>`:v)+`</span>`).join('')+`</div>`;
   }).join('');
 }
 function renderSummary(recsBy){
@@ -441,8 +447,11 @@ function renderSummary(recsBy){
     const msg=fcDJF(ensoYearNow().Y)?'No outlook here: this spot is open ocean, outside the map data.'
       :'NOAA&rsquo;s outlook on this page is out of date, so there is nothing to show right now. Please check back soon.';
     el.innerHTML=`<div class="season"><p class="sline">${msg}</p></div>`; return; }
-  el.innerHTML=Ws.map(W=>`<section class="season"><div class="shead">${seasonHead(W)}</div>
-    <p class="sline">${seasonLine(W)}</p><div class="tiles">${seasonTiles(W)}</div></section>`).join('');
+  el.innerHTML=Ws.map(W=>{ const tl=seasonTiles(W);
+    return `<section class="season"><div class="shead">${seasonHead(W)}</div>
+    <p class="sline">${seasonLine(W)}</p><div class="tiles">${tl}</div>`+
+    (tl.includes('class="unc"')?`<p class="uncnote"><span class="unc">Pale values</span> could easily be chance, so the summary above gives them less weight.</p>`:'')+
+    `</section>`; }).join('');
 }
 
 async function render(){
@@ -467,10 +476,8 @@ async function render(){
   /* the maps: the forecast page (NOAA's outlook, month by month), temperature, centered here; December
      of this ENSO year while it is still ahead, else the page's own default month */
   { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:'';
-    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`;
-    /* the science view: the science page's regression tab (any strength, any season), at the outlook rounded to 0.5 */
-    const d=fcDJF(Y), r=d?Math.sign(d.x)*Math.round(Math.abs(d.x)*2)/2:1.5;
-    document.getElementById('sciLink').href=`${BASE}ensoscience#view=reg&f=t2m&r=${r}&m=djf&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
+    const uq=S.units==='metric'?'&u=C':'';        // the maps open in the units shown here
+    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}${uq}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
@@ -499,7 +506,7 @@ async function render(){
   tb.innerHTML=h+'</tbody>';
   document.getElementById('legend').innerHTML=
     `<span>Colors: <span class="bar" style="background:linear-gradient(to right,${CMAP.div.join(',')})"></span>cooler / fewer · warmer / more;
-     rain and snow: <span class="bar" style="background:linear-gradient(to right,${CMAP.brbg.join(',')})"></span>drier · wetter</span>
+     precipitation and snow: <span class="bar" style="background:linear-gradient(to right,${CMAP.brbg.join(',')})"></span>drier · wetter</span>
      <span><span class="chip" style="background:rgb(250,226,211)"></span>pale, plain numbers: could easily be chance</span>
      <span>– not shown: too rare there that month</span>`;
   writeHash();
@@ -524,11 +531,15 @@ async function geo(name,prefix){
   const j=await GEO[key];
   /* places people live in, regions and countries; not airports, parks, stations or buildings */
   const res=(j.results||[]).filter(p=>{ const c=p.feature_code||'PPL'; return /^(PPL|ADM[12]$|PCL)/.test(c)&&!/^(PPLX|PPLH|PPLQ|PPLW|PCLH)$/.test(c); });
-  /* "Paris" means the places called Paris, not "Paris 15 Vaugirard" */
   if(prefix){                                   // as you type: names that start with what is typed come first
     const k=norm(name); return res.filter(p=>norm(p.name).startsWith(k)).concat(res.filter(p=>!norm(p.name).startsWith(k))); }
-  const exact=res.filter(p=>norm(p.name)===norm(name));
-  return exact.length?exact:res;
+  /* "Paris" means the places called Paris (not "Paris 15 Vaugirard"), but a tiny exact match must not hide a big
+     place the name only starts ("Lond" is a village; London is what is meant): exact names come first only when
+     they are not dwarfed by the largest result, and the other results are kept after them (QA 2026-11-13). */
+  const pop=p=>p.population||0, big=Math.max(0,...res.map(pop)), k=norm(name);
+  const exact=res.filter(p=>norm(p.name)===k), others=res.filter(p=>norm(p.name)!==k);
+  if(exact.length&&Math.max(...exact.map(pop))>=0.1*big) return exact.concat(others.filter(p=>!/^PPLX/.test(p.feature_code||'')&&!norm(p.name).startsWith(k+' ')));
+  return res;
 }
 /* a typo ("indianapols"): try the name with its last letters dropped, which the service matches as a prefix */
 async function nearMiss(name){
@@ -548,13 +559,13 @@ function sgShow(items,hint){
   const ul=document.getElementById('sugg'); SG.items=items; SG.on=-1;
   if(!items.length){ sgClose(); return; }
   ul.innerHTML=(hint?`<li class="hint">${esc(hint)}</li>`:'')+items.map((p,i)=>
-    `<li role="option" id="sg${i}" data-i="${i}">${esc(p.name)}<small>${esc(placeLabel(p))}</small></li>`).join('');
+    `<li role="option" id="sg${i}" data-i="${i}" aria-selected="false">${esc(p.name)}<small>${esc(placeLabel(p))}</small></li>`).join('');
   ul.hidden=false; document.getElementById('q').setAttribute('aria-expanded','true');
 }
 function sgMove(d){
   if(!SG.items.length) return;
   SG.on=(SG.on+d+SG.items.length)%SG.items.length;
-  document.querySelectorAll('#sugg li[data-i]').forEach(li=>li.classList.toggle('on',+li.dataset.i===SG.on));
+  document.querySelectorAll('#sugg li[data-i]').forEach(li=>{ const on=+li.dataset.i===SG.on; li.classList.toggle('on',on); li.setAttribute('aria-selected',on); });
   document.getElementById('q').setAttribute('aria-activedescendant','sg'+SG.on);
 }
 async function suggest(q){
@@ -566,7 +577,7 @@ async function suggest(q){
     let hint='';
     if(!res.length){ res=await nearMiss(name); if(res.length) hint='Did you mean:'; }
     if(seq!==SG.seq) return;                       // a newer keystroke has taken over
-    sgShow(res.slice(0,6),hint);
+    SG.q=q; sgShow(res.slice(0,6),hint);
   }catch(e){ if(seq===SG.seq) sgClose(); }
 }
 function matches(p,rest){
@@ -619,13 +630,14 @@ function unitsSaved(){ try{ return localStorage.getItem('ensoUnits'); }catch(e){
 function writeHash(){
   if(!S.loc) return;
   const q=new URLSearchParams({p:S.loc.name,la:S.loc.la.toFixed(3),lo:S.loc.lo.toFixed(3)});
-  if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='us') q.set('u',S.units);
+  if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='us') q.set('u','C');
   history.replaceState(null,'','#'+q.toString());
 }
 function readHash(){
   const q=new URLSearchParams(location.hash.slice(1)), la=parseFloat(q.get('la')), lo=parseFloat(q.get('lo'));
   if(q.get('m')==='val') S.mode='val';
-  { const u=q.get('u'); if(u==='metric'||(!u&&unitsSaved()==='C')) S.units='metric'; }   // a link's units, else the last choice
+  { const u=q.get('u');                          // a link's units (u=C / u=F as on the map pages; older links u=metric), else the last choice
+    if(u==='C'||u==='metric') S.units='metric'; else if(u==='F'||u==='us') S.units='us'; else if(unitsSaved()==='C') S.units='metric'; }
   if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
     S.loc={name:n,short:n.split(',')[0],la,lo}; document.getElementById('q').value=n; }
 }
@@ -636,9 +648,12 @@ function syncSeg(){
 
 async function init(){
   readHash(); syncSeg();
-  document.getElementById('sform').onsubmit=e=>{ e.preventDefault();
+  document.getElementById('sform').onsubmit=e=>{ e.preventDefault(); clearTimeout(SG.timer);   // no late suggestions over the results
+    const q=document.getElementById('q').value.trim();
+    /* Enter takes the highlighted suggestion, or the top one when the list shown is for what is typed (QA 2026-11-13) */
     if(SG.on>=0&&SG.items[SG.on]){ pick(SG.items[SG.on]); return; }
-    SG.seq++; sgClose(); const q=document.getElementById('q').value.trim(); if(q) search(q); };
+    if(SG.items.length&&SG.q===q&&!document.getElementById('sugg').hidden&&!document.querySelector('#sugg li.hint')){ pick(SG.items[0]); return; }
+    SG.seq++; sgClose(); if(q) search(q); };
   const qi=document.getElementById('q');
   qi.addEventListener('input',()=>{ clearTimeout(SG.timer); const v=qi.value.trim();
     document.getElementById('results').innerHTML=''; document.getElementById('smsg').textContent='';
@@ -646,7 +661,7 @@ async function init(){
   qi.addEventListener('keydown',e=>{
     if(e.key==='ArrowDown'){ e.preventDefault(); sgMove(1); }
     else if(e.key==='ArrowUp'){ e.preventDefault(); sgMove(-1); }
-    else if(e.key==='Escape'){ sgClose(); } });
+    else if(e.key==='Escape'){ if(!document.getElementById('sugg').hidden){ e.preventDefault(); sgClose(); } } });   // close the list, keep the text
   qi.addEventListener('blur',()=>setTimeout(sgClose,150));
   /* mousedown, not click: it fires before the box loses focus */
   document.getElementById('sugg').addEventListener('mousedown',e=>{ const li=e.target.closest('li[data-i]'); if(!li) return;
