@@ -45,7 +45,7 @@ box's own fit has p ≥ 0.05. It is a hand-written page (no template), `noindex`
     ADM3+ are dropped.
   - Result card: `seasonSummary` for Dec–Feb and Mar–May (named Winter/Spring north of 23.5°N, Summer/Autumn south
     of 23.5°S, month names in the tropics) from the same cells as the table. Sizes: temperature <0.5 °C near normal,
-    <1.5 °C a little, else a lot; precipitation/snow <10% / <25% / else; one step lower if fewer than 2 of the 3
+    <1.5 °C a little, else a lot; precipitation/snow <10% / <25% / else [superseded by v18, see below]; one step lower if fewer than 2 of the 3
     months have p < 0.05 of the same sign. Snow only where the season averages ≥ 0.25 mm/day of water. `seasonLine`
     groups the near-normal items ("Near-normal temperature and precipitation."). Month tiles and the table round
     to the degree and to 10%.
@@ -143,3 +143,7 @@ Dan), and `update_stamps.py` stamps all four.
   `ensolocal.html`. The location page's toggle now sits beside the place name ("U.S." / "Metric").
 - **Pinned readout (later 2026-11-13):** a clicked box's readout stays up (`pinTip()`, `#tipPin`, × to close); hover
   readouts pause while a box is selected; `pinTip` runs on map move/zoom and from `drawSelection` (so after every refresh).
+- **Location-page wording (v18, 2026-11-13):** no uncertainty language or pale tiles on the summary (Dan); sizes from the
+  numbers alone. Rain/snow on the season change rounded to 10%: 0–10% near normal, 20–30% a little, 40%+ a lot.
+  Temperature (v19): season change rounded to whole °F, 0–1 near normal, 2–4 a little, 5+ a lot (same in metric).
+  The Detailed outlook table keeps p-values/pale cells.
