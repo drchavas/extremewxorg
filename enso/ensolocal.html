@@ -167,6 +167,10 @@
   #det{padding:18px 0 8px;border-top:1px solid #e3e8e4;margin-top:14px}
   #det[hidden]{display:none}
   .fc{position:relative}
+  .morelinks{margin:44px auto 0;max-width:720px;font-size:clamp(16px,1.8vw,18px);color:var(--ink2);line-height:1.5}
+  .morelinks p{margin:0 0 6px}
+  .morelinks a{color:var(--teal2);font-weight:600;text-decoration-thickness:1.5px;text-underline-offset:3px}
+  body:not(.landing) .morelinks{margin-top:22px;font-size:15px}
   @media (max-width:760px){
     .card{padding:26px 18px 18px;border-radius:22px}
     .tiles{grid-template-columns:1fr;gap:10px}
@@ -193,6 +197,10 @@
     <ul id="results" aria-live="polite"></ul>
     <p class="msg" id="smsg"></p>
     <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through mid-2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
+    <div class="morelinks">
+      <p>For a detailed forecast map view, <a href="/enso/ensofcst" target="_blank" rel="noopener">click here</a></p>
+      <p>For a science map view, <a href="/enso/ensoscience" target="_blank" rel="noopener">click here</a></p>
+    </div>
   </div>
 
   <div class="card hidden" id="out">
