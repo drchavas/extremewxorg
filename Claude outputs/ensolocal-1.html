@@ -215,7 +215,6 @@
   <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>.<br>
   This site is updated regularly. <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.<br>
   Place search by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>.
-  Have a dataset to add? <a href="mailto:dchavas@purdue.edu">Email me!</a>
   <span id="built"></span></footer>
 
 <script>
@@ -317,7 +316,7 @@ function amount(k,v,m){            // a monthly amount from the stored daily rat
   if(k==='sf'){ const cm=Math.max(0,v*days); return us?`${fmt(cm/2.54,1)} in`:`${fmt(cm,cm<10?1:0)} cm`; }
   const n=Math.max(0,v); return `${fmt(n,n<1?2:1)} d`;
 }
-/* rounded like the month tiles: to the degree and to 10%, since the fit is not that exact */
+/* table changes are rounded like the month tiles: to the degree and to 10%, since the fit is not that exact */
 function changeTxt(k,c){
   if(k==='t2m') return S.units==='us'?`${sgn(Math.round(c.d*1.8),0)} °F`:`${sgn(Math.round(c.d),0)} °C`;
   return isFinite(c.pct)?`${sgn(Math.round(c.pct/10)*10,0)}%`:null;
