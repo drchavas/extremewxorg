@@ -101,6 +101,6 @@ and a `.sky` layer right after `<body>` with a sun at top left, rain streaks at 
 ## Headers and banner (2026-11-13)
 `ensofcst` ("El Niño & La Niña Weather Effects: Forecast View") and `ensoscience` ("… Science View") share the composite
 page's intro (marker `CSF`). The red work-in-progress banner is kept only on `ensogrid` and `ensoreg` (marker `CRN`).
-Their credit line is the short one (marker `FS`: "© 2026 Dan Chavas (Purdue University) · Site updated regularly. Send
-feedback with bugs or requests."), with no data stamp, so `update_stamps.py` no longer lists them.
+They have no credit line under the intro (Dan, 2026-11-13; the intro's own "Send feedback" line stays) and no data
+stamp, so `update_stamps.py` no longer lists them.
 
