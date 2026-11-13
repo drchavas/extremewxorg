@@ -132,13 +132,14 @@
       <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA CPC</a>.</p>
   </div>
 </main>
-<footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University)
-  &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; <a href="https://elninolanina.org/">El Ni&ntilde;o &amp; La Ni&ntilde;a maps</a>
-  &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including
-  <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a><br>
-  Place search by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
-  &middot; <a href="#feedback" data-feedback>Send feedback</a> &middot; Have a dataset to add? <a href="mailto:dchavas@purdue.edu">Email me!</a>
-  &middot; <span id="built"></span></footer>
+<footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
+  Part of <a href="https://extremewx.org/">extremewx.org</a>.
+  Supported in part by grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including
+  <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a>.<br>
+  This site is updated regularly. <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.<br>
+  Place search by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>.
+  Have a dataset to add? <a href="mailto:dchavas@purdue.edu">Email me!</a>
+  <span id="built"></span></footer>
 
 <script>
 /* The location page. Every number comes from the forecast map page (ensofcst.html): enso/src/build_local.js
@@ -393,7 +394,7 @@ async function init(){
     const off=location.protocol==='file:'||!/^https?:$/.test(location.protocol);
     if(!off) document.getElementById('smsg').textContent='Could not load the data. Please try again later.';
     return; }
-  document.getElementById('built').textContent='Data built '+META.built.slice(0,10);
+  document.getElementById('built').textContent='Data built '+META.built.slice(0,10)+'.';
   fcStatement();
   if(S.loc) render();
 }
