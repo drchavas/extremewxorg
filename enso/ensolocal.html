@@ -167,10 +167,18 @@
   #det{padding:18px 0 8px;border-top:1px solid #e3e8e4;margin-top:14px}
   #det[hidden]{display:none}
   .fc{position:relative}
-  .morelinks{margin:44px auto 0;max-width:720px;font-size:clamp(16px,1.8vw,18px);color:var(--ink2);line-height:1.5}
-  .morelinks p{margin:0 0 6px}
-  .morelinks a{color:var(--teal2);font-weight:600;text-decoration-thickness:1.5px;text-underline-offset:3px}
-  body:not(.landing) .morelinks{margin-top:22px;font-size:15px}
+  .explore{max-width:1090px;width:100%;margin:56px auto 8px}
+  body.landing .explore{margin-top:8px}
+  .explore h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.2vw,38px);margin:0 0 16px;color:var(--ink);text-align:center}
+  .xcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .xcard{display:flex;flex-direction:column;background:#fdfcf8;border:1px solid rgba(214,224,219,.9);border-radius:22px;overflow:hidden;
+    text-decoration:none;color:var(--ink);box-shadow:0 18px 44px rgba(38,73,79,.10),0 2px 6px rgba(38,73,79,.05);transition:transform .15s,box-shadow .15s}
+  .xcard:hover{transform:translateY(-2px);box-shadow:0 24px 54px rgba(38,73,79,.16),0 3px 8px rgba(38,73,79,.06)}
+  .xcard img{display:block;width:100%;height:auto;aspect-ratio:2/1;object-fit:cover;background:#e6ece9}
+  .xt{font-family:var(--serif);font-size:clamp(26px,2.8vw,34px);line-height:1.1;padding:18px 22px 4px}
+  .xt span{font-family:var(--sans);font-size:.6em;color:var(--teal2);vertical-align:.25em;margin-left:4px}
+  .xd{font-size:16px;line-height:1.5;color:var(--ink2);padding:0 22px 22px}
+  @media (max-width:700px){ .xcards{grid-template-columns:1fr} .explore{margin-top:40px} }
   @media (max-width:760px){
     .card{padding:26px 18px 18px;border-radius:22px}
     .tiles{grid-template-columns:1fr;gap:10px}
@@ -197,10 +205,6 @@
     <ul id="results" aria-live="polite"></ul>
     <p class="msg" id="smsg"></p>
     <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through mid-2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
-    <div class="morelinks">
-      <p>For a detailed forecast map view, <a href="/enso/ensofcst" target="_blank" rel="noopener">click here</a></p>
-      <p>For a science map view, <a href="/enso/ensoscience" target="_blank" rel="noopener">click here</a></p>
-    </div>
   </div>
 
   <div class="card hidden" id="out">
@@ -225,6 +229,22 @@
       <div class="legend" id="legend"></div>
     </div>
   </div>
+  <!-- two ways into the maps, under the location tool -->
+  <section class="explore" aria-labelledby="exploreH">
+    <h2 id="exploreH">Explore the maps</h2>
+    <div class="xcards">
+      <a class="xcard" href="/enso/ensofcst" target="_blank" rel="noopener">
+        <img src="/assets/thumbs/ensoreg.webp" alt="" width="720" height="360" loading="lazy">
+        <span class="xt">Forecast maps <span aria-hidden="true">&nearr;</span></span>
+        <span class="xd">Month by month, what NOAA&rsquo;s El Ni&ntilde;o outlook means for weather around the world.</span>
+      </a>
+      <a class="xcard" href="/enso/ensoscience" target="_blank" rel="noopener">
+        <img src="/assets/thumbs/ensogrid.webp" alt="" width="720" height="360" loading="lazy">
+        <span class="xt">Science view <span aria-hidden="true">&nearr;</span></span>
+        <span class="xd">Past El Ni&ntilde;o and La Ni&ntilde;a years, and how their effects grow with strength.</span>
+      </a>
+    </div>
+  </section>
 </main>
 <footer>&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University).
   Part of <a href="https://extremewx.org/">extremewx.org</a>.
