@@ -10,7 +10,7 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v8">
+<meta name="version" content="ensolocal-2026-11-13-v9">
 <title>How is El Ni&ntilde;o expected to change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
@@ -200,7 +200,7 @@
     <div id="sums"></div><!-- one plain-language line per season, with a tile per month -->
     <div class="cardfoot">
       <button type="button" class="go" id="detBtn" aria-expanded="false" aria-controls="det">Detailed outlook <span aria-hidden="true">&rarr;</span></button>
-      <a class="go" id="mapsLink" href="/enso/ensoreg">View maps <span aria-hidden="true">&rarr;</span></a>
+      <a class="go" id="mapsLink" href="/enso/ensoreg" target="_blank" rel="noopener">View maps (opens new tab) <span aria-hidden="true">&rarr;</span></a>
     </div>
     <div id="det" hidden>
       <p class="placesub" id="placesub"></p>
@@ -364,9 +364,10 @@ function seasonSummary(sea,recsBy){
 function seasonHead(W){
   /* named by the season it is where you are: Dec-Feb is winter in the north, summer in the south */
   const la=S.loc?S.loc.la:45, nm=la>=23.5?W.sea.names[0]:la<=-23.5?W.sea.names[1]:null;
-  const yy=W.sea.k==='djf'?`${W.Y}–${String(W.Y+1).slice(2)}`:`${W.Y+1}`;
-  return nm?`<span class="sname">${nm}</span><span class="sspan">${W.sea.span} ${yy}</span>`
-           :`<span class="sname">${W.sea.span}</span><span class="sspan">${yy}</span>`;
+  /* "December 2026 – February 2027"; "March–May 2027" */
+  const when=W.sea.k==='djf'?`December ${W.Y} – February ${W.Y+1}`:`${W.sea.span} ${W.Y+1}`;
+  return nm?`<span class="sname">${nm}</span><span class="sspan">${when}</span>`
+           :`<span class="sname">${when}</span>`;
 }
 /* "A little warmer than usual, with near-normal precipitation and a little less snow."
    "Near-normal temperature and precipitation."  Near-normal items are grouped. */
@@ -393,10 +394,10 @@ function seasonTiles(W){
   const us=S.units==='us';
   return W.mons.map((mo,i)=>{
     const n=[], t=Math.round(W.t2m.cs[i].d*(us?1.8:1));
-    n.push(['Temperature',t===0?'usual':`${t>0?'+':'−'}${Math.abs(t)} °${us?'F':'C'}`]);
+    n.push(['Temperature',t===0?'around normal':`${t>0?'+':'−'}${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`]);
     const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?Math.round(c.pct/10)*10:null; };
-    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'usual':`${Math.abs(pp)}% ${pp>0?'more':'less'}`]);
-    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'usual':`${Math.abs(ps)}% ${ps>0?'more':'less'}`]);
+    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`]);
+    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`]);
     return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v])=>`<span class="tl"><span class="tk">${k}:</span> ${v}</span>`).join('')+`</div>`;
   }).join('');
 }
@@ -427,9 +428,10 @@ async function render(){
     rows.push({R,f,b,cells});
   }
   renderSummary(recsBy);
-  /* the maps: the regression page at the outlook's strength (it steps by 0.5), winter, centered here */
-  { const d=fcDJF(ensoYearNow().Y), r=d?Math.sign(d.x)*Math.round(Math.abs(d.x)*2)/2:1.5;
-    document.getElementById('mapsLink').href=`${BASE}ensoreg#f=t2m&r=${r}&m=djf&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
+  /* the maps: the forecast page (NOAA's outlook, month by month), temperature, centered here; December
+     of this ENSO year while it is still ahead, else the page's own default month */
+  { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12?`&mo=${Y}-12`:'';
+    document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`; }
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
