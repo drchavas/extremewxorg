@@ -40,12 +40,26 @@
     --text:#16212e; --muted:#5b6b7c; --accent:#2b6fb8; --accent2:#9c5607; --onaccent2:#ffffff;
     --en:#c8321f; --ln:#1f63b8; --sea:#eef2f6;
   }
-  html[data-theme="light"] body{
-    background:
-      radial-gradient(1100px 520px at 80% -10%, rgba(43,111,184,.07), transparent 60%),
-      radial-gradient(900px 460px at 0% 0%, rgba(179,100,10,.06), transparent 55%),
-      linear-gradient(180deg,#f7f9fb 0%, #ffffff 100%);
-  }
+  /* Light theme background (2026-11-13): the location page's sky, a warm sun at top left, rain streaks at
+     right and drops toward the bottom, behind everything (the .sky layer right after <body>). */
+  html[data-theme="light"]{background:#dfe8ea}
+  html[data-theme="light"] body{position:relative;isolation:isolate;overflow-x:hidden;
+    background:linear-gradient(118deg,#f2d3a6 0%,#f4e3c8 24%,#eee9de 46%,#d6e0e3 70%,#bccfd9 100%)}
+  html[data-theme="light"] header{background:transparent;border-bottom-color:transparent}
+  .sky{display:none}
+  html[data-theme="light"] .sky{display:block;position:absolute;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+  .sky i{position:absolute;display:block}
+  .sky .sun{left:-150px;top:150px;width:480px;height:480px;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,#fbe6c4 0%,#f7d29e 40%,#f2c086 66%,rgba(242,192,134,0) 70.5%);
+    box-shadow:0 0 0 60px rgba(255,248,236,.16),0 0 0 120px rgba(255,248,236,.10);opacity:.95}
+  .sky .rain{right:0;top:0;width:62%;height:1100px;
+    background:repeating-linear-gradient(-62deg,rgba(255,255,255,0) 0 26px,rgba(255,255,255,.42) 26px 27.2px);
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 75%),linear-gradient(to bottom,#000 55%,transparent 100%);
+    -webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0%,#000 75%),linear-gradient(to bottom,#000 55%,transparent 100%);mask-composite:intersect}
+  .sky .dots{left:0;right:0;bottom:0;height:42%;
+    background:radial-gradient(circle,rgba(255,255,255,.85) 0 2.2px,transparent 2.8px) 0 0/46px 46px;
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 75%);mask-image:linear-gradient(to bottom,transparent 0%,#000 75%)}
+  @media (max-width:760px){ .sky .sun{width:300px;height:300px;left:-120px;top:120px} .sky .rain{width:80%} }
   html[data-theme="light"] .btn.on{background:rgba(43,111,184,.14)}
   html[data-theme="light"] .cbar{background:rgba(255,255,255,.94)}
   html[data-theme="light"] .hint{background:rgba(255,255,255,.9)}
@@ -307,6 +321,7 @@
 </style>
 </head>
 <body>
+<div class="sky" aria-hidden="true"><i class="sun"></i><i class="rain"></i><i class="dots"></i></div>
 <noscript><p style="margin:12px 16px;padding:10px 14px;border:1px solid #cfdbe7;border-radius:8px;background:#fff">These interactive maps need JavaScript. A written summary is under &ldquo;Quick answers&rdquo; at the bottom of the page.</p></noscript>
 
 <div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
@@ -3184,7 +3199,9 @@ function wire(){
 function applyTheme(){
   document.documentElement.dataset.theme=S.theme;
   document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
-  document.documentElement.style.background=T().bg; document.body.style.background=T().bg;
+  /* light: the stylesheet's sky background (2026-11-13); dark: the plain theme colour */
+  const lt=S.theme!=='dark';
+  document.documentElement.style.background=lt?'':T().bg; document.body.style.background=lt?'':T().bg;
 }
 
 async function init(){

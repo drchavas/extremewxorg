@@ -92,3 +92,9 @@ under both. `ensogrid.html` and `ensoreg.html` stay as they were (Dan: keep the 
 - `noindex` like the other hidden pages; `update_stamps.py` stamps it. The location page's "Deeper science view"
   opens its Regression tab.
 
+## Background (2026-11-13)
+In the light theme all four map pages use the location page's sky: a warm gradient (`html[data-theme="light"] body`),
+and a `.sky` layer right after `<body>` with a sun at top left, rain streaks at right and drops toward the bottom
+(`z-index:-1` inside the body's own stacking context, so it sits behind everything). The header is transparent there.
+`applyTheme` leaves the light background to the stylesheet and sets the plain colour only in the dark theme.
+

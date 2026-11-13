@@ -2634,7 +2634,9 @@ function wire(){
 function applyTheme(){
   document.documentElement.dataset.theme=S.theme;
   document.getElementById('themeBtn').textContent=S.theme==='dark'?'Light':'Dark';
-  document.documentElement.style.background=T().bg; document.body.style.background=T().bg;
+  /* light: the stylesheet's sky background (2026-11-13); dark: the plain theme colour */
+  const lt=S.theme!=='dark';
+  document.documentElement.style.background=lt?'':T().bg; document.body.style.background=lt?'':T().bg;
 }
 
 async function init(){
