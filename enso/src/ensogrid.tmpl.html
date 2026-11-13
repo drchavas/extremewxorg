@@ -470,10 +470,13 @@
   #enlnBtn{display:none} body.cmp #enlnBtn{display:inline-block}
   select.big{font-size:14px;padding:7px 9px;width:340px;max-width:100%}
   .mainbar .fld{max-width:100%}
+  @media (min-width:900px) and (max-width:1180px){ .mainbar{gap:12px 14px} .mainbar select.big{max-width:260px} }
   .advanced .advbar{padding:2px 0 4px}
   .advbrk{flex-basis:100%;height:0}   /* checkboxes and buttons on their own line */
   #maps .mapcol .maphead.hastog .mhtext h2{font-size:15.5px}
   .lmap .leaflet-container{background:var(--sea)}
+  .lmap.leaflet-container:focus:not(:focus-visible),.lmap .leaflet-container:focus:not(:focus-visible){outline:none!important}
+  .leaflet-container.ptrfocus:focus{outline:none!important}
   .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
         border:1px solid var(--line);border-radius:8px;padding:8px 9px 6px;
         font-size:10px;color:var(--muted);backdrop-filter:blur(6px);pointer-events:none}
@@ -563,7 +566,7 @@
   #cbHost{display:none}
   @media (max-width:640px){
     .lmap{min-height:0!important;aspect-ratio:2.05/1}
-    .mapbubble .bs{display:none} .lmap .leaflet-control-attribution{font-size:8px;line-height:1.3;max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mapbubble .bs{display:none} .lmap .leaflet-control-attribution{font-size:8px;line-height:1.3;max-width:calc(100vw - 40px);white-space:normal}
     #cbHost{display:block;padding:6px 12px 2px}
     .cbar.h{position:static;transform:none!important;background:none;border:none;padding:0;backdrop-filter:none;
             display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
@@ -614,6 +617,8 @@
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
   #fmSeg{flex-wrap:wrap;max-width:100%} #fmbar .fld{max-width:100%}
+  @media (max-width:640px){ #fmbar .fld{width:100%} #fmSeg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%}
+    #fmSeg button{padding:5px 2px;font-size:12.5px;min-width:0} #fmSeg button .yr{font-size:9.5px} }
   #robar .rofld{flex:1 1 auto;max-width:900px}
   .leaflet-control-attribution{background:rgba(15,23,32,.75)!important;color:#7f909f!important;font-size:10px!important}
   .leaflet-control-attribution a{color:#9fb0c0!important}
@@ -749,7 +754,7 @@
            year used in the maps marked and listed below.</p></div><!--/C-->
 <!--R-->      <div class="secthead"><h2>Measuring El Ni&ntilde;o and La Ni&ntilde;a</h2>
         <p>Every year enters the maps at its winter (Dec&ndash;Feb) value of NOAA's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/" target="_blank" rel="noopener">Relative Oceanic Ni&ntilde;o Index</a>, marked below.
-           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="ensogrid.html">composite version</a> of this page.</p></div><!--/R-->
+           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="/" data-comp>composite version</a> of this page.</p></div><!--/R-->
 <!--F-->      <div class="secthead"><h2>The forecast and the years behind the maps</h2>
         <p>The last two years of NOAA's ocean index (RONI) and NOAA CPC's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/outlook/" target="_blank" rel="noopener">official RONI outlook</a>
            for the coming 3-month seasons. The maps use the winter (Dec&ndash;Feb) value; every past year since 1979 enters the fit

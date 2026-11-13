@@ -37,6 +37,11 @@ if(SCI){
     a.addEventListener('click',e=>{ e.preventDefault(); if(!on) switchView(a.dataset.view); });
   });
 }
+/* links to "the composite version" (marked data-comp): the science page switches to its Composite tab; elsewhere
+   they go to the composite page at the site's root (not /enso/ensogrid, its duplicate) */
+document.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('a[data-comp]'); if(!a) return;
+  if(SCI){ e.preventDefault(); switchView('comp'); }
+  else if(!/(^|\.)elninolanina\.org$/.test(location.hostname)){ e.preventDefault(); location.href='/enso/ensogrid'; } });
 function switchView(v){
   const p=new URLSearchParams(location.hash.slice(1));
   ['ph','s','cp','b','r','view'].forEach(k=>p.delete(k));      // settings that belong to one view only
@@ -2383,7 +2388,7 @@ function regMethods(li){
     included. RONI is the Niño-3.4 sea-surface temperature anomaly <i>minus</i> the tropical-mean anomaly (rescaled), which CPC adopted
     in 2025 because the plain ONI is pushed upward by the warming of the whole tropical ocean. A year whose December–February
     has not happened yet is not used. The composite version of this page, which averages the years past a RONI threshold instead,
-    is <a href="ensogrid.html">here</a>.`);
+    is <a href="/" data-comp>here</a>.`);
   rep('<b>El Niño and La Niña maps.</b>',`<b>The regression maps.</b> Each box's values over the period are fitted by least squares,
     in one step, to <i>y = y<sub>0</sub> + a·(year − mean year) + b<sub>+</sub>·max(x, 0) + b<sub>−</sub>·min(x, 0)</i>, where x is the
     year's Dec–Feb RONI: two straight lines that meet at RONI 0, so El Niño and La Niña get their own slopes (a single straight line
@@ -2729,3 +2734,7 @@ window.__enso={S,get DS(){return DS;},get CUR(){return CUR;},classify,seriesStat
   boxSeries,refresh,cellAt,MSEQ,AVGS,curKey};
 init();
 
+// Leaflet focuses the map itself on a click, which Chrome then outlines as if it were keyboard focus.
+// Hide that outline for mouse/touch; Tab removes the flag so keyboard users still see it.
+document.addEventListener('pointerdown',e=>{const m=e.target.closest&&e.target.closest('.leaflet-container'); if(m) m.classList.add('ptrfocus');},true);
+document.addEventListener('keydown',e=>{if(e.key==='Tab') document.querySelectorAll('.ptrfocus').forEach(x=>x.classList.remove('ptrfocus'));},true);

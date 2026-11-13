@@ -10,8 +10,8 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v11">
-<title>How is El Ni&ntilde;o expected to change the weather where you are? &mdash; elninolanina.org</title>
+<meta name="version" content="ensolocal-2026-11-13-v12">
+<title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
 <!-- hidden while in testing: not linked from anywhere, not indexed -->
@@ -66,7 +66,14 @@
   #sugg li small{color:var(--muted);font-size:14px;margin-left:6px}
   #sugg li:hover{background:var(--panel2)}
   #sugg li.on{background:#dfe9e5;box-shadow:inset 3px 0 0 var(--teal2)}
-  .unc{color:#66787a;font-style:italic}
+  .season.past{opacity:.72}
+  .fcstale{font-size:13.5px;color:var(--muted);margin:8px auto 0;max-width:720px}
+  .fcstale:empty{display:none}
+  .pastnote{font-size:14px;color:var(--muted);font-style:italic}
+  .tv{font-weight:600}
+  .tv.vw{color:#b2432a} .tv.vc{color:#2d6684} .tv.vwet{color:#1f7568} .tv.vdry{color:#8a5a14} .tv.vsnow{color:#2d6684} .tv.vless{color:#6b7778}
+  .unc{font-style:italic;font-weight:400!important;opacity:.62}
+  .uncnote .unc{opacity:1;color:#66787a}
   .uncnote{font-size:13.5px;color:var(--muted);margin:10px 0 0}
   #sugg li.hint{cursor:default;color:var(--muted);font-size:14px;padding:6px 14px 4px}
   #sugg li.hint:hover{background:none}
@@ -160,6 +167,9 @@
   .sline b.w{color:#a54a2c} .sline b.c{color:#2d6684}
   .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
   .tile{background:#f1f4f1;border-radius:14px;padding:14px 16px 16px;font-size:16px;line-height:1.55;color:var(--ink2)}
+  .tile .tv{white-space:nowrap}
+  @media (min-width:761px) and (max-width:980px){ .tile{font-size:14.5px;padding:12px 12px 14px} }
+  @media (max-width:380px){ .searchrow input{font-size:15px;padding:11px 4px 11px 14px} .searchrow button{padding:12px 12px;font-size:15px} }
   .tile .tl{display:block} .tile .tk{color:var(--muted)}
   .tile b{display:block;color:var(--ink);font-weight:600;font-size:16px;margin-bottom:2px}
   .cardfoot{display:flex;flex-wrap:wrap;gap:12px 40px;align-items:center;padding:20px 0 6px}
@@ -198,7 +208,7 @@
 <div class="sky" aria-hidden="true"><i class="sun"></i><i class="rain"></i><i class="dots"></i></div>
 <main>
   <div class="hero">
-    <h1>How is <em id="phaseWord">El&nbsp;Ni&ntilde;o</em> expected to change the weather where&nbsp;you&nbsp;are?</h1>
+    <h1>How might <em id="phaseWord">El&nbsp;Ni&ntilde;o</em> change the weather where&nbsp;you&nbsp;are?</h1>
     <div class="sbox">
     <form class="searchrow" id="sform" role="search" autocomplete="off">
       <input id="q" type="search" placeholder="City, region, or postal code" aria-label="Location" aria-describedby="smsg"
@@ -211,6 +221,7 @@
     <p class="msg" id="smsg" role="status" aria-live="polite"></p>
     <ul id="results"></ul>
     <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through mid-2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
+    <p class="fcstale" id="fcStale"></p>
   </div>
 
   <div class="card hidden" id="out">
@@ -307,6 +318,10 @@ function fcMonths(){
 }
 function roWord(v){ const a=Math.abs(v); return a<0.75?'weak':a<1.25?'moderate':a<1.75?'strong':'very strong'; }
 const OUTLOOK='https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml';
+/* CPC issues a new outlook on the second Thursday of each month: from the 16th of the next month on, this one may
+   have been replaced (the forecast page's rule) */
+function fcStale(){ if(!RFC||!RFC.issued) return false; const [iy,im]=RFC.issued.split('-').map(Number), d=new Date();
+  const k=(d.getFullYear()*12+d.getMonth()+1)-(iy*12+im); return k>=2||(k===1&&d.getDate()>=16); }
 function fcStatement(){
   const L=fcMonths(), el=document.getElementById('fcText'), hw=document.getElementById('phaseWord');
   const noaa=`(<a href="${OUTLOOK}" target="_blank" rel="noopener">NOAA</a>)`;
@@ -316,6 +331,7 @@ function fcStatement(){
   if(Math.abs(x)<0.5-1e-9){ hw.textContent='El Niño or La Niña'; hw.className='nt';
     el.innerHTML=`Neither El Niño nor La Niña is expected this winter, so their usual effects should be small through ${end} ${noaa}.`; return; }
   const ph=x>0?'El\u00a0Niño':'La\u00a0Niña'; hw.textContent=ph; hw.className=x>0?'':'ln';
+  if(fcStale()) document.getElementById('fcStale').textContent='NOAA has probably issued a newer outlook since this one; the page is updated monthly.';
   el.innerHTML=`We are in the midst of a <b class="${x>0?'en':'ln'}">${roWord(x)} ${ph}</b> that will affect weather around the world through ${end} ${noaa}.`;
 }
 
@@ -395,6 +411,7 @@ function seasonSummary(sea,recsBy){
   }
   return out.t2m?out:null;
 }
+function seasonPastNote(W){ return W.past?'<span class="pastnote">This season has passed: this is what was expected.</span>':''; }
 function seasonHead(W){
   /* named by the season it is where you are: Dec-Feb is winter in the north, summer in the south */
   const la=S.loc?S.loc.la:45, nm=la>=23.5?W.sea.names[0]:la<=-23.5?W.sea.names[1]:null;
@@ -414,7 +431,8 @@ function seasonLine(W){
   let head, rest;
   if(t.lv){
     head=`<b class="${t.up?'w':'c'}">${LVL[t.lv][0].toUpperCase()+LVL[t.lv].slice(1)} ${t.up?'warmer':'cooler'}</b> than usual`;
-    rest=items.map(x=>x.lv?ch(x):`<b>near-normal ${x.k}</b>`);
+    const near=items.filter(x=>!x.lv).map(x=>x.k);          // "near-normal precipitation and snow", not twice
+    rest=items.filter(x=>x.lv).map(ch).concat(near.length?[`<b>near-normal ${and(near)}</b>`]:[]);
   } else {
     const near=['temperature'].concat(items.filter(x=>!x.lv).map(x=>x.k));
     head=`<b>Near-normal ${and(near)}</b>`;
@@ -431,12 +449,14 @@ function seasonTiles(W){
        line above gives such months less weight, and this is what explains the difference (QA 2026-11-13) */
     const faint=k=>{ const c=W[k]&&W[k].cs[i]; return !!(c&&c.faint); };
     const n=[], t=Math.round(W.t2m.cs[i].d*(us?1.8:1));
-    n.push(['Temperature',t===0?'around normal':`${t>0?'+':'−'}${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`,faint('t2m')]);
+    /* coloured like the maps (Dan): warmer red, cooler blue, wetter green, drier brown, more snow blue, less snow gray;
+       "1 °F cooler" carries no minus sign (the word says it) */
+    n.push(['Temperature',t===0?'around normal':`${t>0?'+':''}${Math.abs(t)} °${us?'F':'C'} ${t>0?'warmer':'cooler'}`,faint('t2m'),t>0?'vw':t<0?'vc':'']);
     const pc=k=>{ const c=W[k]&&W[k].cs[i]; return c&&isFinite(c.pct)?Math.round(c.pct/10)*10:null; };
-    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`,faint('pr')]);
-    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`,faint('sf')]);
-    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v,f])=>`<span class="tl"><span class="tk">${k}:</span> `+
-      (f?`<span class="unc" title="Could easily be chance">${v}</span>`:v)+`</span>`).join('')+`</div>`;
+    const pp=pc('pr'); if(pp!=null) n.push(['Precipitation',pp===0?'around normal':`${Math.abs(pp)}% ${pp>0?'wetter':'drier'}`,faint('pr'),pp>0?'vwet':pp<0?'vdry':'']);
+    const ps=pc('sf'); if(ps!=null) n.push(['Snow',ps===0?'around normal':`${Math.abs(ps)}% ${ps>0?'more':'less'}`,faint('sf'),ps>0?'vsnow':ps<0?'vless':'']);
+    return `<div class="tile"><b>${MONTHS[mo.m-1]}</b>`+n.map(([k,v,f,cl])=>`<span class="tl"><span class="tk">${k}:</span> `+
+      `<span class="tv ${cl}${f?' unc':''}"${f?' title="Could easily be chance"':''}>${v}</span></span>`).join('')+`</div>`;
   }).join('');
 }
 function renderSummary(recsBy){
@@ -444,11 +464,13 @@ function renderSummary(recsBy){
   const Ws=SEASONS.map(sea=>seasonSummary(sea,recsBy)).filter(Boolean);
   if(!Ws.length){
     /* no line: either the place is outside the map data, or the outlook file is out of date (the monthly refresh missed) */
-    const msg=fcDJF(ensoYearNow().Y)?'No outlook here: this spot is open ocean, outside the map data.'
+    const msg=fcDJF(ensoYearNow().Y)?'No outlook for this spot: it is over open ocean, and this page covers places on land. Try a nearby coast or island.'
       :'NOAA&rsquo;s outlook on this page is out of date, so there is nothing to show right now. Please check back soon.';
     el.innerHTML=`<div class="season"><p class="sline">${msg}</p></div>`; return; }
+  /* a season that is over goes after the one still ahead, marked as past */
+  Ws.sort((a,b)=>(a.past?1:0)-(b.past?1:0));
   el.innerHTML=Ws.map(W=>{ const tl=seasonTiles(W);
-    return `<section class="season"><div class="shead">${seasonHead(W)}</div>
+    return `<section class="season${W.past?' past':''}"><div class="shead">${seasonHead(W)}${seasonPastNote(W)}</div>
     <p class="sline">${seasonLine(W)}</p><div class="tiles">${tl}</div>`+
     (tl.includes('class="unc"')?`<p class="uncnote"><span class="unc">Pale values</span> could easily be chance, so the summary above gives them less weight.</p>`:'')+
     `</section>`; }).join('');
@@ -473,6 +495,7 @@ async function render(){
     rows.push({R,f,b,cells});
   }
   renderSummary(recsBy);
+  const mapMo=(()=>{ const {Y,ym}=ensoYearNow(); return ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:''; })();   // December while ahead
   /* the maps: the forecast page (NOAA's outlook, month by month), temperature, centered here; December
      of this ENSO year while it is still ahead, else the page's own default month */
   { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:'';
@@ -483,19 +506,23 @@ async function render(){
     ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
     : 'No data here (open ocean).';
   const tb=document.getElementById('tbl');
+  /* nothing to tabulate (open ocean): no "Detailed outlook" to open */
+  { const none=!rows.length, db=document.getElementById('detBtn'); db.hidden=none;
+    if(none){ document.getElementById('det').hidden=true; db.setAttribute('aria-expanded','false'); db.firstChild.textContent='Detailed outlook '; } }
   if(!rows.length){ tb.innerHTML=''; document.getElementById('legend').innerHTML=''; return; }
   let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':'Typical value in a year like this')+'</th>'+
     L.map(mo=>`<th scope="col">${MONTHS[mo.m-1]}<small>${mo.y}</small></th>`).join('')+'</tr></thead><tbody>';
   for(const {R,f,cells} of rows){
     const fm=L[0]?ymStr(L[0].y,L[0].m):'';
-    h+=`<tr><th class="row" scope="row">${esc(R.name)}<small>${esc(R.sub)}</small><a href="${BASE}ensofcst#f=${R.k}&t=0&mo=${fm}" target="_blank" rel="noopener">map</a></th>`;
+    h+=`<tr><th class="row" scope="row">${esc(R.name)}<small>${esc(R.sub)}</small><a href="${BASE}ensofcst#f=${R.k}${mapMo}${S.units==='metric'?'&u=C':''}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}" target="_blank" rel="noopener">map</a></th>`;
     cells.forEach((c,i)=>{
       const mo=L[i];
       if(!c){ h+=`<td class="none" title="Not shown: too rare here in ${MFULL[mo.m-1]}">–</td>`; return; }
       const ch=changeTxt(R.k,c), unitless=!ch;
       const v=R.k==='t2m'?c.d:c.pct, col=isFinite(v)?ramp(CMAP[c.cmap],(v-c.lo)/(c.hi-c.lo)):[255,255,255];
       /* faded: the color mixed two-thirds toward white, in plain type, so the eye goes to the reliable cells */
-      const colF=c.faint?col.map(u=>Math.round(u+(255-u)*0.66)):col, ink=c.faint?'#5b6b7c':lum(col)<0.33?'#fff':'#16212e';
+      const val=S.mode!=='pct';                 // "Typical value": plain cells; the colours show changes
+      const colF=val?[255,255,255]:c.faint?col.map(u=>Math.round(u+(255-u)*0.66)):col, ink=c.faint?'#5b6b7c':val?'#16212e':lum(col)<0.33?'#fff':'#16212e';
       const show = S.mode==='pct' ? (ch||'–') : amount(R.k,c.mean+c.d,mo.m);
       const tip=`${MFULL[mo.m-1]} ${mo.y}: average year ${amount(R.k,c.mean,mo.m)}; this year ${amount(R.k,c.mean+c.d,mo.m)}`+
         (ch?` (${ch})`:' (too rare here for a % change)')+(c.faint?'; could easily be chance':'')+'.';
@@ -647,6 +674,7 @@ function syncSeg(){
 }
 
 async function init(){
+  if(innerWidth<380) document.getElementById('q').placeholder='City or postal code';   // the long hint is cut off on small phones
   readHash(); syncSeg();
   document.getElementById('sform').onsubmit=e=>{ e.preventDefault(); clearTimeout(SG.timer);   // no late suggestions over the results
     const q=document.getElementById('q').value.trim();

@@ -183,10 +183,13 @@
   #enlnBtn{display:none} body.cmp #enlnBtn{display:inline-block}
   select.big{font-size:14px;padding:7px 9px;width:340px;max-width:100%}
   .mainbar .fld{max-width:100%}
+  @media (min-width:900px) and (max-width:1180px){ .mainbar{gap:12px 14px} .mainbar select.big{max-width:260px} }
   .advanced .advbar{padding:2px 0 4px}
   .advbrk{flex-basis:100%;height:0}   /* checkboxes and buttons on their own line */
   #maps .mapcol .maphead.hastog .mhtext h2{font-size:15.5px}
   .lmap .leaflet-container{background:var(--sea)}
+  .lmap.leaflet-container:focus:not(:focus-visible),.lmap .leaflet-container:focus:not(:focus-visible){outline:none!important}
+  .leaflet-container.ptrfocus:focus{outline:none!important}
   .cbar{position:absolute;right:10px;top:10px;z-index:600;background:rgba(22,33,46,.94);
         border:1px solid var(--line);border-radius:8px;padding:8px 9px 6px;
         font-size:10px;color:var(--muted);backdrop-filter:blur(6px);pointer-events:none}
@@ -266,7 +269,7 @@
   #cbHost{display:none}
   @media (max-width:640px){
     .lmap{min-height:0!important;aspect-ratio:2.05/1}
-    .mapbubble .bs{display:none} .lmap .leaflet-control-attribution{font-size:8px;line-height:1.3;max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mapbubble .bs{display:none} .lmap .leaflet-control-attribution{font-size:8px;line-height:1.3;max-width:calc(100vw - 40px);white-space:normal}
     #cbHost{display:block;padding:6px 12px 2px}
     .cbar.h{position:static;transform:none!important;background:none;border:none;padding:0;backdrop-filter:none;
             display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
@@ -317,6 +320,8 @@
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
   #fmSeg{flex-wrap:wrap;max-width:100%} #fmbar .fld{max-width:100%}
+  @media (max-width:640px){ #fmbar .fld{width:100%} #fmSeg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);width:100%}
+    #fmSeg button{padding:5px 2px;font-size:12.5px;min-width:0} #fmSeg button .yr{font-size:9.5px} }
   #robar .rofld{flex:1 1 auto;max-width:900px}
   .leaflet-control-attribution{background:rgba(15,23,32,.75)!important;color:#7f909f!important;font-size:10px!important}
   .leaflet-control-attribution a{color:#9fb0c0!important}
@@ -424,7 +429,7 @@
     <section class="sect" id="defSect">
       <div class="secthead"><h2>Measuring El Ni&ntilde;o and La Ni&ntilde;a</h2>
         <p>Every year enters the maps at its winter (Dec&ndash;Feb) value of NOAA's <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/" target="_blank" rel="noopener">Relative Oceanic Ni&ntilde;o Index</a>, marked below.
-           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="ensogrid.html">composite version</a> of this page.</p></div>
+           For averages over the El Ni&ntilde;o and La Ni&ntilde;a years themselves, see the <a href="/" data-comp>composite version</a> of this page.</p></div>
       <div id="panels"><svg id="cardRoni" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div>
       <div class="foot" id="foot"></div>
     </section>
@@ -484,6 +489,11 @@ if(SCI){
     a.addEventListener('click',e=>{ e.preventDefault(); if(!on) switchView(a.dataset.view); });
   });
 }
+/* links to "the composite version" (marked data-comp): the science page switches to its Composite tab; elsewhere
+   they go to the composite page at the site's root (not /enso/ensogrid, its duplicate) */
+document.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('a[data-comp]'); if(!a) return;
+  if(SCI){ e.preventDefault(); switchView('comp'); }
+  else if(!/(^|\.)elninolanina\.org$/.test(location.hostname)){ e.preventDefault(); location.href='/enso/ensogrid'; } });
 function switchView(v){
   const p=new URLSearchParams(location.hash.slice(1));
   ['ph','s','cp','b','r','view'].forEach(k=>p.delete(k));      // settings that belong to one view only
@@ -2830,7 +2840,7 @@ function regMethods(li){
     included. RONI is the Niño-3.4 sea-surface temperature anomaly <i>minus</i> the tropical-mean anomaly (rescaled), which CPC adopted
     in 2025 because the plain ONI is pushed upward by the warming of the whole tropical ocean. A year whose December–February
     has not happened yet is not used. The composite version of this page, which averages the years past a RONI threshold instead,
-    is <a href="ensogrid.html">here</a>.`);
+    is <a href="/" data-comp>here</a>.`);
   rep('<b>El Niño and La Niña maps.</b>',`<b>The regression maps.</b> Each box's values over the period are fitted by least squares,
     in one step, to <i>y = y<sub>0</sub> + a·(year − mean year) + b<sub>+</sub>·max(x, 0) + b<sub>−</sub>·min(x, 0)</i>, where x is the
     year's Dec–Feb RONI: two straight lines that meet at RONI 0, so El Niño and La Niña get their own slopes (a single straight line
@@ -3176,6 +3186,10 @@ window.__enso={S,get DS(){return DS;},get CUR(){return CUR;},classify,seriesStat
   boxSeries,refresh,cellAt,MSEQ,AVGS,curKey};
 init();
 
+// Leaflet focuses the map itself on a click, which Chrome then outlines as if it were keyboard focus.
+// Hide that outline for mouse/touch; Tab removes the flag so keyboard users still see it.
+document.addEventListener('pointerdown',e=>{const m=e.target.closest&&e.target.closest('.leaflet-container'); if(m) m.classList.add('ptrfocus');},true);
+document.addEventListener('keydown',e=>{if(e.key==='Tab') document.querySelectorAll('.ptrfocus').forEach(x=>x.classList.remove('ptrfocus'));},true);
 </script>
 <script src="/assets/feedback.js" defer></script>
 </body>

@@ -49,7 +49,7 @@ box's own fit has p ≥ 0.05. It is a hand-written page (no template), `noindex`
     months have p < 0.05 of the same sign. Snow only where the season averages ≥ 0.25 mm/day of water. `seasonLine`
     groups the near-normal items ("Near-normal temperature and precipitation."). Month tiles and the table round
     to the degree and to 10%.
-  - "View maps →" opens `ensoreg#f=t2m&r=<outlook rounded to 0.5>&m=djf&c=<lat,lon>`.
+  - "Forecast maps →" (was "View maps") opens `ensofcst#f=t2m&mo=<Y>-12&c=<lat,lon>` (December of this ENSO year while still ahead).
   - Look: Instrument Serif + DM Sans from Google Fonts; `.sky` layer (sun, rain streaks, drops); no banner.
   - `<meta name="version">` identifies the copy (`ensolocal-2026-11-13-v8` when it was deployed by hand).
 - **Units (2026-11-13).** U.S. by default (°F, inches); the choice is shared with the map pages in `localStorage`
