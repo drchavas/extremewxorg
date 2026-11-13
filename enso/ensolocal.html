@@ -207,7 +207,7 @@
       <p class="placesub" id="placesub"></p>
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Show">
-          <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Expected amount</button>
+          <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Typical value</button>
         </div>
         <div class="seg" role="group" aria-label="Units">
           <button data-u="us" class="on" aria-pressed="true">&deg;F, inches</button><button data-u="metric" aria-pressed="false">&deg;C, mm</button>
@@ -303,7 +303,7 @@ async function tile(key){
 }
 function rng(a,b,P,N){ const d=v=>Math.abs(v).toFixed(0); return a>=0?`${d(a)}–${d(b)}°${P}`:b<=0?`${d(b)}–${d(a)}°${N}`:`${d(a)}°${N}–${d(b)}°${P}`; }
 
-/* ---- one cell: change at strength v, as % (or °C for temperature) and as the expected amount */
+/* ---- one cell: change at strength v, as % (or °C for temperature) and as the typical value */
 const DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
 function cell(f,rec,mo){
   const mm=f.months[mo.mi]; if(!rec) return null;
@@ -442,7 +442,7 @@ async function render(){
     : 'No data here (open ocean).';
   const tb=document.getElementById('tbl');
   if(!rows.length){ tb.innerHTML=''; document.getElementById('legend').innerHTML=''; return; }
-  let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':'Expected this year')+'</th>'+
+  let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':'Typical value in a year like this')+'</th>'+
     L.map(mo=>`<th scope="col">${MONTHS[mo.m-1]}<small>${mo.y}</small></th>`).join('')+'</tr></thead><tbody>';
   for(const {R,f,cells} of rows){
     const fm=L[0]?ymStr(L[0].y,L[0].m):'';

@@ -87,6 +87,8 @@ under both. `ensogrid.html` and `ensoreg.html` stay as they were (Dan: keep the 
 - A tab click reloads the page in the other view, keeping the shared settings in the link (variable, threshold,
   season/month, period, units, smoothing, dots, contours, point, map view) and dropping the view-only ones
   (`ph`, `s`, `cp`, `b`, `r`). `writeHash` adds `view=reg`; "Reload default" keeps the view.
+- The header is the composite page's and stays the same in both views (Dan): its intro block is marked `CS`, the
+  regression intro `RN`; only what is below the tabs changes.
 - `noindex` like the other hidden pages; `update_stamps.py` stamps it. The location page's "Deeper science view"
   opens its Regression tab.
 
