@@ -10,7 +10,7 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v9">
+<meta name="version" content="ensolocal-2026-11-13-v10">
 <title>How is El Ni&ntilde;o expected to change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
@@ -436,7 +436,11 @@ function seasonTiles(W){
 function renderSummary(recsBy){
   const el=document.getElementById('sums');
   const Ws=SEASONS.map(sea=>seasonSummary(sea,recsBy)).filter(Boolean);
-  if(!Ws.length){ el.innerHTML='<div class="season"><p class="sline">No outlook here: this spot is open ocean, outside the map data.</p></div>'; return; }
+  if(!Ws.length){
+    /* no line: either the place is outside the map data, or the outlook file is out of date (the monthly refresh missed) */
+    const msg=fcDJF(ensoYearNow().Y)?'No outlook here: this spot is open ocean, outside the map data.'
+      :'NOAA&rsquo;s outlook on this page is out of date, so there is nothing to show right now. Please check back soon.';
+    el.innerHTML=`<div class="season"><p class="sline">${msg}</p></div>`; return; }
   el.innerHTML=Ws.map(W=>`<section class="season"><div class="shead">${seasonHead(W)}</div>
     <p class="sline">${seasonLine(W)}</p><div class="tiles">${seasonTiles(W)}</div></section>`).join('');
 }
@@ -462,7 +466,7 @@ async function render(){
   renderSummary(recsBy);
   /* the maps: the forecast page (NOAA's outlook, month by month), temperature, centered here; December
      of this ENSO year while it is still ahead, else the page's own default month */
-  { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12?`&mo=${Y}-12`:'';
+  { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:'';
     document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}&c=${loc.la.toFixed(2)},${loc.lo.toFixed(2)}`;
     /* the science view: the science page's regression tab (any strength, any season), at the outlook rounded to 0.5 */
     const d=fcDJF(Y), r=d?Math.sign(d.x)*Math.round(Math.abs(d.x)*2)/2:1.5;

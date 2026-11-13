@@ -2939,6 +2939,7 @@ function writeHash(){
   try{ history.replaceState(null,'','#'+p.toString()); }catch(e){}
 }
 function readHash(){
+  { const u=unitsSaved(); if(u==='F'||u==='C') S.un=u; }   // the last choice, also when the link has no settings
   if(!location.hash) return null;
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
