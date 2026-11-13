@@ -207,7 +207,7 @@
      month by month, or show a <b>season</b> or the <b>annual</b> mean. <b>Click anywhere</b> on the map for that place&rsquo;s
      seasonal cycle, and <b>Export</b> any map or animation for teaching. More options are under <b>Advanced settings</b>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-11-13 17:53 UTC</span></div>
 </header>
 
 <div id="wrap">
@@ -424,12 +424,14 @@ const CMAP={
 };
 
 /* Every field. `era`: ERA5 variables the field is made from (+ `fn` to combine them,
-   cell by cell, already in display base units); `src:'tc'|'scs'`: extremes, counts.
+   cell by cell, already in display base units); `src:'tc'|'etc'|'scs'|'ta'`: extremes, counts.
+   `rad`: counted within `R` km of each point (data/rad_<k>.bin.gz, built by build/build_radius_counts.py).
    `lv`: color levels in the base unit — {lo,hi,step} or an explicit list `l`.
    `clear`: values below this are left transparent (no ice, no snow, no storms).
    `flow`: the wind level drawn by default. `kind` picks the unit choices.        */
 const G={T:'Temperature',W:'Water, clouds & snow',E:'Energy & radiation',C:'Circulation & pressure',
-         S:'Severe-storm ingredients',X:'Tropical cyclones (IBTrACS, global)',U:'U.S. severe weather (Storm Events, 2° grid)',A:'Tornadoes worldwide (Tornado Archive, 2° grid)'};
+         S:'Severe-storm ingredients',X:'Tropical cyclones (IBTrACS, global)',Y:'Extratropical cyclones (ERA5 tracks, global)',
+         U:'U.S. severe weather (Storm Events)',A:'Tornadoes worldwide (Tornado Archive)'};
 const FIELDS=[
  {k:'t2m',grp:G.T,label:'Surface air temperature (2 m)',era:['t2m'],kind:'temp',cmap:'temp',lv:{lo:-40,hi:40,step:5},cnt:10},
  {k:'sst',grp:G.T,label:'Sea surface temperature',era:['sst'],kind:'temp',cmap:'temp',lv:{lo:-2,hi:32,step:2},cnt:2},
@@ -472,19 +474,26 @@ const FIELDS=[
  {k:'d2m',grp:G.S,label:'Dewpoint (2 m)',era:['d2m'],kind:'temp',cmap:'dew',lv:{lo:-30,hi:25,step:5},flow:'10'},
 
  {k:'s200',grp:G.X,label:'Vertical wind shear for TCs (200 minus 850 hPa)',era:['s200'],kind:'wind',cmap:'wind',lv:{lo:0,hi:40,step:4}},
- {k:'tcd',grp:G.X,label:'Tropical-cyclone track density',src:'tc',tck:'n',kind:'count',unitWord:'storm-days',cmap:'seq',
-  thresholds:[{label:'Vmax ≥ 34 kt (tropical storm+)',bins:[0,1,2]},{label:'Vmax ≥ 64 kt (hurricane / Cat 1+)',bins:[1,2]},
-              {label:'Vmax ≥ 96 kt (major / Cat 3+)',bins:[2]}]},
- {k:'tcace',grp:G.X,label:'Accumulated cyclone energy (ACE)',src:'tc',tck:'a',kind:'count',unitWord:'10⁴ kt²',cmap:'seq'},
- {k:'tcgen',grp:G.X,label:'Tropical-cyclone genesis',src:'tc',tck:'g',kind:'count',unitWord:'storms',cmap:'seq'},
+ {k:'tcd',grp:G.X,label:'Tropical-cyclone frequency (track density)',src:'tc',rad:true,R:500,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'Vmax ≥ 34 kt (tropical storm+)'},{label:'Vmax ≥ 64 kt (hurricane / Cat 1+)'},{label:'Vmax ≥ 96 kt (major / Cat 3+)'}]},
+ {k:'tcace',grp:G.X,label:'Accumulated cyclone energy (ACE)',src:'tc',rad:true,R:500,kind:'count',unitWord:'10⁴ kt²',cmap:'seq'},
+ {k:'tcgen',grp:G.X,label:'Tropical-cyclone genesis',src:'tc',rad:true,R:500,kind:'count',unitWord:'storms',cmap:'seq'},
 
- {k:'hail',grp:G.U,label:'Hail',src:'scs',file:'grid_hail.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
- {k:'tornado',grp:G.U,label:'Tornado',src:'scs',file:'grid_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
- {k:'wind',grp:G.U,label:'Thunderstorm wind',src:'scs',file:'grid_wind.json.gz',kind:'count',unitWord:'days',cmap:'seq'},
- {k:'derechoday',grp:G.U,label:'Derecho',src:'scs',file:'grid_derechoday.json.gz',kind:'count',unitWord:'events',cmap:'seq'},
+ {k:'etc',grp:G.Y,label:'Extratropical-cyclone frequency',src:'etc',rad:true,R:500,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'Extratropical cyclones'},{label:'Deep extratropical cyclones (< 990 hPa)'},{label:'All closed surface lows (unfiltered)'}]},
+
+ {k:'hail',grp:G.U,label:'Hail',src:'scs',rad:true,R:80,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'Any hail report'},{label:'≥ 1.00″ (severe)'},{label:'≥ 2.00″ (significant)'},{label:'≥ 3.00″ (giant)'}]},
+ {k:'tornado',grp:G.U,label:'Tornado',src:'scs',rad:true,R:80,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'Any tornado (EF0+)'},{label:'EF1+'},{label:'EF2+ (significant)'},{label:'EF3+ (intense)'}]},
+ {k:'wind',grp:G.U,label:'Thunderstorm wind',src:'scs',rad:true,R:80,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'Any wind report'},{label:'≥ 50 kt (58 mph, severe)'},{label:'≥ 65 kt (significant)'},{label:'≥ 80 kt (92 mph)'}]},
+ {k:'derechoday',grp:G.U,label:'Derecho',src:'scs',rad:true,R:100,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'≥ 50 kt (58 mph, severe)'},{label:'≥ 64 kt (33 m s⁻¹)'},{label:'≥ 74 kt (38 m s⁻¹)'}]},
 
  /* own period: the public Tornado Archive file ends in 2021 */
- {k:'tatorn',grp:G.A,label:'Tornado (worldwide, incomplete)',src:'ta',file:'data/ta_tornado.json.gz',kind:'count',unitWord:'days',cmap:'seq',
+ {k:'tatorn',grp:G.A,label:'Tornado (worldwide, incomplete)',src:'ta',rad:true,R:80,kind:'count',unitWord:'days',cmap:'seq',
+  thresholds:[{label:'Any tornado (incl. unrated)'},{label:'(E)F1+'},{label:'(E)F2+ (significant)'},{label:'(E)F3+ (intense)'}],
   per:{label:'1992–2021',y0:1992,y1:2021}}
 ];
 const FBYK=Object.fromEntries(FIELDS.map(f=>[f.k,f]));
@@ -651,38 +660,44 @@ const ABOUT={
         'Atlantic hurricane season: shear is lowest over the Main Development Region in <b>July–September</b> and over the Caribbean in <b>September–October</b>.',
         'The subtropical jet makes shear strong over the Gulf of Mexico and the Caribbean in winter and spring.'],
   xp:'Mean of the 6-hourly shear magnitudes, 1996–2022 (WeatherBench2 1.5° copy of ERA5, two days in every four).'},
- tcd:{d:'Storm-days per month with a tropical cyclone center in each 5° box (one 6-hourly position = ¼ storm-day), averaged over 1996–2025.',
+ tcd:{d:'Days per month on which a tropical cyclone center (at the chosen strength) passed within 500 km, averaged over 1996–2025. A day counts once, however many storms were nearby.',
   look:['Every basin has its own season: the North Atlantic peaks in <b>September</b>, the western North Pacific stays active all year, the Southern Hemisphere peaks in <b>January–March</b>.',
         'The western North Pacific is the most active basin on Earth.',
         'No tropical cyclones cross the equator, and almost none form in the South Atlantic or eastern South Pacific (cold water, strong shear).'],
-  xp:'IBTrACS v04r01, USA agency winds, synoptic 6-hourly positions, ET and disturbance stages excluded.'},
- tcace:{d:'Accumulated cyclone energy: the sum of the squared maximum wind (in 10⁴ kt²) of every 6-hourly position, a measure combining the number, strength and duration of storms.',
+  xp:'IBTrACS v04r01, USA agency winds, synoptic 6-hourly positions, ET and disturbance stages excluded. The 500 km circle is wider than most storms\' damaging winds; it is there so the map means the same thing at every latitude.'},
+ tcace:{d:'Accumulated cyclone energy of the storms passing within 500 km: the sum of the squared maximum wind (in 10⁴ kt²) of every 6-hourly position within 500 km. It combines the number, strength and duration of storms.',
   look:['ACE concentrates where storms are strongest and longest-lived: the western North Pacific dominates.',
         'Compare with track density: intense storms count far more than weak ones.'],
-  xp:'ACE is computed from 6-hourly positions with Vmax ≥ 34 kt, as on the TC trends page.'},
- tcgen:{d:'Where tropical cyclones first reach 34 kt: storms per month per 5° box.',
+  xp:'ACE is computed from 6-hourly positions with Vmax ≥ 34 kt, as on the TC trends page. Each position adds to every point within 500 km, so the map is a smoothed ACE, not a basin total.'},
+ tcgen:{d:'Where tropical cyclones form: storms per month that first reach 34 kt within 500 km.',
   look:['Genesis happens in a few preferred regions: the Main Development Region of the Atlantic, the eastern Pacific off Mexico, the western Pacific monsoon trough, the Bay of Bengal.',
         'Almost no genesis within ~5° of the equator, where the Coriolis effect vanishes.'],
   xp:'The first 6-hourly fix with Vmax ≥ 34 kt in IBTrACS.'},
- hail:{d:'Days per month with at least one hail report (at the chosen size) in each 2° box, from NOAA\'s Storm Events Database.',
+ hail:{d:'Days per month with at least one hail report (at the chosen size) within 80 km (50 miles), from NOAA\'s Storm Events Database.',
   look:['Hail season moves north: the southern Plains in <b>April–May</b>, the northern Plains and High Plains in <b>June–July</b>.',
         'The High Plains (eastern Colorado, western Kansas and Nebraska) are the hail capital of North America.'],
-  xp:'Report counts depend on population density and reporting practice, which changed enormously over time; a box with many reports may simply have many people.'},
- tornado:{d:'Days per month with at least one tornado (at the chosen EF rating) in each 2° box (Storm Events Database).',
+  xp:'Report counts depend on population density and reporting practice, which changed enormously over time; a place with many reports may simply have many people. The 80 km circle is twice the 25-mile radius of the Storm Prediction Center\'s outlooks, to smooth 30 years of scattered reports. Near borders and coasts part of the circle lies outside the U.S., where reports are not collected, so values fall off there.'},
+ tornado:{d:'Days per month with at least one tornado (at the chosen EF rating) starting within 80 km (50 miles), from NOAA\'s Storm Events Database.',
   look:['Tornado season moves north and east through spring: the Gulf Coast in <b>winter and early spring</b>, the southern Plains in <b>May</b>, the northern Plains and Midwest in <b>June</b>.',
         'A secondary autumn season appears in the Southeast in <b>November</b>.'],
   xp:'Weak (EF0) tornado reports rose strongly with better detection through the 1990s; strong tornadoes (EF2+) are the more consistent record.'},
- wind:{d:'Days per month with at least one thunderstorm wind report (at the chosen speed) in each 2° box (Storm Events Database).',
+ wind:{d:'Days per month with at least one thunderstorm wind report (at the chosen speed) within 80 km (50 miles), from NOAA\'s Storm Events Database.',
   look:['Damaging thunderstorm wind peaks in <b>June–July</b>, broadly across the East and Midwest.',
         'Reports of gusts of 65 kt and more (measured or estimated) are concentrated in the Plains.'],
   xp:'Most wind reports are estimated from damage, not measured, so they follow trees and people.'},
- tatorn:{d:'<b>This is an incomplete map.</b> Days per month with at least one tornado (at the chosen rating) touching each 2° box, from <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
+ tatorn:{d:'<b>This is an incomplete map.</b> Days per month with a tornado path (at the chosen rating) within 80 km (50 miles), from <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>), which merges national tornado records from around the world. Unrated tornadoes count only under "Any tornado".',
   look:['The United States dwarfs everywhere else, partly because it has more tornadoes and partly because it looks for them harder and has for longer.',
         'Elsewhere the seasons differ: southern Canada and eastern China in <b>summer</b> (China peaks in July), Japan in <b>September–October</b>, Argentina\'s Pampas from <b>October to January</b>, southwestern Australia in the <b>cool season</b>.'],
-  xp:'Coverage differs by country and by year, so compare places with care. <b>Europe is missing</b> (its <a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a> data are not in the public file). Canada lacks 2010–2016; Japan ends in 2015; Argentina and Brazil end in 2017; Australia is sparse after 2017; Mexico is sparse before 2013 and ends in 2020; China starts in 2003. The mean divides by every year of the period, so gaps lower those regions. Waterspouts are left out (unrated records that come only from NOAA\'s Storm Events waterspout reports, or that lie entirely offshore). Days are UTC calendar days of the start time; a tornado counts in every box its path touches.'},
- derechoday:{d:'Derecho events per month touching each 2° box (Squitieri, Wade & Jirak 2026 archive, 1996 on).',
+  xp:'Coverage differs by country and by year, so compare places with care. <b>Europe is missing</b> (its <a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a> data are not in the public file). Canada lacks 2010–2016; Japan ends in 2015; Argentina and Brazil end in 2017; Australia is sparse after 2017; Mexico is sparse before 2013 and ends in 2020; China starts in 2003. The mean divides by every year of the period, so gaps lower those regions. Waterspouts are left out (unrated records that come only from NOAA\'s Storm Events waterspout reports, or that lie entirely offshore). Days are UTC calendar days of the start time; a tornado counts if any part of its path comes within 80 km.'},
+ derechoday:{d:'Days per month on which a derecho passed within 100 km: core severe-wind reports (at the chosen speed) of the definitive derechos in the Squitieri, Wade & Jirak (2026) archive, 1996 on.',
   look:['Derechos are a <b>warm-season</b> phenomenon, peaking in June–July along the northern edge of the summer heat ("ring of fire").'],
-  xp:'Squitieri, Wade & Jirak (2026) derecho archive (BAMS), 1996 on.'}
+  xp:'Squitieri, Wade & Jirak (2026) derecho archive (BAMS), 1996 on. A derecho is dated by the start of its swath; only its core reports count.'},
+ etc:{d:'Days per month on which the center of an extratropical cyclone (a surface low tracked in ERA5) passed within 500 km, averaged over 1996–2025. A day counts once, however many lows were nearby.',
+  look:['The Northern Hemisphere has two storm tracks: Newfoundland to Iceland and Norway, and Japan to the Aleutians and the Gulf of Alaska. Near Iceland a low passes within 500 km on about 100 days a year, most often in <b>winter</b>.',
+        'The Southern Ocean is busy all year, most of all in the ring of low pressure just off Antarctica.',
+        'Lows also form in the lee of mountains and over warm seas: Colorado and Mongolia in <b>spring</b>, the Mediterranean (Gulf of Genoa) in <b>winter</b>.',
+        'Pick "Deep" (< 990 hPa) to see where mature storms end up: the Icelandic and Aleutian Lows and the ring around Antarctica.'],
+  xp:'Draft dataset (Chavas lab, 2026), not yet published: TempestExtremes on hourly ERA5 sea-level pressure (a minimum enclosed by a 2 hPa rise within 6°), tracks defined every 6 hours with the Gore et al. (2023) settings and filled in hourly; positions every 3 hours are counted here. Removed by default: points matched to an IBTrACS tropical-stage position (within 3° and 3 h), tracks that never reach 30° latitude, and points over terrain of 1500 m or more, where sea-level pressure is extrapolated. "All closed surface lows" keeps everything, including heat lows and tropical cyclones.'}
 };
 
 /* ------------------------------------------------------------------ utils */
@@ -720,7 +735,8 @@ const S={f:'t2m',thr:0,p:'p9625',view:'month',seas:'jja',rel:'val',map:'ee',un:{
 const S_DEFAULTS=JSON.stringify(S);
 let IX=null;                       // data/index.json
 const VCACHE=new Map();            // 'var|period' -> Promise<Float32Array(12*64800)>
-const RAW={tc:null,scs:{}};
+let RADIX=null;                    // data/rad_index.json
+const RADC=new Map();              // field -> Promise<Float32Array(nthr*12*N)>
 const GRID1={lat0:-90,lon0:0,g:1,nlat:180,nlon:360,global:true,key:'g1'};
 
 function F(){ return FBYK[S.f]||FIELDS[0]; }
@@ -750,7 +766,7 @@ function loadVar(v,p){
 /* Monthly climatology of a field for one period: {grid, A:Float32Array(12*N), info} */
 const MCACHE=new Map();
 async function monthly(f,p){
-  const key=f.k+'|'+p+'|'+(f.thresholds||f.src==='scs'||f.src==='ta'?S.thr:'');
+  const key=f.k+'|'+p+'|'+(f.thresholds?S.thr:'');
   if(MCACHE.has(key)) return MCACHE.get(key);
   let out;
   if(f.era){
@@ -774,67 +790,36 @@ async function monthly(f,p){
     const yr=f.era.map(v=>(IX.vars[v].periods||{})[p]).filter(Boolean);
     const y0=Math.max(per.y0,...yr.map(q=>q.y0||per.y0)), y1=Math.min(per.y1,...yr.map(q=>q.y1||per.y1));
     out={grid:GRID1,A,years:[y0,y1],n:y1-y0+1};
-  } else if(f.src==='tc') out=await monthlyTC(f,p);
-  else out=await monthlySCS(f,p);
+  } else out=await monthlyRad(f,p);
   MCACHE.set(key,out);
   return out;
 }
 
-/* Tropical cyclones: IBTrACS binned by the ENSO page (5° boxes, year, month). */
-async function monthlyTC(f,p){
-  if(!RAW.tc) RAW.tc=await gzFetch('../enso/data/tc_month.json.gz');
-  const d=RAW.tc, m=d.meta, per=PERIODS.find(x=>x.k===p);
-  const grid={lat0:m.lat0,lon0:m.lon0,g:m.grid,nlat:m.nlat,nlon:m.nlon,global:true,key:'tc'};
-  const N=m.nlat*m.nlon, [ty,tm]=m.through.split('-').map(Number);
-  /* whole years only: a year counts if all 12 months are published */
-  const lastFull=tm===12?ty:ty-1;
-  const y0=Math.max(per.y0,m.year0), y1=Math.min(per.y1,lastFull,m.year1);
-  const A=new Float32Array(12*N);
-  /* a period needs at least two-thirds of its years, or it would not be comparable */
-  if(y1-y0+1<20) return {grid,A:A.fill(NaN),years:null,n:0};
-  const ny=y1-y0+1;
-  if(f.tck==='g'){
-    for(let k=0;k<d.gci.length;k++){ const Y=m.year0+d.gyi[k]; if(Y<y0||Y>y1) continue;
-      A[(d.gmi[k]-1)*N+d.gci[k]]+=1; }
-  } else {
-    const keep=new Uint8Array(3);
-    (f.tck==='n'?f.thresholds[Math.min(S.thr,f.thresholds.length-1)].bins:[0,1,2]).forEach(b=>keep[b]=1);
-    for(let k=0;k<d.ci.length;k++){
-      const Y=m.year0+d.yi[k]; if(Y<y0||Y>y1||!keep[d.bi[k]]) continue;
-      A[(d.mi[k]-1)*N+d.ci[k]] += f.tck==='n' ? d.n[k]/4 : d.a[k]/100;
-    }
+/* Event counts within a radius (tropical and extratropical cyclones, U.S. Storm Events, derechos, the
+   Tornado Archive): for each grid point, the mean number of days per year, by calendar month, with an event
+   within R km. Built by build/build_radius_counts.py; same Int16 delta coding as the ERA5 files, one block of
+   12 months per threshold. Values outside the domain (the U.S.; places the Tornado Archive never reaches) are NaN.
+   The years are fixed by the file (1996–2025; the Tornado Archive 1992–2021). */
+async function monthlyRad(f,p){
+  if(!RADIX) RADIX=fetch('data/rad_index.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error('could not fetch rad_index.json ('+r.status+')'); return r.json(); });
+  let ix;
+  try{ ix=(await RADIX).fields[f.k]; }catch(e){ RADIX=null; throw e; }
+  if(!ix) throw new Error('no data for '+f.k);
+  if(!RADC.has(f.k)){
+    const pr=gzFetch('data/'+ix.file,true).then(buf=>{
+      const g=ix.grid, nl=g.nlon, d=new Uint16Array(buf), n=ix.nthr*12*g.nlat*nl;
+      if(d.length!==n) throw new Error('unexpected file size for '+f.k);
+      const out=new Float32Array(n), sc=ix.scale;
+      for(let r=0;r<n/nl;r++){ let q=0; const o=r*nl;
+        for(let c=0;c<nl;c++){ q=(q+d[o+c])&0xFFFF; out[o+c]= q===32768 ? NaN : (q>32767?q-65536:q)*sc; } }
+      return out;
+    });
+    RADC.set(f.k,pr); pr.catch(()=>RADC.delete(f.k));
   }
-  for(let i=0;i<A.length;i++) A[i]/=ny;
-  return {grid,A,years:[y0,y1],n:ny};
-}
-
-/* U.S. Storm Events 2° grids, read in place from the severe-weather pages. A box that never
-   had a report of this hazard is outside the domain (NaN), so the map shows the U.S. outline. */
-async function monthlySCS(f,p){
-  if(!RAW.scs[f.k]) RAW.scs[f.k]=await gzFetch(f.src==='ta'?f.file:'../scs/trends/data/'+f.file);
-  const d=RAW.scs[f.k], m=d.meta, per=f.per||PERIODS.find(x=>x.k===p);
-  if(!f.thresholds) f.thresholds=m.thresholds.map(t=>({label:t.label}));
-  const ti=Math.min(S.thr,d.v.length-1), v=d.v[ti];
-  const grid={lat0:m.lat0,lon0:m.lon0,g:m.grid,nlat:m.nlat,nlon:m.nlon,global:f.src==='ta',key:f.src==='ta'?'ta2':'us2'};
-  const N=m.nlat*m.nlon;
-  const thr=m.through?m.through.split('-').map(Number):[m.year1,12];
-  const lastFull=thr[1]===12?thr[0]:thr[0]-1;
-  const y0=Math.max(per.y0,m.year0), y1=Math.min(per.y1,lastFull,m.year1);
-  const A=new Float32Array(12*N).fill(NaN);
-  if(y1-y0+1<20) return {grid,A,years:null,n:0};
-  const inDom=new Uint8Array(N); for(const c of d.ci) inDom[c]=1;
-  for(let mo=0;mo<12;mo++) for(let c=0;c<N;c++) if(inDom[c]) A[mo*N+c]=0;
-  /* months missing from the archive (June/July 1993) are averaged over the years that exist */
-  const gaps=new Set((m.gaps||[]).map(([y,mm])=>y*12+mm-1));
-  const nmo=new Float32Array(12);
-  for(let Y=y0;Y<=y1;Y++) for(let mo=0;mo<12;mo++) if(!gaps.has(Y*12+mo)) nmo[mo]++;
-  for(let k=0;k<d.ci.length;k++){
-    const Y=m.year0+d.yi[k]; if(Y<y0||Y>y1) continue;
-    if(gaps.has(Y*12+d.mi[k]-1)) continue;
-    A[(d.mi[k]-1)*N+d.ci[k]]+=v[k];
-  }
-  for(let mo=0;mo<12;mo++) for(let c=0;c<N;c++) A[mo*N+c]/=nmo[mo]||NaN;
-  return {grid,A,years:[y0,y1],n:y1-y0+1,gaps:m.gaps||[]};
+  const all=await RADC.get(f.k), g=ix.grid, N=g.nlat*g.nlon, ti=Math.min(S.thr,ix.nthr-1);
+  const grid={lat0:g.lat0,lon0:g.lon0,g:g.g,nlat:g.nlat,nlon:g.nlon,global:g.global,key:g.key};
+  f._ny=ix.y1-ix.y0+1;
+  return {grid,A:all.subarray(ti*12*N,(ti+1)*12*N),years:[ix.y0,ix.y1],n:f._ny};
 }
 
 /* ----------------------------------------------------------- statistics
@@ -1017,7 +1002,7 @@ class MapView{
   /* paint grid values X through colorizer C ({lut:Uint32Array(n), lo, hi, nan, clear}) */
   drawField(X,grid,C,boxes){
     const L=this.gridLUT(grid), out=this.img32, n=out.length, lo=C.lo, sc=(C.lut.length-1)/(C.hi-C.lo), top=C.lut.length-1;
-    const lut=C.lut, clr=C.clear, zc=C.zero;
+    const lut=C.lut, clr=C.clear, zc=C.zero, zb=C.zb;
     for(let k=0;k<n;k++){
       let v;
       if(boxes){ const i=L.inear[k]; if(i<0){ out[k]=0; continue; } v=X[i]; }
@@ -1035,7 +1020,7 @@ class MapView{
         }
       }
       if(!(v===v)){ out[k]=0; continue; }
-      if(v<clr){ out[k]=(zc&&v<=1e-9)?zc:0; continue; }
+      if(v<clr){ out[k]=(zc&&(zb||v<=1e-9))?zc:0; continue; }
       let j=C.cat?Math.round(v):((v-lo)*sc)|0; if(j<0) j=0; else if(j>top) j=top;
       out[k]=lut[j];
     }
@@ -1264,7 +1249,7 @@ const THEME={
 };
 
 /* ------------------------------------------------------------- color scales */
-const WATERY=new Set(['pr','sf','pme','tcwv','q850','cpf','d2m','tcc','tcd','tcace','tcgen','hail','tornado','wind','derechoday','tatorn']);
+const WATERY=new Set(['pr','sf','pme','tcwv','q850','cpf','d2m','tcc','tcd','tcace','tcgen','etc','hail','tornado','wind','derechoday','tatorn']);
 const _ramp=new Map();
 function ramp(name,t,rev){
   let st=_ramp.get(name); if(!st){ st=CMAP[name].map(hex2rgb); _ramp.set(name,st); }
@@ -1298,6 +1283,9 @@ function buildScale(f,kind,sample){
     const hi=niceUp(quant(sample,0.995,false,true)||1), n=10;
     levels=[0]; for(let i=1;i<=n;i++){ const v=sig2(hi*Math.pow(i/n,2)); if(v>levels[levels.length-1]) levels.push(v); }
     clear=1e-6; if(f.src==='scs'||f.src==='ta') zero=S.theme==='dark'?pack(255,255,204,46):pack(150,150,100,40);   // inside the U.S. domain, no events
+    /* radius counts: the smallest nonzero value a point can have is one event in the period's years, so the
+       zero edge is drawn halfway between zero and that, along the interpolated field instead of grid steps */
+    if(f.rad) clear=u.to(0.5*(f.k==='tcace'?34*34/1e4:1)/(f._ny||30));
   } else if(kind==='pos'){
     const hi=niceUp(quant(sample,0.98,true)||1), st=niceStep(hi/10); levels=uniformLevels(0,Math.ceil(hi/st)*st,st);
     cmap=f.kind==='temp'?'seq':f.cmap==='div'||f.cmap==='brbg'?'seq':f.cmap; rev=false;
@@ -1320,7 +1308,7 @@ function buildScale(f,kind,sample){
     const c=ramp(cmap,t,rev); lut[j]=pack(Math.round(c[0]),Math.round(c[1]),Math.round(c[2]));
   }
   const step=levels.length>2?Math.min(...levels.slice(1).map((v,i)=>v-levels[i])):1;
-  return {kind,lo,hi,levels,lut,cmap,rev,band,clear,zero,dec:Math.max(decFor(step),Math.abs(lo)<10&&hi<10&&step<1?1:0),unit:u.u};
+  return {kind,lo,hi,levels,lut,cmap,rev,band,clear,zero,zb:!!f.rad,dec:Math.max(decFor(step),Math.abs(lo)<10&&hi<10&&step<1?1:0),unit:u.u};
 }
 
 /* ------------------------------------------------------------- the prepared state */
@@ -1396,8 +1384,9 @@ async function prepare(){
     else { sample=new Float32Array(E.length); for(let i=0;i<E.length;i++) sample[i]=conv(E[i]); }
     const C=buildScale(f,kind,sample);
     /* the actual values (no anomaly, no change), for the panels */
-    /* counts are drawn as their boxes, honestly; so is the peak month, which must not be blended */
-    const nd={f,grid,N,E,stat,C,kind,conv,ms,pers,rel,cnt,annRaw,boxes:cnt||kind==='cat'};
+    /* box counts are drawn as their boxes, honestly; so is the peak month, which must not be blended.
+       Radius counts are already smooth fields and are interpolated like ERA5. */
+    const nd={f,grid,N,E,stat,C,kind,conv,ms,pers,rel,cnt,annRaw,boxes:(cnt&&!f.rad)||kind==='cat'};
     await prepareFlow(nd);
     if(gen!==PREP_GEN) return;
     D=nd; BUF.X=new Float32Array(N); BUF.Xd=new Float32Array(N);
@@ -1472,13 +1461,12 @@ function relLabel(){
   return r==='anom'?'departure from the annual mean':r==='zonal'?'departure from the zonal mean':'';
 }
 function thrLabel(){ const f=F(); return f.thresholds&&f.thresholds[S.thr]?': '+f.thresholds[S.thr].label:''; }
-function unitLabel(){
+function unitLabel(monthly){
   const f=F(), u=U(f);
-  if(S.view==='peak') return '';
+  if(S.view==='peak'&&!monthly) return '';
   if(isCount(f)){
-    const per=S.view==='annual'?'per year':S.view==='season'?'per season':'per month';
-    const box=f.src==='tc'?'5° box':'2° box';
-    return `${f.unitWord} ${per} per ${box}`;
+    const per=monthly?'per month':S.view==='annual'?'per year':S.view==='season'?'per season':'per month';
+    return `${f.unitWord} ${per} within ${f.R} km`;
   }
   return u.u;
 }
@@ -1493,7 +1481,7 @@ function writeTitles(){
   const f=F();
   const rl=relLabel();
   document.getElementById('mapTitle').textContent=f.label+thrLabel()+(rl?' — '+rl:'');
-  const src=f.src==='tc'?'IBTrACS':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':f.src==='ta'?'The Tornado Archive':'ERA5';
+  const src=f.src==='tc'?'IBTrACS':f.src==='etc'?'ERA5 cyclone tracks (draft)':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':f.src==='ta'?'The Tornado Archive':'ERA5';
   let sub=`${statLabel()} · ${perLabel()} · ${src}`;
   const yu=yearsUsed(); if(yu) sub+=` · ${yu}`;
   const el=document.getElementById('mapSub'); el.innerHTML=esc(sub);
@@ -1518,7 +1506,7 @@ function bigMonthText(){
 }
 function writeAbout(){
   const f=F(), a=ABOUT[f.k]||{};
-  const src=f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI), 5° boxes, 1996–2025':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026) derecho archive, 2° boxes, 1996–2025':f.src==='scs'?'NOAA/NCEI Storm Events Database, 2° boxes, 1996–2025':f.src==='ta'?'The Tornado Archive (Maas et al. 2024, BAMS), 2° boxes, 1992–2021':
+  const src=f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI), counted within 500 km, 1996–2025':f.src==='etc'?'ERA5 surface-low tracks (TempestExtremes; draft), counted within 500 km, 1996–2025':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026) derecho archive, counted within 100 km, 1996–2025':f.src==='scs'?'NOAA/NCEI Storm Events Database, counted within 80 km, 1996–2025':f.src==='ta'?'The Tornado Archive (Maas et al. 2024, BAMS), counted within 80 km, 1992–2021':
             'ERA5 reanalysis (ECMWF / Copernicus), 1° boxes';
   let h=`<h3>${esc(f.label)}</h3><div class="src">${esc(src)} · ${esc(unitLabel()||'')}</div>`;
   if(a.d) h+=`<div>${a.d}</div>`;
@@ -1691,7 +1679,7 @@ async function cycleSeries(){
         vals.push(u.to(pt?sampleGrid(m.A,mo*N,m.grid,pt[0],pt[1],false):f.fn(pa,pb))); }
       ann=u.to(f.fn(sa/12,sb/12));
     } else for(let mo=0;mo<12;mo++){
-      const v=pt?sampleGrid(m.A,mo*N,m.grid,pt[0],pt[1],isCount(f)):areaMean(m.A,mo*N,m.grid,f.src==='tc'?'sum':'mean');
+      const v=pt?sampleGrid(m.A,mo*N,m.grid,pt[0],pt[1],isCount(f)&&!f.rad):areaMean(m.A,mo*N,m.grid,'mean');
       vals.push(u.to(v));
     }
     out.series.push({p:P.k,label:F().per?F().per.label:P.label,vals,ann});
@@ -1707,9 +1695,9 @@ async function panelsNow(full){
 async function drawCycle(){
   const f=F(), T=THEME[S.theme], u=U(f), cs=await cycleSeries(), svg=document.getElementById('cycSvg');
   const W=440,H=230,ml=44,mr=12,mt=10,mb=26, pw=W-ml-mr, ph=H-mt-mb;
-  const where=S.pt?`at ${fmtLL(S.pt[0],S.pt[1])}${PLACE?' ('+PLACE+')':''}`:(f.src==='tc'?'global total':f.src==='scs'?'mean over U.S. boxes':f.src==='ta'?'mean over boxes with any record':'global area mean');
+  const where=S.pt?`at ${fmtLL(S.pt[0],S.pt[1])}${PLACE?' ('+PLACE+')':''}`:(f.src==='scs'?'mean over the U.S.':f.src==='ta'?'mean over places with any record':'global area mean');
   document.getElementById('cycTitle').textContent='Seasonal cycle '+(S.pt?'here':'');
-  const ul=!S.pt&&f.src==='tc'?unitLabel().replace(/ per 5° box$/,''):unitLabel();   // a global total is not per box
+  const ul=unitLabel(true);   // the panel shows monthly values whatever the map shows
   document.getElementById('cycSub').textContent=`${f.label}${thrLabel()}, ${where} · ${ul}${S.pt?'':' · click the map to pick a place'}`;
   const all=cs.series.flatMap(s=>s.vals).filter(v=>v===v);
   if(!all.length){ svg.innerHTML=txt(W/2,H/2,'No data here',{a:'middle'}); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); return; }
@@ -1779,7 +1767,7 @@ function drawZonal(){
   if(zA) s+=`<path d="${path(zA)}" fill="none" stroke="${T.mute}" stroke-width="1.2" stroke-dasharray="4 3"/>`;
   s+=`<path d="${path(z)}" fill="none" stroke="${LINE[S.theme]}" stroke-width="2.2" stroke-linejoin="round"/>`;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
-  document.getElementById('zonSub').textContent=`Average around each latitude circle${g.global?'':' (U.S. boxes only)'}: ${S.view==='month'?monthName(S.t)+' (solid), annual mean (dashed)':statLabel().toLowerCase()}${note} · ${D.C.unit||''}`;
+  document.getElementById('zonSub').textContent=`Average around each latitude circle${g.global?'':' (U.S. only)'}: ${S.view==='month'?monthName(S.t)+' (solid), annual mean (dashed)':statLabel().toLowerCase()}${note} · ${D.C.unit||''}`;
 }
 let HOVSTATE=null;
 function drawHov(){
@@ -1801,7 +1789,7 @@ function drawHov(){
   x.putImageData(im,0,0);
   /* smooth in time and latitude for ERA5; blocks for counts */
   const big=document.createElement('canvas'); big.width=480; big.height=Math.min(360,nr*4); const bx=big.getContext('2d');
-  bx.imageSmoothingEnabled=!isCount(); bx.drawImage(c,0,0,big.width,big.height);
+  bx.imageSmoothingEnabled=!(isCount()&&!F().rad); bx.drawImage(c,0,0,big.width,big.height);
   const url=big.toDataURL();
   const Ys=la=>mt+ph*(1-(la-g.lat0)/(nr*g.g));
   let s=`<image href="${url}" x="${ml}" y="${mt}" width="${pw}" height="${ph}" preserveAspectRatio="none"/>`;
@@ -1812,7 +1800,7 @@ function drawHov(){
   s+=`<line id="hovMark" x1="0" x2="0" y1="${mt}" y2="${mt+ph}" stroke="${T.ink}" stroke-width="1.5" stroke-dasharray="4 3" style="display:none"/>`;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML=s;
   HOVSTATE={ml,pw};
-  document.getElementById('hovSub').textContent=`Zonal mean by month and latitude${g.global?'':' (U.S. boxes)'}: how the pattern migrates with the seasons · ${C.unit||''}${C!==D.C?' · own color scale':''}`;
+  document.getElementById('hovSub').textContent=`Zonal mean by month and latitude${g.global?'':' (U.S. only)'}: how the pattern migrates with the seasons · ${C.unit||''}${C!==D.C?' · own color scale':''}`;
   moveHovMarker();
 }
 function moveHovMarker(){
@@ -2203,19 +2191,34 @@ around each latitude circle (all longitudes with data).</li>
 <li><b>Animation.</b> By default the map steps from one monthly mean to the next: every frame is real data. Ticking "Smooth between months"
 (Advanced settings) adds in-between frames, placing each monthly mean at mid-month and interpolating along a Catmull–Rom curve through the four
 nearest months, clamped so it never goes beyond the two months it lies between. Those in-between frames are interpolations, not data.</li>
-<li><b>Tropical cyclones.</b> IBTrACS v04r01 binned in 5° boxes, exactly as on the El Niño and La Niña page: USA-agency winds, synoptic 6-hourly
-positions with Vmax ≥ 34 kt, extratropical and disturbance stages excluded. Track density counts storm-days (four positions = one day); ACE sums
-Vmax² in 10⁴ kt²; genesis is the first position at 34 kt. Averages over 1996–2025.</li>
-<li><b>U.S. severe weather.</b> NOAA/NCEI Storm Events: days with at least one report at the chosen threshold in each 2° box, from the
-severe-weather 2° grid page (derechos: events from Squitieri, Wade &amp; Jirak 2026, Bull. Amer. Meteor. Soc., 107(7), doi:10.1175/BAMS-D-25-0002.1; 1996 on). The archive is missing June–July 1993; those months
-are averaged over the remaining years. Report counts grew enormously with population, radar and spotter networks, so they reflect reporting as much as climate.</li>
-<li><b>Tornadoes worldwide.</b> From <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>, Bull. Amer. Meteor. Soc., 105(7), doi:10.1175/BAMS-D-23-0123.1), using its public data file, which leaves out Europe (<a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a>). Tornado days per 2° box, averaged over 1992–2021; a tornado counts in every box its path touches.</li>
+<li><b>Event maps: days within a radius.</b> Storm and tornado maps count, for each point, the days on which an event came within a fixed
+distance: 500 km for tropical and extratropical cyclones, 80 km (50 miles) for hail, tornado and wind reports, 100 km for derechos. Each value is
+the mean per year of that calendar month, so months add up to a season or a year, and "5 days a year" means five days a year at that point. Counting
+in latitude–longitude boxes would make the numbers depend on the box size, which shrinks toward the poles; a circle is the same size everywhere.
+The circles overlap, so neighbouring points share events and the maps are smooth by construction. Global fields are on a 1° grid (the Tornado
+Archive on 0.5°), U.S. fields on 0.25° (inside the U.S. only).</li>
+<li><b>Tropical cyclones.</b> IBTrACS v04r01 with the conventions of the El Niño and La Niña page: USA-agency winds, synoptic 6-hourly
+positions with Vmax ≥ 34 kt, extratropical and disturbance stages excluded. Track density counts days (UTC) with a center within 500 km; ACE sums
+Vmax² (10⁴ kt²) over positions within 500 km; genesis counts storms whose first 34 kt position is within 500 km. Averages over 1996–2025.</li>
+<li><b>Extratropical cyclones.</b> A draft global dataset of surface lows (Chavas lab, 2026), built with TempestExtremes (Ullrich et al. 2021) on
+hourly ERA5 sea-level pressure: a candidate is a pressure minimum enclosed by a 2 hPa rise within 6°; tracks are linked every 6 hours with the
+settings of Gore, Zarzycki &amp; Gervais (2023, Earth's Future) and filled in hourly. Over North America the same detection reproduces the
+hourly tracks of Kiefer et al. (2026, Mon. Wea. Rev.).
+Days (UTC) with a center within 500 km, from positions every 3 hours, 1996–2025. The default removes points matched to IBTrACS tropical-stage
+positions (within 3° and 3 h), tracks that never reach 30° latitude, and points over terrain of 1500 m or more.</li>
+<li><b>U.S. severe weather.</b> NOAA/NCEI Storm Events: days (local calendar date) with at least one report at the chosen threshold within 80 km,
+placed at the report's begin latitude and longitude (the county's center when that is missing), as on the severe-weather pages. Derechos: core
+reports of the definitive derechos in Squitieri, Wade &amp; Jirak (2026), Bull. Amer. Meteor. Soc., 107(7), doi:10.1175/BAMS-D-25-0002.1, within
+100 km, dated by the start of the swath (1996 on). Near borders and coasts part of each circle lies outside the U.S., where nothing is reported.
+Report counts grew enormously with population, radar and spotter networks, so they reflect reporting as much as climate.</li>
+<li><b>Tornadoes worldwide.</b> From <a href="https://tornadoarchive.com/" target="_blank" rel="noopener">The Tornado Archive</a> (<a href="https://doi.org/10.1175/BAMS-D-23-0123.1" target="_blank" rel="noopener">Maas et al. 2024</a>, Bull. Amer. Meteor. Soc., 105(7), doi:10.1175/BAMS-D-23-0123.1), using its public data file, which leaves out Europe (<a href="https://www.eswd.eu/" target="_blank" rel="noopener">ESWD</a>). Days (UTC) with any part of a tornado path within 80 km, averaged over 1992–2021; waterspouts are left out. Places more than 80 km from any tornado in the archive are blank.</li>
 <li><b>Export.</b> Video and GIF exports render each frame off-screen at the chosen size, from the same data and projection as the map. MP4 uses
 the browser's own H.264 encoder (WebCodecs) and plays in PowerPoint, Keynote and every browser; without H.264 it saves VP9 in MP4 (plays in browsers), and without WebCodecs it records a WebM video.</li>
 </ol>
 <p>Data: ERA5 — Hersbach et al. (2020), Q. J. R. Meteorol. Soc., 146, 1999–2049; IBTrACS — Knapp et al. (2010) and Gahtan et al. (2024);
 NOAA/NCEI Storm Events Database; derechos — Squitieri, Wade &amp; Jirak (2026), Bull. Amer. Meteor. Soc., 107(7);
-worldwide tornadoes — The Tornado Archive, Maas et al. (2024), Bull. Amer. Meteor. Soc., 105(7). Built with d3, topojson, gifenc and mp4-muxer (MIT licenses).</p>`;
+worldwide tornadoes — The Tornado Archive, Maas et al. (2024), Bull. Amer. Meteor. Soc., 105(7); extratropical cyclone tracks — TempestExtremes
+(Ullrich et al. 2021, Geosci. Model Dev., 14, 5023–5048) with the methods of Gore et al. (2023) and Kiefer et al. (2026). Built with d3, topojson, gifenc and mp4-muxer (MIT licenses).</p>`;
 }
 
 /* ------------------------------------------------------------- start */
@@ -2227,7 +2230,7 @@ async function init(){
     IX=ix;
   }catch(e){ setMsg('Could not load the data: '+e.message); return; }
   document.getElementById('methodsBody').innerHTML=methodsHtml();
-  document.getElementById('foot').innerHTML=`Data: ERA5 (ECMWF/Copernicus C3S) via NCAR GDEX and the Copernicus Climate Data Store; IBTrACS (NOAA NCEI); NOAA/NCEI Storm Events Database; the Squitieri, Wade &amp; Jirak (2026) derecho archive; The Tornado Archive (Maas et al. 2024). `+
+  document.getElementById('foot').innerHTML=`Data: ERA5 (ECMWF/Copernicus C3S) via NCAR GDEX and the Copernicus Climate Data Store; IBTrACS (NOAA NCEI); NOAA/NCEI Storm Events Database; the Squitieri, Wade &amp; Jirak (2026) derecho archive; The Tornado Archive (Maas et al. 2024); ERA5 cyclone tracks (draft, Chavas lab). `+
     `Maps and animations may be used freely for teaching with credit to <b>extremewx.org</b>.`;
   setMsg(''); document.getElementById('body').style.display='';
   setupView(false);
@@ -2301,7 +2304,7 @@ function makeComposer(W,H){
   const T=THEME[S.theme], bg=S.theme==='dark'?'#0f1720':'#ffffff', ink=T.ink, mute=T.mute, acc=S.theme==='dark'?'#ffb14e':'#a35a08';
   const font=(px,w)=>`${w||400} ${Math.round(px*s)}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
   const f=F(), title=f.label+thrLabel()+(relLabel()?' — '+relLabel():'');
-  const src=f.src==='tc'?'IBTrACS':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':f.src==='ta'?'The Tornado Archive':'ERA5 reanalysis';
+  const src=f.src==='tc'?'IBTrACS':f.src==='etc'?'ERA5 cyclone tracks (draft)':f.k==='derechoday'?'Squitieri et al. (2026) derecho archive':f.src==='scs'?'NOAA Storm Events':f.src==='ta'?'The Tornado Archive':'ERA5 reanalysis';
   const png=document.getElementById('exFmt').value==='png', yu=yearsUsed();
   const sub=`${S.view==='month'?(png?'Average '+monthName(S.t):'Average seasonal cycle'):statLabel()} · ${perLabel()} · ${src}${yu?' · '+yu:''}`;
   const credit=`extremewx.org · EarthVis · Dan Chavas, Purdue University`;
@@ -2328,7 +2331,7 @@ function makeComposer(W,H){
     drawColorbar(ctx,cbW,cbH,{theme:S.theme,fs:cbFs,ink,mute});
     ctx.restore();
     ctx.textAlign='left'; ctx.fillStyle=mute; ctx.font=`${Math.max(9,Math.round(12*s))}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
-    ctx.fillText(`Data: ${f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI)':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026), BAMS':f.src==='scs'?'NOAA/NCEI Storm Events Database (reports follow population)':f.src==='ta'?'The Tornado Archive (Maas et al. 2024); incomplete, no Europe':'ERA5 (ECMWF / Copernicus C3S)'}`,pad,crY);
+    ctx.fillText(`Data: ${f.src==='tc'?'IBTrACS v04r01 (NOAA NCEI)':f.src==='etc'?'ERA5 cyclone tracks, TempestExtremes (draft)':f.k==='derechoday'?'Squitieri, Wade & Jirak (2026), BAMS':f.src==='scs'?'NOAA/NCEI Storm Events Database (reports follow population)':f.src==='ta'?'The Tornado Archive (Maas et al. 2024); incomplete, no Europe':'ERA5 (ECMWF / Copernicus C3S)'}`,pad,crY);
     ctx.textAlign='right'; ctx.fillText(credit,W-pad,crY);
     return cv;
   }

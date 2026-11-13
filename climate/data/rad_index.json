@@ -1,0 +1,315 @@
+{
+ "fields": {
+  "tcd": {
+   "R_km": 500.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "IBTrACS v04r01 (NOAA NCEI), USA_WIND, synoptic 6-hourly, NATURE not ET/DS, Vmax >= 34 kt",
+   "what": "days with a tropical-cyclone centre within R",
+   "thresholds": [
+    "Vmax ≥ 34 kt (tropical storm+)",
+    "Vmax ≥ 64 kt (hurricane / Cat 1+)",
+    "Vmax ≥ 96 kt (major / Cat 3+)"
+   ],
+   "file": "rad_tcd.bin.gz",
+   "grid": {
+    "lat0": -90.0,
+    "lon0": 0.0,
+    "g": 1.0,
+    "nlat": 180,
+    "nlon": 360,
+    "global": true,
+    "key": "g1"
+   },
+   "nthr": 3,
+   "scale": 0.002,
+   "max_month": [
+    6.1333,
+    4.1,
+    2.4667
+   ],
+   "max_year": [
+    21.967,
+    12.2,
+    6.7
+   ],
+   "kb": 131
+  },
+  "tcace": {
+   "R_km": 500.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "IBTrACS v04r01 (NOAA NCEI), USA_WIND, synoptic 6-hourly, NATURE not ET/DS, Vmax >= 34 kt",
+   "what": "ACE (sum of Vmax² / 10⁴ kt²) of 6-hourly positions within R",
+   "file": "rad_tcace.bin.gz",
+   "grid": {
+    "lat0": -90.0,
+    "lon0": 0.0,
+    "g": 1.0,
+    "nlat": 180,
+    "nlon": 360,
+    "global": true,
+    "key": "g1"
+   },
+   "nthr": 1,
+   "scale": 0.005,
+   "max_month": [
+    13.0124
+   ],
+   "max_year": [
+    39.086
+   ],
+   "kb": 101
+  },
+  "tcgen": {
+   "R_km": 500.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "IBTrACS v04r01 (NOAA NCEI), USA_WIND, synoptic 6-hourly, NATURE not ET/DS, Vmax >= 34 kt",
+   "what": "storms whose first TS+ position lies within R",
+   "file": "rad_tcgen.bin.gz",
+   "grid": {
+    "lat0": -90.0,
+    "lon0": 0.0,
+    "g": 1.0,
+    "nlat": 180,
+    "nlon": 360,
+    "global": true,
+    "key": "g1"
+   },
+   "nthr": 1,
+   "scale": 0.0005,
+   "max_month": [
+    1.5667
+   ],
+   "max_year": [
+    5.2
+   ],
+   "kb": 29
+  },
+  "etc": {
+   "R_km": 500.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "Global ERA5 surface-low tracks (TempestExtremes; Gore et al. 2023 settings, hourly infill), draft 2026-11-13",
+   "what": "days with a cyclone centre within R",
+   "thresholds": [
+    "Extratropical cyclones (tropical, low-latitude and high-terrain lows removed)",
+    "Deep extratropical cyclones (central pressure < 990 hPa)",
+    "All closed surface lows (no filtering)"
+   ],
+   "file": "rad_etc.bin.gz",
+   "grid": {
+    "lat0": -90.0,
+    "lon0": 0.0,
+    "g": 1.0,
+    "nlat": 180,
+    "nlon": 360,
+    "global": true,
+    "key": "g1"
+   },
+   "nthr": 3,
+   "scale": 0.005,
+   "max_month": [
+    14.4667,
+    14.4667,
+    14.4667
+   ],
+   "max_year": [
+    138.733,
+    137.933,
+    138.733
+   ],
+   "kb": 1185
+  },
+  "hail": {
+   "R_km": 80.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "NOAA/NCEI Storm Events Database",
+   "what": "days with a report at or above the threshold within R (local calendar date)",
+   "thresholds": [
+    "Any hail report",
+    "≥ 1.00″ (severe)",
+    "≥ 2.00″ (significant)",
+    "≥ 3.00″ (giant)"
+   ],
+   "file": "rad_hail.bin.gz",
+   "grid": {
+    "lat0": 24.0,
+    "lon0": -126.0,
+    "g": 0.25,
+    "nlat": 104,
+    "nlon": 240,
+    "global": false,
+    "key": "rus"
+   },
+   "nthr": 4,
+   "scale": 0.002,
+   "max_month": [
+    8.0,
+    6.5,
+    1.9667,
+    0.7333
+   ],
+   "max_year": [
+    24.6,
+    19.467,
+    4.867,
+    1.6
+   ],
+   "kb": 244
+  },
+  "tornado": {
+   "R_km": 80.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "NOAA/NCEI Storm Events Database",
+   "what": "days with a report at or above the threshold within R (local calendar date)",
+   "thresholds": [
+    "Any tornado (EF0+)",
+    "EF1+",
+    "EF2+ (significant)",
+    "EF3+ (intense)"
+   ],
+   "file": "rad_tornado.bin.gz",
+   "grid": {
+    "lat0": 24.0,
+    "lon0": -126.0,
+    "g": 0.25,
+    "nlat": 104,
+    "nlon": 240,
+    "global": false,
+    "key": "rus"
+   },
+   "nthr": 4,
+   "scale": 0.0005,
+   "max_month": [
+    1.8667,
+    1.3667,
+    0.5667,
+    0.3333
+   ],
+   "max_year": [
+    6.5,
+    4.767,
+    1.833,
+    0.633
+   ],
+   "kb": 153
+  },
+  "wind": {
+   "R_km": 80.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "NOAA/NCEI Storm Events Database",
+   "what": "days with a report at or above the threshold within R (local calendar date)",
+   "thresholds": [
+    "Any wind report",
+    "≥ 50 kt (58 mph, severe)",
+    "≥ 65 kt (significant)",
+    "≥ 80 kt (92 mph)"
+   ],
+   "file": "rad_wind.bin.gz",
+   "grid": {
+    "lat0": 24.0,
+    "lon0": -126.0,
+    "g": 0.25,
+    "nlat": 104,
+    "nlon": 240,
+    "global": false,
+    "key": "rus"
+   },
+   "nthr": 4,
+   "scale": 0.002,
+   "max_month": [
+    9.1333,
+    8.9667,
+    2.2,
+    0.4
+   ],
+   "max_year": [
+    33.333,
+    32.767,
+    7.433,
+    1.3
+   ],
+   "kb": 285
+  },
+  "derechoday": {
+   "R_km": 100.0,
+   "y0": 1996,
+   "y1": 2025,
+   "source": "Squitieri, Wade & Jirak (2026, BAMS) derecho archive; reports from NOAA/NCEI Storm Events",
+   "what": "days with a core report of a definitive derecho within R (dated by the swath start)",
+   "thresholds": [
+    "≥ 50 kt (58 mph, severe)",
+    "≥ 64 kt (33 m s⁻¹)",
+    "≥ 74 kt (38 m s⁻¹)"
+   ],
+   "file": "rad_derechoday.bin.gz",
+   "grid": {
+    "lat0": 24.0,
+    "lon0": -126.0,
+    "g": 0.25,
+    "nlat": 104,
+    "nlon": 240,
+    "global": false,
+    "key": "rus"
+   },
+   "nthr": 3,
+   "scale": 0.0001,
+   "max_month": [
+    0.4,
+    0.3,
+    0.2667
+   ],
+   "max_year": [
+    0.767,
+    0.6,
+    0.433
+   ],
+   "kb": 36
+  },
+  "tatorn": {
+   "R_km": 80.0,
+   "y0": 1992,
+   "y1": 2021,
+   "source": "The Tornado Archive (Maas et al. 2024, BAMS, doi:10.1175/BAMS-D-23-0123.1), public file without ESWD (Europe)",
+   "what": "days with a tornado path within R (UTC date of the start time)",
+   "thresholds": [
+    "Any tornado (incl. unrated)",
+    "(E)F1+",
+    "(E)F2+ (significant)",
+    "(E)F3+ (intense)"
+   ],
+   "file": "rad_tatorn.bin.gz",
+   "grid": {
+    "lat0": -90.0,
+    "lon0": 0.0,
+    "g": 0.5,
+    "nlat": 360,
+    "nlon": 720,
+    "global": true,
+    "key": "r05"
+   },
+   "nthr": 4,
+   "scale": 0.0005,
+   "max_month": [
+    2.3333,
+    1.2333,
+    0.6667,
+    0.4333
+   ],
+   "max_year": [
+    7.567,
+    4.367,
+    1.8,
+    0.667
+   ],
+   "kb": 267
+  }
+ },
+ "encoding": "gzip Int16 LE [threshold][12 months][nlat rows S->N][nlon], rows delta-coded along longitude mod 2^16; value = q*scale; q = -32768 outside the domain; mean per year of each calendar month",
+ "built": "2026-11-13"
+}

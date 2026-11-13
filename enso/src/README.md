@@ -98,10 +98,9 @@ and a `.sky` layer right after `<body>` with a sun at top left, rain streaks at 
 (`z-index:-1` inside the body's own stacking context, so it sits behind everything). The header is transparent there.
 `applyTheme` leaves the light background to the stylesheet and sets the plain colour only in the dark theme.
 
-## Forecast page: small outlook graph (2026-11-13)
-Under the month buttons, `fcMiniSvg` draws CPC's most likely (50th percentile) RONI for each 3-month season of the
-outlook (`data/roni_fcst.json`) as a small line graph, with the Dec–Feb value the maps use marked in red and labelled.
-The middle-50% range is shaded, seasons are labelled "Oct–Dec"… (codes on phones), and it is drawn at the
-box's own width (redrawn on resize). It follows the light/dark theme colours. The full fan chart (5–95%) stays in the panel
-further down.
+## Headers and banner (2026-11-13)
+`ensofcst` ("El Niño & La Niña Weather Effects: Forecast View") and `ensoscience` ("… Science View") share the composite
+page's intro (marker `CSF`). The red work-in-progress banner is kept only on `ensogrid` and `ensoreg` (marker `CRN`).
+Their credit line is the short one (marker `FS`: "© 2026 Dan Chavas (Purdue University) · Site updated regularly. Send
+feedback with bugs or requests."), with no data stamp, so `update_stamps.py` no longer lists them.
 

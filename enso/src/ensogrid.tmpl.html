@@ -16,7 +16,7 @@
 <!--R--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Impacts by Strength &mdash; elninolanina.org</title>
 <meta name="description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensoreg"><!--/R-->
-<!--F--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Outlook &mdash; elninolanina.org</title>
+<!--F--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Forecast View &mdash; elninolanina.org</title>
 <meta name="description" content="What past El Niño and La Niña events of the strength NOAA CPC now forecasts looked like, month by month: temperature, rain and snow, tropical cyclones and U.S. severe weather.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensofcst"><!--/F-->
 <!--S--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Science View &mdash; elninolanina.org</title>
@@ -32,7 +32,7 @@
 <meta property="og:description" content="How impacts around the world change with the strength of El Niño or La Niña: drag a slider to see temperature, rain and snow, tropical cyclones and U.S. severe weather at any strength, fitted to NOAA’s RONI index since 1979.">
 <meta property="og:url" content="https://elninolanina.org/enso/ensoreg">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensoreg.webp"><!--/R-->
-<!--F--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Outlook &mdash; elninolanina.org">
+<!--F--><meta property="og:title" content="El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Forecast View">
 <meta property="og:description" content="What past El Niño and La Niña events of the strength NOAA CPC now forecasts looked like, month by month: temperature, rain and snow, tropical cyclones and U.S. severe weather.">
 <meta property="og:url" content="https://elninolanina.org/enso/ensofcst">
 <meta property="og:image" content="https://elninolanina.org/assets/thumbs/ensoreg.webp"><!--/F-->
@@ -596,14 +596,9 @@
   .reg .seg button.on[data-ph="reg"]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #robar{display:flex;border-top:1px solid var(--line);padding:10px 0 11px}
   /* the forecast page: months instead of the averaging bar */
-  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
+  #fmbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 22px;border-top:1px solid var(--line);padding:10px 0 11px}
   .fcst #monthbar{display:none}
   .fcnote{font-size:13px;color:var(--muted);line-height:1.5;flex:1 1 380px;max-width:760px}
-  .fccol{flex:1 1 380px;max-width:760px;min-width:0}
-  .fccol .fcnote{max-width:none}
-  .fcmini{margin:10px 0 0;padding:10px 12px 6px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
-  .fcmini svg{display:block;width:100%;height:auto}
-  .fcmini:empty{display:none}
   .fcnote b{color:var(--text)} .fcnote a{color:var(--accent)} .fcnote .stale{color:var(--accent2);font-weight:650}
   .seg button.on[data-fm]{background:var(--accent2);color:var(--onaccent2);font-weight:650}
   #fmSeg button .yr{display:block;font-size:10px;opacity:.75;font-weight:400}
@@ -617,17 +612,17 @@
 <div class="sky" aria-hidden="true"><i class="sun"></i><i class="rain"></i><i class="dots"></i></div>
 <!--CS--><noscript><p style="margin:12px 16px;padding:10px 14px;border:1px solid #cfdbe7;border-radius:8px;background:#fff">These interactive maps need JavaScript. A written summary is under &ldquo;Quick answers&rdquo; at the bottom of the page.</p></noscript><!--/CS-->
 
-<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div>
+<!--CRN--><div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b></div><!--/CRN-->
 
 <header>
 <!--CN-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World</h1><!--/CN-->
 <!--RN-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a by Strength: Climatology and Impacts &mdash; global grid</h1><!--/RN-->
 <!--S-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Science View</h1><!--/S-->
-<!--F-->  <h1>El Ni&ntilde;o and La Ni&ntilde;a Outlook: What to Expect, Month by Month &mdash; global grid</h1><!--/F-->
+<!--F-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Forecast View</h1><!--/F-->
   <p>
-<!--CS-->     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
+<!--CSF-->     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
      <br>An El Ni&ntilde;o / La Ni&ntilde;a year runs from June to May (1997&ndash;1998 = June 1997 &ndash; May 1998), with the peak usually around December (Nov&ndash;Jan).
-     <br>For NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/CS-->
+     <br>For NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/CSF-->
 <!--RN-->     What happens around the world in an El Ni&ntilde;o or La Ni&ntilde;a of a given strength, compared with the average year.
      <b>Drag the slider</b> right for El Ni&ntilde;o, left for La Ni&ntilde;a (the Dec&ndash;Feb, northern-winter value of NOAA's ocean index, RONI), pick a
      <b>variable</b>, or switch to the normal <b>Climatology</b>; choose the
@@ -635,15 +630,11 @@
      (1997&ndash;1998 = June 1997 &ndash; May 1998), the twelve months over which an event usually grows, peaks and decays.
      <b>Hover</b> over the map to read the values. More options are under <b>Advanced settings</b>.
      These maps describe past years, not a forecast: for NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/RN-->
-<!--F-->     What past El Ni&ntilde;o and La Ni&ntilde;a events suggest for the coming months. NOAA's Climate Prediction Center forecasts
-     how strong the current event will be this winter (its Dec&ndash;Feb value of the ocean index RONI); this page shows what
-     past events of that strength looked like in the <b>month</b> you pick, compared with the average year. Pick a month and a
-     <b>variable</b>; <b>hover</b> over the map to read the values. More options are under <b>Advanced settings</b>.
-     This is a guide from history, not NOAA&rsquo;s forecast: for the official U.S. outlook for the coming months, see the<!--/F-->
      <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
      and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
      <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
+<!--CRN-->  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div><!--/CRN-->
+<!--FS-->  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; Site updated regularly. <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</div><!--/FS-->
 
 </header>
 
@@ -678,10 +669,7 @@
 <!--F-->  <div id="fmbar">
     <div class="fld"><label>Month</label>
       <div class="seg" id="fmSeg" role="group" aria-label="Month"></div></div>
-    <div class="fccol">
-      <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
-      <div class="fcmini" id="fcMini"></div>
-    </div>
+    <div class="fcnote" id="fcNote" aria-live="polite">&nbsp;</div>
   </div><!--/F-->
   <div id="monthbar">
     <div><div class="mlab">Average over</div>
