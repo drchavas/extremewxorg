@@ -35,6 +35,36 @@ box's own fit has p ≥ 0.05. It is a hand-written page (no template), `noindex`
   the stored 3 significant figures.
 - Rows: temperature (°C change), precipitation and snowfall (%), tropical-storm days (5° box), and for U.S. places
   tornado, hail and thunderstorm-wind days (2° box, all reports). A count or rain change is capped at −100%.
+- **Redesign, 2026-11-13.** The page now leads with plain language; the table is behind "Detailed outlook →".
+  - Headline "How is *El Niño* expected to change the weather where you are?" (the phase word follows the outlook);
+    a large sentence "We are in the midst of a *very strong El Niño* … through mid-{Y+1} (NOAA)" (static in the
+    HTML, rewritten by `fcStatement`).
+  - Search: type-ahead suggestions (`suggest`, 220 ms debounce, Open-Meteo prefix match, cached per query), text
+    after a comma filters by state/region/country (US state abbreviations mapped), postal codes work, a typo falls
+    back to the name with its last letters dropped ("Did you mean"). Airports, parks, PPLX/historical places and
+    ADM3+ are dropped.
+  - Result card: `seasonSummary` for Dec–Feb and Mar–May (named Winter/Spring north of 23.5°N, Summer/Autumn south
+    of 23.5°S, month names in the tropics) from the same cells as the table. Sizes: temperature <0.5 °C near normal,
+    <1.5 °C a little, else a lot; precipitation/snow <10% / <25% / else; one step lower if fewer than 2 of the 3
+    months have p < 0.05 of the same sign. Snow only where the season averages ≥ 0.25 mm/day of water. `seasonLine`
+    groups the near-normal items ("Near-normal temperature and precipitation."). Month tiles and the table round
+    to the degree and to 10%.
+  - "View maps →" opens `ensoreg#f=t2m&r=<outlook rounded to 0.5>&m=djf&c=<lat,lon>`.
+  - Look: Instrument Serif + DM Sans from Google Fonts; `.sky` layer (sun, rain streaks, drops); no banner.
+  - `<meta name="version">` identifies the copy (`ensolocal-2026-11-13-v8` when it was deployed by hand).
+- **Units (2026-11-13).** U.S. by default (°F, inches); the choice is shared with the map pages in `localStorage`
+  key `ensoUnits` (`F`/`C`).
+
+## Units on the map pages (2026-11-13)
+`S.un` is `'F'` (U.S., default) or `'C'` (metric). `cvC`/`cvD` convert temperature to °F and the two water fluxes
+(precipitation, snowfall) to in/month (× 30.44/25.4); `unitAbs` gives `in/month` or `mm/day`; `domains` swaps in round
+in/month colour limits. The Units menu ("U.S. (°F, in)" / "Metric (°C, mm)") is shown for every ERA5 field. The choice
+is saved in `localStorage` `ensoUnits` and read when a link has no `u=`; links carry `u=C` only for metric.
+
+## extremewx.org → elninolanina.org (2026-11-13)
+The template's first script sends a visit on `extremewx.org` (or `www.`) to the same page on elninolanina.org
+(`/enso/`, `/enso/index`, `/enso/ensogrid` → `/`), keeping query and hash; `ensolocal.html` and `enso/index.html`
+carry the same logic. Data files are not redirected (EarthVis reads them on extremewx.org).
 
 ## Where things are in the template
 - **Header text** (title, intro lines, NOAA links, feedback and email line): the `<header>` near the top of `<body>`.

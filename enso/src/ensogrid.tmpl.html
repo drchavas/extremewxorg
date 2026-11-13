@@ -2,6 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>
+/* The ENSO pages live on elninolanina.org: a visit to the same page on extremewx.org goes there
+   (2026-11-13). The maps page is that site's root; the data files stay on both hosts. */
+(function(){var h=location.hostname;if(h!=='extremewx.org'&&h!=='www.extremewx.org')return;
+  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensogrid)?$/.test(p))p='/';
+  location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--C--><title>El Ni&ntilde;o &amp; La Ni&ntilde;a: Weather Impacts Around the World &mdash; elninolanina.org</title>
 <meta name="description" content="What does El Niño or La Niña mean for your weather? Interactive maps of how El Niño and La Niña years change temperature, rain, snow, hurricanes and typhoons, and U.S. tornadoes and hail around the world, by season and month (1979–2025).">
@@ -681,7 +688,7 @@
     <div class="fld" title="Remove each box's linear trend over the period before compositing, so a run of recent El Niño (or La Niña) years does not pick up the warming trend, or a reporting trend, as an ENSO signal."><label for="dtSel">Trend</label>
       <select id="dtSel"><option value="on">Removed</option><option value="off">Kept</option></select></div>
     <div class="fld" id="unBox"><label for="unSel">Units</label>
-      <select id="unSel"><option value="C">&deg;C</option><option value="F">&deg;F</option></select></div>
+      <select id="unSel"><option value="F">U.S. (&deg;F, in)</option><option value="C">Metric (&deg;C, mm)</option></select></div>
     <div class="fld" id="smBox" title="A Gaussian blur of one grid box, applied to each year's map before compositing. Maps only; the panels below are never smoothed."><label for="smSel">Smoothing</label>
       <select id="smSel"><option value="on">1 box</option><option value="off">Raw</option></select></div>
     <div class="advbrk"></div>

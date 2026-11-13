@@ -241,7 +241,7 @@ function classify(thr){
    where there is no observation (a month NCEI never published) — which is
    different from zero (a month with no hail). */
 const S={f:'t2m',thr:0,mode:'diff',ph:'en',str:0.5,av:REG?'yr':'djf',   // the composite page opens on Dec–Feb, when events peak
-         mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'C',
+         mi:6,per:null,y0:null,y1:null,dt:'on',pc:'pct',un:'F',
          sm:'on',sig:1,ct:0,base:'all',pt:null,theme:'light',ro:1.5};
 let DS=null;                 // the current dataset
 const DSCACHE={};            // key -> dataset
@@ -871,11 +871,17 @@ function cellAt(lat,lon){
 
 /* ------------------------------------------------------- color + units */
 /* Units are applied at the last step; the statistics stay in source units. */
-function cvC(v){ return isTemp()&&S.un==='F' ? v*1.8+32 : v; }   // a temperature
-function cvD(v){ return isTemp()&&S.un==='F' ? v*1.8 : v; }      // a difference
+/* U.S. units (the default, S.un 'F'): °F, and rain and snow (water) in inches per month of
+   30.44 days; metric ('C'): °C and mm/day. The choice is shared with the other ENSO pages. */
+const IN_MO=30.44/25.4;
+function usOn(){ return S.un==='F'; }
+function cvC(v){ return !usOn()?v : isTemp()?v*1.8+32 : isPrecip()?v*IN_MO : v; }   // a value
+function cvD(v){ return !usOn()?v : isTemp()?v*1.8 : isPrecip()?v*IN_MO : v; }      // a difference
+function unitsSave(){ try{ localStorage.setItem('ensoUnits',S.un); }catch(e){} }
+function unitsSaved(){ try{ return localStorage.getItem('ensoUnits'); }catch(e){ return null; } }
 function unitAbs(){
   const f=F();
-  if(f.src==='era5') return isTemp()?(S.un==='F'?'°F':'°C'):'mm/day';
+  if(f.src==='era5') return isTemp()?(usOn()?'°F':'°C'):(usOn()?'in/month':'mm/day');
   if(f.src==='tc') return f.kind==='n'?'storm-days':f.kind==='a'?'10⁴ kt²':'storms';
   return (f.countword||'day')+'s';
 }
@@ -923,12 +929,14 @@ function domains(statsAll){
               diff:pctOn()?null:{lo:-dd,hi:dd,st:CMAP.div}};
     }
     if(isSnow()){
-      const dd=[[1,1.5],[0.8,1.2],[0.4,0.6]][ix][two?1:0];
-      return {clim:{lo:0,hi:4,st:CMAP.snow},
+      let dd=[[1,1.5],[0.8,1.2],[0.4,0.6]][ix][two?1:0];
+      if(usOn()) dd={1:1.2,1.5:2,0.8:1,1.2:1.5,0.4:0.5,0.6:0.8}[dd];      // in/month
+      return {clim:{lo:0,hi:usOn()?5:4,st:CMAP.snow},
               diff:pctOn()?{lo:two?-100:-50,hi:two?100:50,st:CMAP.brbg}:{lo:-dd,hi:dd,st:CMAP.brbg}};
     }
-    const dd=[[3,5],[2.5,4],[1.5,2.5]][ix][two?1:0];
-    return {clim:{lo:0,hi:12,st:CMAP.wet},
+    let dd=[[3,5],[2.5,4],[1.5,2.5]][ix][two?1:0];
+    if(usOn()) dd={3:4,5:6,2.5:3,4:5,1.5:2}[dd];                        // in/month
+    return {clim:{lo:0,hi:usOn()?14:12,st:CMAP.wet},
             diff:pctOn()?{lo:two?-100:-50,hi:two?100:50,st:CMAP.brbg}:{lo:-dd,hi:dd,st:CMAP.brbg}};
   }
   const cv=[], dv=[];
@@ -2370,7 +2378,7 @@ function syncControls(){
   const f=F();
   const tog=(id,on)=>{ const b=document.getElementById(id); b.classList.toggle('off',!on);
     b.querySelectorAll('select,input').forEach(e=>e.disabled=!on); };
-  tog('unBox',isTemp()); tog('smBox',isCount());
+  tog('unBox',!isCount()); tog('smBox',isCount());
   document.getElementById('unSel').value=S.un;
   /* "Show as" lives in the difference map's header; temperature is always a change in degrees */
   /* temperature: Absolute shown as chosen, % change grayed out (the stored choice
@@ -2462,7 +2470,7 @@ function writeHash(){
   else if(S.per!==defaultPer()) p.set('p',S.per);
   if(S.dt!=='on') p.set('dt',S.dt);
   if(S.pc!=='pct') p.set('pc',S.pc);
-  if(S.un!=='C') p.set('u',S.un);
+  if(S.un!=='F') p.set('u',S.un);
   if(S.sm!=='on') p.set('sm',S.sm);
   if(!S.sig) p.set('sg','0');
   if(S.ct) p.set('ct','1');
@@ -2502,7 +2510,7 @@ function readHash(){
       else { S.per='custom'; S.y0=a; S.y1=b; } } }
   if(p.get('dt')==='off') S.dt='off';
   if(p.get('pc')==='abs') S.pc='abs'; else if(p.get('pc')==='pct') S.pc='pct';
-  if(p.get('u')==='F') S.un='F';
+  { const u=p.get('u')||unitsSaved(); if(u==='F'||u==='C') S.un=u; }   // a link's units, else the last choice
   if(p.get('sm')==='off') S.sm='off';
   if(p.get('sg')==='0') S.sig=0;
   if(p.get('ct')==='1') S.ct=1;
@@ -2574,7 +2582,7 @@ function wire(){
   document.getElementById('y1In').onchange=e=>perEdit('y1',e);
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
   document.querySelectorAll('#pcSeg button').forEach(b=>b.onclick=()=>{ S.pc=b.dataset.pc; refresh(); });
-  document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; refresh(); };
+  document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; unitsSave(); refresh(); };
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
   document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };

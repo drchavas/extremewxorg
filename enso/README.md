@@ -350,6 +350,9 @@ The map page draws everything with JavaScript, and most AI crawlers read only th
 ## Location page `ensolocal.html` (Nov 12, 2026; hidden)
 "How will El Niño & La Niña affect where you are?" — a place search and a hazards × months table from the forecast
 page's regression at CPC's outlook. Built data in `local/` by `src/build_local.js`; details in `src/README.md`.
+Redesigned 2026-11-13: plain-language Winter/Spring lines and rounded month tiles first, the table behind
+"Detailed outlook", a maps link, type-ahead place search. Since the same day all ENSO pages default to U.S. units
+(rain and snow in in/month) and the ENSO pages on extremewx.org forward to elninolanina.org. See `src/README.md`.
 
 ## Not done yet / ideas
 

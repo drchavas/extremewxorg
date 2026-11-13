@@ -2,6 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>
+/* The ENSO pages live on elninolanina.org: a visit to the same page on extremewx.org goes there
+   (2026-11-13). The maps page is that site's root; the data files stay on both hosts. */
+(function(){var h=location.hostname;if(h!=='extremewx.org'&&h!=='www.extremewx.org')return;
+  var p=location.pathname.replace(/\.html$/,'');if(/^\/enso\/?(index|ensogrid)?$/.test(p))p='/';
+  location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="version" content="ensolocal-2026-11-13-v8">
 <title>How is El Ni&ntilde;o expected to change the weather where you are? &mdash; elninolanina.org</title>
