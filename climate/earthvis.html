@@ -207,7 +207,7 @@
      month by month, or show a <b>season</b> or the <b>annual</b> mean. <b>Click anywhere</b> on the map for that place&rsquo;s
      seasonal cycle, and <b>Export</b> any map or animation for teaching. More options are under <b>Advanced settings</b>.
      <a href="#feedback" data-feedback>Send feedback</a> with bugs or requests.</p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-11-13 17:58 UTC</span></div>
+  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; supported by <a href="https://midwestagrivoltaicsresilientcommunities.org/" target="_blank" rel="noopener">Midwest Agrivoltaics for Resilient Communities</a>, funded by the <a href="https://www.nsf.gov/" target="_blank" rel="noopener">National Science Foundation</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-11-13 20:41 UTC</span></div>
 </header>
 
 <div id="wrap">
@@ -697,7 +697,7 @@ const ABOUT={
         'The Southern Ocean is busy all year, most of all in the ring of low pressure just off Antarctica.',
         'Lows also form in the lee of mountains and over warm seas: Colorado and Mongolia in <b>spring</b>, the Mediterranean (Gulf of Genoa) in <b>winter</b>.',
         'Pick "Deep" (< 990 hPa) to see where mature storms end up: the Icelandic and Aleutian Lows and the ring around Antarctica.'],
-  xp:'Draft dataset (Chavas lab, 2026), not yet published: TempestExtremes on hourly ERA5 sea-level pressure (a minimum enclosed by a 2 hPa rise within 6°), tracks defined every 6 hours with the Gore et al. (2023) settings and filled in hourly; positions every 3 hours are counted here. Removed by default: points matched to an IBTrACS tropical-stage position (within 3° and 3 h), tracks that never reach 30° latitude, and points over terrain of 1500 m or more, where sea-level pressure is extrapolated. "All closed surface lows" keeps everything, including heat lows and tropical cyclones.'}
+  xp:'Draft dataset (Chavas lab, 2026), not yet published: TempestExtremes on hourly ERA5 sea-level pressure (a minimum enclosed by a 2 hPa rise within 6°), tracks defined every 6 hours with the Gore et al. (2023) settings and filled in hourly; positions every 3 hours are counted here. Removed by default: the tropical phase of tracks that match IBTrACS (everything up to the last point within 3° and 3 h of an IBTrACS position at any stage but extratropical, so the precursor disturbance goes too; the extratropical stage after it stays), tracks that never reach 30° latitude, and points over terrain of 1500 m or more, where sea-level pressure is extrapolated. Monsoon depressions and heat lows over South Asia are not in IBTrACS and remain (light shading there in summer). "All closed surface lows" keeps everything, including heat lows and tropical cyclones.'}
 };
 
 /* ------------------------------------------------------------------ utils */
@@ -2204,8 +2204,10 @@ Vmax² (10⁴ kt²) over positions within 500 km; genesis counts storms whose fi
 hourly ERA5 sea-level pressure: a candidate is a pressure minimum enclosed by a 2 hPa rise within 6°; tracks are linked every 6 hours with the
 settings of Gore, Zarzycki &amp; Gervais (2023, Earth's Future) and filled in hourly. Over North America the same detection reproduces the
 hourly tracks of Kiefer et al. (2026, Mon. Wea. Rev.).
-Days (UTC) with a center within 500 km, from positions every 3 hours, 1996–2025. The default removes points matched to IBTrACS tropical-stage
-positions (within 3° and 3 h), tracks that never reach 30° latitude, and points over terrain of 1500 m or more.</li>
+Days (UTC) with a center within 500 km, from positions every 3 hours, 1996–2025. The default removes the tropical phase of tracks
+that match IBTrACS (up to their last point within 3° and 3 h of an IBTrACS position at any stage except extratropical, including the precursor
+disturbance; the extratropical stage after it is kept), tracks that never reach 30° latitude, and points over terrain of 1500 m or more. Monsoon
+depressions and heat lows over South Asia are not in IBTrACS and remain.</li>
 <li><b>U.S. severe weather.</b> NOAA/NCEI Storm Events: days (local calendar date) with at least one report at the chosen threshold within 80 km,
 placed at the report's begin latitude and longitude (the county's center when that is missing), as on the severe-weather pages. Derechos: core
 reports of the definitive derechos in Squitieri, Wade &amp; Jirak (2026), Bull. Amer. Meteor. Soc., 107(7), doi:10.1175/BAMS-D-25-0002.1, within

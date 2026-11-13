@@ -94,7 +94,8 @@ U.S. (`rus`, 24–50°N, 126–66°W) for Storm Events and derechos.
 - Storm Events conventions follow `build_scs_grid.py`: local BEGIN date, BEGIN lat/lon or the county centroid when
   missing or outside the domain (only county-type rows, which is what `events_*_pts` carries). TCs follow
   `../enso/build_enso_tc.py` (UTC day). Derechos follow `build_derecho_data.py` (`definitive`, core reports, dated by
-  swath start). ETCs: positions every 3 h, default = not IBTrACS-matched, track reaches 30°, point below 1500 m.
+  swath start). ETCs: positions every 3 h, default = not in the track's tropical phase (up to its last point within 3°/3 h
+  of an IBTrACS position at any stage but ET: precursor, tropical stage, gaps), track reaches 30°, point below 1500 m.
 - Checked by brute force: tornado days within 80 km of 35.5°N 97.5°W and TS+ days within 500 km of 25.5°N 80.5°W
   match a direct haversine count.
 

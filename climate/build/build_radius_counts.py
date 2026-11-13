@@ -27,7 +27,9 @@ Conventions copied from the builders that feed the old box grids, so the two agr
   * Tornado Archive: build_tornado_archive.py (UTC start date, highest rating, waterspouts dropped; path sampled
     every ~0.05 deg).
   * ETCs: Chavas-lab global ETC tracks (draft 2026-11-13; TempestExtremes, Gore et al. 2023 settings, hourly infill).
-    Day = UTC date; points every 3 h. "ETC" = not IBTrACS-matched, track reaches 30 deg, point below 1500 m terrain.
+    Day = UTC date; points every 3 h. "ETC" = not in the track's tropical phase (up to its last point within 3 deg
+    and 3 h of an IBTrACS position at any stage but ET; column tc_phase_end), track reaches 30 deg, point below
+    1500 m terrain.
 
 Output: OUTDIR/rad_<key>.bin.gz  Int16 LE [threshold][12 months][nlat rows S->N][nlon], rows delta-coded along
 longitude mod 2^16 (like era5_*.bin.gz); value = q * scale; q = -32768 = outside the domain.
@@ -149,14 +151,18 @@ def build_tc(a, IX, Y0=1996, Y1=2025, R=500.0):
 def build_etc(a, IX, Y0=1996, Y1=2025, R=500.0):
     import pandas as pd
     pts_f, trk_f = a.etc
-    tr = pd.read_csv(trk_f, usecols=['track_id', 'lowlat'])
+    tr = pd.read_csv(trk_f, usecols=['track_id', 'lowlat', 'tc_phase_end'], keep_default_na=False)
     low = set(tr.track_id[tr.lowlat == 1])
+    # tropical phase: everything up to the track's last point within 3 deg / 3 h of an IBTrACS position at any
+    # stage except ET (precursor disturbance, tropical stage, gaps); the extratropical stage after it stays
+    tpe = dict(zip(tr.track_id, tr.tc_phase_end))
     keep = []
     for ch in pd.read_csv(pts_f, usecols=['track_id', 'iso_time', 'lat', 'lon', 'slp_hpa', 'elev_m', 'tc_sid'],
                           dtype={'tc_sid': str}, keep_default_na=False, chunksize=2_000_000):
         y = ch.iso_time.str[:4].astype(int); hr = ch.iso_time.str[11:13].astype(int)
         ch = ch[(y >= Y0) & (y <= Y1) & (hr % 3 == 0)]         # every 3 h: steps of ~100 km, well inside R
-        etc = (~ch.track_id.isin(low)) & (ch.tc_sid == '') & (ch.elev_m < 1500)
+        trop = ch.iso_time.to_numpy() <= ch.track_id.map(tpe).fillna('').to_numpy()
+        etc = (~ch.track_id.isin(low)) & (ch.tc_sid == '') & ~trop & (ch.elev_m < 1500)
         keep.append(pd.DataFrame(dict(day=ch.iso_time.str[:10], la=ch.lat.astype(float).round(2),
                                       lo=(ch.lon.astype(float) % 360).round(2), e=etc, dp=etc & (ch.slp_hpa < 990))))
     d = pd.concat(keep); del keep

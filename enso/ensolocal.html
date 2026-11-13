@@ -10,7 +10,7 @@
   location.replace('https://elninolanina.org'+p+location.search+location.hash);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v13">
+<meta name="version" content="ensolocal-2026-11-13-v15">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/enso/ensolocal">
@@ -105,6 +105,7 @@
   .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
   .seg button{font:inherit;font-size:14px;font-weight:500;padding:7px 14px;border:0;border-radius:9px;background:transparent;color:var(--ink2);cursor:pointer}
   .seg button.on{background:var(--teal);color:#fff;font-weight:600}
+  .useg button{font-size:13px;padding:6px 12px}   /* units, beside the place name: U.S. by default, shared with the map pages */
   .tbwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
   th,td{padding:10px 8px;text-align:center;border-bottom:1px solid #e6ece9;white-space:nowrap}
@@ -154,7 +155,7 @@
   .sbox{max-width:1090px}
   .card{background:#fdfcf8;border:1px solid rgba(214,224,219,.9);border-radius:30px;padding:40px 46px 26px;margin-top:34px;
     box-shadow:0 30px 70px rgba(38,73,79,.13),0 3px 10px rgba(38,73,79,.05)}
-  .phead{padding-bottom:22px;border-bottom:1px solid #e3e8e4;margin-bottom:6px}
+  .phead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 20px;flex-wrap:wrap;padding-bottom:22px;border-bottom:1px solid #e3e8e4;margin-bottom:6px}
   .place{font-family:var(--serif);font-weight:400;font-size:clamp(40px,5vw,62px);line-height:1;margin:0;color:var(--ink);letter-spacing:-.01em}
   .placesub2{color:var(--ink2);font-size:17px;margin:8px 0 0}
   .placesub2:empty{display:none}
@@ -225,7 +226,10 @@
   </div>
 
   <div class="card hidden" id="out">
-    <div class="phead"><h2 class="place" id="place"></h2><p class="placesub2" id="placeSub"></p></div>
+    <div class="phead"><div><h2 class="place" id="place"></h2><p class="placesub2" id="placeSub"></p></div>
+      <div class="seg useg" role="group" aria-label="Units">
+        <button data-u="us" class="on" aria-pressed="true">U.S.</button><button data-u="metric" aria-pressed="false">Metric</button>
+      </div></div>
     <div id="sums"></div><!-- one plain-language line per season, with a tile per month -->
     <div class="cardfoot">
       <button type="button" class="go" id="detBtn" aria-expanded="false" aria-controls="det">Detailed outlook <span aria-hidden="true">&rarr;</span></button>
@@ -236,9 +240,6 @@
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Show">
           <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Typical value</button>
-        </div>
-        <div class="seg" role="group" aria-label="Units">
-          <button data-u="us" class="on" aria-pressed="true">&deg;F, inches</button><button data-u="metric" aria-pressed="false">&deg;C, mm</button>
         </div>
       </div>
       <div class="tbwrap"><table id="tbl"></table></div>
@@ -670,11 +671,20 @@ function writeHash(){
   if(S.mode!=='pct') q.set('m',S.mode); if(S.units!=='us') q.set('u','C');
   history.replaceState(null,'','#'+q.toString());
 }
+/* with no choice made yet: the units of where the visitor is, from the browser's time zone (no location
+   prompt needed), else its language's region; U.S. units when neither says (Dan, 2026-11-13) */
+function unitsAuto(){
+  try{ const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    if(tz&&!/^(UTC|GMT|Etc\/)/.test(tz))
+      return /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+|Puerto_Rico)|Pacific\/(Honolulu|Guam|Saipan|Pago_Pago)|US\/.+)$/.test(tz)?'us':'metric';
+  }catch(e){}
+  const l=(navigator.language||'').toUpperCase(); return !l||/-US$/.test(l)||!/-/.test(l)?'us':'metric';
+}
 function readHash(){
   const q=new URLSearchParams(location.hash.slice(1)), la=parseFloat(q.get('la')), lo=parseFloat(q.get('lo'));
   if(q.get('m')==='val') S.mode='val';
   { const u=q.get('u');                          // a link's units (u=C / u=F as on the map pages; older links u=metric), else the last choice
-    if(u==='C'||u==='metric') S.units='metric'; else if(u==='F'||u==='us') S.units='us'; else if(unitsSaved()==='C') S.units='metric'; }
+    if(u==='C'||u==='metric') S.units='metric'; else if(u==='F'||u==='us') S.units='us'; else if(unitsSaved()==='C') S.units='metric'; else if(unitsSaved()!=='F') S.units=unitsAuto(); }
   if(isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
     S.loc={name:n,short:n.split(',')[0],la,lo}; document.getElementById('q').value=n; }
 }

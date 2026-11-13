@@ -2535,8 +2535,17 @@ function writeHash(){
   if(mapA){ const c=mapA.getCenter(); p.set('v',c.lat.toFixed(2)+','+c.lng.toFixed(2)+','+mapA.getZoom()); }
   try{ history.replaceState(null,'','#'+p.toString()); }catch(e){}
 }
+/* with no choice made yet: the units of where the visitor is, from the browser's time zone (no location
+   prompt needed), else its language's region; U.S. units when neither says (Dan, 2026-11-13; same rule as ensolocal) */
+function unitsAuto(){
+  try{ const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    if(tz&&!/^(UTC|GMT|Etc\/)/.test(tz))
+      return /^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Nome|Yakutat|Metlakatla|Adak|Boise|Detroit|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+|Puerto_Rico)|Pacific\/(Honolulu|Guam|Saipan|Pago_Pago)|US\/.+)$/.test(tz)?'us':'metric';
+  }catch(e){}
+  const l=(navigator.language||'').toUpperCase(); return !l||/-US$/.test(l)||!/-/.test(l)?'us':'metric';
+}
 function readHash(){
-  { const u=unitsSaved(); if(u==='F'||u==='C') S.un=u; }   // the last choice, also when the link has no settings
+  { const u=unitsSaved(); if(u==='F'||u==='C') S.un=u; else S.un=unitsAuto()==='us'?'F':'C'; }   // the last choice, also when the link has no settings
   if(!location.hash) return null;
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
