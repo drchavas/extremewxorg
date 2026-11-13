@@ -15,7 +15,7 @@
   location.replace('/enso/ensogrid'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v22">
+<meta name="version" content="ensolocal-2026-11-13-v23">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -99,6 +99,7 @@
   #sugg li:hover{background:var(--panel2)}
   #sugg li.on{background:#dfe9e5;box-shadow:inset 3px 0 0 var(--teal2)}
   .season.past{opacity:.72}
+  .fcbase{font-size:13.5px;color:var(--muted);margin:6px auto 0;max-width:720px}   /* under the El Niño sentence, small (Dan 2026-11-13) */
   .fcstale{font-size:13.5px;color:var(--muted);margin:8px auto 0;max-width:720px}
   .fcstale:empty{display:none}
   .pastnote{font-size:14px;color:var(--muted);font-style:italic}
@@ -257,6 +258,7 @@
     <p class="msg" id="smsg" role="status" aria-live="polite"></p>
     <ul id="results"></ul>
     <p class="fc" id="fcText">We are in the midst of a <b>very strong El&nbsp;Ni&ntilde;o</b> that will affect weather around the world through mid-2027 (<a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">NOAA</a>).</p>
+    <p class="fcbase" id="fcBase">Based on global historical weather data from the past 47&nbsp;years.</p>
     <p class="fcstale" id="fcStale"></p>
   </div>
 
@@ -787,6 +789,8 @@ async function init(){
     if(!off) document.getElementById('smsg').textContent='Could not load the data. Please try again later.';
     return; }
   document.getElementById('built').textContent='Data built '+META.built.slice(0,10)+'.';
+  { const f=META.fields.find(x=>x.k==='t2m'), n=f&&f.ey1-f.ey0+1;    // the years behind the fits (47 for 1979-2025)
+    if(n>0) document.getElementById('fcBase').innerHTML=`Based on global historical weather data from the past ${n}&nbsp;years.`; }
   fcStatement();
   if(S.loc) render();
 }
