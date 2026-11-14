@@ -15,7 +15,7 @@
   location.replace('/enso/ensogrid'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-13-v23">
+<meta name="version" content="ensolocal-2026-11-13-v26">
 <title>How might El Ni&ntilde;o change the weather where you are? &mdash; elninolanina.org</title>
 <meta name="description" content="Type a city, state or country to see how this winter's El Niño or La Niña is likely to change temperature, rain, snow, tropical storms and U.S. severe weather there, month by month.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -290,7 +290,7 @@
       <a class="xcard" href="/enso/ensofcst" target="_blank" rel="noopener">
         <img src="/assets/thumbs/ensoreg.webp" alt="" width="720" height="360" loading="lazy">
         <span class="xt">Forecast maps <span aria-hidden="true">&nearr;</span></span>
-        <span class="xd">Month by month, what this El Ni&ntilde;o means for weather around the world.</span>
+        <span class="xd">Likely impacts of this El Ni&ntilde;o on weather around the world.</span>
       </a>
       <a class="xcard" href="/enso/ensoscience" target="_blank" rel="noopener">
         <img src="/assets/thumbs/ensogrid.webp" alt="" width="720" height="360" loading="lazy">
@@ -726,7 +726,9 @@ function readHash(){
   const q=new URLSearchParams(location.hash.slice(1)), la=parseFloat(q.get('la')), lo=parseFloat(q.get('lo'));
   if(q.get('m')==='val') S.mode='val';
   { const u=q.get('u');                          // a link's units (u=C / u=F as on the map pages; older links u=metric), else the last choice
-    if(u==='C'||u==='metric') S.units='metric'; else if(u==='F'||u==='us') S.units='us'; else if(unitsSaved()==='C') S.units='metric'; else if(unitsSaved()!=='F') S.units=unitsAuto(); }
+    if(u==='C'||u==='metric') S.units='metric'; else if(u==='F'||u==='us') S.units='us'; else S.units=unitsAuto(); }
+  /* otherwise the units of the visitor's country (U.S. units in the U.S., metric elsewhere; unitsAuto): an earlier
+     click is not remembered on the home page, so every visit opens the same way (Dan 2026-11-13) */
   /* a reload or back/forward of a page that still shows an old place link: start clean */
   let nav='navigate'; try{ nav=(performance.getEntriesByType('navigation')[0]||{}).type||'navigate'; }catch(e){}
   if(nav==='navigate'&&isFinite(la)&&isFinite(lo)&&Math.abs(la)<=90){ const n=q.get('p')||`${fmt(Math.abs(la),2)}°${la>=0?'N':'S'}, ${fmt(Math.abs(lo),2)}°${lo>=0?'E':'W'}`;
@@ -740,6 +742,14 @@ function syncSeg(){
 async function init(){
   if(innerWidth<380) document.getElementById('q').placeholder='City or postal code';   // the long hint is cut off on small phones
   readHash(); syncSeg();
+  /* the visitor's country, from Cloudflare's /cdn-cgi/trace on this site (loc=US …), refines the time-zone guess:
+     U.S. units in the U.S. and its territories, metric elsewhere. Only when no link named the units and the
+     visitor has not clicked the toggle yet; quietly skipped when the endpoint is not there (Dan 2026-11-13). */
+  if(!/[#&]u=/.test(location.hash)&&/^https?:$/.test(location.protocol))
+    fetch('/cdn-cgi/trace',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(s=>{
+      const m=/^loc=([A-Z]{2})$/m.exec(s||''); if(!m||S.unitsClicked) return;
+      const u=/^(US|PR|GU|VI|AS|MP|UM)$/.test(m[1])?'us':'metric';
+      if(u!==S.units){ S.units=u; syncSeg(); if(S.loc&&META) render(); } }).catch(()=>{});
   document.getElementById('sform').onsubmit=e=>{ e.preventDefault(); clearTimeout(SG.timer);   // no late suggestions over the results
     const q=document.getElementById('q').value.trim();
     /* Enter takes the highlighted suggestion, or the top one when the list shown is for what is typed (QA 2026-11-13) */
@@ -780,7 +790,7 @@ async function init(){
     d.hidden=!open; b.setAttribute('aria-expanded',open); b.firstChild.textContent=open?'Hide detailed outlook ':'Detailed outlook ';
     if(open) d.scrollIntoView({behavior:'smooth',block:'nearest'}); };
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.m; syncSeg(); render(); });
-  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; unitsSave(); syncSeg(); render(); });
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{ S.units=b.dataset.u; S.unitsClicked=true; unitsSave(); syncSeg(); render(); });
   try{
     [META,RONI,RFC]=await Promise.all([BASE+'local/meta.json',BASE+'data/roni.json',BASE+'data/roni_fcst.json']
       .map(u=>fetch(u,{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(u); return r.json(); })));
