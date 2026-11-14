@@ -1534,6 +1534,7 @@ async function refresh(){
     FCO=fcPick();
     if(!FCO){ const m=document.getElementById('msg'); m.style.display='block';
       m.textContent='The El Niño / La Niña forecast on this page is out of date or missing: see NOAA CPC\'s ENSO outlook for the latest.'; return; }
+    S.mode='diff';                                                   // no Climatology view on this page (Dan 2026-11-14)
     if(FCO.season) S.av=FCO.season; else { S.av='mon'; S.mi=MSEQ.indexOf(FCO.m); }
     S.ro=FCO.x; }
   if(REG){ S.ph=S.ro<0?'ln':'en'; S.str=0.5; S.base='all'; }      // the slider stands in for phase and strength
@@ -2237,8 +2238,9 @@ function guideHtml0(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
   const common=REG ? ' These maps are <b>regressions</b>: each box\'s values over the years are fitted to the Dec–Feb RONI '+
     'with one straight line for El Niño (RONI above 0) and one for La Niña (below 0), and the map is the fitted value at the '+
+    (FCST ? 'forecast strength minus the average year. ' :
     'strength on the slider minus the average year (the climatology), as on the composite page. Dragging the slider mainly '+
-    'changes how strong the map is; the pattern can differ between El Niño and La Niña. A straight line is an assumption, '+
+    'changes how strong the map is; the pattern can differ between El Niño and La Niña. ')+'A straight line is an assumption, '+
     'and it cuts both ways. The El Niño line leans heavily on the four strongest events (1982–83, 1991–92, 1997–98, 2015–16), '+
     'so a <b>weak</b> El Niño map is largely their pattern scaled down: features seen only in strong events, such as the '+
     'coastal Peru rains, still appear at reduced size, so rain in particular can be overstated for weak events. And values '+
@@ -2611,7 +2613,7 @@ function readHash(){
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
   if(p.get('t')) S.thr=Math.max(0,+p.get('t')||0);
   S.thr=menuItem()[1];                                  // only menu combinations exist
-  if(FCST){ if(p.get('ph')==='clim') S.mode='clim'; if(/^\d{4}-(\d{2}|djf|mam)$/.test(p.get('mo')||'')) S.fm=p.get('mo'); }
+  if(FCST){ if(/^\d{4}-(\d{2}|djf|mam)$/.test(p.get('mo')||'')) S.fm=p.get('mo'); }
   else if(REG){ if(p.get('ph')==='clim') S.mode='clim';
     const rq=p.get('r'), r=parseFloat(rq);
     if(rq&&isFinite(r)) S.ro=Math.max(-2.5,Math.min(2.5,Math.sign(r)*Math.round(Math.abs(r)*2)/2)); }
