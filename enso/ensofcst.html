@@ -258,6 +258,9 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
+  .pfoot{font-size:12px;color:var(--muted);text-align:center;padding:22px 16px 18px;line-height:1.6;max-width:900px;margin:0 auto}   /* feedback and credit at the very bottom, as on the home page (Dan 2026-11-13) */
+  .pfoot a{color:inherit}
+  #ensoDef .body p{margin:0 0 8px}
   #mapSub,#mapWarn,#advanced,.mapbubble{display:none}
   @media (min-width:900px){ #fldSel.big{max-width:250px} }   /* room for the Units buttons on one row */   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */
   .guide a{color:var(--accent)}
@@ -341,13 +344,10 @@
 <header>
   <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Forecast View</h1>
   <p>
-     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
-     <br>An El Ni&ntilde;o / La Ni&ntilde;a year runs from June to May (1997&ndash;1998 = June 1997 &ndash; May 1998), with the peak usually around December (Nov&ndash;Jan).
-     <br>For NOAA&rsquo;s official U.S. outlook for the coming months, see the
+For NOAA&rsquo;s official U.S. outlook for the coming months, see the
      <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
      and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
-     <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-11-13 16:44 UTC</span></div>
+</p>
 
 </header>
 
@@ -427,6 +427,11 @@
   </div>
       </div>
     </details>
+    <details class="methods" id="ensoDef">
+      <summary>What is El Ni&ntilde;o?</summary>
+      <div class="body"><p><a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a></p>
+        <p>An El Ni&ntilde;o / La Ni&ntilde;a year runs from June to May (1997&ndash;1998 = June 1997 &ndash; May 1998), with the peak usually around December (Nov&ndash;Jan).</p></div>
+    </details>
     <details class="methods" id="methods">
       <summary>Methods</summary>
       <div class="body" id="methodsBody"></div>
@@ -437,6 +442,8 @@
     <div class="body"><div class="gbody" id="guide"></div></div>
   </details>
 </div>
+<footer class="pfoot"><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a><br>
+  &copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-11-13 16:44 UTC</span></footer>
 
 <script>
 /* ==========================================================================

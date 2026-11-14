@@ -541,7 +541,10 @@
   .refs ul{margin:0;padding-left:14px;columns:2 420px;column-gap:28px} .methods .refs li{margin:0 0 5px;break-inside:avoid}
   .refs a{color:var(--accent);white-space:nowrap}
   #papersBox{margin-bottom:24px}
-<!--F-->  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}
+<!--F-->  .pfoot{font-size:12px;color:var(--muted);text-align:center;padding:22px 16px 18px;line-height:1.6;max-width:900px;margin:0 auto}   /* feedback and credit at the very bottom, as on the home page (Dan 2026-11-13) */
+  .pfoot a{color:inherit}
+  #ensoDef .body p{margin:0 0 8px}
+  #mapSub,#mapWarn,#advanced,.mapbubble{display:none}
   @media (min-width:900px){ #fldSel.big{max-width:250px} }   /* room for the Units buttons on one row */   /* forecast page (Dan 2026-11-13): map title only, no caption or advanced settings */<!--/F-->
 <!--S-->  v-c,v-r{display:contents}
   .viewtabs{max-width:1100px;margin:0 auto 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -639,9 +642,9 @@
 <!--S-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Science View</h1><!--/S-->
 <!--F-->  <h1>El Ni&ntilde;o &amp; La Ni&ntilde;a Weather Effects: Forecast View</h1><!--/F-->
   <p>
-<!--CSF-->     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
+<!--CS-->     <a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a>
      <br>An El Ni&ntilde;o / La Ni&ntilde;a year runs from June to May (1997&ndash;1998 = June 1997 &ndash; May 1998), with the peak usually around December (Nov&ndash;Jan).
-     <br>For NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/CSF-->
+     <br><!--/CS--><!--CSF-->For NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/CSF-->
 <!--RN-->     What happens around the world in an El Ni&ntilde;o or La Ni&ntilde;a of a given strength, compared with the average year.
      <b>Drag the slider</b> right for El Ni&ntilde;o, left for La Ni&ntilde;a (the Dec&ndash;Feb, northern-winter value of NOAA's ocean index, RONI), pick a
      <b>variable</b>, or switch to the normal <b>Climatology</b>; choose the
@@ -651,8 +654,8 @@
      These maps describe past years, not a forecast: for NOAA&rsquo;s official U.S. outlook for the coming months, see the<!--/RN-->
      <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">CPC seasonal outlooks</a>,
      and for the El Ni&ntilde;o or La Ni&ntilde;a under way now, CPC&rsquo;s <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml" target="_blank" rel="noopener">ENSO discussion</a>.
-     <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a></p>
-  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div>
+<!--CRS-->     <br><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a><!--/CRS--></p>
+<!--CRS-->  <div class="hmeta" id="hmeta">&copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></div><!--/CRS-->
 
 </header>
 
@@ -770,6 +773,11 @@
       <div class="body">
         <div class="panels2"><svg id="cardBox" xmlns="http://www.w3.org/2000/svg"></svg></div><div class="panelscroll">Swipe sideways to see the whole panel.</div></div>
     </details><!--/CRS-->
+<!--F-->    <details class="methods" id="ensoDef">
+      <summary>What is El Ni&ntilde;o?</summary>
+      <div class="body"><p><a href="https://oceanservice.noaa.gov/facts/ninonina.html" target="_blank" rel="noopener">What is El Ni&ntilde;o / La Ni&ntilde;a (a.k.a. ENSO)?</a></p>
+        <p>An El Ni&ntilde;o / La Ni&ntilde;a year runs from June to May (1997&ndash;1998 = June 1997 &ndash; May 1998), with the peak usually around December (Nov&ndash;Jan).</p></div>
+    </details><!--/F-->
     <details class="methods" id="methods">
       <summary>Methods</summary>
       <div class="body" id="methodsBody"></div>
@@ -884,6 +892,8 @@
     </div>
   </details><!--/CS-->
 </div>
+<!--F--><footer class="pfoot"><a href="#feedback" data-feedback>Send feedback</a> with bugs or requests. Have a dataset you think should be integrated here? <a href="mailto:dchavas@purdue.edu">Email me!</a><br>
+  &copy; 2026 <a href="https://web.ics.purdue.edu/~dchavas/" target="_blank" rel="noopener">Dan Chavas</a> (Purdue University) &middot; part of <a href="https://extremewx.org/">extremewx.org</a> &middot; supported by multiple grants from the <a href="https://www.nsf.gov/">National Science Foundation</a>, including <a href="https://midwestagrivoltaicsresilientcommunities.org/">Midwest Agrivoltaics for Resilient Communities</a> &middot; <span class="dataupd" id="dataupd">Data last updated 2026-10-27 13:42 UTC</span></footer><!--/F-->
 
 <script>
 /*__SCRIPT__*/</script>
