@@ -2810,12 +2810,15 @@ const REGWORDS=[['so these monthly composites are noisy','so these monthly maps 
   ['in proportion to when each phase happened','in proportion to when El Niño and La Niña happened']];
 function regWords(s){ if(!REG) return s; for(const [a,b] of REGWORDS) s=s.split(a).join(b); return s; }
 function guideHtml(){
-  const fc = FCST ? '<b>This page is a guide from history, not a forecast of the weather.</b> NOAA forecasts the strength of '+
-    'El Niño or La Niña; the maps show what past events of that strength looked like in the month you pick, using the fit '+
-    'of the <a href="ensoreg.html">strength page</a>. Any one event, this one included, can differ from that history, and '+
-    'NOAA\'s own <a href="https://www.cpc.ncep.noaa.gov/products/predictions/long_range/seasonal.php?lead=1" target="_blank" rel="noopener">seasonal outlooks</a> '+
-    'also use computer forecasts of this season and the warming trend, so they can differ from these maps. ' : '';
-  return fc+regWords(guideHtml0()); }
+  /* the forecast page: two short plain paragraphs only (Dan 2026-11-14) */
+  if(FCST){ const n=windowYears().length||47;
+    return `<p>These maps show most likely changes in monthly/seasonal weather based on data from the past ${n} years of weather `+
+      `across years with varying El Niño and La Niña (and neutral) conditions. El Niño and La Niña change weather patterns in ways `+
+      `that change how often different types of colder/warmer/drier/wetter weather happen.</p>`+
+      `<p><b>Is this a forecast?</b> Yes, in that we are using past data to guess how things may be different from normal in the `+
+      `future. This is similar to the forecast statement “it will warm up this summer”: different on average (because past data `+
+      `shows that summer months are usually the warmest), but anything can happen on any individual day.</p>`; }
+  return regWords(guideHtml0()); }
 function guideHtml0(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();
   const common=REG ? ' These maps are <b>regressions</b>: each box\'s values over the years are fitted to the Dec–Feb RONI '+
