@@ -2236,7 +2236,8 @@ function guideHtml(){
       `that change how often different types of colder/warmer/drier/wetter weather happen.</p>`+
       `<p><b>Is this a forecast?</b> Yes, in that we are using past data to guess how things may be different from normal in the `+
       `future. This is similar to the forecast statement “it will warm up this summer”: different on average (because past data `+
-      `shows that summer months are usually the warmest), but anything can happen on any individual day.</p>`; }
+      `shows that summer months are usually the warmest). This is <em>not</em> a regular daily weather forecast: we do not know what `+
+      `the weather will be like on any specific day.</p>`; }
   return regWords(guideHtml0()); }
 function guideHtml0(){
   const lead='<b class="lead">Guidance on interpreting these data:</b> ', f=F();

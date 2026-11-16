@@ -14,7 +14,7 @@ The maps are averages of past El Niño or La Niña years compared with all years
 
 For every 2° box on Earth (about 200 km across), each month's temperature, precipitation and snowfall from 1979 to 2025 (ERA5 reanalysis, ECMWF) is fitted against that year's El Niño or La Niña strength, NOAA's Relative Oceanic Niño Index (RONI) for December–February, with one straight line for El Niño and one for La Niña and the long-term trend removed. The home page and forecast maps read those lines at the December–February strength that NOAA's Climate Prediction Center currently forecasts (its most likely, median value), updated after each monthly NOAA issue. Wording on the home page: temperature over the season 0–1 °F near normal, 2–4 °F a little, 5 °F or more a lot; precipitation and snow up to 10% near normal, 20–30% a little, 40% or more a lot. Values describe a 2° box, not a single station.
 
-Is this a forecast? Yes, in that it uses past data to estimate how things may be different from normal in the future, like the statement "it will warm up this summer": different on average, but anything can happen on any individual day.
+Is this a forecast? Yes, in that it uses past data to estimate how things may be different from normal in the future, like the statement "it will warm up this summer": different on average (because past data shows that summer months are usually the warmest). It is not a regular daily weather forecast: it does not say what the weather will be like on any specific day.
 
 ## Key findings
 
