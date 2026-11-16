@@ -2,10 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://elninolanina.org/</loc>
-    <lastmod>2026-11-13</lastmod>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://elninolanina.org/enso/ensogrid</loc>
-    <lastmod>2026-11-13</lastmod>
+    <loc>https://elninolanina.org/enso/ensofcst</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://elninolanina.org/enso/ensoscience</loc>
+    <lastmod>2026-11-14</lastmod>
   </url>
 </urlset>
