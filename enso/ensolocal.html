@@ -15,7 +15,7 @@
   location.replace('/enso/ensoscience'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-14-v30">
+<meta name="version" content="ensolocal-2026-11-15-v31">
 <title>How might El Ni&ntilde;o change the weather where you are? Local El Ni&ntilde;o outlook &mdash; elninolanina.org</title>
 <meta name="description" content="Type a place to see how this El Niño is likely to change winter and spring temperature, rain and snow there, season by season and month by month, from 47 years of global weather data and NOAA's official El Niño forecast.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -592,7 +592,7 @@ async function render(){
   const mapMo=(()=>{ const {Y,ym}=ensoYearNow(); return ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:''; })();   // December while ahead
   /* the maps: the forecast page (NOAA's outlook, month by month), temperature, centered here; December
      of this ENSO year while it is still ahead, else the page's own default month */
-  { const {Y,ym}=ensoYearNow(), mo=ym<=Y*12+12&&fcDJF(Y)?`&mo=${Y}-12`:'';
+  { const {Y,ym}=ensoYearNow(), mo=ym<=(Y+1)*12+2&&fcDJF(Y)?`&mo=${Y}-djf`:'';   // the Dec-Feb season map while it is not over (Dan 2026-11-15)
     const uq=S.units==='metric'?'&u=C':'';        // the maps open in the units shown here
     const tb0=rows.find(r=>r.R.k==='t2m');
     document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}${uq}&c=${tb0?boxCtr(tb0.b):loc.la.toFixed(2)+','+loc.lo.toFixed(2)}`; }

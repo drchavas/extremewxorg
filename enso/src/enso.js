@@ -626,7 +626,8 @@ function fcPick(){
   const L=fcMonths(); if(!L.length) return null;
   { const s=fcSeasons().find(q=>q.key===S.fm); if(s) return s; }
   let o=L.find(q=>ymStr(q.y,q.m)===S.fm);
-  if(!o){ o=L[Math.min(1,L.length-1)]; S.fm=ymStr(o.y,o.m); }
+  if(!o){ const s0=fcSeasons()[0]; if(s0&&!S.fm){ S.fm=s0.key; return s0; }      // default: Dec-Feb (Dan 2026-11-15)
+    o=L[Math.min(1,L.length-1)]; S.fm=ymStr(o.y,o.m); }
   return o;
 }
 /* CPC updates on the 2nd Thursday of each month: an outlook from two months back, or from
@@ -2610,7 +2611,7 @@ function unitsAuto(){
   const l=(navigator.language||'').toUpperCase(); return !l||/-US$/.test(l)||!/-/.test(l)?'us':'metric';
 }
 function readHash(){
-  { const u=unitsSaved(); if(u==='F'||u==='C') S.un=u; else S.un=unitsAuto()==='us'?'F':'C'; }   // the last choice, also when the link has no settings
+  { const u=FCST?null:unitsSaved(); if(u==='F'||u==='C') S.un=u; else S.un=unitsAuto()==='us'?'F':'C'; }   // forecast page: the country's units every visit (Dan 2026-11-15)   // the last choice, also when the link has no settings
   if(!location.hash) return null;
   const p=new URLSearchParams(location.hash.slice(1));
   if(p.get('f')&&FIELDS.some(f=>f.k===p.get('f'))) S.f=p.get('f');
@@ -2640,7 +2641,7 @@ function readHash(){
       else { S.per='custom'; S.y0=a; S.y1=b; } } }
   if(p.get('dt')==='off') S.dt='off';
   if(p.get('pc')==='abs') S.pc='abs'; else if(p.get('pc')==='pct') S.pc='pct';
-  { const u=p.get('u')||unitsSaved(); if(u==='F'||u==='C') S.un=u; }   // a link's units, else the last choice
+  { const u=p.get('u')||(FCST?null:unitsSaved()); if(u==='F'||u==='C') S.un=u; }   // a link's units, else the last choice (not on the forecast page)
   if(p.get('sm')==='off') S.sm='off';
   if(p.get('sg')==='0') S.sig=0;
   if(p.get('ct')==='1') S.ct=1;
@@ -2713,7 +2714,7 @@ function wire(){
   document.getElementById('dtSel').onchange=e=>{ S.dt=e.target.value; refresh(); };
   document.querySelectorAll('#pcSeg button').forEach(b=>b.onclick=()=>{ S.pc=b.dataset.pc; refresh(); });
   document.getElementById('unSel').onchange=e=>{ S.un=e.target.value; unitsSave(); refresh(); };
-  document.querySelectorAll('#unSeg button').forEach(b=>b.onclick=()=>{ if(S.un===b.dataset.un) return; S.un=b.dataset.un; unitsSave(); refresh(); });
+  document.querySelectorAll('#unSeg button').forEach(b=>b.onclick=()=>{ S.unClicked=true; if(S.un===b.dataset.un) return; S.un=b.dataset.un; unitsSave(); refresh(); });
   document.getElementById('smSel').onchange=e=>{ S.sm=e.target.value; refresh(); };
   document.getElementById('sigChk').onchange=e=>{ S.sig=e.target.checked?1:0; refresh(); };
   document.getElementById('ctChk').onchange=e=>{ S.ct=e.target.checked?1:0; refresh(); };
@@ -2763,6 +2764,13 @@ async function init(){
     tt('.fld:has(#dtSel)','Fit a linear trend over the period along with RONI, so the warming trend, or a reporting trend, is not read as an ENSO signal.');
     tt('#smBox','A Gaussian blur of one grid box, applied to each year’s map before the fit.'+(FCST?'':' Maps only; the panels below are never smoothed.')); }
   const v=readHash();
+  /* the forecast page refines the time-zone guess with the visitor's country from Cloudflare (as the home page does):
+     U.S. units in the U.S. and its territories, metric elsewhere; not when a link set the units or after a click */
+  if(FCST&&!/[#&]u=/.test(location.hash)&&/^https?:$/.test(location.protocol))
+    fetch('/cdn-cgi/trace',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(s=>{
+      const m=/^loc=([A-Z]{2})$/m.exec(s||''); if(!m||S.unClicked) return;
+      const un=/^(US|PR|GU|VI|AS|MP|UM)$/.test(m[1])?'F':'C';
+      if(un!==S.un){ S.un=un; if(DS) refresh(); } }).catch(()=>{});
   if(!S.per) S.per=defaultPer();
   applyTheme();
   wire();
