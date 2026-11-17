@@ -1931,6 +1931,93 @@ function pinTip(){
   pin.style.left=x+'px'; pin.style.top=y+'px';
 }
 
+/* zoom in around S.pt, about continent-wide (from the world view); the U.S. maps are already that size */
+function zoomToPt(){
+  if(!S.pt) return;
+  fullView();
+  if(F().src!=='scs'){ const lo=S.pt[1]<20?S.pt[1]+360:S.pt[1];   // the world maps run 20°E-380°E
+    syncing=true; mapA.setView([Math.max(-60,Math.min(70,S.pt[0])),lo],mapA.getZoom()+2,{animate:false}); syncing=false; }
+  writeHash();
+}
+/* ---- the forecast page's place search (Dan 2026-11-17): type a place; the map zooms there and the place's box is
+   selected with its readout up, as when coming from the home page. Open-Meteo geocoding, as on the home page. */
+const PS={items:[],on:-1,seq:0,timer:null,cache:{}};
+const PS_US={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',
+  DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',
+  KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',
+  MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',
+  NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',
+  SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',
+  WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',PR:'Puerto Rico'};
+const PS_CC={usa:'US',us:'US','united states':'US',america:'US',uk:'GB','united kingdom':'GB',england:'GB',britain:'GB'};
+const psNorm=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const psLabel=p=>[p.admin1&&p.admin1!==p.name?p.admin1:null,p.country].filter(Boolean).join(', ');
+async function psGeo(name){
+  const k=psNorm(name);
+  if(!PS.cache[k]) PS.cache[k]=fetch('https://geocoding-api.open-meteo.com/v1/search?count=20&language=en&format=json&name='+encodeURIComponent(name))
+    .then(r=>r.json()).catch(e=>{ delete PS.cache[k]; throw e; });
+  const j=await PS.cache[k], out=[], seen=new Map();
+  (j.results||[]).filter(p=>{ const c=p.feature_code||'PPL'; return /^(PPL|ADM[12]$|PCL)/.test(c)&&!/^(PPLX|PPLH|PPLQ|PPLW|PCLH)$/.test(c); })
+    .forEach(p=>{ const id=psNorm(p.name)+'|'+psLabel(p), i=seen.get(id);
+      if(i==null){ seen.set(id,out.length); out.push(p); } else if((p.population||0)>(out[i].population||0)) out[i]=p; });
+  return out.filter(p=>psNorm(p.name).startsWith(k)).concat(out.filter(p=>!psNorm(p.name).startsWith(k)));
+}
+function psMatch(p,rest){
+  const x=psNorm(rest); if(!x) return true;
+  const st=PS_US[rest.trim().toUpperCase()], cc=PS_CC[x], f=[p.admin1,p.admin2,p.country].map(psNorm);
+  return (st&&p.country_code==='US'&&psNorm(p.admin1)===psNorm(st))||(cc&&p.country_code===cc)||psNorm(p.country_code)===x||
+         f.some(v=>v&&(v===x||v.startsWith(x)||(x.length>3&&v.includes(x))));
+}
+async function psFind(q){
+  const parts=q.split(',').map(x=>x.trim()).filter(Boolean); if(!parts.length) return [];
+  let res=await psGeo(parts[0]);
+  if(parts.length>1){ const f=res.filter(p=>parts.slice(1).every(x=>psMatch(p,x))); if(f.length) res=f; }
+  if(!res.length){ const w=parts[0].split(/\s+/);           // "Paris France", "Fort Wayne Indiana"
+    for(let i=w.length-1;!res.length&&i>0;i--){ const all=await psGeo(w.slice(0,i).join(' ')); res=all.filter(p=>psMatch(p,w.slice(i).join(' '))); } }
+  if(!res.length){ const n=parts[0];                          // a typo: drop the last letters
+    for(let k=n.length-1;!res.length&&k>=Math.max(4,n.length-5);k--) res=(await psGeo(n.slice(0,k))).filter(p=>psNorm(p.name).startsWith(psNorm(n.slice(0,k)))); }
+  return res;
+}
+function psClose(){ const ul=document.getElementById('fsSugg'); if(!ul) return; ul.hidden=true; ul.innerHTML=''; PS.items=[]; PS.on=-1;
+  document.getElementById('fsQ').setAttribute('aria-expanded','false'); }
+function psShow(items){
+  const ul=document.getElementById('fsSugg'); PS.items=items; PS.on=-1;
+  if(!items.length){ psClose(); return; }
+  ul.innerHTML=items.map((p,i)=>`<li role="option" id="fs${i}" data-i="${i}" aria-selected="false">${esc(p.name)}<small>${esc(psLabel(p))}</small></li>`).join('');
+  ul.hidden=false; document.getElementById('fsQ').setAttribute('aria-expanded','true');
+}
+function psMove(d){
+  if(!PS.items.length) return; PS.on=(PS.on+d+PS.items.length)%PS.items.length;
+  document.querySelectorAll('#fsSugg li[data-i]').forEach(li=>{ const on=+li.dataset.i===PS.on; li.classList.toggle('on',on); li.setAttribute('aria-selected',on); });
+}
+function psPick(p){
+  psClose(); PS.seq++;
+  const q=document.getElementById('fsQ'); q.value=[p.name,psLabel(p)].filter(Boolean).join(', ');
+  document.getElementById('fsMsg').textContent='';
+  S.pt=[+p.latitude,+p.longitude]; zoomToPt(); drawSelection(); drawPanels();
+  if(selCell()<0) document.getElementById('fsMsg').textContent='This map has no data there (the U.S. severe-weather maps cover the lower 48 only).';
+  document.getElementById('fsClear').hidden=false;
+}
+function wirePlaceSearch(){
+  const q=document.getElementById('fsQ'); if(!q) return;
+  const cl=document.getElementById('fsClear'), msg=document.getElementById('fsMsg');
+  q.addEventListener('input',()=>{ clearTimeout(PS.timer); cl.hidden=!q.value&&!S.pt; msg.textContent='';
+    const v=q.value.trim(); if(v.length<3){ psClose(); return; }
+    PS.timer=setTimeout(async()=>{ const seq=++PS.seq; try{ const r=await psFind(v); if(seq===PS.seq&&q.value.trim()===v) psShow(r.slice(0,6)); }catch(e){} },220); });
+  q.addEventListener('keydown',e=>{ if(e.key==='ArrowDown'){ e.preventDefault(); psMove(1); } else if(e.key==='ArrowUp'){ e.preventDefault(); psMove(-1); }
+    else if(e.key==='Escape') psClose(); });
+  q.addEventListener('blur',()=>setTimeout(psClose,150));
+  document.getElementById('fsSugg').addEventListener('mousedown',e=>{ const li=e.target.closest('li[data-i]'); if(!li) return; e.preventDefault(); psPick(PS.items[+li.dataset.i]); });
+  document.getElementById('fsForm').onsubmit=async e=>{ e.preventDefault(); clearTimeout(PS.timer);
+    if(PS.on>=0&&PS.items[PS.on]){ psPick(PS.items[PS.on]); return; }
+    const v=q.value.trim(); if(!v) return; msg.textContent='Searching…'; const seq=++PS.seq;
+    try{ const r=await psFind(v); if(seq!==PS.seq) return;
+      if(!r.length){ msg.textContent='No place found. Try a nearby city, or add the state or country after a comma.'; return; }
+      psPick(r[0]); }catch(err){ msg.textContent='The place search is not responding. Try again.'; } };
+  cl.onclick=()=>{ q.value=''; cl.hidden=true; msg.textContent=''; psClose(); S.pt=null; fullView(); drawSelection(); drawPanels(); writeHash(); q.focus(); };
+  if(S.pt) cl.hidden=false;
+}
+
 /* ------------------------------------------------------------- refresh */
 let CUR=null, CURRAW=null, CURDOM=null, TOKEN=0, STATS=null, BUSY=false;
 /* which view the maps were last fitted to (U.S. or global). Decided by the refresh
@@ -3262,9 +3349,8 @@ async function init(){
       syncing=false; writeHash(); } }
   /* a link with a place but no view (from the location page): open zoomed in around the place,
      about continent-wide, instead of on the whole world. The U.S. maps are already that size. */
-  else if(S.pt&&F().src!=='scs'){ const lo=S.pt[1]<20?S.pt[1]+360:S.pt[1];   // the world maps run 20°E-380°E
-    syncing=true; mapA.setView([Math.max(-60,Math.min(70,S.pt[0])),lo],mapA.getZoom()+2,{animate:false});
-    syncing=false; writeHash(); }
+  else if(S.pt) zoomToPt();
+  if(FCST) wirePlaceSearch();
   mapA.on('moveend',writeHash);
   /* a link pasted into a tab already on this page changes only the hash: reload so it
      opens exactly as shared (the page itself only ever uses replaceState, which does not
