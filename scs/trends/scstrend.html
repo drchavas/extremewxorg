@@ -164,7 +164,7 @@
 </head>
 <body>
 
-<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b> <b>Warning: working through data issues for wind.</b></div>
+<div class="alertbar">&#9888; <b>Work in progress, site evolving rapidly! Check in regularly for updates/fixes.</b> <b id="windWarn" hidden>Warning: working through data issues for peak wind.</b></div>
 
 <header>
   <h1>Severe thunderstorm(+) Climatology and Trends</h1>
@@ -1379,6 +1379,9 @@ function syncHazWarn(){
   const el=document.getElementById('hazwarn'), h=hazWarnHtml();
   el.innerHTML=h;
   el.style.display = h ? '' : 'none';
+  /* Dan, 2026-11-17: the Indiana peak-wind station data is being worked through, so the
+     red banner says so whenever that hazard is on screen. Remove when it is fixed. */
+  const ww=document.getElementById('windWarn'); if(ww) ww.hidden = S.hazard!=='pkwnd';
 }
 
 /* Cross-page probe. Returns the value THIS page would draw for one county at a
