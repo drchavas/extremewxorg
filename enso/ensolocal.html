@@ -15,7 +15,7 @@
   location.replace('/enso/ensoscience'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-15-v34">
+<meta name="version" content="ensolocal-2026-11-17-v35">
 <title>How might El Ni&ntilde;o change the weather where you are? Local El Ni&ntilde;o outlook &mdash; elninolanina.org</title>
 <meta name="description" content="Type a place to see how this El Niño is likely to change winter and spring temperature, rain and snow there, season by season and month by month, from 47 years of global weather data and NOAA's official El Niño forecast.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -358,11 +358,9 @@ const CMAP={div:['#053061','#2166ac','#4393c3','#92c5de','#d1e5f0','#f7f7f7','#f
 const ROWS=[
   {k:'t2m', name:'Temperature', sub:'average for the month'},
   {k:'pr',  name:'Precipitation (total rain+snow)', sub:'melted snow counted as water; total for the month'},
-  {k:'sf',  name:'Snowfall', sub:'as fresh snow (approx.)'},
-  {k:'tcd', name:'Tropical storm days', sub:'storm in the 5° box (~550 km)'},
-  {k:'tornado', name:'Tornado days', sub:'any tornado in the 2° box'},
-  {k:'hail', name:'Hail days', sub:'any hail report in the 2° box'},
-  {k:'wind', name:'Damaging wind days', sub:'thunderstorm wind report in the 2° box'}];
+  {k:'sf',  name:'Snowfall', sub:'as fresh snow (approx.)'}];
+/* tropical storm, tornado, hail and damaging-wind days were rows here until 2026-11-17; Dan: temperature, precipitation
+   and snow only for now (the data are still in local/ tiles: tcd, tornado, hail, wind) */
 const S={mode:'pct',units:'us',loc:null};      // U.S. units by default
 let META=null, RONI=null, RFC=null, TILES={};
 
@@ -627,7 +625,7 @@ async function render(){
   }
   tb.innerHTML=h+'</tbody>';
   document.getElementById('legend').innerHTML=
-    `<span>Colors: <span class="bar" style="background:linear-gradient(to right,${CMAP.div.join(',')})"></span>cooler / fewer · warmer / more;
+    `<span>Colors: <span class="bar" style="background:linear-gradient(to right,${CMAP.div.join(',')})"></span>cooler · warmer;
      precipitation and snow: <span class="bar" style="background:linear-gradient(to right,${CMAP.brbg.join(',')})"></span>drier · wetter</span>
      <span><span class="chip" style="background:rgb(250,226,211)"></span>pale, plain numbers: could easily be chance</span>
      <span>– not shown: too rare there that month</span>`;
