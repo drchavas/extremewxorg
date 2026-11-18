@@ -15,7 +15,7 @@
   location.replace('/enso/ensoscience'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-17-v44">
+<meta name="version" content="ensolocal-2026-11-18-v45">
 <title>How might El Ni&ntilde;o change the weather where you are? Local El Ni&ntilde;o outlook &mdash; elninolanina.org</title>
 <meta name="description" content="Type a place to see how this El Niño is likely to change winter and spring temperature, rain and snow there, season by season and month by month, from 47 years of global weather data and NOAA's official El Niño forecast.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -289,7 +289,7 @@
       <button type="button" class="go" id="detBtn" aria-expanded="false" aria-controls="det">Detailed outlook <span aria-hidden="true">&rarr;</span></button>
       <a class="go" id="mapsLink" href="/enso/ensofcst" target="_blank" rel="noopener">Forecast maps for this location (opens new tab) <span aria-hidden="true">&rarr;</span></a>
     </div>
-    <p class="fcbase" id="fcBase">Based on global historical weather data from the past 47&nbsp;years. The numbers are expected changes in weather, but we do not know exactly what will happen month to month at any given location!</p>
+    <p class="fcbase" id="fcBase">The numbers are the best guess for expected changes in weather, based on global historical weather data from the past 47&nbsp;years. But we do not know exactly what will happen month to month (and especially not day to day) at any given location!</p>
     <div id="det" hidden>
       <p class="placesub" id="placesub"></p>
       <div class="toolbar">
@@ -856,7 +856,7 @@ async function init(){
     return; }
   document.getElementById('built').textContent='Data built '+META.built.slice(0,10)+'.';
   { const f=META.fields.find(x=>x.k==='t2m'), n=f&&f.ey1-f.ey0+1;    // the years behind the fits (47 for 1979-2025)
-    if(n>0) document.getElementById('fcBase').innerHTML=`Based on global historical weather data from the past ${n}&nbsp;years. The numbers are expected changes in weather, but we do not know exactly what will happen month to month at any given location!`; }
+    if(n>0) document.getElementById('fcBase').innerHTML=`The numbers are the best guess for expected changes in weather, based on global historical weather data from the past ${n}&nbsp;years. But we do not know exactly what will happen month to month (and especially not day to day) at any given location!`; }
   fcStatement();
   if(S.loc) render();
 }
