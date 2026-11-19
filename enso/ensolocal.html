@@ -15,7 +15,7 @@
   location.replace('/enso/ensoscience'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-18-v45">
+<meta name="version" content="ensolocal-2026-11-19-v48">
 <title>How might El Ni&ntilde;o change the weather where you are? Local El Ni&ntilde;o outlook &mdash; elninolanina.org</title>
 <meta name="description" content="Type a place to see how this El Niño is likely to change winter and spring temperature, rain and snow there, season by season and month by month, from 47 years of global weather data and NOAA's official El Niño forecast.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -294,7 +294,7 @@
       <p class="placesub" id="placesub"></p>
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Show">
-          <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">Typical value</button>
+          <button data-m="pct" class="on" aria-pressed="true">% change</button><button data-m="val" aria-pressed="false">This year</button>
         </div>
       </div>
       <div class="tbwrap"><table id="tbl"></table></div>
@@ -436,7 +436,7 @@ function cell(f,rec,mo){
   const [mean,bp,bn,pp,pn,mp=mm.mp,mn=mm.mn]=rec, v=mo.x;
   const d=bp*((v>0?v:0)-mp)+bn*((v<0?v:0)-mn), p=v>0?pp:v<0?pn:null;
   let den=NaN;
-  if(f.k==='pr') den=Math.max(mean,0.1);
+  if(f.k==='pr') den=mean>=0.1-1e-9?mean:NaN;    // under 0.1 mm/day (~0.1 in a month) there is too little rain for a % (was: floored at 0.1; 2026-11-19)
   else if(f.k==='sf') den=mean>=0.05-1e-9?mean:NaN;
   else if(f.k!=='t2m') den=(mean>0&&mean>=(mm.climRef||0)*0.05)?mean:NaN;
   /* a straight line read near the strongest year on record can overshoot to below zero: a count or a
@@ -446,9 +446,11 @@ function cell(f,rec,mo){
 }
 function amount(k,v,m){            // a monthly amount from the stored daily rate / monthly count
   const us=S.units==='us', days=DAYS[m-1];
-  if(k==='t2m') return us?`${fmt(v*1.8+32,0)} °F`:`${fmt(v,0)} °C`;
-  if(k==='pr'){ const mmv=Math.max(0,v*days); return us?`${fmt(mmv/25.4,1)} in`:`${fmt(mmv,0)} mm`; }
-  if(k==='sf'){ const cm=Math.max(0,v*days); return us?`${fmt(cm/2.54,1)} in`:`${fmt(cm,cm<10?1:0)} cm`; }
+  /* one precision for both table views and the "(average → this year)" line, fine enough that the shown amounts
+     agree with the shown change: temperature to 0.1°, small amounts with one more decimal (Dan 2026-11-19) */
+  if(k==='t2m') return us?`${fmt(v*1.8+32,1)} °F`:`${fmt(v,1)} °C`;
+  if(k==='pr'){ const mmv=Math.max(0,v*days), i=mmv/25.4; return us?`${fmt(i,i<1?2:1)} in`:`${fmt(mmv,mmv<10?1:0)} mm`; }
+  if(k==='sf'){ const cm=Math.max(0,v*days), i=cm/2.54; return us?`${fmt(i,i<1?2:1)} in`:`${fmt(cm,cm<10?1:0)} cm`; }
   const n=Math.max(0,v), s=fmt(n,1); return `${s} ${s==='1.0'?'day':'days'}`;
 }
 /* table changes are rounded like the month tiles: to the degree and to 10%, since the fit is not that exact */
@@ -606,7 +608,8 @@ async function render(){
   { const none=!rows.length, db=document.getElementById('detBtn'); db.hidden=none;
     if(none){ document.getElementById('det').hidden=true; db.setAttribute('aria-expanded','false'); db.firstChild.textContent='Detailed outlook '; } }
   if(!rows.length){ tb.innerHTML=''; document.getElementById('legend').innerHTML=''; return; }
-  let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':'Typical value in a year like this')+'</th>'+
+  let h='<thead><tr><th class="row" scope="col">'+(S.mode==='pct'?'Change from an average year':(()=>{ const d=fcDJF(ensoYearNow().Y), ph=d&&d.x>=0.5?'El Niño':d&&d.x<=-0.5?'La Niña':'';
+      return 'Expected this year'+(ph?' (with '+ph+')':''); })())+'</th>'+
     L.map(mo=>`<th scope="col">${MONTHS[mo.m-1]}<small>${mo.y}</small></th>`).join('')+'</tr></thead><tbody>';
   for(const {R,f,b,cells} of rows){
     const fm=L[0]?ymStr(L[0].y,L[0].m):'';
@@ -617,14 +620,13 @@ async function render(){
       const ch=changeTxt(R.k,c), unitless=!ch;
       const v=R.k==='t2m'?c.d:c.pct, col=isFinite(v)?ramp(CMAP[c.cmap],(v-c.lo)/(c.hi-c.lo)):[255,255,255];
       /* faded: the color mixed two-thirds toward white, in plain type, so the eye goes to the reliable cells */
-      const val=S.mode!=='pct';                 // "Typical value": plain cells; the colours show changes
+      const val=S.mode!=='pct';                 // "This year" (was "Typical value"): plain cells; the colours show changes
       const colF=val?[255,255,255]:c.faint?col.map(u=>Math.round(u+(255-u)*0.66)):col, ink=c.faint?'#5b6b7c':val?'#16212e':lum(col)<0.33?'#fff':'#16212e';
       /* % change: the change, and under it the average year's value and this year's (Dan 2026-11-17): "+100%" / "2.1 → 4.2 in" */
-      /* temperature to a tenth of a degree here, so a +1 °F change never reads "46 → 46 °F" */
-      const tf=v=>S.units==='us'?`${fmt(v*1.8+32,1)} °F`:`${fmt(v,1)} °C`;
-      const a0=R.k==='t2m'?tf(c.mean):amount(R.k,c.mean,mo.m), a1=R.k==='t2m'?tf(c.mean+c.d):amount(R.k,c.mean+c.d,mo.m), u=(a1.match(/ [^\d.−-]+$/)||[''])[0];
+      const a0=amount(R.k,c.mean,mo.m), a1=amount(R.k,c.mean+c.d,mo.m), u=(a1.match(/ [^\d.−-]+$/)||[''])[0];
       const fromTo=`<small class="fromto">(${esc(a0.slice(0,a0.length-u.length))} → ${esc(a1)})</small>`;
-      const show = S.mode==='pct' ? (ch?esc(ch)+fromTo:'–') : esc(amount(R.k,c.mean+c.d,mo.m));
+      /* too little there for a % change (e.g. April snow): no %, but the amounts still show, as in the "This year" view */
+      const show = S.mode==='pct' ? (ch?esc(ch):'–')+fromTo : esc(amount(R.k,c.mean+c.d,mo.m));
       const tip=`${MFULL[mo.m-1]} ${mo.y}: average year ${amount(R.k,c.mean,mo.m)}; this year ${amount(R.k,c.mean+c.d,mo.m)}`+
         (ch?` (${ch})`:' (too rare here for a % change)')+(c.faint?'; could easily be chance':'')+'.';
       h+=`<td class="${c.faint?'faint':''}${unitless&&S.mode==='pct'?' none':''}" style="background:rgb(${colF.join(',')});color:${ink}" title="${esc(tip)}">${show}</td>`;
@@ -636,7 +638,7 @@ async function render(){
     `<span>Colors: <span class="bar" style="background:linear-gradient(to right,${CMAP.div.join(',')})"></span>cooler · warmer;
      precipitation and snow: <span class="bar" style="background:linear-gradient(to right,${CMAP.brbg.join(',')})"></span>drier · wetter</span>
      <span><span class="chip" style="background:rgb(250,226,211)"></span>pale, plain numbers: could easily be chance</span>
-     <span>– not shown: too rare there that month</span>`;
+     <span>– no % change: too little there that month</span>`;
   writeHash();
 }
 
