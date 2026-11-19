@@ -15,7 +15,7 @@
   location.replace('/enso/ensoscience'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-19-v51">
+<meta name="version" content="ensolocal-2026-11-19-v52">
 <title>How might El Ni&ntilde;o change the weather where you are? Local El Ni&ntilde;o outlook &mdash; elninolanina.org</title>
 <meta name="description" content="Type a place to see how this El Niño is likely to change winter and spring temperature, rain and snow there, season by season and month by month, from 47 years of global weather data and NOAA's official El Niño forecast.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -150,7 +150,6 @@
   th.row small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
   th.row a{font-weight:400;font-size:11.5px;color:var(--muted)}
   td{font-weight:600;min-width:66px}
-  td.faint{font-weight:400}
   td.none{color:var(--muted);font-weight:400;background:#fff}
   tr:last-child td,tr:last-child th{border-bottom:0}
   .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:12px 0 0}
@@ -625,15 +624,16 @@ async function render(){
       const v=R.k==='t2m'?c.d:c.pct, col=isFinite(v)?ramp(CMAP[c.cmap],(v-c.lo)/(c.hi-c.lo)):[255,255,255];
       /* faded: the color mixed two-thirds toward white, in plain type, so the eye goes to the reliable cells */
       const val=S.mode!=='pct';                 // "This year" (was "Typical value"): plain cells; the colours show changes
-      const colF=val?[255,255,255]:c.faint?col.map(u=>Math.round(u+(255-u)*0.66)):col, ink=c.faint?'#5b6b7c':val?'#16212e':lum(col)<0.33?'#fff':'#16212e';
+      /* every cell at full strength: no faded "could be chance" cells (Dan 2026-11-19: p < 0.05 is an arbitrary cutoff) */
+      const colF=val?[255,255,255]:col, ink=val?'#16212e':lum(col)<0.33?'#fff':'#16212e';
       /* % change: the change, and under it the average year's value and this year's (Dan 2026-11-17): "+100%" / "2.1 → 4.2 in" */
       const a0=amount(R.k,c.mean,mo.m,true), a1=amount(R.k,c.mean+c.d,mo.m,true), u=(a1.match(/ [^\d.−-]+$/)||[''])[0];
       const fromTo=`<small class="fromto">(${esc(a0.slice(0,a0.length-u.length))} → ${esc(a1)})</small>`;
       /* too little there for a % change (e.g. April snow): no %, but the amounts still show, as in the "This year" view */
       const show = S.mode==='pct' ? (ch?esc(ch):'–')+fromTo : esc(amount(R.k,c.mean+c.d,mo.m));
       const tip=`${MFULL[mo.m-1]} ${mo.y}: average year ${amount(R.k,c.mean,mo.m)}; this year ${amount(R.k,c.mean+c.d,mo.m)}`+
-        (ch?` (${ch})`:' (too rare here for a % change)')+(c.faint?'; could easily be chance':'')+'.';
-      h+=`<td class="${c.faint?'faint':''}${unitless&&S.mode==='pct'?' none':''}" style="background:rgb(${colF.join(',')});color:${ink}" title="${esc(tip)}">${show}</td>`;
+        (ch?` (${ch})`:' (too rare here for a % change)')+'.';
+      h+=`<td class="${unitless&&S.mode==='pct'?'none':''}" style="background:rgb(${colF.join(',')});color:${ink}${val?';font-weight:400':''}" title="${esc(tip)}">${show}</td>`;
     });
     h+='</tr>';
   }
@@ -641,7 +641,6 @@ async function render(){
   document.getElementById('legend').innerHTML=
     `<span>Colors: <span class="bar" style="background:linear-gradient(to right,${CMAP.div.join(',')})"></span>cooler · warmer;
      precipitation and snow: <span class="bar" style="background:linear-gradient(to right,${CMAP.brbg.join(',')})"></span>drier · wetter</span>
-     <span><span class="chip" style="background:rgb(250,226,211)"></span>pale, plain numbers: could easily be chance</span>
      <span>– no % change: too little there that month</span>`;
   writeHash();
 }
