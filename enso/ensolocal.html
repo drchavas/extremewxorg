@@ -15,7 +15,7 @@
   location.replace('/enso/ensoscience'+location.search+q);})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="ensolocal-2026-11-19-v52">
+<meta name="version" content="ensolocal-2026-11-19-v53">
 <title>How might El Ni&ntilde;o change the weather where you are? Local El Ni&ntilde;o outlook &mdash; elninolanina.org</title>
 <meta name="description" content="Type a place to see how this El Niño is likely to change winter and spring temperature, rain and snow there, season by season and month by month, from 47 years of global weather data and NOAA's official El Niño forecast.">
 <link rel="canonical" href="https://elninolanina.org/">
@@ -604,7 +604,7 @@ async function render(){
     document.getElementById('mapsLink').href=`${BASE}ensofcst#f=t2m${mo}${uq}&c=${tb0?boxCtr(tb0.b):loc.la.toFixed(2)+','+loc.lo.toFixed(2)}`; }
   const t2=rows.find(r=>r.R.k==='t2m');
   document.getElementById('placesub').textContent = t2
-    ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that holds ${loc.short||'this place'}.`
+    ? `Numbers for the map box ${rng(t2.b.la0,t2.b.la0+t2.b.g,'N','S')}, ${rng(((t2.b.lo0+540)%360)-180,((t2.b.lo0+540)%360)-180+t2.b.g,'E','W')} (about 200 km across) that contains ${loc.short||'this place'}.`
     : 'No data here (open ocean).';
   const tb=document.getElementById('tbl');
   /* nothing to tabulate (open ocean): no "Detailed outlook" to open */
